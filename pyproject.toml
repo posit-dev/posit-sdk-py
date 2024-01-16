@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=60", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "posit-sdk"
+description = "Posit SDK for Python"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+keywords = ["posit", "sdk"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
+dynamic = ["version"]
+dependencies = [
+    "requests==2.31.0"
+]
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "pytest",
+    "setuptools-scm"
+]
+
+[project.urls]
+Source = "https://github.com/posit-dev/posit-sdk-py"
+Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/posit"]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/posit/_version.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/.github",
+  "/.pytest_cache",
+  "/.vscode",
+]
+
+[tool.setuptools_scm]
+version_file = "src/posit/_version.py"
