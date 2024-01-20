@@ -34,6 +34,7 @@ clean:
     #!/usr/bin/env bash
     {{ OPTIONS }}
 
+    find . -name "*.egg-info" -exec rm -rf {} +
     find . -name "*.pyc" -exec rm -f {} +
     find . -name "__pycache__" -exec rm -rf {} +
     rm -rf\
