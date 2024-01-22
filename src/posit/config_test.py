@@ -10,7 +10,7 @@ class TestEnvironmentConfigProvider:
         api_key = provider.get_value("api_key")
         assert api_key == "foobar"
 
-    @patch.dict("os.environ", {"CONNECT_ENDPOINT": "http://foo.bar"})
+    @patch.dict("os.environ", {"CONNECT_SERVER": "http://foo.bar"})
     def test_get_endpoint(self):
         provider = EnvironmentConfigProvider()
         endpoint = provider.get_value("endpoint")

@@ -23,7 +23,7 @@ class EnvironmentConfigProvider(ConfigProvider):
             return os.environ.get("CONNECT_API_KEY")
 
         if key == "endpoint":
-            return os.environ.get("CONNECT_ENDPOINT")
+            return os.environ.get("CONNECT_SERVER")
 
         return None
 
