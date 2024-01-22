@@ -1,4 +1,4 @@
-name: Push
+name: Test
 on: [push]
 jobs:
   test:
@@ -21,3 +21,4 @@ jobs:
     - run: just deps
     - run: just test
     - run: just cov
+    - run: just lint

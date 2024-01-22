@@ -19,7 +19,7 @@ class TestEnvironmentConfigProvider:
     def test_get_value_miss(self):
         provider = EnvironmentConfigProvider()
         value = provider.get_value("foobar")
-        assert value == None
+        assert value is None
 
 
 class TestConfigBuilder:

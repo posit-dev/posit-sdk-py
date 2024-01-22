@@ -11,10 +11,10 @@ default:
     #!/usr/bin/env bash
     {{ OPTIONS }}
 
-    just clean
     just deps
     just test
     just cov
+    just lint
     just build
 
 build:
@@ -22,7 +22,6 @@ build:
     {{ OPTIONS }}
 
     {{ PYTHON }} -m build
-
 
 cov *args="report":
     #!/usr/bin/env bash
@@ -39,7 +38,9 @@ clean:
     find . -name "__pycache__" -exec rm -rf {} +
     rm -rf\
         .coverage\
+        .mypy_cache\
         .pytest_cache\
+        .ruff_cache\
         *.egg-info\
         build\
         dist\
@@ -50,6 +51,19 @@ deps:
     {{ OPTIONS }}
 
     {{ PIP }} install -e '.[test]'
+
+fmt:
+    #!/usr/bin/env bash
+    {{ OPTIONS }}
+
+    {{ PYTHON }} -m ruff format .
+
+lint:
+    #!/usr/bin/env bash
+    {{ OPTIONS }}
+
+    {{ PYTHON }} -m mypy --install-types --non-interactive .
+    {{ PYTHON }} -m ruff check
 
 test:
     #!/usr/bin/env bash

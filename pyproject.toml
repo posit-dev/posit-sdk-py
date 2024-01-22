@@ -25,7 +25,9 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "coverage",
+    "mypy",
     "pytest",
+    "ruff",
     "setuptools-scm"
 ]
 
