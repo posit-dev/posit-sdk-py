@@ -160,4 +160,4 @@ cython_debug/
 .idea/
 
 # Version file
-/src/posit/_version.py
+/posit/_version.py

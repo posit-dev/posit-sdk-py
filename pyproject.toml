@@ -34,10 +34,10 @@ Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/posit"]
+packages = ["posit"]
 
 [tool.hatch.build.hooks.vcs]
-version-file = "src/posit/_version.py"
+version-file = "posit/_version.py"
 
 [tool.hatch.build.targets.sdist]
 exclude = [
@@ -47,4 +47,4 @@ exclude = [
 ]
 
 [tool.setuptools_scm]
-version_file = "src/posit/_version.py"
+version_file = "posit/_version.py"

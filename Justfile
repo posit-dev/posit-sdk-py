@@ -54,7 +54,7 @@ test:
     #!/usr/bin/env bash
     {{ OPTIONS }}
 
-    {{ PYTHON }} -m coverage run --source=src --omit=_version.py -m pytest
+    {{ PYTHON }} -m coverage run --source=posit --omit=_version.py -m pytest
 
 version:
     #!/usr/bin/env bash
