@@ -22,31 +22,9 @@ dependencies = [
     "requests>=2.31.0,<3"
 ]
 
-[project.optional-dependencies]
-test = [
-    "coverage",
-    "mypy",
-    "pytest",
-    "ruff",
-    "setuptools-scm"
-]
-
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/posit"]
-
-[tool.hatch.build.hooks.vcs]
-version-file = "src/posit/_version.py"
-
-[tool.hatch.build.targets.sdist]
-exclude = [
-  "/.github",
-  "/.pytest_cache",
-  "/.vscode",
-]
 
 [tool.setuptools_scm]
 version_file = "src/posit/_version.py"

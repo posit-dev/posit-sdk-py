@@ -50,13 +50,19 @@ deps:
     #!/usr/bin/env bash
     {{ OPTIONS }}
 
-    {{ PIP }} install -e '.[test]'
+    {{ PIP }} install -r requirements.txt -r requirements-dev.txt
 
 fmt:
     #!/usr/bin/env bash
     {{ OPTIONS }}
 
     {{ PYTHON }} -m ruff format .
+
+install:
+    #!/usr/bin/env bash
+    {{ OPTIONS }}
+
+    {{ PIP }} install -e .
 
 lint:
     #!/usr/bin/env bash
