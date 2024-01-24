@@ -1,0 +1,13 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: local
+    hooks:
+      - id: format
+        name: format
+        entry: bash -c "just fmt"
+        language: system
+      - id: lint
+        name: lint
+        entry: bash -c "just lint"
+        language: system
