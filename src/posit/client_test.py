@@ -1,3 +1,5 @@
+import pytest
+
 from unittest.mock import MagicMock, Mock, patch
 
 from .client import Client
@@ -24,3 +26,31 @@ class TestClient:
         Session.assert_called_once()
         Auth.assert_called_once_with(api_key)
         assert client._config == config
+
+    @patch("posit.client.ConfigBuilder")
+    def test_init_without_api_key(self, ConfigBuilder: MagicMock):
+        api_key = None
+        endpoint = "http://foo.bar"
+        config = Mock()
+        config.api_key = api_key
+        config.endpoint = endpoint
+        builder = ConfigBuilder.return_value
+        builder.set_api_key = Mock()
+        builder.set_endpoint = Mock()
+        builder.build = Mock(return_value=config)
+        with pytest.raises(ValueError):
+            Client(api_key=api_key, endpoint=endpoint)
+
+    @patch("posit.client.ConfigBuilder")
+    def test_init_without_endpoint(self, ConfigBuilder: MagicMock):
+        api_key = "foobar"
+        endpoint = None
+        config = Mock()
+        config.api_key = api_key
+        config.endpoint = endpoint
+        builder = ConfigBuilder.return_value
+        builder.set_api_key = Mock()
+        builder.set_endpoint = Mock()
+        builder.build = Mock(return_value=config)
+        with pytest.raises(ValueError):
+            Client(api_key=api_key, endpoint=endpoint)
