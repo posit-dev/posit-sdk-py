@@ -1,4 +1,5 @@
 import os
+import dataclasses
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -20,10 +21,22 @@ class ConfigProvider(ABC):
 class EnvironmentConfigProvider(ConfigProvider):
     def get_value(self, key: str) -> Optional[str]:
         if key == "api_key":
-            return os.environ.get("CONNECT_API_KEY")
+            value = os.environ.get("CONNECT_API_KEY")
+            if value:
+                return value
+            if value == "":
+                raise ValueError(
+                    "Invalid value for 'CONNECT_API_KEY': Must be a non-empty string."
+                )
 
         if key == "endpoint":
-            return os.environ.get("CONNECT_SERVER")
+            value = os.environ.get("CONNECT_SERVER")
+            if value:
+                return os.path.join(value, "__api__")
+            if value == "":
+                raise ValueError(
+                    "Invalid value for 'CONNECT_SERVER': Must be a non-empty string."
+                )
 
         return None
 
@@ -36,7 +49,8 @@ class ConfigBuilder:
         self._providers = providers
 
     def build(self) -> Config:
-        for key in Config.__annotations__:
+        for field in dataclasses.fields(Config):
+            key = field.name
             if not getattr(self._config, key):
                 setattr(
                     self._config,
@@ -47,8 +61,8 @@ class ConfigBuilder:
                 )
         return self._config
 
-    def set_api_key(self, api_key: Optional[str]):
+    def set_api_key(self, api_key: str):
         self._config.api_key = api_key
 
-    def set_endpoint(self, endpoint: Optional[str]):
+    def set_endpoint(self, endpoint: str):
         self._config.endpoint = endpoint

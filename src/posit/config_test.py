@@ -1,3 +1,5 @@
+import pytest
+
 from unittest.mock import Mock, patch
 
 from .config import Config, ConfigBuilder, EnvironmentConfigProvider
@@ -10,11 +12,33 @@ class TestEnvironmentConfigProvider:
         api_key = provider.get_value("api_key")
         assert api_key == "foobar"
 
+    @patch.dict("os.environ", {"CONNECT_API_KEY": ""})
+    def test_get_api_key_empty(self):
+        provider = EnvironmentConfigProvider()
+        with pytest.raises(ValueError):
+            provider.get_value("api_key")
+
+    def test_get_api_key_miss(self):
+        provider = EnvironmentConfigProvider()
+        api_key = provider.get_value("api_key")
+        assert api_key is None
+
     @patch.dict("os.environ", {"CONNECT_SERVER": "http://foo.bar"})
     def test_get_endpoint(self):
         provider = EnvironmentConfigProvider()
         endpoint = provider.get_value("endpoint")
-        assert endpoint == "http://foo.bar"
+        assert endpoint == "http://foo.bar/__api__"
+
+    @patch.dict("os.environ", {"CONNECT_SERVER": ""})
+    def test_get_endpoint_empty(self):
+        provider = EnvironmentConfigProvider()
+        with pytest.raises(ValueError):
+            provider.get_value("endpoint")
+
+    def test_get_endpoint_miss(self):
+        provider = EnvironmentConfigProvider()
+        endpoint = provider.get_value("endpoint")
+        assert endpoint is None
 
     def test_get_value_miss(self):
         provider = EnvironmentConfigProvider()
