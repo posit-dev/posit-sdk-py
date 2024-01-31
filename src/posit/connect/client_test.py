@@ -6,9 +6,9 @@ from .client import Client
 
 
 class TestClient:
-    @patch("posit.client.Session")
-    @patch("posit.client.ConfigBuilder")
-    @patch("posit.client.Auth")
+    @patch("posit.connect.client.Session")
+    @patch("posit.connect.client.ConfigBuilder")
+    @patch("posit.connect.client.Auth")
     def test_init(self, Auth: MagicMock, ConfigBuilder: MagicMock, Session: MagicMock):
         api_key = "foobar"
         endpoint = "http://foo.bar"
@@ -27,7 +27,7 @@ class TestClient:
         Auth.assert_called_once_with(api_key)
         assert client._config == config
 
-    @patch("posit.client.ConfigBuilder")
+    @patch("posit.connect.client.ConfigBuilder")
     def test_init_without_api_key(self, ConfigBuilder: MagicMock):
         api_key = None
         endpoint = "http://foo.bar"
@@ -41,7 +41,7 @@ class TestClient:
         with pytest.raises(ValueError):
             Client(api_key=api_key, endpoint=endpoint)
 
-    @patch("posit.client.ConfigBuilder")
+    @patch("posit.connect.client.ConfigBuilder")
     def test_init_without_endpoint(self, ConfigBuilder: MagicMock):
         api_key = "foobar"
         endpoint = None
