@@ -1,7 +1,7 @@
 <!-- The title should match the document name. Please use kebab case when naming document (e.g., 0000_kebab-case.md). A predictable naming convention helps with automation. -->
 # RFC 0000: Template
 
-- Author(s): [Your Name]
+- Author(s):[Author's Name, <author@email>,  Co-Author's Name, <co-author@email>]
 <!-- See ./0001_status-lifecycle.md -->
 - Status: Under Review
 
@@ -35,6 +35,6 @@
 
 ## References
 
-<!-- Provide links to related issues, discussions, or external resources that are relevant to this proposal. -->
+<!-- Provide links to related issues, discussions, or external resources that are relevant to this proposal in APA format. -->
 
-- OpenAI. (2024). ChatGPT [Large language model]. https://chat.openai.com/share/3e6b0542-c081-48bf-a481-f1ee10dd9611
+1. OpenAI. (2024). ChatGPT [Large language model]. https://chat.openai.com/share/3e6b0542-c081-48bf-a481-f1ee10dd9611

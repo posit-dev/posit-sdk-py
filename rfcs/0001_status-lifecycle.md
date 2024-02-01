@@ -1,6 +1,6 @@
 # RFC 0001: RFC Status Lifecycle
 
-- Author(s): Taylor Steinberg
+- Author(s): Taylor Steinberg <taylor.steinberg@posit.co>
 - Status: Under Review
 
 ## Summary
@@ -98,6 +98,4 @@ None
 
 <!-- Provide links to related issues, discussions, or external resources that are relevant to this proposal. -->
 
-Parts of this documented were curated by ChatGPT.
-
-- OpenAI. (2024). ChatGPT [Large language model]. https://chat.openai.com/share/3e6b0542-c081-48bf-a481-f1ee10dd9611
+1. OpenAI. (2024). ChatGPT [Large language model]. https://chat.openai.com/share/3e6b0542-c081-48bf-a481-f1ee10dd9611
