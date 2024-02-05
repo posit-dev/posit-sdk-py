@@ -1,5 +1,9 @@
-from posit.connect.client import Client
+from posit.connect import make_client
 
-client = Client()
-res = client.users.get_current_user()
-print(res.json())
+client = make_client()
+for user in client.users.find({"username": "aaron"}):
+    print(user)
+
+print(client.users.find_one())
+
+print(client.users.find_one({"guid": "f155520a-ca2e-4084-b0a0-12120b7d1add"}))
