@@ -53,7 +53,7 @@ class Client:
         api_key: Optional[str] = None,
         endpoint: Optional[str] = None,
     ) -> None:
-        self._api_key = api_key if api_key else _get_api_key()
+        self._api_key = api_key or _get_api_key()
         self._endpoint = endpoint if endpoint else _get_endpoint()
         self._session = Session()
         self._session.hooks["response"].append(hooks.handle_errors)
