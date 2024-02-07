@@ -2,7 +2,7 @@
 
 > Note: this is design-by-wishful-thinking, not how things actually work today.
 
-To get started, import the Connect `Client` and create a connect. You can specify `endpoint` for your Connect server URL and your `api_key`; if not specified, they'll be pulled from the environment (`CONNECT_SERVER` and `CONNECT_API_KEY`).
+To get started, import the Connect `Client` and create a connection. You can specify the `endpoint` for your Connect server URL and your `api_key`; if not specified, they'll be pulled from the environment (`CONNECT_SERVER` and `CONNECT_API_KEY`).
 
 ```
 from posit.connect import Client
