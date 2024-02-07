@@ -9,9 +9,9 @@ class Users:
         self._session = session
 
     def get_user(self, user_id: str) -> Response:
-        endpoint = os.path.join(self._endpoint, "v1/users", user_id)
+        endpoint = os.path.join(self._endpoint, "__api__/v1/users", user_id)
         return self._session.get(endpoint)
 
     def get_current_user(self) -> Response:
-        endpoint = os.path.join(self._endpoint, "v1/user")
+        endpoint = os.path.join(self._endpoint, "__api__/v1/user")
         return self._session.get(endpoint)
