@@ -12,7 +12,7 @@ con = Client()
 
 All of the general collections of entities can be referenced as properties of the Client object. Some collections belong to a single entity and are referenced from them similarly. 
 
-All collections have a `.find()` method that returns an iterable List-like object, and `.find_one()` methods that return a single entity.
+All collections have a `.find()` method that returns an iterable List-like object, and a `.get(guid)` method that returns a single entity by id.
 
 Entities have methods that are appropriate to them. Fields in the entity bodies can be accessed as properties. 
 
