@@ -1,48 +1,34 @@
-import os
+from __future__ import annotations
 
+from contextlib import contextmanager
 from requests import Session
-from typing import Optional
+from typing import Generator, Optional
 
 from . import hooks
 
 from .auth import Auth
+from .config import Config
 from .users import Users
 
 
-def _get_api_key() -> str:
-    """Gets the API key from the environment variable 'CONNECT_API_KEY'.
+@contextmanager
+def create_client(
+    api_key: Optional[str] = None, endpoint: Optional[str] = None
+) -> Generator[Client, None, None]:
+    """Creates a new :class:`Client` instance
 
-    Raises:
-        ValueError: if CONNECT_API_KEY is not set or invalid
-
-    Returns:
-        The API key
-    """
-    value = os.environ.get("CONNECT_API_KEY")
-    if value is None or value == "":
-        raise ValueError(
-            "Invalid value for 'CONNECT_API_KEY': Must be a non-empty string."
-        )
-    return value
-
-
-def _get_endpoint() -> str:
-    """Gets the endpoint from the environment variable 'CONNECT_SERVER'.
-
-    The `requests` library uses 'endpoint' instead of 'server'. We will use 'endpoint' from here forward for consistency.
-
-    Raises:
-        ValueError: if CONNECT_SERVER is not set or invalid.
+    Keyword Arguments:
+        api_key -- an api_key for authentication (default: {None})
+        endpoint -- a base api endpoint (url) (default: {None})
 
     Returns:
-        The endpoint.
+        A :class:`Client` instance
     """
-    value = os.environ.get("CONNECT_SERVER")
-    if value is None or value == "":
-        raise ValueError(
-            "Invalid value for 'CONNECT_SERVER': Must be a non-empty string."
-        )
-    return value
+    client = Client(api_key=api_key, endpoint=endpoint)
+    try:
+        yield client
+    finally:
+        del client
 
 
 class Client:
@@ -53,9 +39,29 @@ class Client:
         api_key: Optional[str] = None,
         endpoint: Optional[str] = None,
     ) -> None:
-        self._api_key = api_key or _get_api_key()
-        self._endpoint = endpoint or _get_endpoint()
-        self._session = Session()
-        self._session.hooks["response"].append(hooks.handle_errors)
-        self._session.auth = Auth(self._api_key)
-        self.users = Users(self._endpoint, self._session)
+        """
+        Initialize the Client instance.
+
+        Args:
+            api_key (str, optional): API key for authentication. Defaults to None.
+            endpoint (str, optional): API endpoint URL. Defaults to None.
+        """
+        # Create a Config object.
+        config = Config(api_key=api_key, endpoint=endpoint)
+        # Create a Session object for making HTTP requests.
+        session = Session()
+        # Authenticate the session using the provided Config.
+        session.auth = Auth(config=config)
+        # Add error handling hooks to the session.
+        session.hooks["response"].append(hooks.handle_errors)
+
+        # Initialize the Users instance.
+        self.users = Users(config=config, session=session)
+        # Store the Session object.
+        self._session = session
+
+    def __del__(self):
+        """
+        Close the session when the Client instance is deleted.
+        """
+        self._session.close()

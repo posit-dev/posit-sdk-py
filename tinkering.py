@@ -1,9 +1,12 @@
-from posit.connect import make_client
+from posit.connect.client import create_client
 
-client = make_client()
-for user in client.users.find({"username": "aaron"}):
-    print(user)
-
-print(client.users.find_one())
-
-print(client.users.find_one({"guid": "f155520a-ca2e-4084-b0a0-12120b7d1add"}))
+with create_client() as client:
+    users = client.users
+    print(
+        users.find({"username": "taylor_steinberg"}).find(
+            {"username": "taylor_steinberg"}
+        )
+    )
+    print(users.find_one({"username": "taylor_steinberg"}))
+    print(users.get("f55ca95d-ce52-43ed-b31b-48dc4a07fe13"))
+    print(users.to_pandas_data_frame())
