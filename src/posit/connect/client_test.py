@@ -34,6 +34,7 @@ class TestClient:
         LazyUsers.assert_called_once_with(config=config, session=Session.return_value)
 
     @patch("posit.connect.client.Session")
+    @patch("posit.connect.client.Config")
     @patch("posit.connect.client.Auth")
     def test_del(self, Auth: MagicMock, Session: MagicMock):
         api_key = "foobar"
