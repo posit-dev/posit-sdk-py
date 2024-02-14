@@ -8,7 +8,7 @@ from . import hooks
 
 from .auth import Auth
 from .config import Config
-from .users import Users
+from .users import LazyUsers, Users
 
 
 @contextmanager
@@ -32,8 +32,6 @@ def create_client(
 
 
 class Client:
-    users: Users
-
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -56,7 +54,7 @@ class Client:
         session.hooks["response"].append(hooks.handle_errors)
 
         # Initialize the Users instance.
-        self.users = Users(config=config, session=session)
+        self.users: Users = LazyUsers(config=config, session=session)
         # Store the Session object.
         self._session = session
 

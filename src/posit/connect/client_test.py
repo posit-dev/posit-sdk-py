@@ -13,12 +13,16 @@ class TestCreateClient:
 
 
 class TestClient:
-    @patch("posit.connect.client.Users")
+    @patch("posit.connect.client.LazyUsers")
     @patch("posit.connect.client.Session")
     @patch("posit.connect.client.Config")
     @patch("posit.connect.client.Auth")
     def test_init(
-        self, Auth: MagicMock, Config: MagicMock, Session: MagicMock, Users: MagicMock
+        self,
+        Auth: MagicMock,
+        Config: MagicMock,
+        Session: MagicMock,
+        LazyUsers: MagicMock,
     ):
         api_key = "foobar"
         endpoint = "http://foo.bar"
@@ -27,12 +31,11 @@ class TestClient:
         Auth.assert_called_once_with(config=config)
         Config.assert_called_once_with(api_key=api_key, endpoint=endpoint)
         Session.assert_called_once()
-        Users.assert_called_once_with(config=config, session=Session.return_value)
+        LazyUsers.assert_called_once_with(config=config, session=Session.return_value)
 
-    @patch("posit.connect.client.Users")
     @patch("posit.connect.client.Session")
     @patch("posit.connect.client.Auth")
-    def test_del(self, Auth: MagicMock, Session: MagicMock, Users: MagicMock):
+    def test_del(self, Auth: MagicMock, Session: MagicMock):
         api_key = "foobar"
         endpoint = "http://foo.bar"
         client = Client(api_key=api_key, endpoint=endpoint)

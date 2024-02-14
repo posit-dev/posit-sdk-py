@@ -1,0 +1,48 @@
+name: Pull Request
+on:
+  pull_request:
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+    steps:
+    - uses: actions/checkout@v4
+    - uses: extractions/setup-just@v1
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - run: just deps
+    - run: just test
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: extractions/setup-just@v1
+    - uses: actions/setup-python@v5
+    - run: just deps
+    - run: just lint
+  cov:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: extractions/setup-just@v1
+    - uses: actions/setup-python@v5
+    - run: just deps
+    - run: just test
+    - run: just cov xml
+    - if: always()
+      uses: orgoro/coverage@v3.1
+      with:
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
