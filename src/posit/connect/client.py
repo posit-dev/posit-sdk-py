@@ -8,11 +8,7 @@ from . import hooks
 
 from .auth import Auth
 from .config import Config
-<<<<<<< HEAD
 from .users import LazyUsers, Users
-=======
-from .users import Users
->>>>>>> b5d8a18 (feat: adds users implementation with lazy server-side fetching)
 
 
 @contextmanager
