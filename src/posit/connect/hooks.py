@@ -5,7 +5,7 @@ from .errors import ClientError
 
 
 def handle_errors(response: Response, *args, **kwargs) -> Response:
-    if response.status_code >= 400 and response.status_code < 500:
+    if response.status_code >= 400:
         try:
             data = response.json()
             error_code = data["code"]
