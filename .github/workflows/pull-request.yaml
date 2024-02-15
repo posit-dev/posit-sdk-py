@@ -18,29 +18,26 @@ jobs:
           - '3.12'
     steps:
     - uses: actions/checkout@v4
-    - uses: extractions/setup-just@v1
     - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - run: just deps
-    - run: just test
+    - run: make deps
+    - run: make test
   lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: extractions/setup-just@v1
     - uses: actions/setup-python@v5
-    - run: just deps
-    - run: just lint
+    - run: make deps
+    - run: make lint
   cov:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: extractions/setup-just@v1
     - uses: actions/setup-python@v5
-    - run: just deps
-    - run: just test
-    - run: just cov xml
+    - run: make deps
+    - run: make test
+    - run: make cov-xml
     - if: always()
       uses: orgoro/coverage@v3.1
       with:
