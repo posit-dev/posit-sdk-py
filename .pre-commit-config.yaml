@@ -5,9 +5,9 @@ repos:
     hooks:
       - id: format
         name: format
-        entry: bash -c "just fmt"
+        entry: bash -c "make fmt"
         language: system
       - id: lint
         name: lint
-        entry: bash -c "just lint"
+        entry: bash -c "make lint"
         language: system
