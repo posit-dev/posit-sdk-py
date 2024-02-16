@@ -1,8 +1,8 @@
 import pytest
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from .config import Config, _get_api_key, _get_endpoint
+from .config import Config, _get_api_key, _get_url
 
 
 class TestGetApiKey:
@@ -21,26 +21,28 @@ class TestGetApiKey:
             _get_api_key()
 
 
-class TestGetEndpoint:
+class TestGetUrl:
     @patch.dict("os.environ", {"CONNECT_SERVER": "http://foo.bar"})
     def test_get_endpoint(self):
-        endpoint = _get_endpoint()
-        assert endpoint == "http://foo.bar"
+        url = _get_url()
+        assert url == "http://foo.bar"
 
     @patch.dict("os.environ", {"CONNECT_SERVER": ""})
     def test_get_endpoint_empty(self):
         with pytest.raises(ValueError):
-            _get_endpoint()
+            _get_url()
 
     def test_get_endpoint_miss(self):
         with pytest.raises(ValueError):
-            _get_endpoint()
+            _get_url()
 
 
 class TestConfig:
-    def test_init(self):
+    @patch("posit.connect.config.Url")
+    def test_init(self, Url: MagicMock):
         api_key = "foobar"
-        endpoint = "http://foo.bar"
-        config = Config(api_key=api_key, endpoint=endpoint)
+        url = "http://foo.bar"
+        config = Config(api_key=api_key, url=url)
         assert config.api_key == api_key
-        assert config.endpoint == endpoint
+        assert config.url == Url.return_value
+        Url.assert_called_with(url)

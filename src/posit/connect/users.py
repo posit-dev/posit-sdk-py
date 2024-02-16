@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 
 from datetime import datetime
 from typing import Iterator, Callable, List
@@ -64,13 +63,13 @@ class Users(CachedUsers, Resources[User]):
                 f"index ({index}) must be a multiple of page size ({self.page_size})"
             )
         # Construct the endpoint URL.
-        endpoint = os.path.join(self.config.endpoint, "v1/users")
+        url = self.config.url.append("v1/users")
         # Define the page number using 1-based indexing.
         page_number = int(index / self.page_size) + 1
         # Define query parameters for pagination.
         params = {"page_number": page_number, "page_size": self.page_size}
         # Send a GET request to the endpoint with the specified parameters.
-        response = self.session.get(endpoint, params=params)
+        response = self.session.get(url, params=params)
         # Convert response to dict
         json: dict = dict(response.json())
         # Parse the JSON response and extract the results.
@@ -82,6 +81,6 @@ class Users(CachedUsers, Resources[User]):
         return (users, exhausted)
 
     def get(self, id: str) -> User:
-        endpoint = os.path.join(self.config.endpoint, "v1/users", id)
-        response = self.session.get(endpoint)
+        url = self.config.url.append(f"v1/users/{id}")
+        response = self.session.get(url)
         return User(**response.json())
