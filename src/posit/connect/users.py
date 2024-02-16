@@ -8,8 +8,9 @@ from typing import Iterator, Callable, List
 from requests import Session
 
 from .config import Config
-from .resources import LazyResources, Resource, Resources
+from .resources import Resources, Resource, CachedResources
 
+# The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
 
 
@@ -27,9 +28,9 @@ class User(Resource, total=False):
     locked: bool
 
 
-class Users(Resources[User]):
-    def find(self, filter: Callable[[User], bool] = lambda _: True) -> Users:
-        return Users([user for user in self if filter(user)])
+class CachedUsers(CachedResources[User]):
+    def find(self, filter: Callable[[User], bool] = lambda _: True) -> CachedUsers:
+        return CachedUsers([user for user in self if filter(user)])
 
     def find_one(self, filter: Callable[[User], bool] = lambda _: True) -> User | None:
         return next((user for user in self if filter(user)), None)
@@ -41,10 +42,15 @@ class Users(Resources[User]):
         return user
 
 
-class LazyUsers(Users, LazyResources[User]):
+class Users(CachedUsers, Resources[User]):
     def __init__(
         self, config: Config, session: Session, *, page_size=_MAX_PAGE_SIZE
     ) -> None:
+        if page_size > _MAX_PAGE_SIZE:
+            raise ValueError(
+                f"page_size must be less than or equal to {_MAX_PAGE_SIZE}"
+            )
+
         super().__init__()
         self.config = config
         self.session = session
