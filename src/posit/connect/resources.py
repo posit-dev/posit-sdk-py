@@ -12,13 +12,13 @@ class Resource(TypedDict):
 T = TypeVar("T", bound=Resource)
 
 
-class Resources(ABC, Generic[T], Iterator[T]):
+class CachedResources(ABC, Generic[T], Iterator[T]):
     def __init__(self, data: List[T] = []) -> None:
         super().__init__()
         self.data = data
 
     @abstractmethod
-    def find(self, *args, **kwargs) -> Resources[T]:
+    def find(self, *args, **kwargs) -> CachedResources[T]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -50,7 +50,7 @@ class Resources(ABC, Generic[T], Iterator[T]):
             return None
 
 
-class LazyResources(Resources[T]):
+class Resources(CachedResources[T]):
     def __init__(self, data: List[T] = []) -> None:
         super().__init__(data)
         self.data = data

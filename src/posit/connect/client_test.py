@@ -13,7 +13,7 @@ class TestCreateClient:
 
 
 class TestClient:
-    @patch("posit.connect.client.LazyUsers")
+    @patch("posit.connect.client.Users")
     @patch("posit.connect.client.Session")
     @patch("posit.connect.client.Config")
     @patch("posit.connect.client.Auth")
@@ -22,7 +22,7 @@ class TestClient:
         Auth: MagicMock,
         Config: MagicMock,
         Session: MagicMock,
-        LazyUsers: MagicMock,
+        Users: MagicMock,
     ):
         api_key = "foobar"
         endpoint = "http://foo.bar"
@@ -31,7 +31,7 @@ class TestClient:
         Auth.assert_called_once_with(config=config)
         Config.assert_called_once_with(api_key=api_key, endpoint=endpoint)
         Session.assert_called_once()
-        LazyUsers.assert_called_once_with(config=config, session=Session.return_value)
+        Users.assert_called_once_with(config=config, session=Session.return_value)
 
     @patch("posit.connect.client.Session")
     @patch("posit.connect.client.Auth")
