@@ -19,8 +19,8 @@ class FakeCachedResources(CachedResources[FakeResource]):
         return Mock(spec=FakeResource)
 
 
-class TestResources:
-    def test(self):
+class TestCachedResources:
+    def test_init(self):
         resources = FakeCachedResources()
         assert resources == resources.find()
         assert resources.find_one()
@@ -28,12 +28,15 @@ class TestResources:
 
 
 class FakeResources(FakeCachedResources, Resources):
+    def __init__(self) -> None:
+        super().__init__("")
+
     def fetch(self, index) -> Tuple[Optional[Iterator[FakeResource]], bool]:
         return iter([FakeResource()]), len(self.data) > 0
 
 
-class TestFakeLazyResources:
-    def test(self):
+class TestFakeResources:
+    def test_init(self):
         resources = FakeResources()
         assert resources == resources.find()
         assert resources.find_one()

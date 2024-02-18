@@ -1,8 +1,6 @@
 import os
 from typing import Optional
 
-from .urls import Url
-
 
 def _get_api_key() -> str:
     """Gets the API key from the environment variable 'CONNECT_API_KEY'.
@@ -47,4 +45,4 @@ class Config:
         self, api_key: Optional[str] = None, url: Optional[str] = None
     ) -> None:
         self.api_key = api_key or _get_api_key()
-        self.url = Url(url or _get_url())
+        self.url = url or _get_url()

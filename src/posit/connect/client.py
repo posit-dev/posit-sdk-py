@@ -3,11 +3,12 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import hooks
+from . import hooks, urls
 
 from .auth import Auth
 from .config import Config
-from .users import Users, CachedUsers
+from .resources import CachedResources
+from .users import Users, User
 
 
 class Client:
@@ -33,7 +34,7 @@ class Client:
         session.hooks["response"].append(hooks.handle_errors)
 
         # Initialize the Users instance.
-        self.users: CachedUsers = Users(config=self.config, session=session)
+        self.users: CachedResources[User] = Users(config=self.config, session=session)
         # Store the Session object.
         self.session = session
 
@@ -62,6 +63,21 @@ class Client:
         if hasattr(self, "session") and self.session is not None:
             self.session.close()
 
+    def request(self, method: str, path: str, **kwargs) -> Response:
+        """
+        Sends an HTTP request to the specified path using the given method.
+
+        Args:
+            method (str): The HTTP method to use for the request.
+            path (str): The path to send the request to.
+            **kwargs: Additional keyword arguments to pass to the underlying session's request method.
+
+        Returns:
+            Response: The response object containing the server's response to the request.
+        """
+        url = urls.append_path(self.config.url, path)
+        return self.session.request(method, url, **kwargs)
+
     def get(self, path: str, **kwargs) -> Response:
         """
         Send a GET request to the specified path.
@@ -74,7 +90,8 @@ class Client:
             Response: The response object.
 
         """
-        return self.session.get(self.config.url.append(path), **kwargs)
+        url = urls.append_path(self.config.url, path)
+        return self.session.get(url, **kwargs)
 
     def post(self, path: str, **kwargs) -> Response:
         """
@@ -88,7 +105,8 @@ class Client:
             Response: The response object.
 
         """
-        return self.session.post(self.config.url.append(path), **kwargs)
+        url = urls.append_path(self.config.url, path)
+        return self.session.post(url, **kwargs)
 
     def put(self, path: str, **kwargs) -> Response:
         """
@@ -102,7 +120,8 @@ class Client:
             Response: The response object.
 
         """
-        return self.session.put(self.config.url.append(path), **kwargs)
+        url = urls.append_path(self.config.url, path)
+        return self.session.put(url, **kwargs)
 
     def patch(self, path: str, **kwargs) -> Response:
         """
@@ -116,7 +135,8 @@ class Client:
             Response: The response object.
 
         """
-        return self.session.patch(self.config.url.append(path), **kwargs)
+        url = urls.append_path(self.config.url, path)
+        return self.session.patch(url, **kwargs)
 
     def delete(self, path: str, **kwargs) -> Response:
         """
@@ -130,4 +150,5 @@ class Client:
             Response: The response object.
 
         """
-        return self.session.delete(self.config.url.append(path), **kwargs)
+        url = urls.append_path(self.config.url, path)
+        return self.session.delete(url, **kwargs)

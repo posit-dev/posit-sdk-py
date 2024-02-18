@@ -1,43 +1,43 @@
 import posixpath
 
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlsplit, urlunsplit
 
 
-class Url:
-    def __init__(self, url: str) -> None:
-        """
-        Initializes a Url object.
+def append_path(url: str, path: str) -> str:
+    """
+    Appends a path to the end of a URL.
 
-        Args:
-            url (str): The URL to be used.
+    Args:
+        url (str): The URL to append the path to.
+        path (str): The path to append to the URL.
 
-        Returns:
-            None
-        """
-        parsed = urlparse(url)
-        if not parsed.scheme or not parsed.netloc:
-            raise ValueError("url must be an absolute URL: {url}")
+    Returns:
+        str: The modified URL with the appended path.
 
-        if parsed.path != "/__api__":
-            self.url = urljoin(url, "/__api__")
-        else:
-            self.url = url
+    Raises:
+        ValueError: If the URL does not specify a scheme, is not absolute, or does not end with "/__api__".
 
-    def append(self, path: str = "") -> str:
-        """
-        Appends a path to the URL.
+    Example:
+        >>> append_path("http://example.com", "api")
+        'http://example.com/__api__/api'
+    """
+    split = urlsplit(url, allow_fragments=False)
+    if not split.scheme:
+        raise ValueError(
+            f"url must specify a scheme (e.g., http://example.com/__api__): {url}"
+        )
 
-        Args:
-            path (str): The path to be appended to the URL. Defaults to an empty string.
+    if not split.netloc:
+        raise ValueError(
+            f"url must be absolute (e.g., http://example.com/__api__): {url}"
+        )
 
-        Returns:
-            str: The updated URL with the appended path.
-        """
-        if path:
-            parsed = urlparse(path)
-            if parsed.scheme or parsed.netloc:
-                raise ValueError(
-                    f"path must be a relative URL, not an absolute URL: {path}"
-                )
-            return urljoin(self.url, posixpath.join(urlparse(self.url).path, path))
-        return self.url
+    if not (split.path and split.path.endswith("/__api__")):
+        raise ValueError(
+            f"url must end with path __api__ (e.g., http://example.com/__api__): {url}"
+        )
+
+    joined_path = posixpath.join(split.path, path.lstrip("/"))
+
+    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlunsplit
+    return urlunsplit((split.scheme, split.netloc, joined_path, split.query, None))
