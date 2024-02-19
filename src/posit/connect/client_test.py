@@ -1,15 +1,15 @@
 from unittest.mock import MagicMock, patch
 
-from .client import Client, create_client
+from .client import Client
 
 
 class TestCreateClient:
-    @patch("posit.connect.client.Client")
-    def test(self, Client: MagicMock):
+    def test(self):
+        # What is this testing?
         api_key = "foobar"
         endpoint = "http://foo.bar"
-        with create_client(api_key=api_key, endpoint=endpoint) as client:
-            assert client == Client.return_value
+        with Client(api_key=api_key, endpoint=endpoint) as client:
+            assert isinstance(client, Client)
 
 
 class TestClient:

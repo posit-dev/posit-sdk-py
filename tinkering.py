@@ -1,6 +1,6 @@
-from posit.connect.client import create_client
+from posit.connect import Client
 
-with create_client() as client:
+with Client() as client:
     print(client.users.get("f55ca95d-ce52-43ed-b31b-48dc4a07fe13"))
 
     users = client.users
