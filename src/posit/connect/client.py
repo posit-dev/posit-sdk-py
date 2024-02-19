@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from contextlib import contextmanager
 from requests import Session
-from typing import Generator, Optional
+from typing import Optional
 
 from . import hooks
 
@@ -46,6 +45,6 @@ class Client:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, exc_tb):
         del self
