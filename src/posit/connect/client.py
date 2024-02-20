@@ -39,7 +39,6 @@ class Client:
 
         # Internal properties for storing public resources
         self._current_user: Optional[User] = None
-        self._users: Optional[CachedUsers] = None
 
 
     @property
@@ -53,9 +52,7 @@ class Client:
 
     @property
     def users(self) -> CachedUsers:
-        if self._users is None:
-            self._users = Users(client=self)
-        return self._users
+        return Users(client=self)
 
 
     def __del__(self):
