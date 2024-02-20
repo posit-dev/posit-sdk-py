@@ -1,15 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from .client import Client, create_client
-
-
-class TestCreateClient:
-    @patch("posit.connect.client.Client")
-    def test(self, Client: MagicMock):
-        api_key = "foobar"
-        endpoint = "http://foo.bar"
-        with create_client(api_key=api_key, endpoint=endpoint) as client:
-            assert client == Client.return_value
+from .client import Client
 
 
 class TestClient:
@@ -46,4 +37,14 @@ class TestClient:
         endpoint = "http://foo.bar"
         client = Client(api_key=api_key, endpoint=endpoint)
         del client
+        Session.return_value.close.assert_called_once()
+
+    @patch("posit.connect.client.Session")
+    @patch("posit.connect.client.Auth")
+    def test_context_manager(self, Auth: MagicMock, Session: MagicMock):
+        # What is this testing?
+        api_key = "foobar"
+        endpoint = "http://foo.bar"
+        with Client(api_key=api_key, endpoint=endpoint) as client:
+            assert isinstance(client, Client)
         Session.return_value.close.assert_called_once()

@@ -1,35 +1,14 @@
 from __future__ import annotations
 
-from contextlib import contextmanager
 import os
 from requests import Session
-from typing import Generator, Optional
+from typing import Optional
 
 from . import hooks
 
 from .auth import Auth
 from .config import Config
 from .users import User, Users, CachedUsers
-
-
-@contextmanager
-def create_client(
-    api_key: Optional[str] = None, endpoint: Optional[str] = None
-) -> Generator[Client, None, None]:
-    """Creates a new :class:`Client` instance
-
-    Keyword Arguments:
-        api_key -- an api_key for authentication (default: {None})
-        endpoint -- a base api endpoint (url) (default: {None})
-
-    Returns:
-        A :class:`Client` instance
-    """
-    client = Client(api_key=api_key, endpoint=endpoint)
-    try:
-        yield client
-    finally:
-        del client
 
 
 class Client:
@@ -83,4 +62,10 @@ class Client:
         """
         Close the session when the Client instance is deleted.
         """
+        self._session.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
         self._session.close()
