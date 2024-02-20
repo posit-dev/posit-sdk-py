@@ -8,6 +8,7 @@ from . import hooks
 
 from .auth import Auth
 from .config import Config
+from .oauth import OAuthIntegration
 from .users import User, Users, CachedUsers
 
 
@@ -39,6 +40,14 @@ class Client:
 
         # Internal properties for storing public resources
         self._current_user: Optional[User] = None
+        self._oauth: Optional[OAuthIntegration] = None
+
+
+    # Connect sets the value of the environment variable RSTUDIO_PRODUCT = CONNECT
+    # when content is running on a Connect server. Use this var to determine if the
+    # client SDK was initialized from a piece of content running on a Connect server.
+    def is_local(self) -> bool:
+        return not os.getenv("RSTUDIO_PRODUCT") == "CONNECT"
 
 
     @property
@@ -48,6 +57,13 @@ class Client:
             response = self._session.get(endpoint)
             self._current_user = User(**response.json())
         return self._current_user
+
+
+    @property
+    def oauth(self) -> OAuthIntegration:
+        if self._oauth is None:
+            self._oauth = OAuthIntegration(client=self)
+        return self._oauth
 
 
     @property
