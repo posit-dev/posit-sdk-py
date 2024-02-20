@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import os
 from requests import Session
 from typing import Generator, Optional
 
@@ -8,7 +9,7 @@ from . import hooks
 
 from .auth import Auth
 from .config import Config
-from .users import Users, CachedUsers
+from .users import User, Users, CachedUsers
 
 
 @contextmanager
@@ -53,10 +54,30 @@ class Client:
         # Add error handling hooks to the session.
         session.hooks["response"].append(hooks.handle_errors)
 
-        # Initialize the Users instance.
-        self.users: CachedUsers = Users(config=config, session=session)
-        # Store the Session object.
+        # Store the Config and Session objects.
+        self._config = config
         self._session = session
+
+        # Internal properties for storing public resources
+        self._current_user: Optional[User] = None
+        self._users: Optional[CachedUsers] = None
+
+
+    @property
+    def me(self) -> User:
+        if self._current_user is None:
+            endpoint = os.path.join(self._config.endpoint, "v1/user")
+            response = self._session.get(endpoint)
+            self._current_user = User(**response.json())
+        return self._current_user
+
+
+    @property
+    def users(self) -> CachedUsers:
+        if self._users is None:
+            self._users = Users(client=self)
+        return self._users
+
 
     def __del__(self):
         """

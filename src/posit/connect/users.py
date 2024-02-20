@@ -3,11 +3,11 @@ from __future__ import annotations
 import os
 
 from datetime import datetime
-from typing import Iterator, Callable, List
+from typing import Iterator, Callable, List, TYPE_CHECKING
 
-from requests import Session
+if TYPE_CHECKING:
+    from .client import Client
 
-from .config import Config
 from .resources import Resources, Resource, CachedResources
 
 # The maximum page size supported by the API.
@@ -44,7 +44,7 @@ class CachedUsers(CachedResources[User]):
 
 class Users(CachedUsers, Resources[User]):
     def __init__(
-        self, config: Config, session: Session, *, page_size=_MAX_PAGE_SIZE
+            self, client: Client, *, page_size=_MAX_PAGE_SIZE
     ) -> None:
         if page_size > _MAX_PAGE_SIZE:
             raise ValueError(
@@ -52,8 +52,7 @@ class Users(CachedUsers, Resources[User]):
             )
 
         super().__init__()
-        self.config = config
-        self.session = session
+        self.client = client
         self.page_size = page_size
 
     def fetch(self, index) -> tuple[Iterator[User] | None, bool]:
@@ -64,13 +63,13 @@ class Users(CachedUsers, Resources[User]):
                 f"index ({index}) must be a multiple of page size ({self.page_size})"
             )
         # Construct the endpoint URL.
-        endpoint = os.path.join(self.config.endpoint, "v1/users")
+        endpoint = os.path.join(self.client._config.endpoint, "v1/users")
         # Define the page number using 1-based indexing.
         page_number = int(index / self.page_size) + 1
         # Define query parameters for pagination.
         params = {"page_number": page_number, "page_size": self.page_size}
         # Send a GET request to the endpoint with the specified parameters.
-        response = self.session.get(endpoint, params=params)
+        response = self.client._session.get(endpoint, params=params)
         # Convert response to dict
         json: dict = dict(response.json())
         # Parse the JSON response and extract the results.
@@ -82,6 +81,6 @@ class Users(CachedUsers, Resources[User]):
         return (users, exhausted)
 
     def get(self, id: str) -> User:
-        endpoint = os.path.join(self.config.endpoint, "v1/users", id)
-        response = self.session.get(endpoint)
+        endpoint = os.path.join(self.client._config.endpoint, "v1/users", id)
+        response = self.client._session.get(endpoint)
         return User(**response.json())

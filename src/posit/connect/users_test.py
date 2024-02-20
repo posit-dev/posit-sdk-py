@@ -6,18 +6,12 @@ from .users import Users
 
 
 @pytest.fixture
-def mock_config():
-    with patch("posit.connect.users.Config") as mock:
-        yield mock.return_value
-
-
-@pytest.fixture
-def mock_session():
-    with patch("posit.connect.users.Session") as mock:
+def mock_client():
+    with patch("posit.connect.client.Client") as mock:
         yield mock.return_value
 
 
 class TestUsers:
-    def test_init(self, mock_config, mock_session):
+    def test_init(self, mock_client):
         with pytest.raises(ValueError):
-            Users(mock_config, mock_session, page_size=9999)
+            Users(mock_client, page_size=9999)

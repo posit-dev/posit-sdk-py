@@ -26,12 +26,18 @@ class TestClient:
     ):
         api_key = "foobar"
         endpoint = "http://foo.bar"
-        Client(api_key=api_key, endpoint=endpoint)
+        client = Client(api_key=api_key, endpoint=endpoint)
         config = Config.return_value
         Auth.assert_called_once_with(config=config)
         Config.assert_called_once_with(api_key=api_key, endpoint=endpoint)
         Session.assert_called_once()
-        Users.assert_called_once_with(config=config, session=Session.return_value)
+
+        # API resources are lazy; assert that they aren't initialized until
+        # they are referenced for the first time
+        Users.assert_not_called()
+        client.users
+        Users.assert_called_once_with(client=client)
+
 
     @patch("posit.connect.client.Session")
     @patch("posit.connect.client.Auth")
