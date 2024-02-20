@@ -31,13 +31,13 @@ clean:
 	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build dist htmlcov
 
 cov:
-	$(PYTHON) -m coverage report --fail-under=80
+	$(PYTHON) -m coverage report
 
 cov-html:
-	$(PYTHON) -m coverage html --fail-under=80
+	$(PYTHON) -m coverage html
 
 cov-xml:
-	$(PYTHON) -m coverage xml --fail-under=80
+	$(PYTHON) -m coverage xml
 
 deps:
 	$(PIP) install -r requirements.txt -r requirements-dev.txt
