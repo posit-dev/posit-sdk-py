@@ -47,4 +47,4 @@ class Client:
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        del self
+        self._session.close()
