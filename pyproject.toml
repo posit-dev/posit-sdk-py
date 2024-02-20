@@ -26,5 +26,11 @@ dependencies = [
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
+[tool.pytest.ini_options]
+python_files = [
+    "*_test.py",
+    "*_test_*.py",
+]
+
 [tool.setuptools_scm]
 version_file = "src/posit/_version.py"
