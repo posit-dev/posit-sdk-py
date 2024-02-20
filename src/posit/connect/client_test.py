@@ -31,6 +31,7 @@ class TestClient:
         endpoint = "http://foo.bar"
         client = Client(api_key=api_key, endpoint=endpoint)
         del client
+        Session.return_value.close.assert_called_once()
 
     @patch("posit.connect.client.Session")
     @patch("posit.connect.client.Auth")
