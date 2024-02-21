@@ -51,9 +51,8 @@ class Users(CachedUsers, Resources[User]):
                 f"page_size must be less than or equal to {_MAX_PAGE_SIZE}"
             )
 
-        url = urls.append_path(config.url, "v1/users")
-        super().__init__(url)
-        self.url = url
+        super().__init__(config.url)
+        self.config = config
         self.session = session
         self.page_size = page_size
 
@@ -68,8 +67,10 @@ class Users(CachedUsers, Resources[User]):
         page_number = int(index / self.page_size) + 1
         # Define query parameters for pagination.
         params = {"page_number": page_number, "page_size": self.page_size}
+        # Create the URL for the endpoint.
+        url = urls.append_path(self.config.url, "v1/users")
         # Send a GET request to the endpoint with the specified parameters.
-        response = self.session.get(self.url, params=params)
+        response = self.session.get(url, params=params)
         # Convert response to dict
         json: dict = dict(response.json())
         # Parse the JSON response and extract the results.
@@ -81,6 +82,6 @@ class Users(CachedUsers, Resources[User]):
         return (users, exhausted)
 
     def get(self, id: str) -> User:
-        url = urls.append_path(self.url, id)
+        url = urls.append_path(self.config.url, f"v1/users/{id}")
         response = self.session.get(url)
         return User(**response.json())
