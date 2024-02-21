@@ -95,5 +95,7 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
+        # TODO: page_size should go with find(), can't pass it to client.users
         u = Users(con.config, con.session, page_size=2)
+        # TODO: Add __len__ method to Users
         assert len(u.find().data) == 3
