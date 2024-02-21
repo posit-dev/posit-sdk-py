@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from abc import ABC, abstractmethod
 from typing import Generic, Iterator, Optional, TypeVar, List, TypedDict, Tuple
 
@@ -51,8 +50,9 @@ class CachedResources(ABC, Generic[T], Iterator[T]):
 
 
 class Resources(CachedResources[T]):
-    def __init__(self, data: List[T] = []) -> None:
+    def __init__(self, url: str, data: List[T] = []) -> None:
         super().__init__(data)
+        self.url = url
         self.data = data
         self.exhausted = False
         self.index = 0
