@@ -54,7 +54,9 @@ class Client:
     def me(self) -> User:
         if self._current_user is None:
             endpoint = os.path.join(self._config.endpoint, "v1/user")
+            print(f'getting me: {endpoint}')
             response = self._session.get(endpoint)
+            print(response)
             self._current_user = User(**response.json())
         return self._current_user
 

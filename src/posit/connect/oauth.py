@@ -15,11 +15,14 @@ if TYPE_CHECKING:
 # parse_target_guid fixes the jwt payload padding before base64 decoding the payload and parsing the json.
 # The sub claim containing the target user guid is returned.
 def parse_target_guid(content_identity: str) -> str:
+    print(f'parsing cit: {content_identity}')
     payload = content_identity.split(".")[1].encode("utf-8")
     rem = len(payload) % 4
     if rem > 0:
         payload += b"=" * (4 - rem)
     payload = base64.urlsafe_b64decode(payload)
+    print(f'parsed cit: {payload}')
+    print(json.loads(payload)['sub'])
     return json.loads(payload)['sub']
 
 
@@ -38,7 +41,9 @@ class OAuthIntegration:
         data = dict()
         data["grant_type"] = "urn:ietf:params:oauth:grant-type:token-exchange"
         data["subject_token_type"] = "urn:posit:connect:user-guid"
+        print('getting me')
         data["subject_token"] = self.client.me.get('guid')
+        print('got me')
 
         # if this content is running on Connect, then it is allowed to request
         # the content viewer's credentials
@@ -47,6 +52,12 @@ class OAuthIntegration:
             data["actor_token_type"] = "urn:posit:connect:content-identity-token"
             data["actor_token"] = content_identity
 
-        return self.client._session.post(endpoint, data=data)
+        print('1111 REQUESTING OAUTH CREDENTENTIALS FROM CONNECT')
+        print(endpoint)
+        print(data)
+
+        response = self.client._session.post(endpoint, json=data)
+        print('GOT RESPONSE ', response)
+        return response
 
 
