@@ -41,7 +41,7 @@ def test_get_url_miss():
 
 def test_init():
     api_key = "foobar"
-    url = "http://foo.bar"
+    url = "http://foo.bar/__api__"
     config = Config(api_key=api_key, url=url)
     assert config.api_key == api_key
     assert config.url == url
