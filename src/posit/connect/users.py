@@ -49,7 +49,7 @@ class Users(CachedUsers, Resources[User]):
                 f"page_size must be less than or equal to {_MAX_PAGE_SIZE}"
             )
 
-        super().__init__(config.url)
+        super().__init__(client.config.url)
         self.client = client
         self.page_size = page_size
 
@@ -65,7 +65,7 @@ class Users(CachedUsers, Resources[User]):
         # Define query parameters for pagination.
         params = {"page_number": page_number, "page_size": self.page_size}
         # Create the URL for the endpoint.
-        url = urls.append_path(self.config.url, "v1/users")
+        url = urls.append_path(self.client.config.url, "v1/users")
         # Send a GET request to the endpoint with the specified parameters.
         response = self.client.session.get(url, params=params)
         # Convert response to dict
