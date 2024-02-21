@@ -35,6 +35,7 @@ class Client:
         self.session = session
 
         # Internal properties for storing public resources
+        self.server_settings = None
         self._current_user: Optional[User] = None
 
     @property
@@ -48,6 +49,14 @@ class Client:
     @property
     def users(self) -> CachedUsers:
         return Users(client=self)
+        # Place to cache the server settings
+        self.server_settings = None
+
+    @property
+    def connect_version(self):
+        if self.server_settings is None:
+            self.server_settings = self.get("server_settings").json()
+        return self.server_settings["version"]
 
     def __del__(self):
         """
