@@ -1,68 +1,165 @@
 from __future__ import annotations
 
-import os
-from requests import Session
+from requests import Response, Session
 from typing import Optional
 
-from . import hooks
+from . import hooks, urls
 
 from .auth import Auth
 from .config import Config
-from .users import User, Users, CachedUsers
+from .users import CachedUsers, Users, User
 
 
 class Client:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        endpoint: Optional[str] = None,
+        url: Optional[str] = None,
     ) -> None:
         """
         Initialize the Client instance.
 
         Args:
             api_key (str, optional): API key for authentication. Defaults to None.
-            endpoint (str, optional): API endpoint URL. Defaults to None.
+            url (str, optional): API url URL. Defaults to None.
         """
         # Create a Config object.
-        config = Config(api_key=api_key, endpoint=endpoint)
+        self.config = Config(api_key=api_key, url=url)
         # Create a Session object for making HTTP requests.
         session = Session()
         # Authenticate the session using the provided Config.
-        session.auth = Auth(config=config)
+        session.auth = Auth(config=self.config)
         # Add error handling hooks to the session.
         session.hooks["response"].append(hooks.handle_errors)
-
-        # Store the Config and Session objects.
-        self._config = config
-        self._session = session
+        # Store the Session object.
+        self.session = session
 
         # Internal properties for storing public resources
         self._current_user: Optional[User] = None
 
-
     @property
     def me(self) -> User:
         if self._current_user is None:
-            endpoint = os.path.join(self._config.endpoint, "v1/user")
-            response = self._session.get(endpoint)
+            url = urls.append_path(self.config.url, "v1/user")
+            response = self.session.get(url)
             self._current_user = User(**response.json())
         return self._current_user
-
 
     @property
     def users(self) -> CachedUsers:
         return Users(client=self)
 
-
     def __del__(self):
         """
         Close the session when the Client instance is deleted.
         """
-        self._session.close()
+        if hasattr(self, "session") and self.session is not None:
+            self.session.close()
 
     def __enter__(self):
+        """
+        Enter method for using the client as a context manager.
+        """
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        self._session.close()
+        """
+        Closes the session if it exists.
+
+        Args:
+            exc_type: The type of the exception raised (if any).
+            exc_value: The exception instance raised (if any).
+            exc_tb: The traceback for the exception raised (if any).
+        """
+        if hasattr(self, "session") and self.session is not None:
+            self.session.close()
+
+    def request(self, method: str, path: str, **kwargs) -> Response:
+        """
+        Sends an HTTP request to the specified path using the given method.
+
+        Args:
+            method (str): The HTTP method to use for the request.
+            path (str): The path to send the request to.
+            **kwargs: Additional keyword arguments to pass to the underlying session's request method.
+
+        Returns:
+            Response: The response object containing the server's response to the request.
+        """
+        url = urls.append_path(self.config.url, path)
+        return self.session.request(method, url, **kwargs)
+
+    def get(self, path: str, **kwargs) -> Response:
+        """
+        Send a GET request to the specified path.
+
+        Args:
+            path (str): The path to send the request to.
+            **kwargs: Additional keyword arguments to be passed to the underlying session's `get` method.
+
+        Returns:
+            Response: The response object.
+
+        """
+        url = urls.append_path(self.config.url, path)
+        return self.session.get(url, **kwargs)
+
+    def post(self, path: str, **kwargs) -> Response:
+        """
+        Send a POST request to the specified path.
+
+        Args:
+            path (str): The path to send the request to.
+            **kwargs: Additional keyword arguments to be passed to the underlying session's `post` method.
+
+        Returns:
+            Response: The response object.
+
+        """
+        url = urls.append_path(self.config.url, path)
+        return self.session.post(url, **kwargs)
+
+    def put(self, path: str, **kwargs) -> Response:
+        """
+        Send a PUT request to the specified path.
+
+        Args:
+            path (str): The path to send the request to.
+            **kwargs: Additional keyword arguments to be passed to the underlying session's `put` method.
+
+        Returns:
+            Response: The response object.
+
+        """
+        url = urls.append_path(self.config.url, path)
+        return self.session.put(url, **kwargs)
+
+    def patch(self, path: str, **kwargs) -> Response:
+        """
+        Send a PATCH request to the specified path.
+
+        Args:
+            path (str): The path to send the request to.
+            **kwargs: Additional keyword arguments to be passed to the underlying session's `patch` method.
+
+        Returns:
+            Response: The response object.
+
+        """
+        url = urls.append_path(self.config.url, path)
+        return self.session.patch(url, **kwargs)
+
+    def delete(self, path: str, **kwargs) -> Response:
+        """
+        Send a DELETE request to the specified path.
+
+        Args:
+            path (str): The path to send the request to.
+            **kwargs: Additional keyword arguments to be passed to the underlying session's `delete` method.
+
+        Returns:
+            Response: The response object.
+
+        """
+        url = urls.append_path(self.config.url, path)
+        return self.session.delete(url, **kwargs)
