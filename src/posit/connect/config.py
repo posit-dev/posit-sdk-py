@@ -1,5 +1,8 @@
 import os
+
 from typing import Optional
+
+from . import urls
 
 
 def _get_api_key() -> str:
@@ -45,4 +48,5 @@ class Config:
         self, api_key: Optional[str] = None, url: Optional[str] = None
     ) -> None:
         self.api_key = api_key or _get_api_key()
-        self.url = url or _get_url()
+        self.url = urls.server_to_api_url(url or _get_url())
+        urls.validate(self.url)
