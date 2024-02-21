@@ -1,5 +1,8 @@
-from unittest.mock import MagicMock, patch
 import pytest
+import responses
+
+from unittest.mock import MagicMock, patch
+
 
 from .client import Client
 
@@ -67,6 +70,20 @@ class TestClient:
         with Client(api_key=api_key, url=url) as client:
             assert isinstance(client, Client)
         MockSession.return_value.close.assert_called_once()
+
+    @responses.activate
+    def test_connect_version(self):
+        api_key = "foobar"
+        url = "http://foo.bar/__api__"
+        client = Client(api_key=api_key, url=url)
+
+        # The actual server_settings response has a lot more attributes, but we
+        # don't need to include them all here because we don't use them
+        responses.get(
+            "http://foo.bar/__api__/server_settings",
+            json={"version": "2024.01.0"},
+        )
+        assert client.connect_version == "2024.01.0"
 
     def test_request(self, MockSession):
         api_key = "foobar"
