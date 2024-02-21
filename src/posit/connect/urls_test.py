@@ -1,6 +1,6 @@
 import pytest
 
-from .urls import append_path, fix, validate
+from .urls import append_path, server_to_api_url, validate
 
 
 def test_append_path():
@@ -12,15 +12,16 @@ def test_append_path_with_leading_slash():
 
 
 def test_fix_with_correct_url():
-    assert fix("http://foo.bar/__api__") == "http://foo.bar/__api__"
+    assert server_to_api_url("http://foo.bar/__api__") == "http://foo.bar/__api__"
+    assert server_to_api_url("http://foo.bar/__api__/") == "http://foo.bar/__api__"
 
 
 def test_fix_without_path():
-    assert fix("http://foo.bar") == "http://foo.bar/__api__"
+    assert server_to_api_url("http://foo.bar") == "http://foo.bar/__api__"
 
 
 def test_fix_with_proxy_path():
-    assert fix("http://foo.bar/baz") == "http://foo.bar/baz/__api__"
+    assert server_to_api_url("http://foo.bar/baz") == "http://foo.bar/baz/__api__"
 
 
 def test_validate_without_scheme():
@@ -32,12 +33,3 @@ def test_validate_without_netloc():
     with pytest.raises(ValueError):
         validate("http:///__api__")
 
-
-def test_validate_without_path():
-    with pytest.raises(ValueError):
-        validate("http://foo.bar")
-
-
-def test_validate_without_correct_path():
-    with pytest.raises(ValueError):
-        validate("http://foo.bar/baz")

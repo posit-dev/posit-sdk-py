@@ -5,7 +5,7 @@ import posixpath
 from urllib.parse import urlsplit, urlunsplit
 
 
-def fix(url: str) -> str:
+def server_to_api_url(url: str) -> str:
     """
     Fixes the given URL by appending '__api__' if it doesn't already end with it.
 
@@ -15,6 +15,7 @@ def fix(url: str) -> str:
     Returns:
         str: The fixed URL.
     """
+    url = url.rstrip("/")
     if not url.endswith("__api__"):
         return append_path(url, "__api__")
     return url
@@ -31,7 +32,7 @@ def validate(url: str) -> None:
         bool: True if the URL is valid, False otherwise.
 
     Raises:
-        ValueError: If the URL is missing a scheme, is not absolute, or does not end with '/__api__'.
+        ValueError: If the URL is missing a scheme or is not absolute.
     """
     split = urlsplit(url, allow_fragments=False)
     if not split.scheme:
@@ -42,11 +43,6 @@ def validate(url: str) -> None:
     if not split.netloc:
         raise ValueError(
             f"url must be absolute (e.g., http://example.com/__api__): {url}"
-        )
-
-    if not (split.path and split.path.endswith("/__api__")):
-        raise ValueError(
-            f"url must end with path __api__ (e.g., http://example.com/__api__): {url}"
         )
 
 
