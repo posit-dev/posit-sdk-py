@@ -49,8 +49,6 @@ class Client:
     @property
     def users(self) -> CachedUsers:
         return Users(client=self)
-        # Place to cache the server settings
-        self.server_settings = None
 
     @property
     def connect_version(self):
