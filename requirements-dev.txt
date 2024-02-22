@@ -6,3 +6,4 @@ responses>=0.25
 ruff==0.1.14
 setuptools==69.0.3
 setuptools-scm==8.0.4
+pandas==2.2.0

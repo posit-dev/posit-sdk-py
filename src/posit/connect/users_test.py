@@ -1,10 +1,11 @@
 import pytest
 import responses
 
+from pandas import DataFrame
 from unittest.mock import patch
 
 from .client import Client
-from .users import Users
+from .users import User, Users
 
 
 @pytest.fixture
@@ -95,7 +96,31 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        # TODO: page_size should go with find(), can't pass it to client.users
+        # TODO(#48): page_size should go with find(), can't pass it to client.users
         u = Users(con.config, con.session, page_size=2)
-        # TODO: Add __len__ method to Users
+        # TODO(#47): Add __len__ method to Users
         assert len(u.find().data) == 3
+
+        # Test to_pandas()
+        df = u.to_pandas()
+        assert isinstance(df, DataFrame)
+        assert df.shape == (3, 11)
+        assert df.columns.to_list() == [
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "user_role",
+            "created_time",
+            "updated_time",
+            "active_time",
+            "confirmed",
+            "locked",
+            "guid",
+        ]
+        assert df["username"].to_list() == ["al", "robert", "carlos12"]
+
+        # Test find_one()
+        bob = u.find_one(lambda u: u['first_name'] == "Bob")
+        # Can't isinstance(bob, User) bc inherits TypedDict (cf. #23)
+        assert bob['username'] == "robert"
