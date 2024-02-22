@@ -1,0 +1,10 @@
+'$schema' = 'https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json'
+type = 'python-streamlit'
+entrypoint = 'sample-content.py'
+validate = true
+title = 'Databricks Viewer App'
+
+[python]
+version = '3.11.3'
+package-file = 'requirements.txt'
+package-manager = 'pip'

@@ -1,0 +1,20 @@
+'$schema' = 'https://cdn.posit.co/publisher/schemas/posit-publishing-record-schema-v3.json'
+server-type = 'connect'
+server-url = 'http://localhost:3939'
+client-version = '1.0.alpha1'
+id = 'bd37754b-a24d-4a9a-b787-de16c2357726'
+configuration-name = 'default'
+files = ['.env', '.posit/publish/default.toml', '.posit/publish/deployments/d307564a-d2ff-4101-9e16-7dfdcd86517d.toml', '.python-version', 'requirements.txt', 'sample-content.py']
+deployed-at = '2024-02-21T20:06:53Z'
+
+[configuration]
+'$schema' = 'https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json'
+type = 'python-streamlit'
+entrypoint = 'sample-content.py'
+validate = true
+title = 'connect-content'
+
+[configuration.python]
+version = '3.11.3'
+package-file = 'requirements.txt'
+package-manager = 'pip'
