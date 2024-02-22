@@ -121,6 +121,6 @@ class TestUsers:
         assert df["username"].to_list() == ["al", "robert", "carlos12"]
 
         # Test find_one()
-        bob = u.find_one(lambda u: u['first_name'] == "Bob")
+        bob = u.find_one(lambda u: u["first_name"] == "Bob")
         # Can't isinstance(bob, User) bc inherits TypedDict (cf. #23)
-        assert bob['username'] == "robert"
+        assert bob["username"] == "robert"
