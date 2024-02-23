@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Callable, List
+from typing import Callable, List, TypedDict
 
 from requests import Session
 
@@ -9,10 +9,9 @@ from . import urls
 
 from .config import Config
 from .pagination import _MAX_PAGE_SIZE, PaginatedRequester
-from .resources import Resource
 
 
-class User(Resource, total=False):
+class User(TypedDict, total=False):
     guid: str
     email: str
     username: str
