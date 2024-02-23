@@ -4,6 +4,7 @@ from typing import List
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
 
+
 class PaginatedRequester:
     """
     Utility for consuming Connect APIs that have pagination
@@ -15,7 +16,9 @@ class PaginatedRequester:
         pager.get_next_page() # To step through one page at a time
     """
 
-    def __init__(self, session, url, start_page=1, page_size=_MAX_PAGE_SIZE) -> None:
+    def __init__(
+        self, session, url, start_page: int = 1, page_size=_MAX_PAGE_SIZE
+    ) -> None:
         self.session = session
         self.url = url
         self.page_number = start_page
@@ -27,11 +30,10 @@ class PaginatedRequester:
         self.seen = 0
 
     def get_all(self) -> List[dict]:
-        # Do the first page, which will tell us how many results there are
-        result = self.get_next_page()
-        while self.seen < self.total:
-            self.page_number += 1
+        result = []
+        while self.total is None or self.seen < self.total:
             result += self.get_next_page()
+            self.page_number += 1
         return result
 
     def get_next_page(self) -> List[dict]:
