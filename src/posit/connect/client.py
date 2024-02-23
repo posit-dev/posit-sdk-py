@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from requests import Response, Session
 from typing import Optional
 
@@ -7,7 +8,15 @@ from . import hooks, urls
 
 from .auth import Auth
 from .config import Config
+from .oauth import OAuthIntegration
 from .users import Users
+
+
+# Connect sets the value of the environment variable RSTUDIO_PRODUCT = CONNECT
+# when content is running on a Connect server. Use this var to determine if the
+# client SDK was initialized from a piece of content running on a Connect server.
+def is_local() -> bool:
+    return not os.getenv("RSTUDIO_PRODUCT") == "CONNECT"
 
 
 class Client:
@@ -37,12 +46,19 @@ class Client:
 
         # Place to cache the server settings
         self.server_settings = None
+        self._oauth = None
 
     @property
     def connect_version(self):
         if self.server_settings is None:
             self.server_settings = self.get("server_settings").json()
         return self.server_settings["version"]
+
+    @property
+    def oauth(self) -> OAuthIntegration:
+        if self._oauth is None:
+            self._oauth = OAuthIntegration(config=self.config, session=self.session)
+        return self._oauth
 
     @property
     def users(self) -> Users:
