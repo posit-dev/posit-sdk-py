@@ -7,8 +7,7 @@ from . import hooks, urls
 
 from .auth import Auth
 from .config import Config
-from .resources import CachedResources
-from .users import Users, User
+from .users import Users
 
 
 class Client:
@@ -33,8 +32,6 @@ class Client:
         # Add error handling hooks to the session.
         session.hooks["response"].append(hooks.handle_errors)
 
-        # Initialize the Users instance.
-        self.users: CachedResources[User] = Users(config=self.config, session=session)
         # Store the Session object.
         self.session = session
 
@@ -46,6 +43,10 @@ class Client:
         if self.server_settings is None:
             self.server_settings = self.get("server_settings").json()
         return self.server_settings["version"]
+
+    @property
+    def users(self) -> Users:
+        return Users(config=self.config, session=self.session)
 
     def __del__(self):
         """

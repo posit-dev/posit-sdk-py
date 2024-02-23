@@ -25,19 +25,12 @@ def MockSession():
         yield mock
 
 
-@pytest.fixture
-def MockUsers():
-    with patch("posit.connect.client.Users") as mock:
-        yield mock
-
-
 class TestClient:
     def test_init(
         self,
         MockAuth: MagicMock,
         MockConfig: MagicMock,
         MockSession: MagicMock,
-        MockUsers: MagicMock,
     ):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
@@ -45,11 +38,8 @@ class TestClient:
         MockAuth.assert_called_once_with(config=MockConfig.return_value)
         MockConfig.assert_called_once_with(api_key=api_key, url=url)
         MockSession.assert_called_once()
-        MockUsers.assert_called_once_with(
-            config=MockConfig.return_value, session=MockSession.return_value
-        )
 
-    def test__del__(self, MockAuth, MockConfig, MockSession, MockUsers):
+    def test__del__(self, MockAuth, MockConfig, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
         client = Client(api_key=api_key, url=url)

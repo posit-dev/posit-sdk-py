@@ -17,6 +17,7 @@ def test_get_api_key_empty():
         _get_api_key()
 
 
+@patch.dict("os.environ", clear=True)
 def test_get_api_key_miss():
     with pytest.raises(ValueError):
         _get_api_key()
@@ -34,6 +35,7 @@ def test_get_url_empty():
         _get_url()
 
 
+@patch.dict("os.environ", clear=True)
 def test_get_url_miss():
     with pytest.raises(ValueError):
         _get_url()
