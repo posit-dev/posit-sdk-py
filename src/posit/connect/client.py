@@ -7,7 +7,7 @@ from . import hooks, urls
 
 from .auth import Auth
 from .config import Config
-from .users import Users
+from .users import User, Users
 
 
 class Client:
@@ -35,14 +35,23 @@ class Client:
         # Store the Session object.
         self.session = session
 
-        # Place to cache the server settings
-        self.server_settings = None
+        # Internal attributes to hold settings we fetch lazily
+        self._server_settings = None
+        self._current_user: Optional[User] = None
 
     @property
     def connect_version(self):
-        if self.server_settings is None:
-            self.server_settings = self.get("server_settings").json()
-        return self.server_settings["version"]
+        if self._server_settings is None:
+            self._server_settings = self.get("server_settings").json()
+        return self._server_settings["version"]
+
+    @property
+    def me(self) -> User:
+        if self._current_user is None:
+            url = urls.append_path(self.config.url, "v1/user")
+            response = self.session.get(url)
+            self._current_user = User(**response.json())
+        return self._current_user
 
     @property
     def users(self) -> Users:

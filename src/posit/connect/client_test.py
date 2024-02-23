@@ -75,6 +75,43 @@ class TestClient:
         )
         assert client.connect_version == "2024.01.0"
 
+    @patch("posit.connect.client.Session")
+    @patch("posit.connect.client.User")
+    def test_me(
+        self,
+        User: MagicMock,
+        Session: MagicMock,
+    ):
+        api_key = "foobar"
+        url = "http://foo.bar/__api__"
+        client = Client(api_key=api_key, url=url)
+        User.assert_not_called()
+        assert client._current_user is None
+        client.me
+        User.assert_called_once()
+
+    @responses.activate
+    def test_me_request(self):
+        responses.get(
+            "https://connect.example/__api__/v1/user",
+            json={
+                "email": "carlos@connect.example",
+                "username": "carlos12",
+                "first_name": "Carlos",
+                "last_name": "User",
+                "user_role": "publisher",
+                "created_time": "2019-09-09T15:24:32Z",
+                "updated_time": "2022-03-02T20:25:06Z",
+                "active_time": "2020-05-11T16:58:45Z",
+                "confirmed": True,
+                "locked": False,
+                "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+            },
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        assert con.me["username"] == "carlos12"
+
     def test_request(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
