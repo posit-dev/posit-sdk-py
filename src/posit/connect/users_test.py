@@ -1,29 +1,10 @@
-import pytest
+import pandas as pd
 import responses
 
-from pandas import DataFrame
-from unittest.mock import patch
-
 from .client import Client
-from .users import Users
-
-
-@pytest.fixture
-def mock_config():
-    with patch("posit.connect.users.Config") as mock:
-        yield mock.return_value
-
-
-@pytest.fixture
-def mock_session():
-    with patch("posit.connect.users.Session") as mock:
-        yield mock.return_value
 
 
 class TestUsers:
-    def test_init(self, mock_config, mock_session):
-        with pytest.raises(ValueError):
-            Users(mock_config, mock_session, page_size=9999)
 
     @responses.activate
     def test_get_users(self):
@@ -96,15 +77,11 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        # TODO(#48): page_size should go with find(), can't pass it to client.users
-        u = con.users
-        u.page_size = 2
-        # TODO(#47): Add __len__ method to Users
-        assert len(u.find().data) == 3
+        all_users = con.users.find(page_size=2)
+        assert len(all_users) == 3
 
-        # Test to_pandas()
-        df = u.to_pandas()
-        assert isinstance(df, DataFrame)
+        df = pd.DataFrame(all_users)
+        assert isinstance(df, pd.DataFrame)
         assert df.shape == (3, 11)
         assert df.columns.to_list() == [
             "email",
@@ -122,7 +99,7 @@ class TestUsers:
         assert df["username"].to_list() == ["al", "robert", "carlos12"]
 
         # Test find_one()
-        bob = u.find_one(lambda u: u["first_name"] == "Bob")
+        bob = con.users.find_one(lambda u: u["first_name"] == "Bob", page_size=2)
         # Can't isinstance(bob, User) bc inherits TypedDict (cf. #23)
         assert bob["username"] == "robert"
 
