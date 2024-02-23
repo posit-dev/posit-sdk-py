@@ -45,6 +45,7 @@ class Users:
         pager = PaginatedRequester(self.session, self.url, page_size=page_size)
         result = pager.get_next_page()
         while pager.total is None or pager.seen < pager.total:
+            result = pager.get_next_page()
             for user in result:
                 if filter(user):
                     return User(**user)
