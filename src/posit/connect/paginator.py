@@ -5,13 +5,13 @@ from typing import List
 _MAX_PAGE_SIZE = 500
 
 
-class PaginatedRequester:
+class Paginator:
     """
     Utility for consuming Connect APIs that have pagination
 
     Usage:
 
-        pager = PaginatedRequester(client.session, url)
+        pager = Paginator(client.session, url)
         pager.get_all() # To return a list with results from all pages concatenated
         pager.get_next_page() # To step through one page at a time
     """

@@ -8,7 +8,7 @@ from requests import Session
 from . import urls
 
 from .config import Config
-from .pagination import _MAX_PAGE_SIZE, PaginatedRequester
+from .paginator import _MAX_PAGE_SIZE, Paginator
 
 
 class User(TypedDict, total=False):
@@ -34,15 +34,13 @@ class Users:
     def find(
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
     ) -> List[User]:
-        results = PaginatedRequester(
-            self.session, self.url, page_size=page_size
-        ).get_all()
+        results = Paginator(self.session, self.url, page_size=page_size).get_all()
         return [User(**user) for user in results if filter(User(**user))]
 
     def find_one(
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
     ) -> User | None:
-        pager = PaginatedRequester(self.session, self.url, page_size=page_size)
+        pager = Paginator(self.session, self.url, page_size=page_size)
         result = pager.get_next_page()
         while pager.total is None or pager.seen < pager.total:
             result = pager.get_next_page()
