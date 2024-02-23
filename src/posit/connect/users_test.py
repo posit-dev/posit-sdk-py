@@ -5,7 +5,7 @@ from pandas import DataFrame
 from unittest.mock import patch
 
 from .client import Client
-from .users import User, Users
+from .users import Users
 
 
 @pytest.fixture
