@@ -97,7 +97,8 @@ class TestUsers:
 
         con = Client(api_key="12345", url="https://connect.example/")
         # TODO(#48): page_size should go with find(), can't pass it to client.users
-        u = Users(con.config, con.session, page_size=2)
+        u = con.users
+        u.page_size = 2
         # TODO(#47): Add __len__ method to Users
         assert len(u.find().data) == 3
 
@@ -124,3 +125,28 @@ class TestUsers:
         bob = u.find_one(lambda u: u["first_name"] == "Bob")
         # Can't isinstance(bob, User) bc inherits TypedDict (cf. #23)
         assert bob["username"] == "robert"
+
+    @responses.activate
+    def test_users_get(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json={
+                "email": "carlos@connect.example",
+                "username": "carlos12",
+                "first_name": "Carlos",
+                "last_name": "User",
+                "user_role": "publisher",
+                "created_time": "2019-09-09T15:24:32Z",
+                "updated_time": "2022-03-02T20:25:06Z",
+                "active_time": "2020-05-11T16:58:45Z",
+                "confirmed": True,
+                "locked": False,
+                "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+            },
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        assert (
+            con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")["username"]
+            == "carlos12"
+        )
