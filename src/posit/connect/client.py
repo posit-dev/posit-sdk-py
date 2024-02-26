@@ -9,7 +9,7 @@ from . import hooks, urls
 from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
-from .users import Users
+from .users import User, Users
 
 
 # Connect sets the value of the environment variable RSTUDIO_PRODUCT = CONNECT
@@ -44,14 +44,20 @@ class Client:
         # Store the Session object.
         self.session = session
 
-        # Place to cache the server settings
-        self.server_settings = None
+        # Internal attributes to hold settings we fetch lazily
+        self._server_settings = None
 
     @property
     def connect_version(self):
-        if self.server_settings is None:
-            self.server_settings = self.get("server_settings").json()
-        return self.server_settings["version"]
+        if self._server_settings is None:
+            self._server_settings = self.get("server_settings").json()
+        return self._server_settings["version"]
+
+    @property
+    def me(self) -> User:
+        url = urls.append_path(self.config.url, "v1/user")
+        response = self.session.get(url)
+        return User(**response.json())
 
     @property
     def oauth(self) -> OAuthIntegration:
