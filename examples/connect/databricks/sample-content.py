@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# mypy: ignore-errors
 import os
 
 from posit.connect.external.databricks import viewer_credentials_provider

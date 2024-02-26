@@ -16,14 +16,14 @@ class CredentialsProvider(abc.ABC):
 
     @abc.abstractmethod
     def auth_type(self) -> str:
-        raise NotImplemented
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __call__(self, *args, **kwargs) -> HeaderFactory:
-        raise NotImplemented
+        raise NotImplementedError
 
 
-class PositOAuthIntegrationCredentialsProvider:
+class PositOAuthIntegrationCredentialsProvider(CredentialsProvider):
     def __init__(self, posit_oauth: OAuthIntegration, user_identity: str):
         self.posit_oauth = posit_oauth
         self.user_identity = user_identity
@@ -63,4 +63,4 @@ def viewer_credentials_provider(client: Optional[Client] = None, user_identity: 
 
 
 def service_account_credentials_provider(client: Optional[Client] = None):
-    raise NotImplemented
+    raise NotImplementedError
