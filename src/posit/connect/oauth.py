@@ -23,7 +23,7 @@ class OAuthIntegration:
         self.session = session
 
 
-    def get_credentials(self, user_identity: Optional[str]) -> Credentials:
+    def get_credentials(self, user_identity: Optional[str]=None) -> Credentials:
 
         # craft a basic credential exchange request where the self.config.api_key owner
         # is requesting their own credentials
@@ -38,5 +38,5 @@ class OAuthIntegration:
             data["subject_token_type"] = "urn:posit:connect:user-identity-token"
             data["subject_token"] = user_identity
 
-        response = self.session.post(self.url, json=data)
+        response = self.session.post(self.url, data=data)
         return Credentials(**response.json())
