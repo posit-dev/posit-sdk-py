@@ -75,21 +75,6 @@ class TestClient:
         )
         assert client.connect_version == "2024.01.0"
 
-    @patch("posit.connect.client.Session")
-    @patch("posit.connect.client.User")
-    def test_me(
-        self,
-        User: MagicMock,
-        Session: MagicMock,
-    ):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
-        User.assert_not_called()
-        assert client._current_user is None
-        client.me
-        User.assert_called_once()
-
     @responses.activate
     def test_me_request(self):
         responses.get(

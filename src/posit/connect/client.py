@@ -37,7 +37,6 @@ class Client:
 
         # Internal attributes to hold settings we fetch lazily
         self._server_settings = None
-        self._current_user: Optional[User] = None
 
     @property
     def connect_version(self):
@@ -47,11 +46,9 @@ class Client:
 
     @property
     def me(self) -> User:
-        if self._current_user is None:
-            url = urls.append_path(self.config.url, "v1/user")
-            response = self.session.get(url)
-            self._current_user = User(**response.json())
-        return self._current_user
+        url = urls.append_path(self.config.url, "v1/user")
+        response = self.session.get(url)
+        return User(**response.json())
 
     @property
     def users(self) -> Users:
