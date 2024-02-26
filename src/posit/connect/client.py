@@ -46,7 +46,6 @@ class Client:
 
         # Place to cache the server settings
         self.server_settings = None
-        self._oauth = None
 
     @property
     def connect_version(self):
@@ -56,9 +55,7 @@ class Client:
 
     @property
     def oauth(self) -> OAuthIntegration:
-        if self._oauth is None:
-            self._oauth = OAuthIntegration(config=self.config, session=self.session)
-        return self._oauth
+        return OAuthIntegration(config=self.config, session=self.session)
 
     @property
     def users(self) -> Users:

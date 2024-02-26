@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-from requests import Response, Session
-from typing import Optional
+from requests import Session
+from typing import Optional, TypedDict
 
 from . import urls
 from .config import Config
+
+
+class Credentials(TypedDict, total=False):
+    access_token: str
+    issued_token_type: str
+    token_type: str
 
 
 class OAuthIntegration:
@@ -17,7 +23,7 @@ class OAuthIntegration:
         self.session = session
 
 
-    def get_credentials(self, user_identity: Optional[str]) -> Response:
+    def get_credentials(self, user_identity: Optional[str]) -> Credentials:
 
         # craft a basic credential exchange request where the self.config.api_key owner
         # is requesting their own credentials
@@ -32,4 +38,5 @@ class OAuthIntegration:
             data["subject_token_type"] = "urn:posit:connect:user-identity-token"
             data["subject_token"] = user_identity
 
-        return self.session.post(self.url, json=data)
+        response = self.session.post(self.url, json=data)
+        return Credentials(**response.json())
