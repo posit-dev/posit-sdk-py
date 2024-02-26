@@ -38,6 +38,5 @@ class OAuthIntegration:
             data["subject_token_type"] = "urn:posit:connect:user-identity-token"
             data["subject_token"] = user_identity
 
-        # TODO: use data= when the endpoint is updated to use a form-post
-        response = self.session.post(self.url, json=data)
+        response = self.session.post(self.url, data=data)
         return Credentials(**response.json())
