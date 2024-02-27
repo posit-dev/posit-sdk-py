@@ -18,14 +18,14 @@ DB_HOST=os.getenv("DB_HOST")
 DB_HOST_URL = f"https://{DB_HOST}"
 SQL_HTTP_PATH=os.getenv("SQL_HTTP_PATH")
 
-USER_IDENTITY = None
+USER_SESSION_TOKEN = None
 
-# Read the viewer's individual content identity token from the streamlit ws header.
+# Read the viewer's user session token from the streamlit ws header.
 headers = _get_websocket_headers()
 if headers:
-    USER_IDENTITY = headers.get('Posit-Connect-User-Identity')
+    USER_SESSION_TOKEN = headers.get('Posit-Connect-User-Session')
 
-credentials_provider = viewer_credentials_provider(user_identity=USER_IDENTITY)
+credentials_provider = viewer_credentials_provider(user_session_token=USER_SESSION_TOKEN)
 cfg = Config(host=DB_HOST_URL, credentials_provider=credentials_provider)
 #cfg = Config(host=DB_HOST_URL, token=DB_PAT)
 

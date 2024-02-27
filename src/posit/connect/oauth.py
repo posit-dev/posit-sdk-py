@@ -23,7 +23,7 @@ class OAuthIntegration:
         self.session = session
 
 
-    def get_credentials(self, user_identity: Optional[str]=None) -> Credentials:
+    def get_credentials(self, user_session_token: Optional[str]=None) -> Credentials:
 
         # craft a basic credential exchange request where the self.config.api_key owner
         # is requesting their own credentials
@@ -34,9 +34,9 @@ class OAuthIntegration:
 
         # if this content is running on Connect, then it is allowed to request
         # the content viewer's credentials
-        if user_identity:
-            data["subject_token_type"] = "urn:posit:connect:user-identity-token"
-            data["subject_token"] = user_identity
+        if user_session_token:
+            data["subject_token_type"] = "urn:posit:connect:user-session-token"
+            data["subject_token"] = user_session_token
 
         response = self.session.post(self.url, data=data)
         return Credentials(**response.json())

@@ -24,16 +24,16 @@ class CredentialsProvider(abc.ABC):
 
 
 class PositOAuthIntegrationCredentialsProvider(CredentialsProvider):
-    def __init__(self, posit_oauth: OAuthIntegration, user_identity: str):
+    def __init__(self, posit_oauth: OAuthIntegration, user_session_token: str):
         self.posit_oauth = posit_oauth
-        self.user_identity = user_identity
+        self.user_session_token = user_session_token
 
     def auth_type(self) -> str:
         return "posit-oauth-integration"
 
     def __call__(self, *args, **kwargs) -> HeaderFactory:
         def inner() -> Dict[str, str]:
-            access_token = self.posit_oauth.get_credentials(self.user_identity)['access_token']
+            access_token = self.posit_oauth.get_credentials(self.user_session_token)['access_token']
             return {"Authorization": f"Bearer {access_token}"}
         return inner
 
@@ -44,7 +44,7 @@ def is_local() -> bool:
     return not os.getenv("RSTUDIO_PRODUCT") == "CONNECT"
 
 
-def viewer_credentials_provider(client: Optional[Client] = None, user_identity: Optional[str] = None) -> Optional[CredentialsProvider]:
+def viewer_credentials_provider(client: Optional[Client] = None, user_session_token: Optional[str] = None) -> Optional[CredentialsProvider]:
 
     # If the content is not running on Connect then viewer auth should
     # fall back to the locally configured credentials hierarchy
@@ -54,12 +54,12 @@ def viewer_credentials_provider(client: Optional[Client] = None, user_identity: 
     if client is None:
         client = Client()
 
-    # If the user-identity-token wasn't provided and we're running on Connect then we raise an exception.
-    # user_identity is required to impersonate the viewer.
-    if user_identity is None:
-        raise ValueError("The user-identity-token is required for viewer authentication.")
+    # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.
+    # user_session_token is required to impersonate the viewer.
+    if user_session_token is None:
+        raise ValueError("The user-session-token is required for viewer authentication.")
 
-    return PositOAuthIntegrationCredentialsProvider(client.oauth, user_identity)
+    return PositOAuthIntegrationCredentialsProvider(client.oauth, user_session_token)
 
 
 def service_account_credentials_provider(client: Optional[Client] = None):
