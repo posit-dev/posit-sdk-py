@@ -38,10 +38,10 @@ class PositOAuthIntegrationCredentialsProvider(CredentialsProvider):
         return inner
 
 
-# Use these environment varariables to determine if the
+# Use this environment variable to determine if the
 # client SDK was initialized from a piece of content running on a Connect server.
 def is_local() -> bool:
-    return not os.getenv("CONNECT_SERVER") and not os.getenv("CONNECT_CONTENT_GUID")
+    return not os.getenv("RSTUDIO_PRODUCT") == "CONNECT"
 
 
 def viewer_credentials_provider(client: Optional[Client] = None, user_identity: Optional[str] = None) -> Optional[CredentialsProvider]:
