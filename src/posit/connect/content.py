@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Callable, List, TypedDict
+from typing import Callable, List, Optional, TypedDict
 
 from requests import Session
 
 from . import urls
 
 from .config import Config
+from .paginator import _MAX_PAGE_SIZE, Paginator
 
 
 class ContentItem(TypedDict, total=False):
@@ -21,10 +22,22 @@ class Content:
         self.session = session
 
     def find(
-        self, filter: Callable[[ContentItem], bool] = lambda _: True
+        self,
+        filter: Callable[[ContentItem], bool] = lambda _: True,
+        query: Optional[str] = None,
+        page_size=_MAX_PAGE_SIZE,
     ) -> List[ContentItem]:
-        results = self.session.get(self.url).json()
-        return [ContentItem(**c) for c in results if filter(ContentItem(**c))]
+        if query:
+            # TODO: check connect_version, error if too old
+            results = Paginator(
+                self.session,
+                urls.append_path(self.config.url, "v1/search/content"),
+                page_size=page_size,
+                params={"q": query},
+            ).get_all()
+        else:
+            results = self.session.get(self.url).json()
+            return [ContentItem(**c) for c in results if filter(ContentItem(**c))]
 
     def find_one(
         self, filter: Callable[[ContentItem], bool] = lambda _: True
