@@ -2,8 +2,8 @@ import responses
 
 from .client import Client
 
-class TestOAuthIntegrations:
 
+class TestOAuthIntegrations:
     @responses.activate
     def test_get_credentials(self):
         responses.post(
@@ -41,11 +41,5 @@ class TestOAuthIntegrations:
             },
         )
         con = Client(api_key="12345", url="https://connect.example/")
-        assert (
-            con.oauth.get_credentials()["access_token"]
-            == "sdk-user-token"
-        )
-        assert (
-            con.oauth.get_credentials("cit")["access_token"]
-            == "viewer-token"
-        )
+        assert con.oauth.get_credentials()["access_token"] == "sdk-user-token"
+        assert con.oauth.get_credentials("cit")["access_token"] == "viewer-token"

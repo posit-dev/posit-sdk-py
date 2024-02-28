@@ -1,0 +1,19 @@
+name: Release
+on:
+  push:
+    branches:
+      - 'tdstein/27'
+    tags:
+      - "v*.*.*"
+jobs:
+  default:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+    - run: make
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/

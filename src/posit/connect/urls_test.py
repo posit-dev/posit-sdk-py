@@ -32,4 +32,3 @@ def test_validate_without_scheme():
 def test_validate_without_netloc():
     with pytest.raises(ValueError):
         validate("http:///__api__")
-
