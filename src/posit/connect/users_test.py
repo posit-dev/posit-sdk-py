@@ -5,7 +5,6 @@ from .client import Client
 
 
 class TestUsers:
-
     @responses.activate
     def test_get_users(self):
         responses.get(
