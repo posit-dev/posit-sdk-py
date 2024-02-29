@@ -4,6 +4,9 @@ from typing import Optional
 
 from . import urls
 
+# The maximum page size supported by the API.
+_MAX_PAGE_SIZE = 500
+
 
 def _get_api_key() -> str:
     """Gets the API key from the environment variable 'CONNECT_API_KEY'.
@@ -45,8 +48,13 @@ class Config:
     """Derived configuration properties"""
 
     def __init__(
-        self, api_key: Optional[str] = None, url: Optional[str] = None
+        self,
+        api_key: Optional[str] = None,
+        url: Optional[str] = None,
+        *,
+        page_size: Optional[int] = None,
     ) -> None:
         self.api_key = api_key or _get_api_key()
         self.url = urls.server_to_api_url(url or _get_url())
+        self.page_size = page_size or _MAX_PAGE_SIZE
         urls.validate(self.url)

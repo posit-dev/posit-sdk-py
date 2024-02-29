@@ -1,11 +1,9 @@
 from posit.connect import Client
 
 with Client() as client:
-    print(client.get("v1/users"))
-    print(client.users.get("f55ca95d-ce52-43ed-b31b-48dc4a07fe13"))
-
-    users = client.users
-    users = users.find(lambda user: user["first_name"].startswith("T"))
-    users = users.find(lambda user: user["last_name"].startswith("S"))
-    user = users.find_one(lambda user: user["user_role"] == "administrator")
-    print(user)
+    # Calls the API to get the total number of users from the server.
+    print(len(client.users))
+    # Iterates over the users in the API and counts the length client side.
+    print(len(client.users.find()))
+    # Iterates over the users in the API and finds the first results that match the condition.
+    print(client.users.find_one(lambda user: user["last_name"] == "Steinberg"))

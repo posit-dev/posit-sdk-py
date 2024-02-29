@@ -17,6 +17,8 @@ class Client:
         self,
         api_key: Optional[str] = None,
         url: Optional[str] = None,
+        *,
+        page_size: Optional[int] = None,
     ) -> None:
         """
         Initialize the Client instance.
@@ -24,16 +26,16 @@ class Client:
         Args:
             api_key (str, optional): API key for authentication. Defaults to None.
             url (str, optional): API url URL. Defaults to None.
+            page_size (int, optional): The maximum number of items to return in a single page. Defaults to None.
         """
         # Create a Config object.
-        self.config = Config(api_key=api_key, url=url)
+        self.config = Config(api_key=api_key, url=url, page_size=page_size)
         # Create a Session object for making HTTP requests.
         session = Session()
         # Authenticate the session using the provided Config.
         session.auth = Auth(config=self.config)
         # Add error handling hooks to the session.
         session.hooks["response"].append(hooks.handle_errors)
-
         # Store the Session object.
         self.session = session
 

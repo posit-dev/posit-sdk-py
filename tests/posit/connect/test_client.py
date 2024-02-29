@@ -33,9 +33,12 @@ class TestClient:
     ):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        Client(api_key=api_key, url=url)
+        page_size = 24
+        Client(api_key=api_key, url=url, page_size=page_size)
         MockAuth.assert_called_once_with(config=MockConfig.return_value)
-        MockConfig.assert_called_once_with(api_key=api_key, url=url)
+        MockConfig.assert_called_once_with(
+            api_key=api_key, url=url, page_size=page_size
+        )
         MockSession.assert_called_once()
 
     def test__del__(self, MockAuth, MockConfig, MockSession):
