@@ -30,10 +30,6 @@ Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 addopts = [
     "--import-mode=importlib",
 ]
-python_files = [
-    "*_test.py",
-    "*_test_*.py",
-]
 
 [tool.setuptools_scm]
 version_file = "src/posit/_version.py"
