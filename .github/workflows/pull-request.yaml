@@ -36,6 +36,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
     - run: make deps
+    - run: make install
     - run: make test
     - run: make cov-xml
     - if: always()
