@@ -1,6 +1,6 @@
 import responses
 
-from .client import Client
+from posit.connect.client import Client
 
 
 class TestContents:

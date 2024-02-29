@@ -4,8 +4,8 @@ import pytest
 
 from requests import HTTPError, Response
 
-from .errors import ClientError
-from .hooks import handle_errors
+from posit.connect.errors import ClientError
+from posit.connect.hooks import handle_errors
 
 
 def test():
