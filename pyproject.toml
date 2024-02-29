@@ -22,6 +22,9 @@ dependencies = [
     "requests>=2.31.0,<3"
 ]
 
+[project.optional-dependencies]
+extras = ["pandas", "pyarrow"]
+
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"

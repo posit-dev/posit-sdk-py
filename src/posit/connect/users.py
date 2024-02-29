@@ -8,7 +8,7 @@ from requests import Session
 from . import urls
 
 from .config import Config
-from .paginator import _MAX_PAGE_SIZE, Paginator
+from .paginator import Paginator
 
 
 class User(TypedDict, total=False):
@@ -28,29 +28,25 @@ class User(TypedDict, total=False):
 class Users:
     def __init__(self, config: Config, session: Session) -> None:
         self.url = urls.append_path(config.url, "v1/users")
+        self.paginator = Paginator(session, self.url, page_size=config.page_size)
         self.config = config
         self.session = session
 
-    def find(
-        self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
-    ) -> List[User]:
-        results = Paginator(self.session, self.url, page_size=page_size).get_all()
-        return [User(**user) for user in results if filter(User(**user))]
+    def find(self, filter: Callable[[User], bool] = lambda _: True) -> List[User]:
+        return [User(**user) for user in self.paginator if filter(User(**user))]
 
-    def find_one(
-        self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
-    ) -> User | None:
-        pager = Paginator(self.session, self.url, page_size=page_size)
-        result = pager.get_next_page()
-        while pager.total is None or pager.seen < pager.total:
-            result = pager.get_next_page()
-            for u in result:
-                user = User(**u)
-                if filter(user):
-                    return user
-        return None
+    def find_one(self, filter: Callable[[User], bool] = lambda _: True) -> User | None:
+        return next(
+            (User(**user) for user in self.paginator if filter(User(**user))), None
+        )
 
     def get(self, id: str) -> User:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
         return User(**response.json())
+
+    def __iter__(self):
+        return iter(self.paginator)
+
+    def __len__(self):
+        return len(self.paginator)

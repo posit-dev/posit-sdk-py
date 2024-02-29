@@ -28,7 +28,7 @@ clean:
 	find . -name "*.egg-info" -exec rm -rf {} +
 	find . -name "*.pyc" -exec rm -f {} +
 	find . -name "__pycache__" -exec rm -rf {} +
-	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build dist htmlcov
+	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build dist htmlcov coverage.xml
 
 cov:
 	$(PYTHON) -m coverage report
@@ -40,7 +40,7 @@ cov-xml:
 	$(PYTHON) -m coverage xml
 
 deps:
-	$(PIP) install -r requirements.txt -r requirements-dev.txt
+	$(PIP) install -r requirements.txt -r requirements-dev.txt -r requirements-extras.txt
 
 fmt:
 	$(PYTHON) -m ruff format .
