@@ -22,6 +22,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - run: make deps
+    - run: make install
     - run: make test
   lint:
     runs-on: ubuntu-latest
