@@ -30,6 +30,35 @@ class Paginator(Iterable):
         self.session = session
         self.url = url
 
+    def fetch(self, page: int) -> Tuple[Iterator[dict], bool]:
+        """
+        Fetches a specific page of results from the API.
+
+        Args:
+            page (int): The page number to fetch. Must be greater than 0.
+
+        Returns:
+            tuple[Iterator[dict] | None, bool]: A tuple containing the fetched results and a boolean indicating
+            whether there are more pages to fetch.
+
+        Raises:
+            ValueError: If the page number is not greater than 0.
+        """
+        # Check if page is greater than 0
+        if not (page > 0):
+            raise ValueError(f"page must be greater than 0, got {page}")
+        # Define query parameters for pagination.
+        params = {"page_number": page, "page_size": self.page_size}
+        # Send a GET request to the endpoint with the specified parameters.
+        response = self.session.get(self.url, params=params)
+        # Convert response to dict
+        as_dict: dict = dict(response.json())
+        # Parse the JSON response and extract the results.
+        results = as_dict["results"]
+        # Mark exhausted if the result size is less than the maximum page size.
+        exhausted = len(results) < self.page_size
+        return (results, exhausted)
+
     def __iter__(self) -> Iterator[dict]:
         """
         Returns an iterator object for the Paginator class.
@@ -80,32 +109,3 @@ class Paginator(Iterable):
         v = self.elements[self.index]
         self.index += 1
         return v
-
-    def fetch(self, page: int) -> Tuple[Iterator[dict], bool]:
-        """
-        Fetches a specific page of results from the API.
-
-        Args:
-            page (int): The page number to fetch. Must be greater than 0.
-
-        Returns:
-            tuple[Iterator[dict] | None, bool]: A tuple containing the fetched results and a boolean indicating
-            whether there are more pages to fetch.
-
-        Raises:
-            ValueError: If the page number is not greater than 0.
-        """
-        # Check if page is greater than 0
-        if not (page > 0):
-            raise ValueError(f"page must be greater than 0, got {page}")
-        # Define query parameters for pagination.
-        params = {"page_number": page, "page_size": self.page_size}
-        # Send a GET request to the endpoint with the specified parameters.
-        response = self.session.get(self.url, params=params)
-        # Convert response to dict
-        as_dict: dict = dict(response.json())
-        # Parse the JSON response and extract the results.
-        results = as_dict["results"]
-        # Mark exhausted if the result size is less than the maximum page size.
-        exhausted = len(results) < self.page_size
-        return (results, exhausted)
