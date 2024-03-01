@@ -26,7 +26,7 @@ openpyxl==3.1.2
 packaging==23.2
 pandas==2.1.4
 pillow==10.2.0
-posit-sdk @ git+https://github.com/posit-dev/posit-sdk-py.git@24ad71458de56b01b8168e80441ea860236f1933
+posit-sdk @ git+https://github.com/posit-dev/posit-sdk-py.git@cec7f78a1bdee9e5fd7580011bfa0bcef58cd64b
 protobuf==4.25.3
 pyarrow==14.0.2
 pyasn1==0.5.1
