@@ -8,6 +8,7 @@ PYTHON := python3
 	cov
 	default
 	deps
+	fix
 	fmt
 	fix
 	install
@@ -42,6 +43,9 @@ cov-xml:
 
 deps:
 	$(PIP) install -r requirements.txt -r requirements-dev.txt -r requirements-extras.txt
+
+fix:
+	$(PYTHON) -m ruff check --fix
 
 fmt:
 	$(PYTHON) -m ruff format .
