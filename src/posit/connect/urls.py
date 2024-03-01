@@ -46,22 +46,19 @@ def validate(url: str) -> None:
         )
 
 
-def append_path(url: str, path: str) -> str:
+def append_path(url: str, *paths: str) -> str:
     """
-    Appends a path to a URL.
+    Appends multiple paths to a URL.
 
     Args:
         url (str): The original URL.
-        path (str): The path to append.
+        *paths (str): The paths to append.
 
     Returns:
-        str: The modified URL with the appended path.
+        str: The modified URL with the appended paths.
     """
-    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlsplit
     split = urlsplit(url, allow_fragments=False)
-    # Removes leading '/' from path to avoid double slashes.
-    path = path.lstrip("/")
-    # Prepend the path with the existing URL path.
-    path = posixpath.join(split.path, path)
-    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlunsplit
-    return urlunsplit((split.scheme, split.netloc, path, split.query, None))
+    for path in paths:
+        path = path.lstrip("/")
+        split = split._replace(path=posixpath.join(split.path, path))
+    return urlunsplit((split.scheme, split.netloc, split.path, split.query, None))

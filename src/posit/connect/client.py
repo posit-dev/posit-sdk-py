@@ -17,8 +17,6 @@ class Client:
         self,
         api_key: Optional[str] = None,
         url: Optional[str] = None,
-        *,
-        page_size: Optional[int] = None,
     ) -> None:
         """
         Initialize the Client instance.
@@ -29,7 +27,7 @@ class Client:
             page_size (int, optional): The maximum number of items to return in a single page. Defaults to None.
         """
         # Create a Config object.
-        self.config = Config(api_key=api_key, url=url, page_size=page_size)
+        self.config = Config(api_key=api_key, url=url)
         # Create a Session object for making HTTP requests.
         session = Session()
         # Authenticate the session using the provided Config.

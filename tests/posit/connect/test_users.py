@@ -75,8 +75,8 @@ class TestUsers:
             },
         )
 
-        con = Client(api_key="12345", url="https://connect.example/", page_size=2)
-        all_users = con.users.find()
+        con = Client(api_key="12345", url="https://connect.example/")
+        all_users = con.users.find(page_size=2)
         assert len(all_users) == 3
 
         df = pd.DataFrame(all_users)
@@ -98,12 +98,12 @@ class TestUsers:
         assert df["username"].to_list() == ["al", "robert", "carlos12"]
 
         # Test find_one()
-        bob = con.users.find_one(lambda u: u["first_name"] == "Bob")
+        bob = con.users.find_one(lambda u: u["first_name"] == "Bob", page_size=2)
         # Can't isinstance(bob, User) bc inherits TypedDict (cf. #23)
         assert bob["username"] == "robert"
 
         # Test where find_one() doesn't find any
-        assert con.users.find_one(lambda u: u["first_name"] == "Ringo") is None
+        assert con.users.find_one(lambda u: u["first_name"] == "Ringo", page_size=2) is None
 
     @responses.activate
     def test_users_get(self):
