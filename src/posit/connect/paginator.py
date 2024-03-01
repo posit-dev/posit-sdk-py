@@ -16,7 +16,7 @@ class Paginator(Iterable):
     Attributes:
         elements (List[dict]): The list of fetched elements.
         exhausted (bool): Indicates whether all pages have been fetched.
-        idx (int): The current index of the elements list.
+        index (int): The current index of the elements list.
         page_size (int): The number of items to fetch per page.
         session (requests.Session): The requests session object to use for making API requests.
         url (str): The URL of the API endpoint to fetch paginated results from.
@@ -25,7 +25,7 @@ class Paginator(Iterable):
     def __init__(self, session: requests.Session, url: str, *, page_size: int) -> None:
         self.elements: List[dict] = []
         self.exhausted = False
-        self.idx = 0
+        self.index = 0
         self.page_size = page_size
         self.session = session
         self.url = url
@@ -37,7 +37,7 @@ class Paginator(Iterable):
         Returns:
             Iterator[dict]: An iterator object that iterates over the items in the Paginator.
         """
-        self.idx = 0
+        self.index = 0
         return self
 
     def __len__(self) -> int:
@@ -66,19 +66,19 @@ class Paginator(Iterable):
         Returns:
             dict: The next element in the paginator.
         """
-        if self.idx >= len(self.elements):
+        if self.index >= len(self.elements):
             if self.exhausted:
                 raise StopIteration
 
-            page = int(self.idx / self.page_size) + 1
+            page = int(self.index / self.page_size) + 1
             results, self.exhausted = self.fetch(page)
             if not results:
                 raise StopIteration
 
             self.elements += results
 
-        v = self.elements[self.idx]
-        self.idx += 1
+        v = self.elements[self.index]
+        self.index += 1
         return v
 
     def fetch(self, page: int) -> tuple[Iterator[dict] | None, bool]:
