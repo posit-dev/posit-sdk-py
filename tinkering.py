@@ -7,3 +7,7 @@ with Client() as client:
     print(len(client.users.find()))
     # Iterates over the users in the API and finds the first results that match the condition.
     print(client.users.find_one(lambda user: user["last_name"] == "Steinberg"))
+
+    print(len(client.groups))
+    for group in client.groups:
+        print(group)

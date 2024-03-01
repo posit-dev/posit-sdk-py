@@ -7,8 +7,9 @@ from . import hooks, urls
 
 from .auth import Auth
 from .config import Config
-from .oauth import OAuthIntegration
 from .content import Content
+from .groups import Groups
+from .oauth import OAuthIntegration
 from .users import User, Users
 
 
@@ -57,12 +58,16 @@ class Client:
         return OAuthIntegration(config=self.config, session=self.session)
 
     @property
-    def users(self) -> Users:
-        return Users(config=self.config, session=self.session)
-
-    @property
     def content(self) -> Content:
         return Content(config=self.config, session=self.session)
+
+    @property
+    def groups(self) -> Groups:
+        return Groups(config=self.config, session=self.session)
+
+    @property
+    def users(self) -> Users:
+        return Users(config=self.config, session=self.session)
 
     def __del__(self):
         """
