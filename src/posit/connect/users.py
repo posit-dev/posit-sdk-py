@@ -28,16 +28,13 @@ class User(TypedDict, total=False):
 _MAX_PAGE_SIZE = 500
 
 
-
 class Users(Paginator):
-
     def __init__(self, config: Config, session: Session) -> None:
         super().__init__(
             session, urls.append_path(config.url, "v1/users"), page_size=_MAX_PAGE_SIZE
         )
         self.config = config
         self.session = session
-
 
     # todo - replace with query parameter based filtering.
     # reason - the current implementation is a fill in for actual implementation

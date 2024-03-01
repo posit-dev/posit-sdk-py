@@ -103,7 +103,10 @@ class TestUsers:
         assert bob["username"] == "robert"
 
         # Test where find_one() doesn't find any
-        assert con.users.find_one(lambda u: u["first_name"] == "Ringo", page_size=2) is None
+        assert (
+            con.users.find_one(lambda u: u["first_name"] == "Ringo", page_size=2)
+            is None
+        )
 
     @responses.activate
     def test_users_get(self):
