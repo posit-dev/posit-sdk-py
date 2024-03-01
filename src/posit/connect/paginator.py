@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Iterator, List
+from typing import Iterator, List, Tuple
 
 import requests
 
@@ -81,7 +81,7 @@ class Paginator(Iterable):
         self.index += 1
         return v
 
-    def fetch(self, page: int) -> tuple[Iterator[dict] | None, bool]:
+    def fetch(self, page: int) -> Tuple[Iterator[dict], bool]:
         """
         Fetches a specific page of results from the API.
 
