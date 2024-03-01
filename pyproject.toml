@@ -18,19 +18,22 @@ classifiers = [
     "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = [
-    "requests>=2.31.0,<3"
-]
+dependencies = ["requests>=2.31.0,<3"]
 
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
-[tool.pytest.ini_options]
-python_files = [
-    "*_test.py",
-    "*_test_*.py",
-]
+[tool.coverage.report]
+fail_under = 80
+omit = [ "src/posit/_version.py", "src/posit/**/tests/*", ]
+
+# package discovery configuration
+# see - https://setuptools.pypa.io/en/latest/userguide/quickstart.html#package-discovery
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["posit*"]
+exclude = ["posit.*.tests*"]
 
 [tool.setuptools_scm]
 version_file = "src/posit/_version.py"

@@ -3,7 +3,7 @@ import responses
 
 from unittest.mock import MagicMock, patch
 
-from .client import Client
+from ..client import Client
 
 
 @pytest.fixture

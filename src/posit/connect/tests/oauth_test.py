@@ -1,6 +1,6 @@
 import responses
 
-from .client import Client
+from ..client import Client
 
 
 class TestOAuthIntegrations:

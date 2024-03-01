@@ -1,6 +1,6 @@
 import pytest
 
-from .urls import append_path, server_to_api_url, validate
+from ..urls import append_path, server_to_api_url, validate
 
 
 def test_append_path():

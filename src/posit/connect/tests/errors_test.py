@@ -1,6 +1,6 @@
 import pytest
 
-from .errors import ClientError
+from ..errors import ClientError
 
 
 class TestClientError:

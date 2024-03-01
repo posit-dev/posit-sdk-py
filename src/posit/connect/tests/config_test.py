@@ -2,7 +2,7 @@ import pytest
 
 from unittest.mock import patch
 
-from .config import Config, _get_api_key, _get_url
+from ..config import Config, _get_api_key, _get_url
 
 
 @patch.dict("os.environ", {"CONNECT_API_KEY": "foobar"})

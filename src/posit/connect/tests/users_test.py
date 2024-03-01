@@ -1,7 +1,7 @@
 import pandas as pd
 import responses
 
-from .client import Client
+from ..client import Client
 
 
 class TestUsers:

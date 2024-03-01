@@ -53,7 +53,7 @@ lint:
 	$(PYTHON) -m ruff check
 
 test:
-	$(PYTHON) -m coverage run --source=src --omit=_version.py -m pytest
+	$(PYTHON) -m coverage run --source=src -m pytest
 
 uninstall:
 	$(PIP) uninstall -y $(NAME)
