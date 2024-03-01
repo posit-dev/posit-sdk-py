@@ -33,11 +33,10 @@ class TestClient:
     ):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        page_size = 24
-        Client(api_key=api_key, url=url, page_size=page_size)
+        Client(api_key=api_key, url=url)
         MockAuth.assert_called_once_with(config=MockConfig.return_value)
         MockConfig.assert_called_once_with(
-            api_key=api_key, url=url, page_size=page_size
+            api_key=api_key, url=url
         )
         MockSession.assert_called_once()
 

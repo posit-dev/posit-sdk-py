@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Callable, List, TypedDict
+from typing import Callable, Optional, TypedDict
 
 from requests import Session
 
@@ -25,28 +25,52 @@ class User(TypedDict, total=False):
     locked: bool
 
 
-class Users:
+_MAX_PAGE_SIZE = 500
+
+
+
+class Users(Paginator):
+
     def __init__(self, config: Config, session: Session) -> None:
-        self.url = urls.append_path(config.url, "v1/users")
-        self.paginator = Paginator(session, self.url, page_size=config.page_size)
+        super().__init__(
+            session, urls.append_path(config.url, "v1/users"), page_size=_MAX_PAGE_SIZE
+        )
         self.config = config
         self.session = session
 
-    def find(self, filter: Callable[[User], bool] = lambda _: True) -> List[User]:
-        return [User(**user) for user in self.paginator if filter(User(**user))]
 
-    def find_one(self, filter: Callable[[User], bool] = lambda _: True) -> User | None:
-        return next(
-            (User(**user) for user in self.paginator if filter(User(**user))), None
-        )
+    # todo - replace with query parameter based filtering.
+    # reason - the current implementation is a fill in for actual implementation
+    def find(
+        self,
+        filter: Callable[[User], bool] = lambda user: True,
+        *,
+        page_size: int = _MAX_PAGE_SIZE,
+    ) -> list[User]:
+        url = urls.append_path(self.config.url, "v1/users")
+        paginator = Paginator(self.session, url, page_size=page_size)
+        users = (User(**user) for user in paginator)
+        return [user for user in users if filter(user)]
+
+    # todo - replace with query parameter based filtering.
+    # reason - the current implementation is a fill in for actual implementation
+    def find_one(
+        self,
+        filter: Callable[[User], bool] = lambda user: True,
+        *,
+        page_size: int = _MAX_PAGE_SIZE,
+    ) -> Optional[User]:
+        # note - you may be tempted to to use self.find(filter, page_size) and return the first element.
+        # note - this is less efficient as it will fetch all the users and then filter them.
+        # note - instead, we use the paginator directly to fetch the first user that matches the filter.
+        # note - since the paginator fetches the users in pages, it will stop fetching once it finds a match.
+        url = urls.append_path(self.config.url, "v1/users")
+        paginator = Paginator(self.session, url, page_size=page_size)
+        users = (User(**user) for user in paginator)
+        users = (user for user in users if filter(user))
+        return next(users, None)
 
     def get(self, id: str) -> User:
-        url = urls.append_path(self.url, id)
+        url = urls.append_path(self.config.url, "v1/users", id)
         response = self.session.get(url)
         return User(**response.json())
-
-    def __iter__(self):
-        return iter(self.paginator)
-
-    def __len__(self):
-        return len(self.paginator)
