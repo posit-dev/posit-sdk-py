@@ -44,18 +44,12 @@ class Paginator(Iterable):
         Raises:
             ValueError: If the page number is not greater than 0.
         """
-        # Check if page is greater than 0
         if not (page > 0):
             raise ValueError(f"page must be greater than 0, got {page}")
-        # Define query parameters for pagination.
         params = {"page_number": page, "page_size": self.page_size}
-        # Send a GET request to the endpoint with the specified parameters.
         response = self.session.get(self.url, params=params)
-        # Convert response to dict
         as_dict: dict = dict(response.json())
-        # Parse the JSON response and extract the results.
         results = as_dict["results"]
-        # Mark exhausted if the result size is less than the maximum page size.
         exhausted = len(results) < self.page_size
         return (results, exhausted)
 
@@ -76,13 +70,11 @@ class Paginator(Iterable):
         Returns:
             int: The total number of items in the paginator.
         """
-        # Define query parameters for pagination.
+        # Connect's paginated APIs include a "total" count in the response.
+        # So we only need to request page_size = 1 and inspect the total.
         params = {"page_number": 1, "page_size": 1}
-        # Send a GET request to the endpoint with the specified parameters.
         response = self.session.get(self.url, params=params)
-        # Convert response to dict
         as_dict = response.json()
-        # Return total as int
         return int(as_dict["total"])
 
     def __next__(self) -> dict:
