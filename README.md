@@ -27,7 +27,7 @@ We welcome contributions to the Posit SDK for Python! If you would like to contr
 
 ## Issues
 
-If you encounter any issues or have any questions, please open an issue on the [issue tracker](https://github.com/posit-dev/posit-sdk-py/issues). We appreciate your feedback and will do our best to address any problems.
+If you encounter any issues or have any questions, please [open an issue](https://github.com/posit-dev/posit-sdk-py/issues). We appreciate your feedback.
 
 ## License
 
