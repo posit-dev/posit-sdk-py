@@ -35,4 +35,4 @@ This project is licensed under the [MIT License](LICENSE). Feel free to use, mod
 
 ## Code of Conduct
 
-Please note that this project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). We expect all contributors to adhere to its guidelines and create a positive and inclusive community.
+We expect all contributors to adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md) and create a positive and inclusive community.
