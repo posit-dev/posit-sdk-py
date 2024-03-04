@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    paths:
+      - '.github/workflows/cpp.yml'
 jobs:
   default:
     runs-on: ubuntu-latest
@@ -21,4 +24,3 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - run: make
-    - run: make install
