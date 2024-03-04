@@ -10,6 +10,17 @@ Before contributing to the `posit-sdk`, ensure that the following prerequisites 
 
 - Python >=3.8
 
+## Instructions
+
+1. Fork the repository and clone it to your local machine.
+1. Create a new branch for your feature or bug fix.
+1. Run `make` to run the default development workflow.
+1. Make your changes and test them thoroughly using `make test`
+1. Commit your changes and push them to your forked repository.
+1. Submit a pull request to the main repository.
+
+Please ensure that your code follows the project's coding conventions and style guidelines using `make lint`. Also, make sure to include tests for any new functionality or bug fixes.
+
 ## Tooling
 
 The `Makefile` provides the following commands:
