@@ -5,7 +5,7 @@ on:
       - main
   pull_request:
     paths:
-      - '.github/workflows/cpp.yml'
+      - '.github/workflows/main.yaml'
 jobs:
   default:
     runs-on: ubuntu-latest
