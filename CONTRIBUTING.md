@@ -23,20 +23,7 @@ Please ensure that your code follows the project's coding conventions and style 
 
 ## Tooling
 
-The `Makefile` provides the following commands:
-
-- `build`: Build the SDK.
-- `clean`: Remove generated files and directories.
-- `cov`: Generate coverage report.
-- `cov-html`: Generate HTML coverage report.
-- `cov-xml`: Generate XML coverage report.
-- `deps`: Install required dependencies.
-- `fmt`: Format the source code.
-- `install`: Install the SDK locally.
-- `lint`: Perform linting using `mypy` and `ruff`.
-- `test`: Run tests with coverage.
-- `uninstall`: Uninstall the SDK.
-- `version`: Display the current version of the SDK.
+Use the default make target to execute the full build pipeline. For details on specific targets, refer to the [Makefile](./Makefile).
 
 ## Release
 
