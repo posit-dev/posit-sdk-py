@@ -23,7 +23,7 @@ USER_SESSION_TOKEN = None
 # Read the viewer's user session token from the streamlit ws header.
 headers = _get_websocket_headers()
 if headers:
-   USER_SESSION_TOKEN = headers.get("Posit-Connect-User-Session-Token")
+    USER_SESSION_TOKEN = headers.get("Posit-Connect-User-Session-Token")
 
 credentials_provider = viewer_credentials_provider(
     user_session_token=USER_SESSION_TOKEN
