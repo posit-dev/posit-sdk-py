@@ -10,7 +10,6 @@ PYTHON := python3
 	deps
 	fix
 	fmt
-	fix
 	install
 	lint
 	test
@@ -49,9 +48,6 @@ fix:
 
 fmt:
 	$(PYTHON) -m ruff format .
-
-fix:
-	$(PYTHON) -m ruff check --fix
 
 install:
 	$(PIP) install -e .

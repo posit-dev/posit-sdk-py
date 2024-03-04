@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 
-from .paginator import Paginator
+from posit.connect.paginator import Paginator
 
 
 @pytest.fixture

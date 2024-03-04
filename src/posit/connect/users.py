@@ -81,14 +81,31 @@ class Users(Paginator):
         *,
         page_size: int = _MAX_PAGE_SIZE,
     ) -> Optional[User]:
-        # You may be tempted to to use self.find(filter, page_size) and return the first element.
-        # This is less efficient as it will fetch all the users and then filter them.
-        # Instead, we use the paginator directly to fetch the first user that matches the filter.
-        # Since the paginator fetches the users in pages, it will stop fetching subsequent pages once a match is found.
+        """
+        Find and return the first user that matches the given filter.
+
+        Args:
+            filter: A callable that takes a User object as input and returns a boolean value indicating whether the user matches the filter criteria. Defaults to a lambda function that always returns True.
+            page_size: The number of users to fetch per page. Defaults to the maximum page size.
+
+        Returns:
+            The first User object that matches the filter, or None if no match is found.
+
+        Note:
+            This method uses the paginator to fetch users from the server in pages. It stops fetching subsequent pages once a match is found, making it more efficient than fetching all users and then filtering them.
+            The filter function should take a User object as input and return True if the user matches the filter criteria, or False otherwise.
+        """
         url = urls.append_path(self.config.url, "v1/users")
         paginator = Paginator(self.session, url, page_size=page_size)
-        users = (User(**user) for user in paginator)
-        users = (user for user in users if filter(user))
+        # Create a generator using comprehension syntax.
+        users = (User(**user) for user in paginator if filter(User(**user)))
+        # Evaluate the generator to find the first User matching the provided filter, or return None.
+        # The generator is more memory efficient than a list since the paginator supports lazy-loading users on demand.
+        # Once a match is found, the iteration is stopped, skipping any subsequent pages fetched by the paginator.
+        # If the paginator is exhausted and no matching results are found, None is returned.
+        # Runtime is reduced when a match occurs before all pages are fetched from the server.
+        # If users was instead defined as `users = [User(**user) for user in paginator if filter(User(**user))]`, then all users are evaluated through the filter before next is called.
+        # In other words, next(users, None) becomes a head operation on the in-memory list.
         return next(users, None)
 
     def get(self, id: str) -> User:
