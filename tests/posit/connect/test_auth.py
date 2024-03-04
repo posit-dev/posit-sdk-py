@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, Mock, patch
 
-from .auth import Auth
+from posit.connect.auth import Auth
 
 
 class TestAuth:

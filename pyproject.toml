@@ -27,9 +27,8 @@ Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
 [tool.pytest.ini_options]
-python_files = [
-    "*_test.py",
-    "*_test_*.py",
+addopts = [
+    "--import-mode=importlib",
 ]
 
 [tool.setuptools_scm]

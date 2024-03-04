@@ -22,7 +22,17 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - run: make deps
+    - run: make install
     - run: make test
+    # Run coverage on one of the builds, doesn't matter which
+    - if: ${{ matrix.python-version == '3.12' }}
+      run: make cov-xml
+    - if: ${{ matrix.python-version == '3.12' }}
+      uses: orgoro/coverage@v3.1
+      with:
+          coverageFile: coverage.xml
+          thresholdAll: 0.8
+          token: ${{ secrets.GITHUB_TOKEN }}
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -30,17 +40,3 @@ jobs:
     - uses: actions/setup-python@v5
     - run: make deps
     - run: make lint
-  cov:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-    - run: make deps
-    - run: make test
-    - run: make cov-xml
-    - if: always()
-      uses: orgoro/coverage@v3.1
-      with:
-          coverageFile: coverage.xml
-          thresholdAll: 0.8
-          token: ${{ secrets.GITHUB_TOKEN }}
