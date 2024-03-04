@@ -18,6 +18,7 @@ PYTHON := python3
 
 default:
 	make deps
+	make install
 	make test
 	make lint
 	make build
