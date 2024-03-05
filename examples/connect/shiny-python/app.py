@@ -22,7 +22,7 @@ app_ui = ui.page_fluid(
     ui.output_data_frame("result")
 )
 
-def get_connection_settings(session_token: str):
+def get_connection_settings(credentials_provider):
     """
     Construct a connection settings dictionary that works locally and on Posit Connect.
     """
@@ -32,7 +32,7 @@ def get_connection_settings(session_token: str):
             "server_hostname": DATABRICKS_HOST,
             "http_path": SQL_HTTP_PATH,
             "auth_type": "databricks-oauth",
-            "credentials_provider": viewer_credentials_provider(user_session_token=session_token)
+            "credentials_provider": credentials_provider
         }
     return {
         "server_hostname": DATABRICKS_HOST,
@@ -40,7 +40,7 @@ def get_connection_settings(session_token: str):
         "access_token": DATABRICKS_PAT
     }
 
-def get_databricks_user_info(session_token: str):
+def get_databricks_user_info(credentials_provider):
     """
     Use the Databricks SDK to get the current user's information.
     """
@@ -48,7 +48,7 @@ def get_databricks_user_info(session_token: str):
     if os.getenv("CONNECT_SERVER"):
         cfg = Config(
             host=DATABRICKS_HOST_URL,
-            credentials_provider=viewer_credentials_provider(user_session_token=session_token)
+            credentials_provider=credentials_provider
         )
     else:
         cfg = Config(host=DATABRICKS_HOST_URL, token=DATABRICKS_PAT)
@@ -62,13 +62,14 @@ def server(input: Inputs, output: Outputs, session: Session):
     """
 
     session_token = session.http_conn.headers.get('Posit-Connect-User-Session-Token')
-    databricks_user_info = get_databricks_user_info(session_token=session_token)
+    credentials_provider = viewer_credentials_provider(user_session_token=session_token)
+    databricks_user_info = get_databricks_user_info(credentials_provider=credentials_provider)
 
     @render.data_frame
     def result():
 
         query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"
-        connection_settings = get_connection_settings(session_token=session_token)
+        connection_settings = get_connection_settings(credentials_provider=credentials_provider)
 
         with sql.connect(**connection_settings) as connection:
             with connection.cursor() as cursor:
