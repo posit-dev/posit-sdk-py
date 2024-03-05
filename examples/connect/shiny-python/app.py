@@ -22,24 +22,6 @@ app_ui = ui.page_fluid(
     ui.output_data_frame("result")
 )
 
-def get_connection_settings(credentials_provider):
-    """
-    Construct a connection settings dictionary that works locally and on Posit Connect.
-    """
-
-    if os.getenv("CONNECT_SERVER"):
-        return {
-            "server_hostname": DATABRICKS_HOST,
-            "http_path": SQL_HTTP_PATH,
-            "auth_type": "databricks-oauth",
-            "credentials_provider": credentials_provider
-        }
-    return {
-        "server_hostname": DATABRICKS_HOST,
-        "http_path": SQL_HTTP_PATH,
-        "access_token": DATABRICKS_PAT
-    }
-
 def get_databricks_user_info(credentials_provider):
     """
     Use the Databricks SDK to get the current user's information.
@@ -69,9 +51,11 @@ def server(input: Inputs, output: Outputs, session: Session):
     def result():
 
         query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"
-        connection_settings = get_connection_settings(credentials_provider=credentials_provider)
 
-        with sql.connect(**connection_settings) as connection:
+        with sql.connect(server_hostname=DATABRICKS_HOST,
+                         http_path=SQL_HTTP_PATH,
+                         auth_type="databricks-oauth",
+                         credentials_provider=credentials_provider) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query)
                 rows = cursor.fetchall()
