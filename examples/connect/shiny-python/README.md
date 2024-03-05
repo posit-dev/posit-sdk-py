@@ -3,7 +3,7 @@
 ## Start the app locally
 
 ```bash
-DATABRICKS_TOKEN=<DATABRICKS_PAT> shiny run app.py
+shiny run app.py
 ```
 
 ## Deploy to Posit Connect
@@ -16,7 +16,7 @@ rsconnect version
 
 Or install it as documented in the [installation](https://docs.posit.co/rsconnect-python/#installation) section of the documentation.
 
-To publish, make sure `MY_CONNECT_SERVER`, `MY_CONNECT_API_KEY`, `DATABRICKS_HOST`, `DATABRICKS_PATH` have valid values. Then, on a terminal session, enter the following command:
+To publish, make sure `CONNECT_SERVER`, `CONNECT_API_KEY`, `DATABRICKS_HOST`, `DATABRICKS_PATH` have valid values. Then, on a terminal session, enter the following command:
 
 ```bash
 rsconnect deploy shiny . \
