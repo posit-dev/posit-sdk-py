@@ -12,7 +12,6 @@ from databricks.sdk.core import ApiClient, Config
 
 from shiny import App, Inputs, Outputs, Session, render, ui
 
-DATABRICKS_PAT = os.getenv("DATABRICKS_TOKEN")
 DATABRICKS_HOST=os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
 SQL_HTTP_PATH = os.getenv("DATABRICKS_PATH")
