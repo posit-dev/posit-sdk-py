@@ -81,7 +81,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
         with sql.connect(**connection_settings) as connection:
             with connection.cursor() as cursor:
-                tmp = cursor.execute(query)
+                cursor.execute(query)
                 rows = cursor.fetchall()
                 df = pd.DataFrame(rows, columns = [col[0] for col in cursor.description])
                 return df
