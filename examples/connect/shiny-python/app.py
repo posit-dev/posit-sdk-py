@@ -22,15 +22,6 @@ app_ui = ui.page_fluid(
     ui.output_data_frame("result")
 )
 
-def get_credentials_provider(session_token: str):
-    """
-    Use the Posit SDK to get a credentials provider for the Databricks connection.
-    """
-
-    if os.getenv("CONNECT_SERVER"):
-        return viewer_credentials_provider(user_session_token=session_token)
-    return None
-
 def get_connection_settings(session_token: str):
     """
     Construct a connection settings dictionary that works locally and on Posit Connect.
@@ -41,7 +32,7 @@ def get_connection_settings(session_token: str):
             "server_hostname": DATABRICKS_HOST,
             "http_path": SQL_HTTP_PATH,
             "auth_type": "databricks-oauth",
-            "credentials_provider": get_credentials_provider(session_token=session_token)
+            "credentials_provider": viewer_credentials_provider(user_session_token=session_token)
         }
     return {
         "server_hostname": DATABRICKS_HOST,
@@ -57,7 +48,7 @@ def get_databricks_user_info(session_token: str):
     if os.getenv("CONNECT_SERVER"):
         cfg = Config(
             host=DATABRICKS_HOST_URL,
-            credentials_provider=get_credentials_provider(session_token=session_token)
+            credentials_provider=viewer_credentials_provider(user_session_token=session_token)
         )
     else:
         cfg = Config(host=DATABRICKS_HOST_URL, token=DATABRICKS_PAT)
