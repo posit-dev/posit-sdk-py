@@ -20,8 +20,8 @@ To publish, make sure `CONNECT_SERVER`, `CONNECT_API_KEY`, `DATABRICKS_HOST`, `D
 
 ```bash
 rsconnect deploy shiny . \
-  --server "${MY_CONNECT_SERVER}" \
-  --api-key "${MY_CONNECT_API_KEY}" \
+  --server "${CONNECT_SERVER}" \
+  --api-key "${CONNECT_API_KEY}" \
   --environment DATABRICKS_HOST \
   --environment DATABRICKS_PATH
 ```
@@ -32,6 +32,6 @@ The Databricks environment variables only need to be set once, unless a change n
 
 ```
 rsconnect deploy shiny . \
-  --server "${MY_CONNECT_SERVER}" \
-  --api-key "${MY_CONNECT_API_KEY}"
+  --server "${CONNECT_SERVER}" \
+  --api-key "${CONNECT_API_KEY}"
 ```
