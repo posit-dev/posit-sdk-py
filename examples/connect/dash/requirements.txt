@@ -1,0 +1,4 @@
+databricks-sql-connector==3.0.1
+databricks-sdk==0.20.0
+dash==2.15.0
+git+https://github.com/posit-dev/posit-sdk-py.git
