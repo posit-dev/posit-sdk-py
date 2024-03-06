@@ -1,0 +1,4 @@
+databricks-sql-connector==3.0.1
+databricks-sdk==0.20.0
+flask==3.0.2
+git+https://github.com/posit-dev/posit-sdk-py.git
