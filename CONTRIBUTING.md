@@ -19,7 +19,9 @@ Before contributing to the `posit-sdk`, ensure that the following prerequisites 
 1. Commit your changes and push them to your forked repository.
 1. Submit a pull request to the main repository.
 
-Please ensure that your code follows the project's coding conventions and style guidelines using `make lint`. Also, make sure to include tests for any new functionality or bug fixes.
+Please ensure that your code follows the project's coding conventions and style guidelines using the configured pre-commit hooks. Run `pre-commit install` install to configure this functionality on your machine.
+
+Also, make sure to include tests for any new functionality or bug fixes.
 
 ## Tooling
 
