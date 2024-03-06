@@ -22,7 +22,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - run: make deps
-    - run: make install
+    - run: make dev
     - run: make test
     # Run coverage on one of the builds, doesn't matter which
     - if: ${{ matrix.python-version == '3.12' }}

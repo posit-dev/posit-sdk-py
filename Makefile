@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := all
+
 # Name of the project
 NAME := posit-sdk
 
@@ -11,6 +13,7 @@ PYTHON := python3
 	cov
 	default
 	deps
+	dev
 	fmt
 	fix
 	install
@@ -20,12 +23,7 @@ PYTHON := python3
 	version
 
 # Default target that runs the necessary steps to build the project
-default:
-	make deps
-	make install
-	make test
-	make lint
-	make build
+all: deps dev test lint build
 
 # Target for building the project, which will generate the distribution files in the `dist` directory.
 build:
@@ -54,17 +52,21 @@ cov-xml:
 deps:
 	$(PIP) install -r requirements.txt -r requirements-dev.txt
 
-# Target for formatting the code.
-fmt:
-	$(PYTHON) -m ruff format .
+# Target for installing the project in editable mode
+dev:
+	$(PIP) install -e .
 
 # Target for fixing linting issues.
 fix:
 	$(PYTHON) -m ruff check --fix
 
-# Target for installing the project in editable mode
+# Target for formatting the code.
+fmt:
+	$(PYTHON) -m ruff format .
+
+# Target for installing the built distribution
 install:
-	$(PIP) install -e .
+	$(PIP) install dist/*.whl
 
 # Target for running static type checking and linting
 lint:
