@@ -3,6 +3,8 @@
 ## Start the app locally
 
 ```bash
+export DATABRICKS_HOST="<databricks-sql-warehouse-server-hostname>"
+export DATABRICKS_PATH="<databricks-sql-warehouse-http-path>"
 shiny run app.py
 ```
 

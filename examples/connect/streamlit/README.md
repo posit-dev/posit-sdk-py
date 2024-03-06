@@ -1,19 +1,39 @@
+# Streamlit Example
+
+## Start the app locally
+
 ```bash
-# start streamlit locally
-DATABRICKS_TOKEN=<DB_PAT> \
-streamlit run ./sample-content.py
-
-# deploy the app the first time
-publisher deploy -a localhost:3939 -n databricks ./
-
-# re-deploy the databricks app
-publisher redeploy databricks
+export DATABRICKS_HOST="<databricks-sql-warehouse-server-hostname>"
+export DATABRICKS_PATH="<databricks-sql-warehouse-http-path>"
+streamlit run app.py
 ```
 
-TODO: Test this content with databricks-connect
-<https://docs.databricks.com/en/dev-tools/databricks-connect/python/index.html>
+## Deploy to Posit Connect
 
+Validate that `rsconnect-python` is installed:
+
+```bash
+rsconnect version
 ```
-# install the sdk from this branch
-pip install git+https://github.com/posit-dev/posit-sdk-py.git@kegs/databricks-oauth-2
+
+Or install it as documented in the [installation](https://docs.posit.co/rsconnect-python/#installation) section of the documentation.
+
+To publish, make sure `CONNECT_SERVER`, `CONNECT_API_KEY`, `DATABRICKS_HOST`, `DATABRICKS_PATH` have valid values. Then, on a terminal session, enter the following command:
+
+```bash
+rsconnect deploy streamlit . \
+  --server "${CONNECT_SERVER}" \
+  --api-key "${CONNECT_API_KEY}" \
+  --environment DATABRICKS_HOST \
+  --environment DATABRICKS_PATH
+```
+
+Note that the Databricks environment variables do not need to be resolved by the shell, so they do not include the `$` prefix.
+
+The Databricks environment variables only need to be set once, unless a change needs to be made. If the values have not changed, you don’t need to provide them again when you publish updates to the document.
+
+```bash
+rsconnect deploy streamlit . \
+  --server "${CONNECT_SERVER}" \
+  --api-key "${CONNECT_API_KEY}"
 ```
