@@ -17,10 +17,11 @@ class Paginator:
     """
 
     def __init__(
-        self, session, url, start_page: int = 1, page_size=_MAX_PAGE_SIZE
+        self, session, url, params={}, start_page: int = 1, page_size=_MAX_PAGE_SIZE
     ) -> None:
         self.session = session
         self.url = url
+        self.params = params
         self.page_number = start_page
         self.page_size = page_size
         # The API response will tell us how many total entries there are,
@@ -37,10 +38,12 @@ class Paginator:
         return result
 
     def get_next_page(self) -> List[dict]:
-        # Define query parameters for pagination.
-        params = {"page_number": self.page_number, "page_size": self.page_size}
+        # Set query parameters for pagination.
+        self.params.update(
+            {"page_number": self.page_number, "page_size": self.page_size}
+        )
         # Send a GET request to the endpoint with the specified parameters.
-        response = self.session.get(self.url, params=params).json()
+        response = self.session.get(self.url, params=self.params).json()
         # On our first request, we won't have set the total yet, so do it
         if self.total is None:
             self.total = response["total"]
