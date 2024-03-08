@@ -41,7 +41,6 @@ class Users:
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
     ) -> User | None:
         pager = Paginator(self.session, self.url, page_size=page_size)
-        result = pager.get_next_page()
         while pager.total is None or pager.seen < pager.total:
             result = pager.get_next_page()
             for u in result:
