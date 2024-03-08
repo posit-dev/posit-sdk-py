@@ -6,7 +6,7 @@ from requests import HTTPError
 
 from posit.connect.client import Client
 
-from .api import load_mock
+from .api import load_mock  # type: ignore
 
 
 class TestUsers:

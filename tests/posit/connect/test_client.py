@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from posit.connect import Client
 
-from .api import load_mock
+from .api import load_mock  # type: ignore
 
 
 @pytest.fixture
