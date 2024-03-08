@@ -33,7 +33,6 @@ class Paginator:
         result = []
         while self.total is None or self.seen < self.total:
             result += self.get_next_page()
-            self.page_number += 1
         return result
 
     def get_next_page(self) -> List[dict]:
@@ -46,4 +45,5 @@ class Paginator:
             self.total = response["total"]
         results = response["results"]
         self.seen += len(results)
+        self.page_number += 1
         return results
