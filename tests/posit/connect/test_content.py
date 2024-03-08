@@ -2,209 +2,45 @@ import responses
 
 from posit.connect.client import Client
 
+from .api import load_mock  # type: ignore
+
 
 class TestContents:
     @responses.activate
     def test_get_all_content(self):
         responses.get(
             "https://connect.example/__api__/v1/content",
-            json=[
-                {
-                    "guid": "39c8d85a-37ae-4b8b-8655-30a06adff2f1",
-                    "name": "team-admin-dashboard",
-                    "title": "Team admin dashboard",
-                    "description": "",
-                    "access_type": "logged_in",
-                    "connection_timeout": None,
-                    "read_timeout": None,
-                    "init_timeout": None,
-                    "idle_timeout": None,
-                    "max_processes": None,
-                    "min_processes": None,
-                    "max_conns_per_process": None,
-                    "load_factor": None,
-                    "memory_request": None,
-                    "memory_limit": None,
-                    "cpu_request": None,
-                    "cpu_limit": None,
-                    "amd_gpu_limit": None,
-                    "nvidia_gpu_limit": None,
-                    "service_account_name": None,
-                    "default_image_name": None,
-                    "created_time": "2020-02-23T20:28:20Z",
-                    "last_deployed_time": "2020-10-13T21:11:24Z",
-                    "bundle_id": "16145",
-                    "app_mode": "shiny",
-                    "content_category": "",
-                    "parameterized": False,
-                    "cluster_name": None,
-                    "image_name": None,
-                    "r_version": "3.5.3",
-                    "py_version": None,
-                    "quarto_version": None,
-                    "r_environment_management": True,
-                    "default_r_environment_management": None,
-                    "py_environment_management": None,
-                    "default_py_environment_management": None,
-                    "run_as": None,
-                    "run_as_current_user": False,
-                    "owner_guid": "a01792e3-2e67-402e-99af-be04a48da074",
-                    "content_url": "https://connect.example/content/39c8d85a-37ae-4b8b-8655-30a06adff2f1/",
-                    "dashboard_url": "https://connect.example/connect/#/apps/39c8d85a-37ae-4b8b-8655-30a06adff2f1",
-                    "app_role": "viewer",
-                    "id": "583",
-                },
-                {
-                    "guid": "f2f37341-e21d-3d80-c698-a935ad614066",
-                    "name": "Performance-Data-1671216053560",
-                    "title": "Performance Data",
-                    "description": "",
-                    "access_type": "logged_in",
-                    "connection_timeout": None,
-                    "read_timeout": None,
-                    "init_timeout": None,
-                    "idle_timeout": None,
-                    "max_processes": None,
-                    "min_processes": None,
-                    "max_conns_per_process": None,
-                    "load_factor": None,
-                    "memory_request": None,
-                    "memory_limit": None,
-                    "cpu_request": None,
-                    "cpu_limit": None,
-                    "amd_gpu_limit": None,
-                    "nvidia_gpu_limit": None,
-                    "service_account_name": None,
-                    "default_image_name": None,
-                    "created_time": "2022-12-16T18:40:53Z",
-                    "last_deployed_time": "2024-02-24T09:56:30Z",
-                    "bundle_id": "401171",
-                    "app_mode": "quarto-static",
-                    "content_category": "",
-                    "parameterized": False,
-                    "cluster_name": "Local",
-                    "image_name": None,
-                    "r_version": None,
-                    "py_version": "3.9.17",
-                    "quarto_version": "1.3.340",
-                    "r_environment_management": None,
-                    "default_r_environment_management": None,
-                    "py_environment_management": True,
-                    "default_py_environment_management": None,
-                    "run_as": None,
-                    "run_as_current_user": False,
-                    "owner_guid": "87c12c08-11cd-4de1-8da3-12a7579c4998",
-                    "content_url": "https://connect.example/content/f2f37341-e21d-3d80-c698-a935ad614066/",
-                    "dashboard_url": "https://connect.example/connect/#/apps/f2f37341-e21d-3d80-c698-a935ad614066",
-                    "app_role": "viewer",
-                    "id": "8274",
-                },
-                {
-                    "guid": "93a3cd6d-5a1b-236c-9808-6045f2a73fb5",
-                    "name": "My-Streamlit-app",
-                    "title": "My Streamlit app",
-                    "description": "",
-                    "access_type": "logged_in",
-                    "connection_timeout": None,
-                    "read_timeout": None,
-                    "init_timeout": None,
-                    "idle_timeout": None,
-                    "max_processes": None,
-                    "min_processes": None,
-                    "max_conns_per_process": None,
-                    "load_factor": None,
-                    "memory_request": None,
-                    "memory_limit": None,
-                    "cpu_request": None,
-                    "cpu_limit": None,
-                    "amd_gpu_limit": None,
-                    "nvidia_gpu_limit": None,
-                    "service_account_name": None,
-                    "default_image_name": None,
-                    "created_time": "2023-02-28T14:00:17Z",
-                    "last_deployed_time": "2023-03-01T14:12:21Z",
-                    "bundle_id": "217640",
-                    "app_mode": "python-streamlit",
-                    "content_category": "",
-                    "parameterized": False,
-                    "cluster_name": "Local",
-                    "image_name": None,
-                    "r_version": None,
-                    "py_version": "3.9.17",
-                    "quarto_version": None,
-                    "r_environment_management": None,
-                    "default_r_environment_management": None,
-                    "py_environment_management": True,
-                    "default_py_environment_management": None,
-                    "run_as": None,
-                    "run_as_current_user": False,
-                    "owner_guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
-                    "content_url": "https://connect.example/content/93a3cd6d-5a1b-236c-9808-6045f2a73fb5/",
-                    "dashboard_url": "https://connect.example/connect/#/apps/93a3cd6d-5a1b-236c-9808-6045f2a73fb5",
-                    "app_role": "viewer",
-                    "id": "8462",
-                },
-            ],
-        )
-        responses.get(
-            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
-            json={
-                "guid": "f2f37341-e21d-3d80-c698-a935ad614066",
-                "name": "Performance-Data-1671216053560",
-                "title": "Performance Data",
-                "description": "",
-                "access_type": "logged_in",
-                "connection_timeout": None,
-                "read_timeout": None,
-                "init_timeout": None,
-                "idle_timeout": None,
-                "max_processes": None,
-                "min_processes": None,
-                "max_conns_per_process": None,
-                "load_factor": None,
-                "memory_request": None,
-                "memory_limit": None,
-                "cpu_request": None,
-                "cpu_limit": None,
-                "amd_gpu_limit": None,
-                "nvidia_gpu_limit": None,
-                "service_account_name": None,
-                "default_image_name": None,
-                "created_time": "2022-12-16T18:40:53Z",
-                "last_deployed_time": "2024-02-24T09:56:30Z",
-                "bundle_id": "401171",
-                "app_mode": "quarto-static",
-                "content_category": "",
-                "parameterized": False,
-                "cluster_name": "Local",
-                "image_name": None,
-                "r_version": None,
-                "py_version": "3.9.17",
-                "quarto_version": "1.3.340",
-                "r_environment_management": None,
-                "default_r_environment_management": None,
-                "py_environment_management": True,
-                "default_py_environment_management": None,
-                "run_as": None,
-                "run_as_current_user": False,
-                "owner_guid": "87c12c08-11cd-4de1-8da3-12a7579c4998",
-                "content_url": "https://connect.example/content/f2f37341-e21d-3d80-c698-a935ad614066/",
-                "dashboard_url": "https://connect.example/connect/#/apps/f2f37341-e21d-3d80-c698-a935ad614066",
-                "app_role": "viewer",
-                "id": "8274",
-            },
+            json=load_mock("v1/content.json"),
         )
         con = Client("12345", "https://connect.example")
         all_content = con.content.find()
         assert len(all_content) == 3
+        assert [c["name"] for c in all_content] == [
+            "team-admin-dashboard",
+            "Performance-Data-1671216053560",
+            "My-Streamlit-app",
+        ]
 
-        # Test find_one
+    @responses.activate
+    def test_content_find_one(self):
+        responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+        )
+        con = Client("12345", "https://connect.example")
+
         one = con.content.find_one(lambda c: c["title"] == "Performance Data")
         assert one["name"] == "Performance-Data-1671216053560"
 
-        # Test get
-        get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
-        assert one == get_one
-
         # Test find_one doesn't find any
         assert con.content.find_one(lambda c: c["title"] == "Does not exist") is None
+
+    @responses.activate
+    def test_content_get(self):
+        responses.get(
+            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+        )
+        con = Client("12345", "https://connect.example")
+        get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
+        assert get_one["name"] == "Performance-Data-1671216053560"
