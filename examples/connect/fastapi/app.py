@@ -8,7 +8,7 @@ from databricks import sql
 
 from typing import Annotated
 
-from fastapi import FastAPI, Header, Depends
+from fastapi import FastAPI, Header
 from fastapi.responses import JSONResponse
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
@@ -19,26 +19,15 @@ rows = None
 app = FastAPI()
 
 
-async def get_token(
-    posit_connect_user_session_token: Annotated[str | None, Header()] = None,
-) -> dict | None:
-    """
-    Get the token from the Posit-Connect-User-Session-Token header.
-    """
-    if posit_connect_user_session_token is None:
-        return None
-    return posit_connect_user_session_token
-
-
 @app.get("/fares")
-async def get_fares(session_token=Depends(get_token)) -> JSONResponse:
+async def get_fares(posit_connect_user_session_token: Annotated[str | None, Header()] = None) -> JSONResponse:
     """
     FastAPI example API that returns the first few rows from
     a table hosted in Databricks.
     """
     global rows
 
-    credentials_provider = viewer_credentials_provider(user_session_token=session_token)
+    credentials_provider = viewer_credentials_provider(user_session_token=posit_connect_user_session_token)
 
     if rows is None:
         query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"
