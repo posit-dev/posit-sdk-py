@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, List, TypedDict
+from typing import Callable, List
 
 from requests import Session
 
@@ -11,7 +12,8 @@ from .config import Config
 from .paginator import _MAX_PAGE_SIZE, Paginator
 
 
-class User(TypedDict, total=False):
+@dataclass
+class User:
     guid: str
     email: str
     username: str

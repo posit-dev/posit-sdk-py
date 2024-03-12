@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Callable, List, TypedDict
+from dataclasses import dataclass
+from typing import Callable, List, Optional
 
 from requests import Session
 
@@ -9,9 +10,51 @@ from . import urls
 from .config import Config
 
 
-class ContentItem(TypedDict, total=False):
-    # TODO: specify types
-    pass
+@dataclass
+class ContentItem:
+    guid: str
+    name: str
+    title: Optional[str]
+    description: str
+    access_type: str
+    connection_timeout: Optional[int]
+    read_timeout: Optional[int]
+    init_timeout: Optional[int]
+    idle_timeout: Optional[int]
+    max_processes: Optional[int]
+    min_processes: Optional[int]
+    max_conns_per_process: Optional[int]
+    load_factor: Optional[float]
+    cpu_request: Optional[float]
+    cpu_limit: Optional[float]
+    memory_request: Optional[int]
+    memory_limit: Optional[int]
+    amd_gpu_limit: Optional[int]
+    nvidia_gpu_limit: Optional[int]
+    created_time: str
+    last_deployed_time: str
+    bundle_id: Optional[str]
+    app_mode: str
+    content_category: Optional[str]
+    parameterized: bool
+    cluster_name: Optional[str]
+    image_name: Optional[str]
+    default_image_name: Optional[str]
+    default_r_environment_management: Optional[bool]
+    default_py_environment_management: Optional[bool]
+    service_account_name: Optional[str]
+    r_version: Optional[str]
+    r_environment_management: Optional[bool]
+    py_version: Optional[str]
+    py_environment_management: Optional[bool]
+    quarto_version: Optional[str]
+    run_as: Optional[str]
+    run_as_current_user: bool
+    owner_guid: str
+    content_url: str
+    dashboard_url: str
+    app_role: str
+    id: str
 
 
 class Content:

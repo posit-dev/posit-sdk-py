@@ -15,7 +15,7 @@ class TestContents:
         con = Client("12345", "https://connect.example")
         all_content = con.content.find()
         assert len(all_content) == 3
-        assert [c["name"] for c in all_content] == [
+        assert [c.name for c in all_content] == [
             "team-admin-dashboard",
             "Performance-Data-1671216053560",
             "My-Streamlit-app",
@@ -29,11 +29,11 @@ class TestContents:
         )
         con = Client("12345", "https://connect.example")
 
-        one = con.content.find_one(lambda c: c["title"] == "Performance Data")
-        assert one["name"] == "Performance-Data-1671216053560"
+        one = con.content.find_one(lambda c: c.title == "Performance Data")
+        assert one.name == "Performance-Data-1671216053560"
 
         # Test find_one doesn't find any
-        assert con.content.find_one(lambda c: c["title"] == "Does not exist") is None
+        assert con.content.find_one(lambda c: c.title == "Does not exist") is None
 
     @responses.activate
     def test_content_get(self):
@@ -43,4 +43,4 @@ class TestContents:
         )
         con = Client("12345", "https://connect.example")
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
-        assert get_one["name"] == "Performance-Data-1671216053560"
+        assert get_one.name == "Performance-Data-1671216053560"
