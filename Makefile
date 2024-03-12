@@ -34,7 +34,8 @@ clean:
 	find . -name "*.egg-info" -exec rm -rf {} +
 	find . -name "*.pyc" -exec rm -f {} +
 	find . -name "__pycache__" -exec rm -rf {} +
-	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build dist htmlcov
+	find . -name "_version.py" -exec rm -rf {} +
+	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
 
 # Target for generating coverage report
 cov:
