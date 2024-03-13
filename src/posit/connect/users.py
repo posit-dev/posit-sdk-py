@@ -5,10 +5,12 @@ from typing import Callable, List, TypedDict
 
 from requests import Session
 
+
 from . import urls
 
 from .config import Config
 from .paginator import _MAX_PAGE_SIZE, Paginator
+from .resources import Resources
 
 
 class User(TypedDict, total=False):
@@ -25,7 +27,7 @@ class User(TypedDict, total=False):
     locked: bool
 
 
-class Users:
+class Users(Resources[User]):
     def __init__(self, config: Config, session: Session) -> None:
         self.url = urls.append_path(config.url, "v1/users")
         self.config = config
@@ -53,3 +55,12 @@ class Users:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
         return User(**response.json())
+
+    def create(self) -> User:
+        raise NotImplementedError()
+
+    def update(self) -> User:
+        raise NotImplementedError()
+
+    def delete(self) -> None:
+        raise NotImplementedError()
