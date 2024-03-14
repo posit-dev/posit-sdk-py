@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from requests import Session
 
@@ -24,7 +24,34 @@ class User:
     updated_time: datetime
     active_time: datetime
     confirmed: bool
-    locked: bool
+    is_locked: bool
+
+    asdf: Optional[bool]
+
+
+    @property
+    def locked(self):
+        from warnings import warn
+
+        warn("this is a deprecation notice", DeprecationWarning)
+        return self.is_locked
+
+    @locked.setter
+    def locked(self, value):
+        self.locked = value
+
+    @classmethod
+    def from_dict(cls, instance: dict) -> User:
+        field_names = {"locked": "is_locked"}
+        instance = {field_names.get(k, k): v for k, v in instance.items()}
+        return cls(**instance)
+
+    def asdict(self) -> dict:
+        field_names = {"is_locked": "locked"}
+        return {
+            **asdict(self),
+            **{field_names.get(k, k): v for k, v in asdict(self).items()},
+        }
 
 
 class Users:
@@ -37,7 +64,8 @@ class Users:
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
     ) -> List[User]:
         results = Paginator(self.session, self.url, page_size=page_size).get_all()
-        return [User(**user) for user in results if filter(User(**user))]
+        users = (User.from_dict(result) for result in results)
+        return [user for user in users if filter(user)]
 
     def find_one(
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
@@ -46,7 +74,7 @@ class Users:
         while pager.total is None or pager.seen < pager.total:
             result = pager.get_next_page()
             for u in result:
-                user = User(**u)
+                user = User.from_dict(u)
                 if filter(user):
                     return user
         return None
@@ -54,4 +82,4 @@ class Users:
     def get(self, id: str) -> User:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
-        return User(**response.json())
+        return User.from_dict(response.json())
