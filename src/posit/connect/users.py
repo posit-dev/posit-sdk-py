@@ -13,18 +13,55 @@ from .paginator import _MAX_PAGE_SIZE, Paginator
 from .resources import Resources
 
 
-class User(TypedDict, total=False):
-    guid: str
-    email: str
-    username: str
-    first_name: str
-    last_name: str
-    user_role: str
-    created_time: datetime
-    updated_time: datetime
-    active_time: datetime
-    confirmed: bool
-    locked: bool
+class User(dict):
+
+    @property
+    def guid(self) -> str:
+        return self["guid"]
+
+    @property
+    def email(self) -> str:
+        return self["email"]
+
+    @property
+    def username(self) -> str:
+        return self["username"]
+
+    @property
+    def first_name(self) -> str:
+        return self["first_name"]
+
+    @property
+    def last_name(self) -> str:
+        return self["last_name"]
+
+    @property
+    def user_role(self) -> str:
+        return self["user_role"]
+
+    @property
+    def created_time(self) -> datetime:
+        return self["created_time"]
+
+    @property
+    def updated_time(self) -> datetime:
+        return self["updated_time"]
+
+    @property
+    def active_time(self) -> datetime:
+        return self["active_time"]
+
+    @property
+    def confirmed(self) -> bool:
+        return self["confirmed"]
+
+    @property
+    def locked(self) -> bool:
+        return self["locked"]
+
+    def update(self, **kwargs):
+        self["session"].patch(self["url"], json=kwargs)
+        super().update(kwargs)
 
 
 class Users(Resources[User]):
@@ -37,7 +74,15 @@ class Users(Resources[User]):
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
     ) -> List[User]:
         results = Paginator(self.session, self.url, page_size=page_size).get_all()
-        return [User(**user) for user in results if filter(User(**user))]
+        return [
+            User(
+                **user,
+                session=self.session,
+                url=urls.append_path(self.url, user["guid"]),
+            )
+            for user in results
+            if filter(User(**user))
+        ]
 
     def find_one(
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
@@ -46,7 +91,11 @@ class Users(Resources[User]):
         while pager.total is None or pager.seen < pager.total:
             result = pager.get_next_page()
             for u in result:
-                user = User(**u)
+                user = User(
+                    **u,
+                    session=self.session,
+                    url=urls.append_path(self.url, u["guid"]),
+                )
                 if filter(user):
                     return user
         return None
@@ -54,7 +103,12 @@ class Users(Resources[User]):
     def get(self, id: str) -> User:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
-        return User(**response.json())
+        raw_user = response.json()
+        return User(
+            **raw_user,
+            session=self.session,
+            url=urls.append_path(self.url, raw_user["guid"]),
+        )
 
     def create(self) -> User:
         raise NotImplementedError()
