@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, List, Optional
+from typing import Callable, List
 
 from requests import Session
+
 
 from . import urls
 
 from .config import Config
 from .paginator import _MAX_PAGE_SIZE, Paginator
+from .resources import Resources, Resource
 
 
-@dataclass
-class User:
+@dataclass(init=False)
+class User(Resource):
     guid: str
     email: str
     username: str
@@ -24,37 +26,37 @@ class User:
     updated_time: datetime
     active_time: datetime
     confirmed: bool
+    locked: bool
+
+    # A local shim around locked. This field does not exist in the Connect API.
     is_locked: bool
 
-    asdf: Optional[bool]
-
-
     @property
+    def _compatibility(self):
+        return {"locked": "is_locked"}
+
+    @property  # type: ignore
     def locked(self):
         from warnings import warn
 
-        warn("this is a deprecation notice", DeprecationWarning)
+        warn(
+            "the field 'locked' will be removed in the next major release",
+            FutureWarning,
+        )
         return self.is_locked
 
     @locked.setter
     def locked(self, value):
-        self.locked = value
+        from warnings import warn
 
-    @classmethod
-    def from_dict(cls, instance: dict) -> User:
-        field_names = {"locked": "is_locked"}
-        instance = {field_names.get(k, k): v for k, v in instance.items()}
-        return cls(**instance)
-
-    def asdict(self) -> dict:
-        field_names = {"is_locked": "locked"}
-        return {
-            **asdict(self),
-            **{field_names.get(k, k): v for k, v in asdict(self).items()},
-        }
+        warn(
+            "the field 'locked' will be removed in the next major release",
+            FutureWarning,
+        )
+        self.is_locked = value
 
 
-class Users:
+class Users(Resources[User]):
     def __init__(self, config: Config, session: Session) -> None:
         self.url = urls.append_path(config.url, "v1/users")
         self.config = config
@@ -64,7 +66,7 @@ class Users:
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
     ) -> List[User]:
         results = Paginator(self.session, self.url, page_size=page_size).get_all()
-        users = (User.from_dict(result) for result in results)
+        users = (User(**result) for result in results)
         return [user for user in users if filter(user)]
 
     def find_one(
@@ -74,7 +76,7 @@ class Users:
         while pager.total is None or pager.seen < pager.total:
             result = pager.get_next_page()
             for u in result:
-                user = User.from_dict(u)
+                user = User(**u)
                 if filter(user):
                     return user
         return None
@@ -82,4 +84,13 @@ class Users:
     def get(self, id: str) -> User:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
-        return User.from_dict(response.json())
+        return User(**response.json())
+
+    def create(self) -> User:
+        raise NotImplementedError()
+
+    def update(self) -> User:
+        raise NotImplementedError()
+
+    def delete(self) -> None:
+        raise NotImplementedError()

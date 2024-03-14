@@ -38,7 +38,7 @@ class TestUsers:
 
         df = pd.DataFrame(all_users)
         assert isinstance(df, pd.DataFrame)
-        assert df.shape == (3, 11)
+        assert df.shape == (3, 12)
         assert df.columns.to_list() == [
             "guid",
             "email",
@@ -51,6 +51,7 @@ class TestUsers:
             "active_time",
             "confirmed",
             "locked",
+            "is_locked",
         ]
         assert df.username.to_list() == ["al", "robert", "carlos12"]
 

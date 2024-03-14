@@ -8,10 +8,11 @@ from requests import Session
 from . import urls
 
 from .config import Config
+from .resources import Resource, Resources
 
 
-@dataclass
-class ContentItem:
+@dataclass(init=False)
+class ContentItem(Resource):
     guid: str
     name: str
     title: Optional[str]
@@ -57,7 +58,7 @@ class ContentItem:
     id: str
 
 
-class Content:
+class Content(Resources[ContentItem]):
     def __init__(self, config: Config, session: Session) -> None:
         self.url = urls.append_path(config.url, "v1/content")
         self.config = config
@@ -83,3 +84,12 @@ class Content:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
         return ContentItem(**response.json())
+
+    def create(self) -> ContentItem:
+        raise NotImplementedError()
+
+    def update(self) -> ContentItem:
+        raise NotImplementedError()
+
+    def delete(self) -> None:
+        raise NotImplementedError()
