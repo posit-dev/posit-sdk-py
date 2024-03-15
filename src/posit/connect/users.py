@@ -55,6 +55,11 @@ class User(Resource):
         )
         self.is_locked = value
 
+    def update(self, **kwargs):
+        for k, v in kwargs.items():
+            self.__setattr__(k, v)
+        self.session.patch(self.url, json=kwargs)
+
 
 class Users(Resources[User]):
     def __init__(self, config: Config, session: Session) -> None:
@@ -67,7 +72,15 @@ class Users(Resources[User]):
     ) -> List[User]:
         results = Paginator(self.session, self.url, page_size=page_size).get_all()
         users = (User(**result) for result in results)
-        return [user for user in users if filter(user)]
+        return [
+            User(
+                **user,
+                session=self.session,
+                url=urls.append_path(self.url, user["guid"]),
+            )
+            for user in results
+            if filter(User(**user))
+        ]
 
     def find_one(
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
@@ -76,7 +89,11 @@ class Users(Resources[User]):
         while pager.total is None or pager.seen < pager.total:
             result = pager.get_next_page()
             for u in result:
-                user = User(**u)
+                user = User(
+                    **u,
+                    session=self.session,
+                    url=urls.append_path(self.url, u["guid"]),
+                )
                 if filter(user):
                     return user
         return None
@@ -84,7 +101,12 @@ class Users(Resources[User]):
     def get(self, id: str) -> User:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
-        return User(**response.json())
+        raw_user = response.json()
+        return User(
+            **raw_user,
+            session=self.session,
+            url=urls.append_path(self.url, raw_user["guid"]),
+        )
 
     def create(self) -> User:
         raise NotImplementedError()

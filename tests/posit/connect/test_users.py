@@ -38,8 +38,10 @@ class TestUsers:
 
         df = pd.DataFrame(all_users)
         assert isinstance(df, pd.DataFrame)
-        assert df.shape == (3, 12)
+        assert df.shape == (3, 14)
         assert df.columns.to_list() == [
+            "session",
+            "url",
             "guid",
             "email",
             "username",
@@ -124,6 +126,45 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        assert (
-            con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4").username == "carlos12"
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+        assert carlos.username == "carlos12"
+        assert carlos.first_name == "Carlos"
+        assert carlos.created_time == "2019-09-09T15:24:32Z"
+
+    @responses.activate
+    def test_users_get_extra_fields(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json={
+                "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+                "username": "carlos12",
+                "some_new_field": "some_new_value",
+            },
         )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+        assert carlos.username == "carlos12"
+        # assert carlos["some_new_field"] == "some_new_value"
+
+    @responses.activate
+    def test_user_update(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        patch_request = responses.patch(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            match=[responses.matchers.json_params_matcher({"first_name": "Carlitos"})],
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+
+        assert patch_request.call_count == 0
+        assert carlos.first_name == "Carlos"
+
+        carlos.update(first_name="Carlitos")
+
+        assert patch_request.call_count == 1
+        assert carlos.first_name == "Carlitos"

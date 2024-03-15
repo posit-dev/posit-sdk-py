@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, fields
+from requests import Session
 from typing import Generic, List, Optional, TypeVar
 
 
@@ -8,6 +9,9 @@ T = TypeVar("T")
 
 @dataclass
 class Resource(ABC):
+    session: Optional[Session]
+    url: Optional[str]
+
     def __init__(self, **kwargs) -> None:
         mapping = {self._compatibility.get(k, k): v for k, v in kwargs.items()}
         for prop in fields(self):
@@ -20,6 +24,7 @@ class Resource(ABC):
         return {}
 
     def asdict(self) -> dict:
+        # TODO: pop off session and url?
         return asdict(self)
 
 
