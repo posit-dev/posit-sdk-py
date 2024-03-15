@@ -167,3 +167,19 @@ class TestUsers:
 
         assert patch_request.call_count == 1
         assert carlos.first_name == "Carlitos"
+
+    @responses.activate
+    def test_user_cant_setattr(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+
+        with pytest.raises(
+            AttributeError,
+            match=r"Cannot set attributes: use update\(\) instead",
+        ):
+            carlos.first_name = "Carlitos"

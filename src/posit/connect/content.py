@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, List, TypedDict
+from typing import Callable, List, Optional
 
 from requests import Session
 
@@ -10,9 +10,46 @@ from .config import Config
 from .resources import Resources
 
 
-class ContentItem(TypedDict, total=False):
-    # TODO: specify types
-    pass
+class ContentItem(dict):
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        # TODO: self.url, self.config, self.session
+
+    def update(self):
+        pass
+
+    @property
+    def name(self) -> str:
+        return self["name"]
+
+    @property
+    def id(self) -> str:
+        return self["id"]
+
+    @property
+    def title(self) -> str:
+        return self["title"]
+
+    @property
+    def description(self) -> str:
+        return self["description"]
+
+    @property
+    def created_time(self) -> str:
+        return self["created_time"]
+
+    @property
+    def guid(self) -> str:
+        return self["guid"]
+
+    @property
+    def access_type(self) -> str:
+        return self["access_type"]
+
+    @property
+    def connection_timeout(self) -> Optional[int]:
+        return self["connection_timeout"]
 
 
 class Content(Resources[ContentItem]):

@@ -1,7 +1,5 @@
 from __future__ import annotations
-
-from datetime import datetime
-from typing import Callable, List, TypedDict
+from typing import Any, Callable, List
 
 from requests import Session
 
@@ -40,15 +38,15 @@ class User(dict):
         return self["user_role"]
 
     @property
-    def created_time(self) -> datetime:
+    def created_time(self) -> str:
         return self["created_time"]
 
     @property
-    def updated_time(self) -> datetime:
+    def updated_time(self) -> str:
         return self["updated_time"]
 
     @property
-    def active_time(self) -> datetime:
+    def active_time(self) -> str:
         return self["active_time"]
 
     @property
@@ -58,6 +56,9 @@ class User(dict):
     @property
     def locked(self) -> bool:
         return self["locked"]
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        raise AttributeError("Cannot set attributes: use update() instead.")
 
     def update(self, **kwargs):
         self["session"].patch(self["url"], json=kwargs)
