@@ -77,14 +77,13 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        c = con.users.find_one(lambda u: u["first_name"] == "Carlos", page_size=2)
+        c = con.users.find_one(lambda u: u.first_name == "Carlos", page_size=2)
         # Can't isinstance(c, User) bc inherits TypedDict (cf. #23)
-        assert c["username"] == "carlos12"
+        assert c.username == "carlos12"
 
         # Now test that if not found, it returns None
         assert (
-            con.users.find_one(lambda u: u["first_name"] == "Ringo", page_size=2)
-            is None
+            con.users.find_one(lambda u: u.first_name == "Ringo", page_size=2) is None
         )
 
     @responses.activate
@@ -111,11 +110,11 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        bob = con.users.find_one(lambda u: u["first_name"] == "Bob", page_size=2)
-        assert bob["username"] == "robert"
+        bob = con.users.find_one(lambda u: u.first_name == "Bob", page_size=2)
+        assert bob.username == "robert"
         # This errors because we have to go past the first page
         with pytest.raises(HTTPError, match="500 Server Error"):
-            con.users.find_one(lambda u: u["first_name"] == "Carlos", page_size=2)
+            con.users.find_one(lambda u: u.first_name == "Carlos", page_size=2)
 
     @responses.activate
     def test_users_get(self):
