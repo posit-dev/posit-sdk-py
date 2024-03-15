@@ -7,10 +7,10 @@ from requests import Session
 from . import urls
 
 from .config import Config
-from .resources import Resources
+from .resources import Resources, Resource
 
 
-class ContentItem(dict):
+class ContentItem(Resource):
     @property
     def guid(self) -> str:
         return self.get("guid")  # type: ignore

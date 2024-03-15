@@ -1,8 +1,33 @@
+import warnings
+
 from abc import ABC, abstractmethod
 from typing import Generic, List, Optional, TypeVar
 
 
 T = TypeVar("T")
+
+
+class Resource(ABC, dict):
+    def __getitem__(self, key):
+        warnings.warn(
+            f"__getitem__ for '{key}' does not support backwards compatibility. Consider using field based access instead: 'instance.{key}'",
+            FutureWarning,
+        )
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, value):
+        warnings.warn(
+            f"__setitem__ for '{key}' does not support backwards compatibility. Consider using field based access instead: 'instance.{key} = {value}",
+            FutureWarning,
+        )
+        return super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        warnings.warn(
+            f"__delitem__ for '{key}' does not support backwards compatibility. Consider using field based access instead: 'del instance.{key}'",
+            FutureWarning,
+        )
+        return super().__delitem__(key)
 
 
 class Resources(ABC, Generic[T]):
