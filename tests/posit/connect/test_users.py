@@ -37,7 +37,7 @@ class TestUsers:
 
         df = pd.DataFrame(all_users)
         assert isinstance(df, pd.DataFrame)
-        assert df.shape == (3, 11)
+        assert df.shape == (3, 13)
         assert df.columns.to_list() == [
             "email",
             "username",
@@ -50,6 +50,8 @@ class TestUsers:
             "confirmed",
             "locked",
             "guid",
+            "session",
+            "url",
         ]
         assert df["username"].to_list() == ["al", "robert", "carlos12"]
 
@@ -75,14 +77,13 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        c = con.users.find_one(lambda u: u["first_name"] == "Carlos", page_size=2)
+        c = con.users.find_one(lambda u: u.first_name == "Carlos", page_size=2)
         # Can't isinstance(c, User) bc inherits TypedDict (cf. #23)
-        assert c["username"] == "carlos12"
+        assert c.username == "carlos12"
 
         # Now test that if not found, it returns None
         assert (
-            con.users.find_one(lambda u: u["first_name"] == "Ringo", page_size=2)
-            is None
+            con.users.find_one(lambda u: u.first_name == "Ringo", page_size=2) is None
         )
 
     @responses.activate
@@ -109,11 +110,11 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        bob = con.users.find_one(lambda u: u["first_name"] == "Bob", page_size=2)
-        assert bob["username"] == "robert"
+        bob = con.users.find_one(lambda u: u.first_name == "Bob", page_size=2)
+        assert bob.username == "robert"
         # This errors because we have to go past the first page
         with pytest.raises(HTTPError, match="500 Server Error"):
-            con.users.find_one(lambda u: u["first_name"] == "Carlos", page_size=2)
+            con.users.find_one(lambda u: u.first_name == "Carlos", page_size=2)
 
     @responses.activate
     def test_users_get(self):
@@ -123,7 +124,65 @@ class TestUsers:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        assert (
-            con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")["username"]
-            == "carlos12"
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+        assert carlos.username == "carlos12"
+        assert carlos.first_name == "Carlos"
+        assert carlos.created_time == "2019-09-09T15:24:32Z"
+
+    @responses.activate
+    def test_users_get_extra_fields(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json={
+                "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+                "username": "carlos12",
+                "some_new_field": "some_new_value",
+            },
         )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+        assert carlos.username == "carlos12"
+        assert carlos["some_new_field"] == "some_new_value"
+
+    @responses.activate
+    def test_user_update(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        patch_request = responses.patch(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            match=[responses.matchers.json_params_matcher({"first_name": "Carlitos"})],
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+
+        assert patch_request.call_count == 0
+        assert carlos.first_name == "Carlos"
+
+        carlos.update(first_name="Carlitos")
+
+        assert patch_request.call_count == 1
+        assert carlos.first_name == "Carlitos"
+        # TODO(#99):
+        # * test setting the other fields
+        # * test invalid field
+        # * error response (e.g. not authorized)
+
+    @responses.activate
+    def test_user_cant_setattr(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+
+        with pytest.raises(
+            AttributeError,
+            match=r"Cannot set attributes: use update\(\) instead",
+        ):
+            carlos.first_name = "Carlitos"
