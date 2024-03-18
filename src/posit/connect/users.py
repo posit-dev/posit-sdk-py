@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any, Callable, List, Optional
 
+
 from requests import Session
 
 
@@ -8,11 +9,10 @@ from . import urls
 
 from .config import Config
 from .paginator import _MAX_PAGE_SIZE, Paginator
-from .resources import Resources
+from .resources import Resource, Resources
 
 
-class User(dict):
-
+class User(Resource):
     @property
     def guid(self) -> str:
         return self.get("guid")  # type: ignore

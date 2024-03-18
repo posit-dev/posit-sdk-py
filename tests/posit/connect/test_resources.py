@@ -1,8 +1,53 @@
 import pytest
+import warnings
 
 from typing import Any, List, Optional
 
-from posit.connect.resources import Resources
+from posit.connect.resources import Resource, Resources
+
+
+class FakeResource(Resource):
+    @property
+    def foo(self) -> Optional[str]:
+        return self.get("foo")
+
+
+class TestResource:
+    def test__getitem__(self):
+        warnings.filterwarnings("ignore", category=FutureWarning)
+        k = "foo"
+        v = "bar"
+        d = dict({k: v})
+        r = FakeResource(d)
+        assert r.__getitem__(k) == d.__getitem__(k)
+        assert r[k] == d[k]
+
+    def test__setitem__(self):
+        warnings.filterwarnings("ignore", category=FutureWarning)
+        k = "foo"
+        v1 = "bar"
+        v2 = "baz"
+        r = FakeResource({k: v1})
+        assert r[k] == v1
+        r[k] = v2
+        assert r[k] == v2
+
+    def test__delitem__(self):
+        warnings.filterwarnings("ignore", category=FutureWarning)
+        k = "foo"
+        v = "bar"
+        r = FakeResource({k: v})
+        assert k in r
+        assert r[k] == v
+        del r[k]
+        assert k not in r
+
+    def test_foo(self):
+        k = "foo"
+        v = "bar"
+        d = dict({k: v})
+        r = FakeResource(d)
+        assert r.foo == v
 
 
 class TestResources(Resources[Any]):
