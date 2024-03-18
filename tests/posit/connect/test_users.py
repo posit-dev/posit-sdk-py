@@ -166,8 +166,10 @@ class TestUsers:
 
         assert patch_request.call_count == 1
         assert carlos.first_name == "Carlitos"
-        # TODO: test setting the other fields
-        # TODO: test invalid field
+        # TODO(#99):
+        # * test setting the other fields
+        # * test invalid field
+        # * error response (e.g. not authorized)
 
     @responses.activate
     def test_user_cant_setattr(self):

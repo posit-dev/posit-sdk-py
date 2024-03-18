@@ -63,10 +63,10 @@ class User(dict):
     def _update(self, body):
         self.get("session").patch(self.get("url"), json=body)
         # If the request is successful, update the local object
-        # TODO: that patch request returns a payload on success,
-        # so we could update the local object with that payload
-        # (includes updated_time)
         super().update(body)
+        # TODO(#99): that patch request returns a payload on success,
+        # so we should instead update the local object with that payload
+        # (includes updated_time)
 
     def update(  # type: ignore
         self,
@@ -77,7 +77,7 @@ class User(dict):
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         user_role: Optional[str] = None,
-        # TODO: in the API, this goes via POST /v1/users/{guid}/lock
+        # TODO(#100): in the API, this goes via POST /v1/users/{guid}/lock
         # accept it here and make that request? Or add a .lock() method?
         # locked: Optional[bool] = None,
     ) -> None:
