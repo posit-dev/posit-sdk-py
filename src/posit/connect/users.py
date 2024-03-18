@@ -15,47 +15,47 @@ class User(dict):
 
     @property
     def guid(self) -> str:
-        return self.get("guid")
+        return self.get("guid")  # type: ignore
 
     @property
     def email(self) -> str:
-        return self.get("email")
+        return self.get("email")  # type: ignore
 
     @property
     def username(self) -> str:
-        return self.get("username")
+        return self.get("username")  # type: ignore
 
     @property
     def first_name(self) -> str:
-        return self.get("first_name")
+        return self.get("first_name")  # type: ignore
 
     @property
     def last_name(self) -> str:
-        return self.get("last_name")
+        return self.get("last_name")  # type: ignore
 
     @property
     def user_role(self) -> str:
-        return self.get("user_role")
+        return self.get("user_role")  # type: ignore
 
     @property
     def created_time(self) -> str:
-        return self.get("created_time")
+        return self.get("created_time")  # type: ignore
 
     @property
     def updated_time(self) -> str:
-        return self.get("updated_time")
+        return self.get("updated_time")  # type: ignore
 
     @property
     def active_time(self) -> str:
-        return self.get("active_time")
+        return self.get("active_time")  # type: ignore
 
     @property
     def confirmed(self) -> bool:
-        return self.get("confirmed")
+        return self.get("confirmed")  # type: ignore
 
     @property
     def locked(self) -> bool:
-        return self.get("locked")
+        return self.get("locked")  # type: ignore
 
     def __setattr__(self, name: str, value: Any) -> None:
         raise AttributeError("Cannot set attributes: use update() instead.")
@@ -68,7 +68,7 @@ class User(dict):
         # (includes updated_time)
         super().update(body)
 
-    def update(
+    def update(  # type: ignore
         self,
         # Not all properties are settable, so we enumerate them here
         # (also for type-hinting purposes)
