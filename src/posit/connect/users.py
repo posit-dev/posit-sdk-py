@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Callable, List, Optional
+from typing import Callable, List, Optional
 
 
 from requests import Session
@@ -57,11 +57,8 @@ class User(Resource):
     def locked(self) -> bool:
         return self.get("locked")  # type: ignore
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        raise AttributeError("Cannot set attributes: use update() instead.")
-
     def _update(self, body):
-        self.get("session").patch(self.get("url"), json=body)
+        self.session.patch(self.url, json=body)
         # If the request is successful, update the local object
         super().update(body)
         # TODO(#99): that patch request returns a payload on success,
@@ -107,15 +104,15 @@ class Users(Resources[User]):
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
     ) -> List[User]:
         results = Paginator(self.session, self.url, page_size=page_size).get_all()
-        return [
+        users = (
             User(
-                **user,
                 session=self.session,
                 url=urls.append_path(self.url, user["guid"]),
+                **user,
             )
             for user in results
-            if filter(User(**user))
-        ]
+        )
+        return [user for user in users if filter(user)]
 
     def find_one(
         self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
@@ -125,9 +122,9 @@ class Users(Resources[User]):
             result = pager.get_next_page()
             for u in result:
                 user = User(
-                    **u,
                     session=self.session,
                     url=urls.append_path(self.url, u["guid"]),
+                    **u,
                 )
                 if filter(user):
                     return user
@@ -138,9 +135,9 @@ class Users(Resources[User]):
         response = self.session.get(url)
         raw_user = response.json()
         return User(
-            **raw_user,
             session=self.session,
             url=urls.append_path(self.url, raw_user["guid"]),
+            **raw_user,
         )
 
     def create(self) -> User:

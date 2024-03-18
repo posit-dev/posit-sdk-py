@@ -50,7 +50,7 @@ class Client:
     def me(self) -> User:
         url = urls.append_path(self.config.url, "v1/user")
         response = self.session.get(url)
-        return User(**response.json())
+        return User(self.session, url, **response.json())
 
     @property
     def oauth(self) -> OAuthIntegration:
