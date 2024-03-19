@@ -1,0 +1,19 @@
+---
+title: "Getting Started"
+jupyter: python3
+---
+
+## Setup
+
+To get started, export your API key.
+
+```shell
+export CONNECT_API_KEY="private-api-key"
+```
+
+```{python}
+from posit.connect import Client
+
+with Client(url="https://rsc.radixu.com/") as client:
+    print(client.me.username)
+```

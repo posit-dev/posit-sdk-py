@@ -1,0 +1,25 @@
+# ignore build directory
+/build/
+
+# ignore generated IPython files
+/**/*.ipynb
+
+# ignore generated HTML files
+/**/*.html
+
+# ignore generated CSS files
+/**/*.css
+
+# ignore generated JavaScript files
+/**/*.js
+
+# ignore generated image files
+/**/*.png
+/**/*.jpg
+/**/*.jpeg
+/**/*.gif
+
+# ignore generated font files
+/**/*.ttf
+/**/*.otf
+/**/*.woff
