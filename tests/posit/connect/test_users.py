@@ -274,6 +274,7 @@ class TestUsers:
         responses.get(
             "https://connect.example/__api__/v1/users",
             json=load_mock("v1/users.json"),
+            match=[responses.matchers.json_params_matcher({"page_size": 1})],
         )
         con = Client(api_key="12345", url="https://connect.example/")
         count = con.users.count()
