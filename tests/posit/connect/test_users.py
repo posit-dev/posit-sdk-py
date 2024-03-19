@@ -19,77 +19,77 @@ class TestUser:
         user = User(session, url)
         assert hasattr(user, "guid")
         assert user.guid is None
-        user = User(session, url, **{"guid": "test_guid"})
+        user = User(session, url, guid="test_guid")
         assert user.guid == "test_guid"
 
     def test_email(self):
         user = User(session, url)
         assert hasattr(user, "email")
         assert user.email is None
-        user = User(session, url, **{"email": "test@example.com"})
+        user = User(session, url, email="test@example.com")
         assert user.email == "test@example.com"
 
     def test_username(self):
         user = User(session, url)
         assert hasattr(user, "username")
         assert user.username is None
-        user = User(session, url, **{"username": "test_user"})
+        user = User(session, url, username="test_user")
         assert user.username == "test_user"
 
     def test_first_name(self):
         user = User(session, url)
         assert hasattr(user, "first_name")
         assert user.first_name is None
-        user = User(session, url, **{"first_name": "John"})
+        user = User(session, url, first_name="John")
         assert user.first_name == "John"
 
     def test_last_name(self):
         user = User(session, url)
         assert hasattr(user, "last_name")
         assert user.last_name is None
-        user = User(session, url, **{"last_name": "Doe"})
+        user = User(session, url, last_name="Doe")
         assert user.last_name == "Doe"
 
     def test_user_role(self):
         user = User(session, url)
         assert hasattr(user, "user_role")
         assert user.user_role is None
-        user = User(session, url, **{"user_role": "admin"})
+        user = User(session, url, user_role="admin")
         assert user.user_role == "admin"
 
     def test_created_time(self):
         user = User(session, url)
         assert hasattr(user, "created_time")
         assert user.created_time is None
-        user = User(session, url, **{"created_time": "2022-01-01T00:00:00"})
+        user = User(session, url, created_time="2022-01-01T00:00:00")
         assert user.created_time == "2022-01-01T00:00:00"
 
     def test_updated_time(self):
         user = User(session, url)
         assert hasattr(user, "updated_time")
         assert user.updated_time is None
-        user = User(session, url, **{"updated_time": "2022-01-01T00:00:00"})
+        user = User(session, url, updated_time="2022-01-01T00:00:00")
         assert user.updated_time == "2022-01-01T00:00:00"
 
     def test_active_time(self):
         user = User(session, url)
         assert hasattr(user, "active_time")
         assert user.active_time is None
-        user = User(session, url, **{"active_time": "2022-01-01T00:00:00"})
+        user = User(session, url, active_time="2022-01-01T00:00:00")
         assert user.active_time == "2022-01-01T00:00:00"
 
     def test_confirmed(self):
         user = User(session, url)
         assert hasattr(user, "confirmed")
         assert user.confirmed is None
-        user = User(session, url, **{"confirmed": True})
+        user = User(session, url, confirmed=True)
         assert user.confirmed is True
 
     def test_locked(self):
         user = User(session, url)
         assert hasattr(user, "locked")
         assert user.locked is None
-        user = User(session, url, **{"locked": False})
+        user = User(session, url, locked=False)
         assert user.locked is False
 
 
