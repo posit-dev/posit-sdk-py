@@ -148,3 +148,10 @@ class Users(Resources[User]):
 
     def delete(self) -> None:
         raise NotImplementedError()
+
+    def count(self) -> int:
+        response = self.session.get(self.url)
+        result: dict = response.json()
+        if "total" not in result:
+            raise RuntimeError("'total' not found in response body")
+        return result.get("total", 0)

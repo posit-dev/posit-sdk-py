@@ -46,3 +46,13 @@ class TestContents:
         con = Client("12345", "https://connect.example")
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         assert get_one.name == "Performance-Data-1671216053560"
+
+    @responses.activate
+    def test_count(self):
+        responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        count = con.content.count()
+        assert count == 3

@@ -1,0 +1,19 @@
+{
+    "results": [
+        {
+            "email": "testuser@example.com",
+            "username": "testuser123",
+            "first_name": "Test",
+            "last_name": "User",
+            "user_role": "tester",
+            "created_time": "2021-01-01T10:00:00Z",
+            "updated_time": "2022-03-02T20:25:06Z",
+            "active_time": "2021-01-01T10:00:00Z",
+            "confirmed": true,
+            "locked": false,
+            "guid": "12345678-abcd-1234-efgh-1234567890ab"
+        }
+    ],
+    "current_page": 1,
+    "total": 1
+}
