@@ -268,3 +268,14 @@ class TestUsers:
             match=r"cannot set attributes: use update\(\) instead",
         ):
             carlos.first_name = "Carlitos"
+
+    @responses.activate
+    def test_count(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json=load_mock("v1/users.json"),
+            match=[responses.matchers.json_params_matcher({"page_size": 1})],
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        count = con.users.count()
+        assert count == 1

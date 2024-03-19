@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Callable, List, Optional
 
 
-from requests import Session
+import requests
 
 
 from . import urls
@@ -95,7 +95,7 @@ class User(Resource):
 
 
 class Users(Resources[User]):
-    def __init__(self, config: Config, session: Session) -> None:
+    def __init__(self, config: Config, session: requests.Session) -> None:
         self.url = urls.append_path(config.url, "v1/users")
         self.config = config
         self.session = session
@@ -148,3 +148,8 @@ class Users(Resources[User]):
 
     def delete(self) -> None:
         raise NotImplementedError()
+
+    def count(self) -> int:
+        response: requests.Response = self.session.get(self.url, json={"page_size": 1})
+        result: dict = response.json()
+        return result["total"]

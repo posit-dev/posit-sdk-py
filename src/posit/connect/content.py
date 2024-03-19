@@ -231,3 +231,7 @@ class Content(Resources[ContentItem]):
 
     def delete(self) -> None:
         raise NotImplementedError()
+
+    def count(self) -> int:
+        results = self.session.get(self.url).json()
+        return len(results)

@@ -66,3 +66,7 @@ class Resources(ABC, Generic[T]):
     @abstractmethod
     def update(self, *args, **kwargs) -> T:
         raise NotImplementedError()
+
+    @abstractmethod
+    def count(self, *args, **kwargs) -> int:
+        raise NotImplementedError()

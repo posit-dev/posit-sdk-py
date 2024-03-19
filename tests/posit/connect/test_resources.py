@@ -85,6 +85,9 @@ class TestResources(Resources[Any]):
     def update(self) -> Any:
         return super().update()  # type: ignore [safe-super]
 
+    def count(self) -> int:
+        return super().count()  # type: ignore [safe-super]
+
     def test_create(self):
         with pytest.raises(NotImplementedError):
             self.create()
@@ -108,3 +111,7 @@ class TestResources(Resources[Any]):
     def test_update(self):
         with pytest.raises(NotImplementedError):
             self.update()
+
+    def test_count(self):
+        with pytest.raises(NotImplementedError):
+            self.count()
