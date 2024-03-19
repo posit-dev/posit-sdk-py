@@ -1,13 +1,22 @@
 import warnings
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, Optional, TypeVar
+from typing import Any, Generic, List, Optional, TypeVar
+
+import requests
 
 
 T = TypeVar("T")
 
 
 class Resource(ABC, dict):
+    def __init__(self, session: requests.Session, url: str, **kwargs):
+        super().__init__(**kwargs)
+        self.session: requests.Session
+        super().__setattr__("session", session)
+        self.url: str
+        super().__setattr__("url", url)
+
     def __getitem__(self, key):
         warnings.warn(
             f"__getitem__ for '{key}' does not support backwards compatibility. Consider using field based access instead: 'instance.{key}'",
@@ -28,6 +37,9 @@ class Resource(ABC, dict):
             FutureWarning,
         )
         return super().__delitem__(key)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        raise AttributeError("cannot set attributes: use update() instead")
 
 
 class Resources(ABC, Generic[T]):

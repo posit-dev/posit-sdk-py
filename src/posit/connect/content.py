@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List, Optional
+from typing import Callable, List, Optional
 
 from requests import Session
 
@@ -183,9 +183,6 @@ class ContentItem(Resource):
     def id(self) -> str:
         return self.get("id")  # type: ignore
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        raise AttributeError("Cannot set attributes: use update() instead")
-
 
 class Content(Resources[ContentItem]):
     def __init__(self, config: Config, session: Session) -> None:
@@ -197,22 +194,34 @@ class Content(Resources[ContentItem]):
         self, filter: Callable[[ContentItem], bool] = lambda _: True
     ) -> List[ContentItem]:
         results = self.session.get(self.url).json()
-        return [ContentItem(**c) for c in results if filter(ContentItem(**c))]
+        items = (
+            ContentItem(
+                session=self.session,
+                url=urls.append_path(self.url, result["guid"]),
+                **result,
+            )
+            for result in results
+        )
+        return [item for item in items if filter(item)]
 
     def find_one(
         self, filter: Callable[[ContentItem], bool] = lambda _: True
     ) -> ContentItem | None:
         results = self.session.get(self.url).json()
-        for c in results:
-            content_item = ContentItem(**c)
-            if filter(content_item):
-                return content_item
+        for result in results:
+            item = ContentItem(
+                session=self.session,
+                url=urls.append_path(self.url, result["guid"]),
+                **result,
+            )
+            if filter(item):
+                return item
         return None
 
     def get(self, id: str) -> ContentItem:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
-        return ContentItem(**response.json())
+        return ContentItem(self.session, url, **response.json())
 
     def create(self) -> ContentItem:
         raise NotImplementedError()
