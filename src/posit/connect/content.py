@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional
 
 from requests import Session
 
@@ -182,6 +182,94 @@ class ContentItem(Resource):
     @property
     def id(self) -> str:
         return self.get("id")  # type: ignore
+
+    def update(  # type: ignore
+        self,
+        name: Optional[str] = None,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        access_type: Optional[str] = None,
+        owner_guid: Optional[str] = None,
+        connection_timeout: Optional[int] = None,
+        read_timeout: Optional[int] = None,
+        init_timeout: Optional[int] = None,
+        idle_timeout: Optional[int] = None,
+        max_processes: Optional[int] = None,
+        min_processes: Optional[int] = None,
+        max_conns_per_process: Optional[int] = None,
+        load_factor: Optional[float] = None,
+        cpu_request: Optional[float] = None,
+        cpu_limit: Optional[float] = None,
+        memory_request: Optional[int] = None,
+        memory_limit: Optional[int] = None,
+        amd_gpu_limit: Optional[int] = None,
+        nvidia_gpu_limit: Optional[int] = None,
+        run_as: Optional[str] = None,
+        run_as_current_user: Optional[bool] = None,
+        default_image_name: Optional[str] = None,
+        default_r_environment_management: Optional[bool] = None,
+        default_py_environment_management: Optional[bool] = None,
+        service_account_name: Optional[str] = None,
+    ) -> None:
+        data: dict[str, Any] = {}
+        if name is not None:
+            data["name"] = name
+        if title is not None:
+            data["title"] = title
+        if description is not None:
+            data["description"] = description
+        if access_type is not None:
+            data["access_type"] = access_type
+        if owner_guid is not None:
+            data["owner_guid"] = owner_guid
+        if connection_timeout is not None:
+            data["connection_timeout"] = connection_timeout
+        if read_timeout is not None:
+            data["read_timeout"] = read_timeout
+        if init_timeout is not None:
+            data["init_timeout"] = init_timeout
+        if idle_timeout is not None:
+            data["idle_timeout"] = idle_timeout
+        if max_processes is not None:
+            data["max_processes"] = max_processes
+        if min_processes is not None:
+            data["min_processes"] = min_processes
+        if max_conns_per_process is not None:
+            data["max_conns_per_process"] = max_conns_per_process
+        if load_factor is not None:
+            data["load_factor"] = load_factor
+        if cpu_request is not None:
+            data["cpu_request"] = cpu_request
+        if cpu_limit is not None:
+            data["cpu_limit"] = cpu_limit
+        if memory_request is not None:
+            data["memory_request"] = memory_request
+        if memory_limit is not None:
+            data["memory_limit"] = memory_limit
+        if amd_gpu_limit is not None:
+            data["amd_gpu_limit"] = amd_gpu_limit
+        if nvidia_gpu_limit is not None:
+            data["nvidia_gpu_limit"] = nvidia_gpu_limit
+        if run_as is not None:
+            data["run_as"] = run_as
+        if run_as_current_user is not None:
+            data["run_as_current_user"] = run_as_current_user
+        if default_image_name is not None:
+            data["default_image_name"] = default_image_name
+        if default_r_environment_management is not None:
+            data["default_r_environment_management"] = default_r_environment_management
+        if default_py_environment_management is not None:
+            data["default_py_environment_management"] = (
+                default_py_environment_management
+            )
+        if service_account_name is not None:
+            data["service_account_name"] = service_account_name
+
+        if len(data) == 0:
+            return
+
+        response = self.session.patch(self.url, json=data)
+        super().update(**response.json())
 
 
 class Content(Resources[ContentItem]):
