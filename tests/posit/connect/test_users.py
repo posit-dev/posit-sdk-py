@@ -222,6 +222,7 @@ class TestUsers:
         patch_request = responses.patch(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             match=[responses.matchers.json_params_matcher({"first_name": "Carlitos"})],
+            json={"first_name": "Carlitos"},
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
@@ -234,10 +235,22 @@ class TestUsers:
 
         assert patch_request.call_count == 1
         assert carlos.first_name == "Carlitos"
-        # TODO(#99):
-        # * test setting the other fields
-        # * test invalid field
-        # * error response (e.g. not authorized)
+
+    @responses.activate
+    def test_user_update_server_error(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        responses.patch(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            status=500,
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+        with pytest.raises(HTTPError, match="500 Server Error"):
+            carlos.update()
 
     @responses.activate
     def test_user_cant_setattr(self):

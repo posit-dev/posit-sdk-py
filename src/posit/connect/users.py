@@ -58,12 +58,9 @@ class User(Resource):
         return self.get("locked")  # type: ignore
 
     def _update(self, body):
-        self.session.patch(self.url, json=body)
+        response = self.session.patch(self.url, json=body)
         # If the request is successful, update the local object
-        super().update(body)
-        # TODO(#99): that patch request returns a payload on success,
-        # so we should instead update the local object with that payload
-        # (includes updated_time)
+        super().update(**response.json())
 
     def update(  # type: ignore
         self,
