@@ -153,6 +153,5 @@ class Users(Resources[User]):
         response: requests.Response = self.session.get(
             self.url, params={"page_size": 1}
         )
-        print(response.json())
         result: dict = response.json()
         return result["total"]
