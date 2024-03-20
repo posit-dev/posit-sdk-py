@@ -58,8 +58,9 @@ class User(Resource):
         return self.get("locked")  # type: ignore
 
     def _update(self, body):
-        response = self.session.patch(self.url, json=body)
-        # If the request is successful, update the local object
+        if len(body) == 0:
+            return
+        response = self.session.put(self.url, json=body)
         super().update(**response.json())
 
     def update(  # type: ignore

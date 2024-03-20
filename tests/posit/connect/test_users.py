@@ -219,7 +219,7 @@ class TestUsers:
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
-        patch_request = responses.patch(
+        patch_request = responses.put(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             match=[responses.matchers.json_params_matcher({"first_name": "Carlitos"})],
             json={"first_name": "Carlitos"},
@@ -242,7 +242,7 @@ class TestUsers:
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
-        responses.patch(
+        responses.put(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             status=500,
         )
@@ -250,7 +250,7 @@ class TestUsers:
         con = Client(api_key="12345", url="https://connect.example/")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         with pytest.raises(HTTPError, match="500 Server Error"):
-            carlos.update()
+            carlos.update(first_name="Carlitos")
 
     @responses.activate
     def test_user_cant_setattr(self):

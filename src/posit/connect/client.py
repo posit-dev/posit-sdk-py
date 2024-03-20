@@ -50,6 +50,9 @@ class Client:
     def me(self) -> User:
         url = urls.append_path(self.config.url, "v1/user")
         response = self.session.get(url)
+        body = response.json()
+        guid = body["guid"]
+        url = urls.append_path(self.config.url, f"v1/users/{guid}")
         return User(self.session, url, **response.json())
 
     @property
