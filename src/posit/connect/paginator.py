@@ -74,7 +74,7 @@ class Paginator:
             count += len(page.results)
             # Check if the local count has reached the total threshold.
             # It is possible for count to exceed total if the total changes
-            # during execution of this method
+            # during execution of this loop.
             # It is also possible for the total to change between iterations.
             if count >= page.total:
                 break
