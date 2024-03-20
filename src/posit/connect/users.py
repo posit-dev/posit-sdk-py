@@ -150,6 +150,9 @@ class Users(Resources[User]):
         raise NotImplementedError()
 
     def count(self) -> int:
-        response: requests.Response = self.session.get(self.url, json={"page_size": 1})
+        response: requests.Response = self.session.get(
+            self.url, params={"page_size": 1}
+        )
+        print(response.json())
         result: dict = response.json()
         return result["total"]
