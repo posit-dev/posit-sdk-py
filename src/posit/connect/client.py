@@ -51,9 +51,10 @@ class Client:
         url = urls.append_path(self.config.url, "v1/user")
         response = self.session.get(url)
         body = response.json()
+        # Build the canonical URL for the User based on its GUID
         guid = body["guid"]
         url = urls.append_path(self.config.url, f"v1/users/{guid}")
-        return User(self.session, url, **response.json())
+        return User(self.session, url, **body)
 
     @property
     def oauth(self) -> OAuthIntegration:
