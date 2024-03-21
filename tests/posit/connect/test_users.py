@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 import responses
 
-from requests import HTTPError
 
 from posit.connect.client import Client
 from posit.connect.users import User
@@ -100,23 +99,23 @@ class TestUsers:
             "https://connect.example/__api__/v1/users",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 2, "page_number": 1}
+                    {"page_size": 500, "page_number": 1}
                 )
             ],
-            json=load_mock("v1/users?page_number=1&page_size=2.json"),
+            json=load_mock("v1/users?page_number=1&page_size=500.json"),
         )
         responses.get(
             "https://connect.example/__api__/v1/users",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 2, "page_number": 2}
+                    {"page_size": 500, "page_number": 2}
                 )
             ],
-            json=load_mock("v1/users?page_number=2&page_size=2.json"),
+            json=load_mock("v1/users?page_number=2&page_size=500.json"),
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        all_users = con.users.find(page_size=2)
+        all_users = con.users.find()
         assert len(all_users) == 3
 
         df = pd.DataFrame(all_users)
@@ -143,60 +142,47 @@ class TestUsers:
             "https://connect.example/__api__/v1/users",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 2, "page_number": 1}
+                    {"page_size": 500, "page_number": 1}
                 )
             ],
-            json=load_mock("v1/users?page_number=1&page_size=2.json"),
+            json=load_mock("v1/users?page_number=1&page_size=500.json"),
         )
         responses.get(
             "https://connect.example/__api__/v1/users",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 2, "page_number": 2}
+                    {"page_size": 500, "page_number": 2}
                 )
             ],
-            json=load_mock("v1/users?page_number=2&page_size=2.json"),
+            json=load_mock("v1/users?page_number=2&page_size=500.json"),
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        c = con.users.find_one(lambda u: u.first_name == "Carlos", page_size=2)
-        # Can't isinstance(c, User) bc inherits TypedDict (cf. #23)
-        assert c.username == "carlos12"
-
-        # Now test that if not found, it returns None
-        assert (
-            con.users.find_one(lambda u: u.first_name == "Ringo", page_size=2) is None
-        )
+        c = con.users.find_one()
+        assert c.username == "al"
 
     @responses.activate
     def test_users_find_one_only_gets_necessary_pages(self):
         responses.get(
             "https://connect.example/__api__/v1/users",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 2, "page_number": 1}
-                )
-            ],
-            json=load_mock("v1/users?page_number=1&page_size=2.json"),
-        )
-        # Make page 2 return an error so we can prove that we're quitting
-        # when we find the user
-        responses.get(
-            "https://connect.example/__api__/v1/users",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 2, "page_number": 2}
-                )
-            ],
-            status=500,
+            json=load_mock("v1/users?page_number=1&page_size=500.json"),
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        bob = con.users.find_one(lambda u: u.first_name == "Bob", page_size=2)
-        assert bob.username == "robert"
-        # This errors because we have to go past the first page
-        with pytest.raises(HTTPError, match="500 Server Error"):
-            con.users.find_one(lambda u: u.first_name == "Carlos", page_size=2)
+        user = con.users.find_one()
+        assert user.username == "al"
+        assert len(responses.calls) == 1
+
+    @responses.activate
+    def test_users_find_one_finds_nothing(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json={"total": 0, "current_page": 1, "results": []},
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.find_one()
+        assert user is None
 
     @responses.activate
     def test_users_get(self):

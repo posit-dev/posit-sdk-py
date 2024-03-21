@@ -1,49 +1,95 @@
-from typing import List
+from dataclasses import dataclass
+from typing import Generator, List
+
+import requests
 
 
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
 
 
+@dataclass
+class Page:
+    """
+    Represents a page of results returned by the paginator.
+
+    Attributes:
+        current_page (int): The current page number.
+        total (int): The total number of results.
+        results (List[dict]): The list of results on the current page.
+    """
+
+    current_page: int
+    total: int
+    results: List[dict]
+
+
 class Paginator:
     """
-    Utility for consuming Connect APIs that have pagination
+    A class for paginating through API results.
 
-    Usage:
+    Args:
+        session (requests.Session): The session object to use for making API requests.
+        url (str): The URL of the paginated API endpoint.
 
-        pager = Paginator(client.session, url)
-        pager.get_all() # To return a list with results from all pages concatenated
-        pager.get_next_page() # To step through one page at a time
+    Attributes:
+        session (requests.Session): The session object to use for making API requests.
+        url (str): The URL of the paginated API endpoint.
     """
 
-    def __init__(
-        self, session, url, start_page: int = 1, page_size=_MAX_PAGE_SIZE
-    ) -> None:
+    def __init__(self, session: requests.Session, url: str) -> None:
         self.session = session
         self.url = url
-        self.page_number = start_page
-        self.page_size = page_size
-        # The API response will tell us how many total entries there are,
-        # but we don't know yet.
-        self.total = None
-        # We also want to track how many results we've seen so far
-        self.seen = 0
 
-    def get_all(self) -> List[dict]:
-        result = []
-        while self.total is None or self.seen < self.total:
-            result += self.get_next_page()
-        return result
+    def fetch_results(self) -> List[dict]:
+        """
+        Fetches and returns all the results from the paginated API endpoint.
 
-    def get_next_page(self) -> List[dict]:
-        # Define query parameters for pagination.
-        params = {"page_number": self.page_number, "page_size": self.page_size}
-        # Send a GET request to the endpoint with the specified parameters.
-        response = self.session.get(self.url, params=params).json()
-        # On our first request, we won't have set the total yet, so do it
-        if self.total is None:
-            self.total = response["total"]
-        results = response["results"]
-        self.seen += len(results)
-        self.page_number += 1
+        Returns:
+            A list of dictionaries representing the fetched results.
+        """
+        results = []
+        for page in self.fetch_pages():
+            results.extend(page.results)
         return results
+
+    def fetch_pages(self) -> Generator[Page, None, None]:
+        """
+        Fetches pages of results from the API.
+
+        Yields:
+            Page: A page of results from the API.
+        """
+        count = 0
+        page_number = 1
+        while True:
+            page = self.fetch_page(page_number)
+            page_number += 1
+            if len(page.results) > 0:
+                yield page
+            else:
+                # stop if the result set is empty
+                return
+
+            count += len(page.results)
+            # Check if the local count has reached the total threshold.
+            # It is possible for count to exceed total if the total changes
+            # during execution of this loop.
+            # It is also possible for the total to change between iterations.
+            if count >= page.total:
+                break
+
+    def fetch_page(self, page_number: int) -> Page:
+        """
+        Fetches a specific page of data from the API.
+
+        Args:
+            page_number (int): The page number to fetch.
+
+        Returns:
+            Page: The fetched page object.
+
+        """
+        params = {"page_number": page_number, "page_size": _MAX_PAGE_SIZE}
+        response = self.session.get(self.url, params=params)
+        return Page(**response.json())

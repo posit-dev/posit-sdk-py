@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, List, Optional
+from typing import List, Optional
 
 
 import requests
@@ -8,7 +8,7 @@ import requests
 from . import urls
 
 from .config import Config
-from .paginator import _MAX_PAGE_SIZE, Paginator
+from .paginator import Paginator
 from .resources import Resource, Resources
 
 
@@ -100,35 +100,31 @@ class Users(Resources[User]):
         self.config = config
         self.session = session
 
-    def find(
-        self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
-    ) -> List[User]:
-        results = Paginator(self.session, self.url, page_size=page_size).get_all()
-        users = (
+    def find(self) -> List[User]:
+        paginator = Paginator(self.session, self.url)
+        results = paginator.fetch_results()
+        return [
             User(
                 session=self.session,
                 url=urls.append_path(self.url, user["guid"]),
                 **user,
             )
             for user in results
-        )
-        return [user for user in users if filter(user)]
+        ]
 
-    def find_one(
-        self, filter: Callable[[User], bool] = lambda _: True, page_size=_MAX_PAGE_SIZE
-    ) -> User | None:
-        pager = Paginator(self.session, self.url, page_size=page_size)
-        while pager.total is None or pager.seen < pager.total:
-            result = pager.get_next_page()
-            for u in result:
-                user = User(
-                    session=self.session,
-                    url=urls.append_path(self.url, u["guid"]),
-                    **u,
-                )
-                if filter(user):
-                    return user
-        return None
+    def find_one(self) -> User | None:
+        paginator = Paginator(self.session, self.url)
+        pages = paginator.fetch_pages()
+        results = (result for page in pages for result in page.results)
+        users = (
+            User(
+                session=self.session,
+                url=urls.append_path(self.url, result["guid"]),
+                **result,
+            )
+            for result in results
+        )
+        return next(users, None)
 
     def get(self, id: str) -> User:
         url = urls.append_path(self.url, id)
