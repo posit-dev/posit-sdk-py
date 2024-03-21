@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List, Optional
+from typing import Callable, List, Optional, overload
+
 
 from requests import Session
 
@@ -8,6 +9,37 @@ from . import urls
 
 from .config import Config
 from .resources import Resources, Resource
+
+
+_UPDATE_FIELDS = frozenset(
+    {
+        "name",
+        "title",
+        "description",
+        "access_type",
+        "owner_guid",
+        "connection_timeout",
+        "read_timeout",
+        "init_timeout",
+        "idle_timeout",
+        "max_processes",
+        "min_processes",
+        "max_conns_per_process",
+        "load_factor",
+        "cpu_request",
+        "cpu_limit",
+        "memory_request",
+        "memory_limit",
+        "amd_gpu_limit",
+        "nvidia_gpu_limit",
+        "run_as",
+        "run_as_current_user",
+        "default_image_name",
+        "default_r_environment_management",
+        "default_py_environment_management",
+        "service_account_name",
+    }
+)
 
 
 class ContentItem(Resource):
@@ -183,92 +215,99 @@ class ContentItem(Resource):
     def id(self) -> str:
         return self.get("id")  # type: ignore
 
-    def update(  # type: ignore
+    @overload
+    def update(
         self,
-        name: Optional[str] = None,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        access_type: Optional[str] = None,
-        owner_guid: Optional[str] = None,
-        connection_timeout: Optional[int] = None,
-        read_timeout: Optional[int] = None,
-        init_timeout: Optional[int] = None,
-        idle_timeout: Optional[int] = None,
-        max_processes: Optional[int] = None,
-        min_processes: Optional[int] = None,
-        max_conns_per_process: Optional[int] = None,
-        load_factor: Optional[float] = None,
-        cpu_request: Optional[float] = None,
-        cpu_limit: Optional[float] = None,
-        memory_request: Optional[int] = None,
-        memory_limit: Optional[int] = None,
-        amd_gpu_limit: Optional[int] = None,
-        nvidia_gpu_limit: Optional[int] = None,
-        run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = None,
-        default_image_name: Optional[str] = None,
-        default_r_environment_management: Optional[bool] = None,
-        default_py_environment_management: Optional[bool] = None,
-        service_account_name: Optional[str] = None,
+        name: str = ...,
+        title: Optional[str] = ...,
+        description: str = ...,
+        access_type: str = ...,
+        owner_guid: Optional[str] = ...,
+        connection_timeout: Optional[int] = ...,
+        read_timeout: Optional[int] = ...,
+        init_timeout: Optional[int] = ...,
+        idle_timeout: Optional[int] = ...,
+        max_processes: Optional[int] = ...,
+        min_processes: Optional[int] = ...,
+        max_conns_per_process: Optional[int] = ...,
+        load_factor: Optional[float] = ...,
+        cpu_request: Optional[float] = ...,
+        cpu_limit: Optional[float] = ...,
+        memory_request: Optional[int] = ...,
+        memory_limit: Optional[int] = ...,
+        amd_gpu_limit: Optional[int] = ...,
+        nvidia_gpu_limit: Optional[int] = ...,
+        run_as: Optional[str] = ...,
+        run_as_current_user: Optional[bool] = ...,
+        default_image_name: Optional[str] = ...,
+        default_r_environment_management: Optional[bool] = ...,
+        default_py_environment_management: Optional[bool] = ...,
+        service_account_name: Optional[str] = ...,
     ) -> None:
-        data: dict[str, Any] = {}
-        if name is not None:
-            data["name"] = name
-        if title is not None:
-            data["title"] = title
-        if description is not None:
-            data["description"] = description
-        if access_type is not None:
-            data["access_type"] = access_type
-        if owner_guid is not None:
-            data["owner_guid"] = owner_guid
-        if connection_timeout is not None:
-            data["connection_timeout"] = connection_timeout
-        if read_timeout is not None:
-            data["read_timeout"] = read_timeout
-        if init_timeout is not None:
-            data["init_timeout"] = init_timeout
-        if idle_timeout is not None:
-            data["idle_timeout"] = idle_timeout
-        if max_processes is not None:
-            data["max_processes"] = max_processes
-        if min_processes is not None:
-            data["min_processes"] = min_processes
-        if max_conns_per_process is not None:
-            data["max_conns_per_process"] = max_conns_per_process
-        if load_factor is not None:
-            data["load_factor"] = load_factor
-        if cpu_request is not None:
-            data["cpu_request"] = cpu_request
-        if cpu_limit is not None:
-            data["cpu_limit"] = cpu_limit
-        if memory_request is not None:
-            data["memory_request"] = memory_request
-        if memory_limit is not None:
-            data["memory_limit"] = memory_limit
-        if amd_gpu_limit is not None:
-            data["amd_gpu_limit"] = amd_gpu_limit
-        if nvidia_gpu_limit is not None:
-            data["nvidia_gpu_limit"] = nvidia_gpu_limit
-        if run_as is not None:
-            data["run_as"] = run_as
-        if run_as_current_user is not None:
-            data["run_as_current_user"] = run_as_current_user
-        if default_image_name is not None:
-            data["default_image_name"] = default_image_name
-        if default_r_environment_management is not None:
-            data["default_r_environment_management"] = default_r_environment_management
-        if default_py_environment_management is not None:
-            data["default_py_environment_management"] = (
-                default_py_environment_management
-            )
-        if service_account_name is not None:
-            data["service_account_name"] = service_account_name
+        """
+        Update the content with the specified parameters.
 
-        if len(data) == 0:
-            return
+        Args:
+            name (str): The name of the content.
+            title (Optional[str]): The title of the content.
+            description (str): The description of the content.
+            access_type (str): The access type of the content.
+            owner_guid (Optional[str]): The owner GUID of the content.
+            connection_timeout (Optional[int]): The connection timeout in seconds.
+            read_timeout (Optional[int]): The read timeout in seconds.
+            init_timeout (Optional[int]): The initialization timeout in seconds.
+            idle_timeout (Optional[int]): The idle timeout in seconds.
+            max_processes (Optional[int]): The maximum number of processes.
+            min_processes (Optional[int]): The minimum number of processes.
+            max_conns_per_process (Optional[int]): The maximum number of connections per process.
+            load_factor (Optional[float]): The load factor.
+            cpu_request (Optional[float]): The CPU request.
+            cpu_limit (Optional[float]): The CPU limit.
+            memory_request (Optional[int]): The memory request in bytes.
+            memory_limit (Optional[int]): The memory limit in bytes.
+            amd_gpu_limit (Optional[int]): The AMD GPU limit.
+            nvidia_gpu_limit (Optional[int]): The NVIDIA GPU limit.
+            run_as (Optional[str]): The user to run as.
+            run_as_current_user (Optional[bool]): Whether to run as the current user.
+            default_image_name (Optional[str]): The default image name.
+            default_r_environment_management (Optional[bool]): Whether to use default R environment management.
+            default_py_environment_management (Optional[bool]): Whether to use default Python environment management.
+            service_account_name (Optional[str]): The service account name.
 
-        response = self.session.patch(self.url, json=data)
+        Returns:
+            None: This method does not return anything.
+        """
+        ...
+
+    @overload
+    def update(self, *args, **kwargs) -> None: ...
+
+    def update(self, *args, **kwargs) -> None:
+        """
+        Update the content with the provided fields.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Raises:
+            RuntimeError: If any of the provided fields are not supported.
+
+        Returns:
+            None
+        """
+        # Create a new dict using the provided *args and **kwargs.
+        body = dict(*args, **kwargs)
+        fields = set(body.keys())
+        # Check if fields is a subset of _UPDATE_FIELDS.
+        if not fields <= _UPDATE_FIELDS:
+            # Construct a RuntimeError listing the provided fields which are not allowed by the API.
+            unsupported_fields = fields - _UPDATE_FIELDS
+            if unsupported_fields:
+                raise RuntimeError(
+                    f"The following fields are not supported: {', '.join(unsupported_fields)}"
+                )
+        response = self.session.patch(self.url, json=body)
         super().update(**response.json())
 
 
