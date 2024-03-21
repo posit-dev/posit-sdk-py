@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional
+from typing import List
 
 
 import requests
@@ -97,34 +97,6 @@ class User(Resource):
         url = urls.append_path(self.config.url, f"v1/users/{self.guid}")
         response = self.session.put(url, json=body)
         super().update(**response.json())
-
-    def update(  # type: ignore
-        self,
-        # Not all properties are settable, so we enumerate them here
-        # (also for type-hinting purposes)
-        email: Optional[str] = None,
-        username: Optional[str] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        user_role: Optional[str] = None,
-        # TODO(#100): in the API, this goes via POST /v1/users/{guid}/lock
-        # accept it here and make that request? Or add a .lock() method?
-        # locked: Optional[bool] = None,
-    ) -> None:
-        kwargs = {}
-        if email is not None:
-            kwargs["email"] = email
-        if username is not None:
-            kwargs["username"] = username
-        if first_name is not None:
-            kwargs["first_name"] = first_name
-        if last_name is not None:
-            kwargs["last_name"] = last_name
-        if user_role is not None:
-            kwargs["user_role"] = user_role
-        # if locked is not None:
-        #     kwargs["locked"] = locked
-        self._update(kwargs)
 
 
 class Users(Resources[User]):
