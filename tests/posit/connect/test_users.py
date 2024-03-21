@@ -1,8 +1,9 @@
 from unittest.mock import Mock
+
 import pandas as pd
 import pytest
+import requests
 import responses
-
 
 from posit.connect.client import Client
 from posit.connect.users import User
@@ -249,7 +250,7 @@ class TestUsers:
 
         con = Client(api_key="12345", url="https://connect.example/")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
-        with pytest.raises(HTTPError, match="500 Server Error"):
+        with pytest.raises(requests.HTTPError, match="500 Server Error"):
             carlos.update(first_name="Carlitos")
 
     @responses.activate
