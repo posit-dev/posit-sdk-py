@@ -102,7 +102,7 @@ class TestUsers:
                     {"page_size": 500, "page_number": 1}
                 )
             ],
-            json=load_mock("v1/users?page_number=1&page_size=2.json"),
+            json=load_mock("v1/users?page_number=1&page_size=500.json"),
         )
         responses.get(
             "https://connect.example/__api__/v1/users",
@@ -111,7 +111,7 @@ class TestUsers:
                     {"page_size": 500, "page_number": 2}
                 )
             ],
-            json=load_mock("v1/users?page_number=2&page_size=2.json"),
+            json=load_mock("v1/users?page_number=2&page_size=500.json"),
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
@@ -145,7 +145,7 @@ class TestUsers:
                     {"page_size": 500, "page_number": 1}
                 )
             ],
-            json=load_mock("v1/users?page_number=1&page_size=2.json"),
+            json=load_mock("v1/users?page_number=1&page_size=500.json"),
         )
         responses.get(
             "https://connect.example/__api__/v1/users",
@@ -154,12 +154,35 @@ class TestUsers:
                     {"page_size": 500, "page_number": 2}
                 )
             ],
-            json=load_mock("v1/users?page_number=2&page_size=2.json"),
+            json=load_mock("v1/users?page_number=2&page_size=500.json"),
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
         c = con.users.find_one()
         assert c.username == "al"
+
+    @responses.activate
+    def test_users_find_one_only_gets_necessary_pages(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json=load_mock("v1/users?page_number=1&page_size=500.json"),
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.find_one()
+        assert user.username == "al"
+        assert len(responses.calls) == 1
+
+    @responses.activate
+    def test_users_find_one_finds_nothing(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json={"total": 0, "current_page": 1, "results": []},
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.find_one()
+        assert user is None
 
     @responses.activate
     def test_users_get(self):
