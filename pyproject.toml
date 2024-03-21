@@ -33,3 +33,8 @@ addopts = [
 
 [tool.setuptools_scm]
 version_file = "src/posit/_version.py"
+
+[tool.mypy]
+exclude = [
+    'examples/',
+]
