@@ -52,12 +52,9 @@ class TestContents:
         )
         con = Client("12345", "https://connect.example")
 
-        one = con.content.find_one(lambda c: c.title == "Performance Data")
+        one = con.content.find_one()
         assert isinstance(one, ContentItem)
-        assert one.name == "Performance-Data-1671216053560"
-
-        # Test find_one doesn't find any
-        assert con.content.find_one(lambda c: c.title == "Does not exist") is None
+        assert one.name == "team-admin-dashboard"
 
     @responses.activate
     def test_content_get(self):
