@@ -11,8 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
-    - run:
-        make deps
-        make build
+    - run: make deps
+    - run: make build
     - id: release
       uses: pypa/gh-action-pypi-publish@release/v1
