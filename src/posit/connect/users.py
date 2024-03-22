@@ -57,6 +57,32 @@ class User(Resource):
     def locked(self) -> bool:
         return self.get("locked")  # type: ignore
 
+    def lock(self):
+        """
+        Locks the user account.
+
+        .. warning:: You cannot unlock your own account. Once an account is locked, only an admin can unlock it.
+
+        Returns:
+            None
+        """
+        url = urls.append_path(self.url, "lock")
+        body = {"locked": True}
+        self.session.post(url, json=body)
+        super().update(locked=True)
+
+    def unlock(self):
+        """
+        Unlocks the user account.
+
+        Returns:
+            None
+        """
+        url = urls.append_path(self.url, "lock")
+        body = {"locked": False}
+        self.session.post(url, json=body)
+        super().update(locked=False)
+
     def _update(self, body):
         if len(body) == 0:
             return

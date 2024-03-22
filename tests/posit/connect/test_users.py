@@ -92,6 +92,30 @@ class TestUser:
         user = User(session, url, locked=False)
         assert user.locked is False
 
+    @responses.activate
+    def test_lock(self):
+        responses.post(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
+            match=[responses.matchers.json_params_matcher({"locked": True})],
+        )
+        session = requests.Session()
+        url = "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4"
+        user = User(session, url)
+        user.lock()
+        assert user.locked
+
+    @responses.activate
+    def test_unlock(self):
+        responses.post(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
+            match=[responses.matchers.json_params_matcher({"locked": False})],
+        )
+        session = requests.Session()
+        url = "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4"
+        user = User(session, url)
+        user.unlock()
+        assert not user.locked
+
 
 class TestUsers:
     @responses.activate
