@@ -196,8 +196,8 @@ class Content(Resources[ContentItem]):
         results = self.session.get(self.url).json()
         items = (
             ContentItem(
+                config=self.config,
                 session=self.session,
-                url=urls.append_path(self.url, result["guid"]),
                 **result,
             )
             for result in results
@@ -210,8 +210,8 @@ class Content(Resources[ContentItem]):
         results = self.session.get(self.url).json()
         for result in results:
             item = ContentItem(
+                config=self.config,
                 session=self.session,
-                url=urls.append_path(self.url, result["guid"]),
                 **result,
             )
             if filter(item):
@@ -221,7 +221,7 @@ class Content(Resources[ContentItem]):
     def get(self, id: str) -> ContentItem:
         url = urls.append_path(self.url, id)
         response = self.session.get(url)
-        return ContentItem(self.session, url, **response.json())
+        return ContentItem(self.config, self.session, **response.json())
 
     def create(self) -> ContentItem:
         raise NotImplementedError()

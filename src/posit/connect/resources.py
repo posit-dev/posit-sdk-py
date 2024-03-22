@@ -5,17 +5,19 @@ from typing import Any, Generic, List, Optional, TypeVar
 
 import requests
 
+from .config import Config
+
 
 T = TypeVar("T")
 
 
 class Resource(ABC, dict):
-    def __init__(self, session: requests.Session, url: str, **kwargs):
+    def __init__(self, config: Config, session: requests.Session, **kwargs):
         super().__init__(**kwargs)
+        self.config: Config
+        super().__setattr__("config", config)
         self.session: requests.Session
         super().__setattr__("session", session)
-        self.url: str
-        super().__setattr__("url", url)
 
     def __getitem__(self, key):
         warnings.warn(

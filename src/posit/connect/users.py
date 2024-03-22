@@ -60,7 +60,8 @@ class User(Resource):
     def _update(self, body):
         if len(body) == 0:
             return
-        response = self.session.put(self.url, json=body)
+        url = urls.append_path(self.config.url, f"v1/users/{self.guid}")
+        response = self.session.put(url, json=body)
         super().update(**response.json())
 
     def update(  # type: ignore
@@ -103,8 +104,8 @@ class Users(Resources[User]):
         results = paginator.fetch_results()
         return [
             User(
+                config=self.config,
                 session=self.session,
-                url=urls.append_path(self.url, user["guid"]),
                 **user,
             )
             for user in results
@@ -116,8 +117,8 @@ class Users(Resources[User]):
         results = (result for page in pages for result in page.results)
         users = (
             User(
+                config=self.config,
                 session=self.session,
-                url=urls.append_path(self.url, result["guid"]),
                 **result,
             )
             for result in results
@@ -129,8 +130,8 @@ class Users(Resources[User]):
         response = self.session.get(url)
         raw_user = response.json()
         return User(
+            config=self.config,
             session=self.session,
-            url=urls.append_path(self.url, raw_user["guid"]),
             **raw_user,
         )
 
