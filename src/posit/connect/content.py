@@ -249,7 +249,18 @@ class ContentItem(Resource):
         ...
 
     @overload
-    def update(self, *args, **kwargs) -> None: ...
+    def update(self, *args, **kwargs) -> None:
+        """
+        Update the content item.
+
+        Args:
+            *args
+            **kwargs
+
+        Returns:
+            None
+        """
+        ...
 
     def update(self, *args, **kwargs) -> None:
         """

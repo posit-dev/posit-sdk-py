@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional
+from typing import List, overload
 
 
 import requests
@@ -91,40 +91,59 @@ class User(Resource):
         self.session.post(url, json=body)
         super().update(locked=False)
 
-    def _update(self, body):
-        if len(body) == 0:
-            return
+    @overload
+    def update(
+        self,
+        email: str = ...,
+        username: str = ...,
+        first_name: str = ...,
+        last_name: str = ...,
+        user_role: str = ...,
+    ) -> None:
+        """
+        Update the user.
+
+        Args:
+            email (str): The email address for the user.
+            username (str): The username for the user.
+            first_name (str): The first name for the user.
+            last_name (str): The last name for the user.
+            user_role (str): The role for the user.
+
+        Returns:
+            None
+        """
+        ...
+
+    @overload
+    def update(self, *args, **kwargs) -> None:
+        """
+        Update the user.
+
+        Args:
+            *args
+            **kwargs
+
+        Returns:
+            None
+        """
+        ...
+
+    def update(self, *args, **kwargs) -> None:
+        """
+        Update the user.
+
+        Args:
+            *args
+            **kwargs
+
+        Returns:
+            None
+        """
+        body = dict(*args, **kwargs)
         url = urls.append_path(self.config.url, f"v1/users/{self.guid}")
         response = self.session.put(url, json=body)
         super().update(**response.json())
-
-    def update(  # type: ignore
-        self,
-        # Not all properties are settable, so we enumerate them here
-        # (also for type-hinting purposes)
-        email: Optional[str] = None,
-        username: Optional[str] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        user_role: Optional[str] = None,
-        # TODO(#100): in the API, this goes via POST /v1/users/{guid}/lock
-        # accept it here and make that request? Or add a .lock() method?
-        # locked: Optional[bool] = None,
-    ) -> None:
-        kwargs = {}
-        if email is not None:
-            kwargs["email"] = email
-        if username is not None:
-            kwargs["username"] = username
-        if first_name is not None:
-            kwargs["first_name"] = first_name
-        if last_name is not None:
-            kwargs["last_name"] = last_name
-        if user_role is not None:
-            kwargs["user_role"] = user_role
-        # if locked is not None:
-        #     kwargs["locked"] = locked
-        self._update(kwargs)
 
 
 class Users(Resources[User]):
