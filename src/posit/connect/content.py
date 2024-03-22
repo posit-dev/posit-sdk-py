@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, overload
+
 
 from requests import Session
 
@@ -182,6 +183,88 @@ class ContentItem(Resource):
     @property
     def id(self) -> str:
         return self.get("id")  # type: ignore
+
+    @overload
+    def update(
+        self,
+        name: str = ...,
+        title: Optional[str] = ...,
+        description: str = ...,
+        access_type: str = ...,
+        owner_guid: Optional[str] = ...,
+        connection_timeout: Optional[int] = ...,
+        read_timeout: Optional[int] = ...,
+        init_timeout: Optional[int] = ...,
+        idle_timeout: Optional[int] = ...,
+        max_processes: Optional[int] = ...,
+        min_processes: Optional[int] = ...,
+        max_conns_per_process: Optional[int] = ...,
+        load_factor: Optional[float] = ...,
+        cpu_request: Optional[float] = ...,
+        cpu_limit: Optional[float] = ...,
+        memory_request: Optional[int] = ...,
+        memory_limit: Optional[int] = ...,
+        amd_gpu_limit: Optional[int] = ...,
+        nvidia_gpu_limit: Optional[int] = ...,
+        run_as: Optional[str] = ...,
+        run_as_current_user: Optional[bool] = ...,
+        default_image_name: Optional[str] = ...,
+        default_r_environment_management: Optional[bool] = ...,
+        default_py_environment_management: Optional[bool] = ...,
+        service_account_name: Optional[str] = ...,
+    ) -> None:
+        """
+        Update the content item.
+
+        Args:
+            name (str): The name of the content.
+            title (Optional[str]): The title of the content.
+            description (str): The description of the content.
+            access_type (str): The access type of the content.
+            owner_guid (Optional[str]): The owner GUID of the content.
+            connection_timeout (Optional[int]): The connection timeout in seconds.
+            read_timeout (Optional[int]): The read timeout in seconds.
+            init_timeout (Optional[int]): The initialization timeout in seconds.
+            idle_timeout (Optional[int]): The idle timeout in seconds.
+            max_processes (Optional[int]): The maximum number of processes.
+            min_processes (Optional[int]): The minimum number of processes.
+            max_conns_per_process (Optional[int]): The maximum number of connections per process.
+            load_factor (Optional[float]): The load factor.
+            cpu_request (Optional[float]): The CPU request.
+            cpu_limit (Optional[float]): The CPU limit.
+            memory_request (Optional[int]): The memory request in bytes.
+            memory_limit (Optional[int]): The memory limit in bytes.
+            amd_gpu_limit (Optional[int]): The AMD GPU limit.
+            nvidia_gpu_limit (Optional[int]): The NVIDIA GPU limit.
+            run_as (Optional[str]): The user to run as.
+            run_as_current_user (Optional[bool]): Whether to run as the current user.
+            default_image_name (Optional[str]): The default image name.
+            default_r_environment_management (Optional[bool]): Whether to use default R environment management.
+            default_py_environment_management (Optional[bool]): Whether to use default Python environment management.
+            service_account_name (Optional[str]): The service account name.
+
+        Returns:
+            None
+        """
+        ...
+
+    @overload
+    def update(self, *args, **kwargs) -> None: ...
+
+    def update(self, *args, **kwargs) -> None:
+        """
+        Update the content item.
+
+        Args:
+            *args
+            **kwargs
+
+        Returns:
+            None
+        """
+        body = dict(*args, **kwargs)
+        response = self.session.patch(self.url, json=body)
+        super().update(**response.json())
 
 
 class Content(Resources[ContentItem]):
