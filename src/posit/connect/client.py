@@ -3,7 +3,7 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import hooks, urls
+from . import hooks, me, urls
 
 from .auth import Auth
 from .config import Config
@@ -48,9 +48,7 @@ class Client:
 
     @property
     def me(self) -> User:
-        url = urls.append_path(self.config.url, "v1/user")
-        response = self.session.get(url)
-        return User(self.config, self.session, **response.json())
+        return me.get(self.config, self.session)
 
     @property
     def oauth(self) -> OAuthIntegration:

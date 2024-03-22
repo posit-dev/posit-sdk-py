@@ -1,0 +1,13 @@
+{
+    "email": "random_email@example.com",
+    "username": "random_username",
+    "first_name": "Random",
+    "last_name": "User",
+    "user_role": "admin",
+    "created_time": "2022-01-01T00:00:00Z",
+    "updated_time": "2022-03-15T12:34:56Z",
+    "active_time": "2022-02-28T18:30:00Z",
+    "confirmed": false,
+    "locked": true,
+    "guid": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
+}
