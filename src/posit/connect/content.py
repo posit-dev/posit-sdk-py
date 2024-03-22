@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, List, Optional, overload
+from typing import List, Optional, overload
 
 
 from requests import Session
@@ -285,9 +285,7 @@ class Content(Resources[ContentItem]):
         self.config = config
         self.session = session
 
-    def find(
-        self, filter: Callable[[ContentItem], bool] = lambda _: True
-    ) -> List[ContentItem]:
+    def find(self) -> List[ContentItem]:
         results = self.session.get(self.url).json()
         items = (
             ContentItem(
@@ -297,21 +295,19 @@ class Content(Resources[ContentItem]):
             )
             for result in results
         )
-        return [item for item in items if filter(item)]
+        return [item for item in items]
 
-    def find_one(
-        self, filter: Callable[[ContentItem], bool] = lambda _: True
-    ) -> ContentItem | None:
+    def find_one(self) -> ContentItem | None:
         results = self.session.get(self.url).json()
-        for result in results:
-            item = ContentItem(
+        items = (
+            ContentItem(
                 config=self.config,
                 session=self.session,
                 **result,
             )
-            if filter(item):
-                return item
-        return None
+            for result in results
+        )
+        return next(items, None)
 
     def get(self, id: str) -> ContentItem:
         url = urls.append_path(self.url, id)
