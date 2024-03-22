@@ -263,7 +263,8 @@ class ContentItem(Resource):
             None
         """
         body = dict(*args, **kwargs)
-        response = self.session.patch(self.url, json=body)
+        url = urls.append_path(self.config.url, f"v1/content/{self.guid}")
+        response = self.session.patch(url, json=body)
         super().update(**response.json())
 
 
