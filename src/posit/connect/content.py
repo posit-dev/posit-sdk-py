@@ -11,37 +11,6 @@ from .config import Config
 from .resources import Resources, Resource
 
 
-_UPDATE_FIELDS = frozenset(
-    {
-        "name",
-        "title",
-        "description",
-        "access_type",
-        "owner_guid",
-        "connection_timeout",
-        "read_timeout",
-        "init_timeout",
-        "idle_timeout",
-        "max_processes",
-        "min_processes",
-        "max_conns_per_process",
-        "load_factor",
-        "cpu_request",
-        "cpu_limit",
-        "memory_request",
-        "memory_limit",
-        "amd_gpu_limit",
-        "nvidia_gpu_limit",
-        "run_as",
-        "run_as_current_user",
-        "default_image_name",
-        "default_r_environment_management",
-        "default_py_environment_management",
-        "service_account_name",
-    }
-)
-
-
 class ContentItem(Resource):
     @property
     def guid(self) -> str:
