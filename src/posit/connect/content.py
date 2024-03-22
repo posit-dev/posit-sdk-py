@@ -11,37 +11,6 @@ from .config import Config
 from .resources import Resources, Resource
 
 
-_UPDATE_FIELDS = frozenset(
-    {
-        "name",
-        "title",
-        "description",
-        "access_type",
-        "owner_guid",
-        "connection_timeout",
-        "read_timeout",
-        "init_timeout",
-        "idle_timeout",
-        "max_processes",
-        "min_processes",
-        "max_conns_per_process",
-        "load_factor",
-        "cpu_request",
-        "cpu_limit",
-        "memory_request",
-        "memory_limit",
-        "amd_gpu_limit",
-        "nvidia_gpu_limit",
-        "run_as",
-        "run_as_current_user",
-        "default_image_name",
-        "default_r_environment_management",
-        "default_py_environment_management",
-        "service_account_name",
-    }
-)
-
-
 class ContentItem(Resource):
     @property
     def guid(self) -> str:
@@ -245,7 +214,7 @@ class ContentItem(Resource):
         service_account_name: Optional[str] = ...,
     ) -> None:
         """
-        Update the content with the specified parameters.
+        Update the content item.
 
         Args:
             name (str): The name of the content.
@@ -275,7 +244,7 @@ class ContentItem(Resource):
             service_account_name (Optional[str]): The service account name.
 
         Returns:
-            None: This method does not return anything.
+            None
         """
         ...
 
@@ -284,29 +253,16 @@ class ContentItem(Resource):
 
     def update(self, *args, **kwargs) -> None:
         """
-        Update the content with the provided fields.
+        Update the content item.
 
         Args:
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-
-        Raises:
-            RuntimeError: If any of the provided fields are not supported.
+            *args
+            **kwargs
 
         Returns:
             None
         """
-        # Create a new dict using the provided *args and **kwargs.
         body = dict(*args, **kwargs)
-        fields = set(body.keys())
-        # Check if fields is a subset of _UPDATE_FIELDS.
-        if not fields <= _UPDATE_FIELDS:
-            # Construct a RuntimeError listing the provided fields which are not allowed by the API.
-            unsupported_fields = fields - _UPDATE_FIELDS
-            if unsupported_fields:
-                raise RuntimeError(
-                    f"The following fields are not supported: {', '.join(unsupported_fields)}"
-                )
         response = self.session.patch(self.url, json=body)
         super().update(**response.json())
 
