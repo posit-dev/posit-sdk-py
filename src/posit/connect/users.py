@@ -5,7 +5,7 @@ from typing import List, Optional
 import requests
 
 
-from . import urls
+from . import me, urls
 
 from .config import Config
 from .paginator import Paginator
@@ -56,6 +56,40 @@ class User(Resource):
     @property
     def locked(self) -> bool:
         return self.get("locked")  # type: ignore
+
+    def lock(self, *, force: bool = False):
+        """
+        Locks the user account.
+
+        .. warning:: You cannot unlock your own account. Once an account is locked, only an admin can unlock it.
+
+        Args:
+            force (bool, optional): If set to True, overrides lock protection allowing a user to lock their own account. Defaults to False.
+
+        Returns:
+            None
+        """
+        _me = me.get(self.config, self.session)
+        if _me.guid == self.guid and not force:
+            raise RuntimeError(
+                "You cannot lock your own account. Set force=True to override this behavior."
+            )
+        url = urls.append_path(self.config.url, f"v1/users/{self.guid}/lock")
+        body = {"locked": True}
+        self.session.post(url, json=body)
+        super().update(locked=True)
+
+    def unlock(self):
+        """
+        Unlocks the user account.
+
+        Returns:
+            None
+        """
+        url = urls.append_path(self.config.url, f"v1/users/{self.guid}/lock")
+        body = {"locked": False}
+        self.session.post(url, json=body)
+        super().update(locked=False)
 
     def _update(self, body):
         if len(body) == 0:
@@ -126,13 +160,12 @@ class Users(Resources[User]):
         return next(users, None)
 
     def get(self, id: str) -> User:
-        url = urls.append_path(self.url, id)
+        url = urls.append_path(self.config.url, f"v1/users/{id}")
         response = self.session.get(url)
-        raw_user = response.json()
         return User(
             config=self.config,
             session=self.session,
-            **raw_user,
+            **response.json(),
         )
 
     def create(self) -> User:

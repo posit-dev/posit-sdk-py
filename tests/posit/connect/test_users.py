@@ -92,6 +92,87 @@ class TestUser:
         user = User(session, url, locked=False)
         assert user.locked is False
 
+    @responses.activate
+    def test_lock(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+            json=load_mock("v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6.json"),
+        )
+        c = Client(api_key="12345", url="https://connect.example/")
+        user = c.users.get("a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6")
+        assert user.guid == "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
+
+        responses.get(
+            "https://connect.example/__api__/v1/user",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        responses.post(
+            "https://connect.example/__api__/v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6/lock",
+            match=[responses.matchers.json_params_matcher({"locked": True})],
+        )
+        user.lock()
+        assert user.locked
+
+    @responses.activate
+    def test_lock_self_true(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        c = Client(api_key="12345", url="https://connect.example/")
+        user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+        assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+
+        responses.get(
+            "https://connect.example/__api__/v1/user",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        responses.post(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
+            match=[responses.matchers.json_params_matcher({"locked": True})],
+        )
+        user.lock(force=True)
+        assert user.locked
+
+    @responses.activate
+    def test_lock_self_false(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        c = Client(api_key="12345", url="https://connect.example/")
+        user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+        assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+
+        responses.get(
+            "https://connect.example/__api__/v1/user",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        responses.post(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
+            match=[responses.matchers.json_params_matcher({"locked": True})],
+        )
+        with pytest.raises(RuntimeError):
+            user.lock(force=False)
+        assert not user.locked
+
+    @responses.activate
+    def test_unlock(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+        )
+        c = Client(api_key="12345", url="https://connect.example/")
+        user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+        assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+
+        responses.post(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
+            match=[responses.matchers.json_params_matcher({"locked": False})],
+        )
+        user.unlock()
+        assert not user.locked
+
 
 class TestUsers:
     @responses.activate
