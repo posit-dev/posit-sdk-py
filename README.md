@@ -12,13 +12,32 @@ pip install posit-sdk
 
 ## Usage
 
+Establish server information and credentials using the following environment variable or when initializing a client.
+
+> [!CAUTION]
+> It is important to keep your API key safe and secure. Your API key grants access to your account and allows you to make authenticated requests to the Posit API. Treat your API key like a password and avoid sharing it with others. If you suspect that your API key has been compromised, regenerate a new one immediately to maintain the security of your account.
+
+### Option 1 (Preferred)
+
+```shell
+export CONNECT_API_KEY="my-secret-api-key"
+export CONNECT_SERVER="https://example.com/"
+```
+
 ```python
 from posit.connect import Client
 
-# If CONNECT_API_KEY and CONNECT_SERVER are set in your environment,
-# they will be picked up, or you can pass them as arguments
-con = Client()
-con.users.find()
+with Client() as client:
+    print(client)
+```
+
+### Option 2
+
+```python
+from posit.connect import Client
+
+with Client(api_key="my-secret-api-key", url="https://example.com") as client:
+    print(client)
 ```
 
 ## Contributing
