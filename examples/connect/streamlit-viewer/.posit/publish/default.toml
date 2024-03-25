@@ -1,0 +1,14 @@
+'$schema' = 'https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json'
+type = 'python-streamlit'
+entrypoint = 'app.py'
+validate = true
+title = 'Streamlit Databricks Connect Viewer App'
+
+[python]
+version = '3.11.3'
+package-file = 'requirements.txt'
+package-manager = 'pip'
+
+[environment]
+DATABRICKS_HOST = 'https://adb-138962681435081.1.azuredatabricks.net'
+DATABRICKS_CLUSTER_ID = '0321-164939-srl6mq9v'
