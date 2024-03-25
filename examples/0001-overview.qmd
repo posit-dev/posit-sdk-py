@@ -1,0 +1,71 @@
+# Overview
+
+## Table of Contents
+
+- [Example - Print information for each user.](#example-print-information-for-each-user)
+- [Example - Update content title.](#example-update-content-title)
+- [Example - Print information for a single user.](#example-print-information-for-a-single-user)
+- [Example - Print my user information.](#example-print-my-user-information)
+- [Example - Get user by their unique identifier.](#example-get-user-by-their-unique-identifier)
+- [Example - Update my user information.](#example-update-my-user-information)
+
+## Example - Print information for each user.
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    for user in client.users.find():
+        print(user)
+```
+
+## Example - Update content title.
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    content_item = client.content.get('69ff7ba4-56c9-40d9-b094-6d0b1a07d516')
+    content_item.update(title="New Title")
+```
+
+## Example - Print information for a single user.
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    user = client.users.find_one()
+    print(user)
+```
+
+## Example - Print my user information.
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    print(client.me)
+```
+
+
+## Example - Get user by their unique identifer.
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    user1 = client.users.find_one()
+    user2 = client.users.get(user.guid)
+    print(user1 == user2)
+```
+
+## Example - Update my user information.
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    user = client.me
+    user.update(first_name="Bob")
+```
