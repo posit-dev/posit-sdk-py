@@ -3,8 +3,9 @@ coverage
 mypy
 pandas
 pre-commit
+pyjson5
 pytest
 responses
 ruff
-setuptools-scm
 setuptools
+setuptools-scm

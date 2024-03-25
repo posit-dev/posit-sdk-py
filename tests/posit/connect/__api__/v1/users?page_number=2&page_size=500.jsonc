@@ -1,3 +1,7 @@
+// A subsequent single page response from the '/v1/users' endpoint.
+//
+// This file is typically used in conjunction with v1/users?page_number=1&page_size=500.jsonc
+
 {
     "results": [
         {
