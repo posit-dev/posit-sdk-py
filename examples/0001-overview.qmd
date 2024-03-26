@@ -1,0 +1,47 @@
+# Overview
+
+This file provides a collection of short examples to help users get started.
+
+The examples cover various aspects, including authentication, data retrieval, and data manipulation.
+
+## Example - Print information for each user where `user_role='publisher'`
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    for user in client.users.find(user_role='publisher'):
+        print(user)
+```
+
+## Example - Print information for a single user where `prefix='b'`
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    user = client.users.find_one(prefix='b')
+    print(user)
+```
+
+## Example - Print the title for each content item that I own.
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    guid = client.me.guid
+    for item in client.content.find(owner_guid=guid)
+        print(item.title)
+```
+
+## Example - Update the title for a content item.
+
+```python
+from posit.connect import Client
+
+with Client() as client:
+    guid = ... # the guid for a content item
+    item = client.content.get(guid)
+    item.update(title='New Title')
+```
