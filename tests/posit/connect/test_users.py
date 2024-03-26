@@ -302,6 +302,10 @@ class TestUsersFindOne:
         )
         con = Client(api_key="12345", url="https://connect.example/")
         con.users.find_one(**params)
+        responses.assert_call_count(
+            "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
+            1,
+        )
 
     @responses.activate
     def test_empty_results(self):
@@ -378,6 +382,10 @@ class TestUsersFind:
         )
         con = Client(api_key="12345", url="https://connect.example/")
         con.users.find(**params)
+        responses.assert_call_count(
+            "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
+            1,
+        )
 
     @responses.activate
     def test_params_not_dict_like(self):
