@@ -37,9 +37,10 @@ class Paginator:
         url (str): The URL of the paginated API endpoint.
     """
 
-    def __init__(self, session: requests.Session, url: str) -> None:
+    def __init__(self, session: requests.Session, url: str, params: dict = {}) -> None:
         self.session = session
         self.url = url
+        self.params = params
 
     def fetch_results(self) -> List[dict]:
         """
@@ -90,6 +91,10 @@ class Paginator:
             Page: The fetched page object.
 
         """
-        params = {"page_number": page_number, "page_size": _MAX_PAGE_SIZE}
+        params = {
+            **self.params,
+            "page_number": page_number,
+            "page_size": _MAX_PAGE_SIZE,
+        }
         response = self.session.get(self.url, params=params)
         return Page(**response.json())

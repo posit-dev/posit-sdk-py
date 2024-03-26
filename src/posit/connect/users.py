@@ -152,8 +152,17 @@ class Users(Resources[User]):
         self.config = config
         self.session = session
 
-    def find(self) -> List[User]:
-        paginator = Paginator(self.session, self.url)
+    @overload
+    def find(
+        self, prefix: str = ..., user_role: str = ..., account_status: str = ...
+    ) -> List[User]: ...
+
+    @overload
+    def find(self, *args, **kwargs) -> List[User]: ...
+
+    def find(self, *args, **kwargs):
+        params = dict(*args, **kwargs)
+        paginator = Paginator(self.session, self.url, params=params)
         results = paginator.fetch_results()
         return [
             User(
@@ -164,8 +173,17 @@ class Users(Resources[User]):
             for user in results
         ]
 
-    def find_one(self) -> User | None:
-        paginator = Paginator(self.session, self.url)
+    @overload
+    def find_one(
+        self, prefix: str = ..., user_role: str = ..., account_status: str = ...
+    ) -> User | None: ...
+
+    @overload
+    def find_one(self, *args, **kwargs) -> User | None: ...
+
+    def find_one(self, *args, **kwargs) -> User | None:
+        params = dict(*args, **kwargs)
+        paginator = Paginator(self.session, self.url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (

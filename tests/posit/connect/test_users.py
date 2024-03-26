@@ -1,6 +1,5 @@
 from unittest.mock import Mock
 
-import pandas as pd
 import pytest
 import requests
 import responses
@@ -14,7 +13,7 @@ session = Mock()
 url = Mock()
 
 
-class TestUser:
+class TestUserAttributes:
     def test_guid(self):
         user = User(session, url)
         assert hasattr(user, "guid")
@@ -92,6 +91,8 @@ class TestUser:
         user = User(session, url, locked=False)
         assert user.locked is False
 
+
+class TestUserLock:
     @responses.activate
     def test_lock(self):
         responses.get(
@@ -156,6 +157,8 @@ class TestUser:
             user.lock(force=False)
         assert not user.locked
 
+
+class TestUserUnlock:
     @responses.activate
     def test_unlock(self):
         responses.get(
@@ -175,97 +178,6 @@ class TestUser:
 
 
 class TestUsers:
-    @responses.activate
-    def test_users_find(self):
-        responses.get(
-            "https://connect.example/__api__/v1/users",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1}
-                )
-            ],
-            json=load_mock("v1/users?page_number=1&page_size=500.json"),
-        )
-        responses.get(
-            "https://connect.example/__api__/v1/users",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 2}
-                )
-            ],
-            json=load_mock("v1/users?page_number=2&page_size=500.json"),
-        )
-
-        con = Client(api_key="12345", url="https://connect.example/")
-        all_users = con.users.find()
-        assert len(all_users) == 3
-
-        df = pd.DataFrame(all_users)
-        assert isinstance(df, pd.DataFrame)
-        assert df.shape == (3, 11)
-        assert df.columns.to_list() == [
-            "email",
-            "username",
-            "first_name",
-            "last_name",
-            "user_role",
-            "created_time",
-            "updated_time",
-            "active_time",
-            "confirmed",
-            "locked",
-            "guid",
-        ]
-        assert df["username"].to_list() == ["al", "robert", "carlos12"]
-
-    @responses.activate
-    def test_users_find_one(self):
-        responses.get(
-            "https://connect.example/__api__/v1/users",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1}
-                )
-            ],
-            json=load_mock("v1/users?page_number=1&page_size=500.json"),
-        )
-        responses.get(
-            "https://connect.example/__api__/v1/users",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 2}
-                )
-            ],
-            json=load_mock("v1/users?page_number=2&page_size=500.json"),
-        )
-
-        con = Client(api_key="12345", url="https://connect.example/")
-        c = con.users.find_one()
-        assert c.username == "al"
-
-    @responses.activate
-    def test_users_find_one_only_gets_necessary_pages(self):
-        responses.get(
-            "https://connect.example/__api__/v1/users",
-            json=load_mock("v1/users?page_number=1&page_size=500.json"),
-        )
-
-        con = Client(api_key="12345", url="https://connect.example/")
-        user = con.users.find_one()
-        assert user.username == "al"
-        assert len(responses.calls) == 1
-
-    @responses.activate
-    def test_users_find_one_finds_nothing(self):
-        responses.get(
-            "https://connect.example/__api__/v1/users",
-            json={"total": 0, "current_page": 1, "results": []},
-        )
-
-        con = Client(api_key="12345", url="https://connect.example/")
-        user = con.users.find_one()
-        assert user is None
-
     @responses.activate
     def test_users_get(self):
         responses.get(
@@ -354,9 +266,131 @@ class TestUsers:
     def test_count(self):
         responses.get(
             "https://connect.example/__api__/v1/users",
-            json=load_mock("v1/users.json"),
+            json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
             match=[responses.matchers.query_param_matcher({"page_size": 1})],
         )
         con = Client(api_key="12345", url="https://connect.example/")
         count = con.users.count()
-        assert count == 1
+        assert count == 3
+
+
+class TestUsersFindOne:
+    @responses.activate
+    def test_default(self):
+        # validate first result returned
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.find_one()
+        assert user.username == "al"
+        assert len(responses.calls) == 1
+
+    @responses.activate
+    def test_params(self):
+        # validate input params are propagated to the query params
+        params = {"key1": "value1", "key2": "value2", "key3": "value3"}
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 1, **params}
+                )
+            ],
+            json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        con.users.find_one(**params)
+        responses.assert_call_count(
+            "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
+            1,
+        )
+
+    @responses.activate
+    def test_empty_results(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json={"total": 0, "current_page": 1, "results": []},
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.find_one()
+        assert user is None
+
+
+class TestUsersFind:
+    @responses.activate
+    def test_default(self):
+        # validate response body is parsed and returned
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 1}
+                )
+            ],
+            json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
+        )
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 2}
+                )
+            ],
+            json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        users = con.users.find()
+        assert len(users) == 3
+        assert users[0] == {
+            "email": "alice@connect.example",
+            "username": "al",
+            "first_name": "Alice",
+            "last_name": "User",
+            "user_role": "publisher",
+            "created_time": "2017-08-08T15:24:32Z",
+            "updated_time": "2023-03-02T20:25:06Z",
+            "active_time": "2018-05-09T16:58:45Z",
+            "confirmed": True,
+            "locked": False,
+            "guid": "a01792e3-2e67-402e-99af-be04a48da074",
+        }
+
+    @responses.activate
+    def test_params(self):
+        # validate input params are propagated to the query params
+        params = {"key1": "value1", "key2": "value2", "key3": "value3"}
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 1, **params}
+                )
+            ],
+            json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
+        )
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 2, **params}
+                )
+            ],
+            json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        con.users.find(**params)
+        responses.assert_call_count(
+            "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
+            1,
+        )
+
+    @responses.activate
+    def test_params_not_dict_like(self):
+        # validate input params are propagated to the query params
+        con = Client(api_key="12345", url="https://connect.example/")
+        not_dict_like = "string"
+        with pytest.raises(ValueError):
+            con.users.find(not_dict_like)
