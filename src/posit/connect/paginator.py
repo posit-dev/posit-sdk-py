@@ -13,7 +13,8 @@ class Page:
     """
     Represents a page of results returned by the paginator.
 
-    Attributes:
+    Attributes
+    ----------
         current_page (int): The current page number.
         total (int): The total number of results.
         results (List[dict]): The list of results on the current page.
@@ -32,7 +33,8 @@ class Paginator:
         session (requests.Session): The session object to use for making API requests.
         url (str): The URL of the paginated API endpoint.
 
-    Attributes:
+    Attributes
+    ----------
         session (requests.Session): The session object to use for making API requests.
         url (str): The URL of the paginated API endpoint.
     """
@@ -46,7 +48,8 @@ class Paginator:
         """
         Fetches and returns all the results from the paginated API endpoint.
 
-        Returns:
+        Returns
+        -------
             A list of dictionaries representing the fetched results.
         """
         results = []
@@ -58,7 +61,8 @@ class Paginator:
         """
         Fetches pages of results from the API.
 
-        Yields:
+        Yields
+        ------
             Page: A page of results from the API.
         """
         count = 0
@@ -87,7 +91,8 @@ class Paginator:
         Args:
             page_number (int): The page number to fetch.
 
-        Returns:
+        Returns
+        -------
             Page: The fetched page object.
 
         """

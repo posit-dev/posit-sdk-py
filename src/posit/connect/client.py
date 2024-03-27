@@ -1,3 +1,5 @@
+"""Contains the Client class."""
+
 from __future__ import annotations
 
 from requests import Response, Session
@@ -13,6 +15,8 @@ from .users import User, Users
 
 
 class Client:
+    """Main interface for Posit Connect."""
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -42,42 +46,67 @@ class Client:
 
     @property
     def connect_version(self):
+        """The server version.
+
+        Return:
+            str
+        """
         if self._server_settings is None:
             self._server_settings = self.get("server_settings").json()
         return self._server_settings["version"]
 
     @property
     def me(self) -> User:
+        """The connected user.
+
+        Returns
+        -------
+        User
+        """
         return me.get(self.config, self.session)
 
     @property
     def oauth(self) -> OAuthIntegration:
+        """An OAuthIntegration.
+
+        Returns
+        -------
+        OAuthIntegration
+        """
         return OAuthIntegration(config=self.config, session=self.session)
 
     @property
     def users(self) -> Users:
+        """The users resource interface.
+
+        Returns
+        -------
+        Users
+        """
         return Users(config=self.config, session=self.session)
 
     @property
     def content(self) -> Content:
+        """The content resource interface.
+
+        Returns
+        -------
+        Content
+        """
         return Content(config=self.config, session=self.session)
 
     def __del__(self):
-        """
-        Close the session when the Client instance is deleted.
-        """
+        """Close the session when the Client instance is deleted."""
         if hasattr(self, "session") and self.session is not None:
             self.session.close()
 
     def __enter__(self):
-        """
-        Enter method for using the client as a context manager.
-        """
+        """Enter method for using the client as a context manager."""
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         """
-        Closes the session if it exists.
+        Close the session if it exists.
 
         Args:
             exc_type: The type of the exception raised (if any).
@@ -89,29 +118,33 @@ class Client:
 
     def request(self, method: str, path: str, **kwargs) -> Response:
         """
-        Sends an HTTP request to the specified path using the given method.
+        Send an HTTP request.
+
+        A facade for requests.Session.request.
 
         Args:
             method (str): The HTTP method to use for the request.
-            path (str): The path to send the request to.
-            **kwargs: Additional keyword arguments to pass to the underlying session's request method.
+            path (str): Appended to the url object attribute.
+            **kwargs: Additional keyword arguments passed to requests.Session.post.
 
-        Returns:
-            Response: The response object containing the server's response to the request.
+        Returns
+        -------
+            Response: A requests.Response object.
         """
         url = urls.append_path(self.config.url, path)
         return self.session.request(method, url, **kwargs)
 
     def get(self, path: str, **kwargs) -> Response:
         """
-        Send a GET request to the specified path.
+        Send a GET request.
 
         Args:
-            path (str): The path to send the request to.
-            **kwargs: Additional keyword arguments to be passed to the underlying session's `get` method.
+            path (str): Appended to the configured base url.
+            **kwargs: Additional keyword arguments passed to requests.Session.get.
 
-        Returns:
-            Response: The response object.
+        Returns
+        -------
+            Response: A requests.Response object.
 
         """
         url = urls.append_path(self.config.url, path)
@@ -119,14 +152,15 @@ class Client:
 
     def post(self, path: str, **kwargs) -> Response:
         """
-        Send a POST request to the specified path.
+        Send a POST request.
 
         Args:
-            path (str): The path to send the request to.
-            **kwargs: Additional keyword arguments to be passed to the underlying session's `post` method.
+            path (str): Appended to the configured base url.
+            **kwargs: Additional keyword arguments passed to requests.Session.post.
 
-        Returns:
-            Response: The response object.
+        Returns
+        -------
+            Response: A requests.Response object.
 
         """
         url = urls.append_path(self.config.url, path)
@@ -134,14 +168,15 @@ class Client:
 
     def put(self, path: str, **kwargs) -> Response:
         """
-        Send a PUT request to the specified path.
+        Send a PUT request.
 
         Args:
-            path (str): The path to send the request to.
-            **kwargs: Additional keyword arguments to be passed to the underlying session's `put` method.
+            path (str): Appended to the configured base url.
+            **kwargs: Additional keyword arguments passed to requests.Session.put.
 
-        Returns:
-            Response: The response object.
+        Returns
+        -------
+            Response: A requests.Response object.
 
         """
         url = urls.append_path(self.config.url, path)
@@ -149,14 +184,15 @@ class Client:
 
     def patch(self, path: str, **kwargs) -> Response:
         """
-        Send a PATCH request to the specified path.
+        Send a PATCH request.
 
         Args:
-            path (str): The path to send the request to.
-            **kwargs: Additional keyword arguments to be passed to the underlying session's `patch` method.
+            path (str): Appended to the configured base url.
+            **kwargs: Additional keyword arguments passed to requests.Session.patch.
 
-        Returns:
-            Response: The response object.
+        Returns
+        -------
+            Response: A requests.Response object.
 
         """
         url = urls.append_path(self.config.url, path)
@@ -164,14 +200,15 @@ class Client:
 
     def delete(self, path: str, **kwargs) -> Response:
         """
-        Send a DELETE request to the specified path.
+        Send a DELETE request.
 
         Args:
-            path (str): The path to send the request to.
-            **kwargs: Additional keyword arguments to be passed to the underlying session's `delete` method.
+            path (str): Appended to the configured base url.
+            **kwargs: Additional keyword arguments passed to requests.Session.delete.
 
-        Returns:
-            Response: The response object.
+        Returns
+        -------
+            Response: A requests.Response object.
 
         """
         url = urls.append_path(self.config.url, path)

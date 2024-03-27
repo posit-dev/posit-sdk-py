@@ -14,7 +14,8 @@ def get(config: Config, session: requests.Session) -> User:
         config (Config): The configuration object containing the URL.
         session (requests.Session): The session object used for making HTTP requests.
 
-    Returns:
+    Returns
+    -------
         User: The current user.
     """
     url = urls.append_path(config.url, "v1/user")

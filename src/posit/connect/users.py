@@ -66,7 +66,8 @@ class User(Resource):
         Args:
             force (bool, optional): If set to True, overrides lock protection allowing a user to lock their own account. Defaults to False.
 
-        Returns:
+        Returns
+        -------
             None
         """
         _me = me.get(self.config, self.session)
@@ -83,7 +84,8 @@ class User(Resource):
         """
         Unlocks the user account.
 
-        Returns:
+        Returns
+        -------
             None
         """
         url = urls.append_path(self.config.url, f"v1/users/{self.guid}/lock")
@@ -110,7 +112,8 @@ class User(Resource):
             last_name (str): The last name for the user.
             user_role (str): The role for the user.
 
-        Returns:
+        Returns
+        -------
             None
         """
         ...
@@ -124,7 +127,8 @@ class User(Resource):
             *args
             **kwargs
 
-        Returns:
+        Returns
+        -------
             None
         """
         ...
@@ -137,7 +141,8 @@ class User(Resource):
             *args
             **kwargs
 
-        Returns:
+        Returns
+        -------
             None
         """
         body = dict(*args, **kwargs)

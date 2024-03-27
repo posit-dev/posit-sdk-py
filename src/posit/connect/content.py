@@ -1,3 +1,5 @@
+"""Provides the Content resource interface."""
+
 from __future__ import annotations
 
 from typing import List, Optional, overload
@@ -12,6 +14,19 @@ from .resources import Resources, Resource
 
 
 class ContentItem(Resource):
+    """A piece of content.
+
+    Parameters
+    ----------
+    Resource : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+
     @property
     def guid(self) -> str:
         return self.get("guid")  # type: ignore
@@ -243,7 +258,8 @@ class ContentItem(Resource):
             default_py_environment_management (Optional[bool]): Whether to use default Python environment management.
             service_account_name (Optional[str]): The service account name.
 
-        Returns:
+        Returns
+        -------
             None
         """
         ...
@@ -257,7 +273,8 @@ class ContentItem(Resource):
             *args
             **kwargs
 
-        Returns:
+        Returns
+        -------
             None
         """
         ...
@@ -270,7 +287,8 @@ class ContentItem(Resource):
             *args
             **kwargs
 
-        Returns:
+        Returns
+        -------
             None
         """
         body = dict(*args, **kwargs)

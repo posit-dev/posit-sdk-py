@@ -24,7 +24,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     Shiny for Python example application that shows user information and
     the first few rows from a table hosted in Databricks.
     """
-
     session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
     credentials_provider = viewer_credentials_provider(user_session_token=session_token)
 
