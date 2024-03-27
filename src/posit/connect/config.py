@@ -1,3 +1,5 @@
+"""Client configuration."""
+
 import os
 
 from typing import Optional
@@ -6,15 +8,17 @@ from . import urls
 
 
 def _get_api_key() -> str:
-    """Gets the API key from the environment variable 'CONNECT_API_KEY'.
+    """Return the system configured api key.
+
+    Reads the environment variable 'CONNECT_API_KEY'.
 
     Raises
     ------
-        ValueError: if CONNECT_API_KEY is not set or invalid
+        ValueError: If CONNECT_API_KEY is not set or invalid
 
     Returns
     -------
-        The API key
+        str
     """
     value = os.environ.get("CONNECT_API_KEY")
     if not value:
@@ -25,17 +29,17 @@ def _get_api_key() -> str:
 
 
 def _get_url() -> str:
-    """Gets the endpoint from the environment variable 'CONNECT_SERVER'.
+    """Return the system configured url.
 
-    The `requests` library uses 'endpoint' instead of 'server'. We will use 'endpoint' from here forward for consistency.
+    Reads the environment variable 'CONNECT_SERVER'.
 
     Raises
     ------
-        ValueError: if CONNECT_SERVER is not set or invalid.
+        ValueError: If CONNECT_SERVER is not set or invalid
 
     Returns
     -------
-        The endpoint.
+        str
     """
     value = os.environ.get("CONNECT_SERVER")
     if not value:
@@ -46,7 +50,7 @@ def _get_url() -> str:
 
 
 class Config:
-    """Derived configuration properties"""
+    """Configuration object."""
 
     def __init__(
         self, api_key: Optional[str] = None, url: Optional[str] = None

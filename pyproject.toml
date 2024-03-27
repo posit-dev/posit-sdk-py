@@ -19,9 +19,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = [
-    "requests>=2.31.0,<3"
-]
+dependencies = ["requests>=2.31.0,<3"]
 
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
@@ -29,9 +27,7 @@ Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = [
-    "--import-mode=importlib",
-]
+addopts = ["--import-mode=importlib"]
 
 [tool.setuptools_scm]
 version_file = "src/posit/_version.py"
@@ -43,16 +39,34 @@ docstring-code-line-length = 20
 [tool.ruff.lint]
 select = ["D"]
 ignore = [
-     'D107',
-     'D203',
-     'D212',
-     'D213',
-     'D402',
-     'D413',
-     'D415',
-     'D416',
-     'D417'
+    # NumPy style docstring convention with noted exceptions.
+    # https://docs.astral.sh/ruff/faq/#does-ruff-support-numpy-or-google-style-docstrings
+    #
+    # This docstring style works with [quarotdoc](https://machow.github.io/quartodoc/get-started/overview.html).
+    #
+    'D101', # TODO(#135) implement docstring for public class
+    'D103', # TODO(#135) implement docstring for public functions
+    'D104', # TODO(#135) implement docstring for public package
+    'D105', # TODO(#135) implement docstring for magic methods
+    'D107',
+    'D203',
+    'D212',
+    'D213',
+    'D100', # TODO(#135) implement docstring for public modules
+    'D102', # TODO(#135) implement docstring for public methods
+    'D401', # TODO(#135) fix imperative mood warnings
+    'D402',
+    'D413',
+    'D415',
+    'D416',
+    'D417',
+    'D418', # The Python Language Server can accomdate documentation for individual methods.
+            # TODO(#135) resarch D418 and determine if we should continue ignoring it.
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"examples/*" = ["D"]
+"tests/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

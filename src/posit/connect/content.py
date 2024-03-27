@@ -1,3 +1,5 @@
+"""Provides the Content resource interface."""
+
 from __future__ import annotations
 
 from typing import List, Optional, overload
@@ -12,6 +14,19 @@ from .resources import Resources, Resource
 
 
 class ContentItem(Resource):
+    """A piece of content.
+
+    Parameters
+    ----------
+    Resource : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+
     @property
     def guid(self) -> str:
         return self.get("guid")  # type: ignore
