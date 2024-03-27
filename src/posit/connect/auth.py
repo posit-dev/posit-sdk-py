@@ -5,6 +5,14 @@ from .config import Config
 
 
 class Auth(AuthBase):
+    """_summary_
+
+    Parameters
+    ----------
+    AuthBase : _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_  _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_ _type_
+        _description_
+    """
+
     def __init__(self, config: Config) -> None:
         self._config = config
 

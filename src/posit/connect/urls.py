@@ -12,7 +12,8 @@ def server_to_api_url(url: str) -> str:
     Args:
         url (str): The URL to fix.
 
-    Returns:
+    Returns
+    -------
         str: The fixed URL.
     """
     url = url.rstrip("/")
@@ -28,10 +29,12 @@ def validate(url: str) -> None:
     Args:
         url (str): The URL to be validated.
 
-    Returns:
+    Returns
+    -------
         bool: True if the URL is valid, False otherwise.
 
-    Raises:
+    Raises
+    ------
         ValueError: If the URL is missing a scheme or is not absolute.
     """
     split = urlsplit(url, allow_fragments=False)
@@ -54,7 +57,8 @@ def append_path(url: str, path: str) -> str:
         url (str): The original URL.
         path (str): The path to append.
 
-    Returns:
+    Returns
+    -------
         str: The modified URL with the appended path.
     """
     # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlsplit

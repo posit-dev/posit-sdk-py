@@ -25,7 +25,11 @@ def load_mock(path: str) -> dict:
 
     Examples
     --------
-    >>> data = load_mock("v1/example.json")
-    >>> data = load_mock("v1/example.jsonc")
+    >>> data = load_mock(
+    ...     "v1/example.json"
+    ... )
+    >>> data = load_mock(
+    ...     "v1/example.jsonc"
+    ... )
     """
     return json.loads((Path(__file__).parent / "__api__" / path).read_text())

@@ -37,7 +37,6 @@ def update_page(_):
     Dash example application that shows user information and
     the first few rows from a table hosted in Databricks.
     """
-
     session_token = flask.request.headers.get("Posit-Connect-User-Session-Token")
     credentials_provider = viewer_credentials_provider(user_session_token=session_token)
 

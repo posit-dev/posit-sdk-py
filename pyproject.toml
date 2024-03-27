@@ -35,3 +35,24 @@ addopts = [
 
 [tool.setuptools_scm]
 version_file = "src/posit/_version.py"
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 20
+
+[tool.ruff.lint]
+select = ["D"]
+ignore = [
+     'D107',
+     'D203',
+     'D212',
+     'D213',
+     'D402',
+     'D413',
+     'D415',
+     'D416',
+     'D417'
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

@@ -13,7 +13,8 @@ HeaderFactory = Callable[[], Dict[str, str]]
 # In order to keep compatibility with the Databricks SDK
 class CredentialsProvider(abc.ABC):
     """CredentialsProvider is the protocol (call-side interface)
-    for authenticating requests to Databricks REST APIs"""
+    for authenticating requests to Databricks REST APIs
+    """
 
     @abc.abstractmethod
     def auth_type(self) -> str:

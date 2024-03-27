@@ -8,10 +8,12 @@ from . import urls
 def _get_api_key() -> str:
     """Gets the API key from the environment variable 'CONNECT_API_KEY'.
 
-    Raises:
+    Raises
+    ------
         ValueError: if CONNECT_API_KEY is not set or invalid
 
-    Returns:
+    Returns
+    -------
         The API key
     """
     value = os.environ.get("CONNECT_API_KEY")
@@ -27,10 +29,12 @@ def _get_url() -> str:
 
     The `requests` library uses 'endpoint' instead of 'server'. We will use 'endpoint' from here forward for consistency.
 
-    Raises:
+    Raises
+    ------
         ValueError: if CONNECT_SERVER is not set or invalid.
 
-    Returns:
+    Returns
+    -------
         The endpoint.
     """
     value = os.environ.get("CONNECT_SERVER")

@@ -243,7 +243,8 @@ class ContentItem(Resource):
             default_py_environment_management (Optional[bool]): Whether to use default Python environment management.
             service_account_name (Optional[str]): The service account name.
 
-        Returns:
+        Returns
+        -------
             None
         """
         ...
@@ -257,7 +258,8 @@ class ContentItem(Resource):
             *args
             **kwargs
 
-        Returns:
+        Returns
+        -------
             None
         """
         ...
@@ -270,7 +272,8 @@ class ContentItem(Resource):
             *args
             **kwargs
 
-        Returns:
+        Returns
+        -------
             None
         """
         body = dict(*args, **kwargs)

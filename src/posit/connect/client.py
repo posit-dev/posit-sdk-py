@@ -96,7 +96,8 @@ class Client:
             path (str): The path to send the request to.
             **kwargs: Additional keyword arguments to pass to the underlying session's request method.
 
-        Returns:
+        Returns
+        -------
             Response: The response object containing the server's response to the request.
         """
         url = urls.append_path(self.config.url, path)
@@ -110,7 +111,8 @@ class Client:
             path (str): The path to send the request to.
             **kwargs: Additional keyword arguments to be passed to the underlying session's `get` method.
 
-        Returns:
+        Returns
+        -------
             Response: The response object.
 
         """
@@ -125,7 +127,8 @@ class Client:
             path (str): The path to send the request to.
             **kwargs: Additional keyword arguments to be passed to the underlying session's `post` method.
 
-        Returns:
+        Returns
+        -------
             Response: The response object.
 
         """
@@ -140,7 +143,8 @@ class Client:
             path (str): The path to send the request to.
             **kwargs: Additional keyword arguments to be passed to the underlying session's `put` method.
 
-        Returns:
+        Returns
+        -------
             Response: The response object.
 
         """
@@ -155,7 +159,8 @@ class Client:
             path (str): The path to send the request to.
             **kwargs: Additional keyword arguments to be passed to the underlying session's `patch` method.
 
-        Returns:
+        Returns
+        -------
             Response: The response object.
 
         """
@@ -170,7 +175,8 @@ class Client:
             path (str): The path to send the request to.
             **kwargs: Additional keyword arguments to be passed to the underlying session's `delete` method.
 
-        Returns:
+        Returns
+        -------
             Response: The response object.
 
         """
