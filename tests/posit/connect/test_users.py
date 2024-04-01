@@ -274,6 +274,58 @@ class TestUsers:
         assert count == 3
 
 
+class TestUsersCreate:
+    @responses.activate
+    def test_with_prefix(self):
+        responses.get(
+            "https://connect.example/__api__/v1/users/remote",
+            json=load_mock("v1/users/remote.json"),
+            match=[
+                responses.matchers.query_param_matcher(
+                    {
+                        "page_number": 1,
+                        "page_size": 500,
+                        "prefix": "carlos@connect.example",
+                    }
+                )
+            ],
+        )
+        responses.put(
+            "https://connect.example/__api__/v1/users",
+            json=load_mock("v1/user.json"),
+            match=[
+                responses.matchers.json_params_matcher(
+                    {
+                        "temp_ticket": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                    }
+                )
+            ],
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.create(prefix="carlos@connect.example")
+        assert user.email == "carlos@connect.example"
+
+    @responses.activate
+    def test(self):
+        params = {
+            "email": "carlos@connect.example",
+            "username": "carlos12",
+            "first_name": "Carlos",
+            "last_name": "User",
+        }
+
+        responses.post(
+            "https://connect.example/__api__/v1/users",
+            json=load_mock("v1/user.json"),
+            match=[responses.matchers.json_params_matcher(params)],
+        )
+
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.create(**params)
+        assert user.email == "carlos@connect.example"
+
+
 class TestUsersFindOne:
     @responses.activate
     def test_default(self):

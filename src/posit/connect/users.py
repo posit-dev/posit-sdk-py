@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, overload
+from typing import List, Optional, overload
 
 
 import requests
@@ -210,8 +210,92 @@ class Users(Resources[User]):
             **response.json(),
         )
 
-    def create(self) -> User:
-        raise NotImplementedError()
+    @overload
+    def create(
+        self,
+        username: str,
+        email: str = ...,
+        first_name: str = ...,
+        last_name: str = ...,
+        user_role: str = ...,
+        user_must_set_password: bool = ...,
+        password: str = ...,
+        unique_id: str = ...,
+    ) -> User:
+        """Creates a user.
+
+        Creates a user from provided information (saml, pam, password, proxy, oauth2).
+
+        Parameters
+        ----------
+        username : str
+        email : str, optional
+        first_name : str, optional
+        last_name : str, optional
+        user_role : str, optional
+        user_must_set_password : bool, optional
+        password : str, optional
+        unique_id : str, optional
+
+        Returns
+        -------
+        User
+            The created user.
+        """
+        ...
+
+    @overload
+    def create(self, prefix: str) -> User:
+        """Creates a user.
+
+        Creates a user via a remote authentication provider (ldap, google).
+
+        Parameters
+        ----------
+        prefix : str, optional
+
+        Returns
+        -------
+        User
+            The created user.
+        """
+        ...
+
+    @overload
+    def create(self, *args, **kwargs) -> User:
+        """Creates a user.
+
+        Returns
+        -------
+        User
+            The created user.
+        """
+        ...
+
+    def create(self, *args, **kwargs) -> User:
+        """Creates a user.
+
+        Returns
+        -------
+        User
+            The created user.
+        """
+        body = dict(*args, **kwargs)
+        if "prefix" in body:
+            # Assume the remote flow if a 'prefix' is supplied
+            url = urls.append_path(self.config.url, "v1/users/remote")
+            paginator = Paginator(self.session, url, params=body)
+            results = paginator.fetch_results()
+            # TODO - Add assertion to verify result set includes a single user.
+            result = results[0]
+            url = urls.append_path(self.config.url, "v1/users")
+            ticket = result["temp_ticket"]
+            response = self.session.put(url, json={"temp_ticket": ticket})
+            return User(config=self.config, session=self.session, **response.json())
+
+        url = urls.append_path(self.config.url, "v1/users")
+        response = self.session.post(url, json=body)
+        return User(config=self.config, session=self.session, **response.json())
 
     def update(self) -> User:
         raise NotImplementedError()
