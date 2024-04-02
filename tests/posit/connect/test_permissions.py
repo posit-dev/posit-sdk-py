@@ -199,3 +199,29 @@ class TestPermissionsFindOne:
 
         # assert response
         assert permission == fake_permissions[0]
+
+
+class TestPermissionsGet:
+    @responses.activate
+    def test(self):
+        # data
+        id = "94"
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
+
+        # behavior
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{id}",
+            json=fake_permission,
+        )
+
+        # setup
+        config = Config(api_key="12345", url="https://connect.example/")
+        session = requests.Session()
+        permissions = Permissions(config, session, content_guid=content_guid)
+
+        # invoke
+        permission = permissions.get(id)
+
+        # assert
+        assert permission == fake_permission
