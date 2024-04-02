@@ -131,6 +131,31 @@ class TestPermissionUpdate:
         assert permission.role == new_role
 
 
+class TestPermissionsCount:
+    @responses.activate
+    def test(self):
+        # test data
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
+
+        # define api behavior
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+            json=fake_permissions,
+        )
+
+        # setup
+        config = Config(api_key="12345", url="https://connect.example/")
+        session = requests.Session()
+        permissions = Permissions(config, session, content_guid=content_guid)
+
+        # invoke
+        count = permissions.count()
+
+        # assert response
+        assert count == len(fake_permissions)
+
+
 class TestPermissionsCreate:
     @responses.activate
     def test(self):

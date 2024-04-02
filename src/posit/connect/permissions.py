@@ -76,6 +76,15 @@ class Permissions(Resources):
         super().__init__(config, session)
         self.content_guid = content_guid
 
+    def count(self) -> int:
+        """Count the number of permissions.
+
+        Returns
+        -------
+        int
+        """
+        return len(self.find())
+
     @overload
     def create(self, principal_guid: str, principal_type: str, role: str) -> Permission:
         """Create a permission.
