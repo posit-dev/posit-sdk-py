@@ -14,6 +14,31 @@ from posit.connect.permissions import Permission, Permissions
 from .api import load_mock  # type: ignore
 
 
+class TestPermissionDelete:
+    @responses.activate
+    def test(self):
+        # data
+        id = "94"
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # behavior
+        mock_delete = responses.delete(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{id}"
+        )
+
+        # setup
+        config = Config(api_key="12345", url="https://connect.example/")
+        session = requests.Session()
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
+        permission = Permission(config, session, **fake_permission)
+
+        # invoke
+        permission.delete()
+
+        # assert
+        assert mock_delete.call_count == 1
+
+
 class TestPermissionUpdate:
     @responses.activate
     def test_request_shape(self):

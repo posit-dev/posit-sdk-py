@@ -31,9 +31,15 @@ class Permission(Resource):
     def role(self) -> str:
         return self.get("role")  # type: ignore
 
+    def delete(self) -> None:
+        """Delete the permission."""
+        path = f"v1/content/{self.content_guid}/permissions/{self.id}"
+        url = urls.append_path(self.config.url, path)
+        self.session.delete(url)
+
     @overload
     def update(self, role: str) -> None:
-        """Update a permission.
+        """Update the permission.
 
         Parameters
         ----------
@@ -44,11 +50,11 @@ class Permission(Resource):
 
     @overload
     def update(self, *args, **kwargs) -> None:
-        """Update a permission."""
+        """Update the permission."""
         ...
 
     def update(self, *args, **kwargs) -> None:
-        """Update a permission."""
+        """Update the permission."""
         body = dict(*args, **kwargs)
         path = f"v1/content/{self.content_guid}/permissions/{self.id}"
         url = urls.append_path(self.config.url, path)
