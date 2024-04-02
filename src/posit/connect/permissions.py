@@ -31,9 +31,15 @@ class Permission(Resource):
     def role(self) -> str:
         return self.get("role")  # type: ignore
 
+    def delete(self) -> None:
+        """Delete the permission."""
+        path = f"v1/content/{self.content_guid}/permissions/{self.id}"
+        url = urls.append_path(self.config.url, path)
+        self.session.delete(url)
+
     @overload
     def update(self, role: str) -> None:
-        """Update a permission.
+        """Update the permission.
 
         Parameters
         ----------
@@ -44,11 +50,11 @@ class Permission(Resource):
 
     @overload
     def update(self, *args, **kwargs) -> None:
-        """Update a permission."""
+        """Update the permission."""
         ...
 
     def update(self, *args, **kwargs) -> None:
-        """Update a permission."""
+        """Update the permission."""
         body = dict(*args, **kwargs)
         path = f"v1/content/{self.content_guid}/permissions/{self.id}"
         url = urls.append_path(self.config.url, path)
@@ -69,6 +75,46 @@ class Permissions(Resources):
     def __init__(self, config: Config, session: Session, *, content_guid: str) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
+
+    @overload
+    def create(self, principal_guid: str, principal_type: str, role: str) -> Permission:
+        """Create a permission.
+
+        Parameters
+        ----------
+        principal_guid : str
+        principal_type : str
+        role : str
+
+        Returns
+        -------
+        Permission
+        """
+        ...
+
+    @overload
+    def create(self, *args, **kwargs) -> Permission:
+        """Create a permission.
+
+        Returns
+        -------
+        Permission
+        """
+        ...
+
+    def create(self, *args, **kwargs) -> Permission:
+        """Create a permission.
+
+        Returns
+        -------
+        Permission
+        """
+        ...
+        body = dict(*args, **kwargs)
+        path = f"v1/content/{self.content_guid}/permissions"
+        url = urls.append_path(self.config.url, path)
+        response = self.session.post(url, json=body)
+        return Permission(self.config, self.session, **response.json())
 
     def find(self, *args, **kwargs) -> List[Permission]:
         """Find permissions.
@@ -93,3 +139,20 @@ class Permissions(Resources):
         """
         permissions = self.find(*args, **kwargs)
         return next(iter(permissions), None)
+
+    def get(self, id: str) -> Permission:
+        """Get a permission.
+
+        Parameters
+        ----------
+        id : str
+            The permission id.
+
+        Returns
+        -------
+        Permission
+        """
+        path = f"v1/content/{self.content_guid}/permissions/{id}"
+        url = urls.append_path(self.config.url, path)
+        response = self.session.get(url)
+        return Permission(self.config, self.session, **response.json())
