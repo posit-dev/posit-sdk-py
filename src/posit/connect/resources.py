@@ -44,31 +44,7 @@ class Resource(ABC, dict):
         raise AttributeError("cannot set attributes: use update() instead")
 
 
-class Resources(ABC, Generic[T]):
-    @abstractmethod
-    def create(self, *args, **kwargs) -> T:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def delete(self, *args, **kwargs) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def find(self, *args, **kwargs) -> List[T]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def find_one(self, *args, **kwargs) -> Optional[T]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get(self, *args, **kwargs) -> T:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def update(self, *args, **kwargs) -> T:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def count(self, *args, **kwargs) -> int:
-        raise NotImplementedError()
+class Resources(ABC):
+    def __init__(self, config: Config, session: requests.Session) -> None:
+        self.config = config
+        self.session = session

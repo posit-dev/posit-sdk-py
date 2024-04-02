@@ -151,7 +151,7 @@ class User(Resource):
         super().update(**response.json())
 
 
-class Users(Resources[User]):
+class Users(Resources):
     def __init__(self, config: Config, session: requests.Session) -> None:
         self.url = urls.append_path(config.url, "v1/users")
         self.config = config

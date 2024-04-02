@@ -10,22 +10,12 @@ from requests import Session
 from . import urls
 
 from .config import Config
+from .permissions import Permissions
 from .resources import Resources, Resource
 
 
 class ContentItem(Resource):
-    """A piece of content.
-
-    Parameters
-    ----------
-    Resource : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
+    """A piece of content."""
 
     @property
     def guid(self) -> str:
@@ -199,6 +189,10 @@ class ContentItem(Resource):
     def id(self) -> str:
         return self.get("id")  # type: ignore
 
+    @property
+    def permissions(self) -> Permissions:
+        return Permissions(self.config, self.session, content_guid=self.guid)
+
     @overload
     def update(
         self,
@@ -297,7 +291,7 @@ class ContentItem(Resource):
         super().update(**response.json())
 
 
-class Content(Resources[ContentItem]):
+class Content(Resources):
     def __init__(self, config: Config, session: Session) -> None:
         self.url = urls.append_path(config.url, "v1/content")
         self.config = config

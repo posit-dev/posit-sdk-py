@@ -1,0 +1,106 @@
+from typing import List, overload
+
+from requests.sessions import Session as Session
+
+from posit.connect.config import Config
+
+from . import urls
+
+from .resources import Resource, Resources
+
+
+class Permission(Resource):
+    @property
+    def guid(self) -> str:
+        """The globally unique identifier.
+
+        An alias for the field 'id'.
+
+        The conventional name for this field is 'guid'. As of v2024.03.0, the API uses the field name 'id'.
+
+        Returns
+        -------
+        str
+        """
+        # Alias 'id' to 'guid'.
+        # The conventional name for this field across applications is 'guid'.
+        return self.get("id", self.get("guid"))  # type: ignore
+
+    @property
+    def content_guid(self) -> str:
+        return self.get("content_guid")  # type: ignore
+
+    @property
+    def principal_guid(self) -> str:
+        return self.get("principal_guid")  # type: ignore
+
+    @property
+    def principal_type(self) -> str:
+        return self.get("principal_type")  # type: ignore
+
+    @property
+    def role(self) -> str:
+        return self.get("role")  # type: ignore
+
+    @overload
+    def update(self, role: str) -> None:
+        """Update a permission.
+
+        Parameters
+        ----------
+        role : str
+            The principal role.
+        """
+        ...
+
+    @overload
+    def update(self, *args, **kwargs) -> None:
+        """Update a permission."""
+        ...
+
+    def update(self, *args, **kwargs) -> None:
+        """Update a permission."""
+        body = dict(*args, **kwargs)
+        path = f"v1/content/{self.content_guid}/permissions/{self.guid}"
+        url = urls.append_path(self.config.url, path)
+        response = self.session.put(
+            url,
+            json={
+                "principal_guid": self.principal_guid,
+                "principal_type": self.principal_type,
+                "role": self.role,
+                # shorthand to overwrite the above fields with method arguments
+                **body,
+            },
+        )
+        super().update(**response.json())
+
+
+class Permissions(Resources):
+    def __init__(self, config: Config, session: Session, *, content_guid: str) -> None:
+        super().__init__(config, session)
+        self.content_guid = content_guid
+
+    def find(self, *args, **kwargs) -> List[Permission]:
+        """Find permissions.
+
+        Returns
+        -------
+        List[Permission]
+        """
+        body = dict(*args, **kwargs)
+        path = f"v1/content/{self.content_guid}/permissions"
+        url = urls.append_path(self.config.url, path)
+        response = self.session.get(url, json=body)
+        results = response.json()
+        return [Permission(self.config, self.session, **result) for result in results]
+
+    def find_one(self, *args, **kwargs) -> Permission | None:
+        """Find a permission.
+
+        Returns
+        -------
+        Permission | None
+        """
+        permissions = self.find(*args, **kwargs)
+        return next(iter(permissions), None)
