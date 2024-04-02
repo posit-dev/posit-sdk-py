@@ -11,6 +11,8 @@ from responses import matchers
 from posit.connect.config import Config
 from posit.connect.permissions import Permission, Permissions
 
+from .api import load_mock  # type: ignore
+
 
 class TestPermissionUpdate:
     @responses.activate
@@ -64,15 +66,22 @@ class TestPermissionUpdate:
     @responses.activate
     def test_role_update(self):
         # test data
-        old_role = "old_role"
-        new_role = "new_role"
+        old_role = "owner"
+        new_role = "viewer"
+
+        id = "94"
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_permission = {
+            **load_mock(f"v1/content/{content_guid}/permissions/{id}.json"),
+            "role": old_role,
+        }
 
         # define api behavior
         id = random.randint(0, 100)
         content_guid = str(uuid.uuid4())
         responses.put(
             f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{id}",
-            json={"role": new_role},
+            json={**fake_permission, "role": new_role},
             match=[
                 matchers.json_params_matcher(
                     {
@@ -101,23 +110,8 @@ class TestPermissionsFind:
     @responses.activate
     def test(self):
         # test data
-        content_guid = str(uuid.uuid4())
-        fake_permissions = [
-            {
-                "guid": str(uuid.uuid4()),
-                "content_guid": content_guid,
-                "principal_guid": str(uuid.uuid4()),
-                "principal_type": "user",
-                "role": "read",
-            },
-            {
-                "guid": str(uuid.uuid4()),
-                "content_guid": content_guid,
-                "principal_guid": str(uuid.uuid4()),
-                "principal_type": "group",
-                "role": "write",
-            },
-        ]
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
@@ -141,23 +135,8 @@ class TestPermissionsFindOne:
     @responses.activate
     def test(self):
         # test data
-        content_guid = str(uuid.uuid4())
-        fake_permissions = [
-            {
-                "id": random.randint(0, 100),
-                "content_guid": content_guid,
-                "principal_guid": str(uuid.uuid4()),
-                "principal_type": "user",
-                "role": "read",
-            },
-            {
-                "id": random.randint(0, 100),
-                "content_guid": content_guid,
-                "principal_guid": str(uuid.uuid4()),
-                "principal_type": "group",
-                "role": "write",
-            },
-        ]
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
