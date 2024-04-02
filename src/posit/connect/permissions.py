@@ -1,19 +1,30 @@
-from __future__ import annotations
-
 from typing import List, overload
 
 from requests.sessions import Session as Session
 
+from posit.connect.config import Config
+
 from . import urls
 
-from .config import Config
 from .resources import Resource, Resources
 
 
 class Permission(Resource):
     @property
-    def id(self) -> str:
-        return self.get("id")  # type: ignore
+    def guid(self) -> str:
+        """The globally unique identifier.
+
+        An alias for the field 'id'.
+
+        The conventional name for this field is 'guid'. As of v2024.03.0, the API uses the field name 'id'.
+
+        Returns
+        -------
+        str
+        """
+        # Alias 'id' to 'guid'.
+        # The conventional name for this field across applications is 'guid'.
+        return self.get("id", self.get("guid"))  # type: ignore
 
     @property
     def content_guid(self) -> str:
@@ -50,7 +61,7 @@ class Permission(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update a permission."""
         body = dict(*args, **kwargs)
-        path = f"v1/content/{self.content_guid}/permissions/{self.id}"
+        path = f"v1/content/{self.content_guid}/permissions/{self.guid}"
         url = urls.append_path(self.config.url, path)
         response = self.session.put(
             url,
@@ -69,46 +80,6 @@ class Permissions(Resources):
     def __init__(self, config: Config, session: Session, *, content_guid: str) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
-
-    @overload
-    def create(self, principal_guid: str, principal_type: str, role: str) -> Permission:
-        """Create a permission.
-
-        Parameters
-        ----------
-        principal_guid : str
-        principal_type : str
-        role : str
-
-        Returns
-        -------
-        Permission
-        """
-        ...
-
-    @overload
-    def create(self, *args, **kwargs) -> Permission:
-        """Create a permission.
-
-        Returns
-        -------
-        Permission
-        """
-        ...
-
-    def create(self, *args, **kwargs) -> Permission:
-        """Create a permission.
-
-        Returns
-        -------
-        Permission
-        """
-        ...
-        body = dict(*args, **kwargs)
-        path = f"v1/content/{self.content_guid}/permissions"
-        url = urls.append_path(self.config.url, path)
-        response = self.session.post(url, json=body)
-        return Permission(self.config, self.session, **response.json())
 
     def find(self, *args, **kwargs) -> List[Permission]:
         """Find permissions.
@@ -133,20 +104,3 @@ class Permissions(Resources):
         """
         permissions = self.find(*args, **kwargs)
         return next(iter(permissions), None)
-
-    def get(self, id: str) -> Permission:
-        """Get a permission.
-
-        Parameters
-        ----------
-        id : str
-            The permission id.
-
-        Returns
-        -------
-        Permission
-        """
-        path = f"v1/content/{self.content_guid}/permissions/{id}"
-        url = urls.append_path(self.config.url, path)
-        response = self.session.get(url)
-        return Permission(self.config, self.session, **response.json())

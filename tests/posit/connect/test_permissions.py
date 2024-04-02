@@ -1,4 +1,3 @@
-import random
 import uuid
 
 from unittest.mock import Mock
@@ -11,14 +10,28 @@ from responses import matchers
 from posit.connect.config import Config
 from posit.connect.permissions import Permission, Permissions
 
-from .api import load_mock  # type: ignore
+
+class TestPermissionGuid:
+    def test_from_id(self):
+        config = Mock()
+        session = Mock()
+        guid = str(uuid.uuid4())
+        permission = Permission(config, session, guid=guid)
+        assert permission.guid == guid
+
+    def test_from_guid(self):
+        config = Mock()
+        session = Mock()
+        guid = str(uuid.uuid4())
+        permission = Permission(config, session, id=guid)
+        assert permission.guid == guid
 
 
 class TestPermissionUpdate:
     @responses.activate
     def test_request_shape(self):
         # test data
-        id = random.randint(0, 100)
+        guid = str(uuid.uuid4())
         content_guid = str(uuid.uuid4())
         principal_guid = str(uuid.uuid4())
         principal_type = "principal_type"
@@ -27,7 +40,7 @@ class TestPermissionUpdate:
 
         # define api behavior
         responses.put(
-            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{id}",
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{guid}",
             json={
                 # doesn't matter for this test
             },
@@ -52,7 +65,7 @@ class TestPermissionUpdate:
         permission = Permission(
             config,
             session,
-            id=id,
+            guid=guid,
             content_guid=content_guid,
             principal_guid=principal_guid,
             principal_type=principal_type,
@@ -66,22 +79,15 @@ class TestPermissionUpdate:
     @responses.activate
     def test_role_update(self):
         # test data
-        old_role = "owner"
-        new_role = "viewer"
-
-        id = "94"
-        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = {
-            **load_mock(f"v1/content/{content_guid}/permissions/{id}.json"),
-            "role": old_role,
-        }
+        old_role = "old_role"
+        new_role = "new_role"
 
         # define api behavior
-        id = random.randint(0, 100)
+        guid = str(uuid.uuid4())
         content_guid = str(uuid.uuid4())
         responses.put(
-            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{id}",
-            json={**fake_permission, "role": new_role},
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{guid}",
+            json={"role": new_role},
             match=[
                 matchers.json_params_matcher(
                     {
@@ -97,7 +103,7 @@ class TestPermissionUpdate:
         config = Config(api_key="12345", url="https://connect.example/")
         session = requests.Session()
         permission = Permission(
-            config, session, id=id, content_guid=content_guid, role=old_role
+            config, session, guid=guid, content_guid=content_guid, role=old_role
         )
 
         # assert role change with respect to api response
@@ -106,57 +112,27 @@ class TestPermissionUpdate:
         assert permission.role == new_role
 
 
-class TestPermissionsCreate:
-    @responses.activate
-    def test(self):
-        # data
-        id = "94"
-        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        principal_guid = str(uuid.uuid4())
-        principal_type = "user"
-        role = "owner"
-        fake_permission = {
-            **load_mock(f"v1/content/{content_guid}/permissions/{id}.json"),
-            "principal_guid": principal_guid,
-            "principal_type": principal_type,
-            "role": role,
-        }
-
-        # behavior
-        responses.post(
-            f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
-            json=fake_permission,
-            match=[
-                matchers.json_params_matcher(
-                    {
-                        "principal_guid": principal_guid,
-                        "principal_type": principal_type,
-                        "role": role,
-                    }
-                )
-            ],
-        )
-
-        # setup
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
-        permissions = Permissions(config, session, content_guid=content_guid)
-
-        # invoke
-        permission = permissions.create(
-            principal_guid=principal_guid, principal_type=principal_type, role=role
-        )
-
-        # assert
-        assert permission == fake_permission
-
-
 class TestPermissionsFind:
     @responses.activate
     def test(self):
         # test data
-        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
+        content_guid = str(uuid.uuid4())
+        fake_permissions = [
+            {
+                "guid": str(uuid.uuid4()),
+                "content_guid": content_guid,
+                "principal_guid": str(uuid.uuid4()),
+                "principal_type": "user",
+                "role": "read",
+            },
+            {
+                "guid": str(uuid.uuid4()),
+                "content_guid": content_guid,
+                "principal_guid": str(uuid.uuid4()),
+                "principal_type": "group",
+                "role": "write",
+            },
+        ]
 
         # define api behavior
         responses.get(
@@ -180,8 +156,23 @@ class TestPermissionsFindOne:
     @responses.activate
     def test(self):
         # test data
-        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
+        content_guid = str(uuid.uuid4())
+        fake_permissions = [
+            {
+                "guid": str(uuid.uuid4()),
+                "content_guid": content_guid,
+                "principal_guid": str(uuid.uuid4()),
+                "principal_type": "user",
+                "role": "read",
+            },
+            {
+                "guid": str(uuid.uuid4()),
+                "content_guid": content_guid,
+                "principal_guid": str(uuid.uuid4()),
+                "principal_type": "group",
+                "role": "write",
+            },
+        ]
 
         # define api behavior
         responses.get(
@@ -199,29 +190,3 @@ class TestPermissionsFindOne:
 
         # assert response
         assert permission == fake_permissions[0]
-
-
-class TestPermissionsGet:
-    @responses.activate
-    def test(self):
-        # data
-        id = "94"
-        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
-
-        # behavior
-        responses.get(
-            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{id}",
-            json=fake_permission,
-        )
-
-        # setup
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
-        permissions = Permissions(config, session, content_guid=content_guid)
-
-        # invoke
-        permission = permissions.get(id)
-
-        # assert
-        assert permission == fake_permission
