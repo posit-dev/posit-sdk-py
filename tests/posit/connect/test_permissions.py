@@ -106,6 +106,51 @@ class TestPermissionUpdate:
         assert permission.role == new_role
 
 
+class TestPermissionsCreate:
+    @responses.activate
+    def test(self):
+        # data
+        id = "94"
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        principal_guid = str(uuid.uuid4())
+        principal_type = "user"
+        role = "owner"
+        fake_permission = {
+            **load_mock(f"v1/content/{content_guid}/permissions/{id}.json"),
+            "principal_guid": principal_guid,
+            "principal_type": principal_type,
+            "role": role,
+        }
+
+        # behavior
+        responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+            json=fake_permission,
+            match=[
+                matchers.json_params_matcher(
+                    {
+                        "principal_guid": principal_guid,
+                        "principal_type": principal_type,
+                        "role": role,
+                    }
+                )
+            ],
+        )
+
+        # setup
+        config = Config(api_key="12345", url="https://connect.example/")
+        session = requests.Session()
+        permissions = Permissions(config, session, content_guid=content_guid)
+
+        # invoke
+        permission = permissions.create(
+            principal_guid=principal_guid, principal_type=principal_type, role=role
+        )
+
+        # assert
+        assert permission == fake_permission
+
+
 class TestPermissionsFind:
     @responses.activate
     def test(self):
@@ -154,3 +199,29 @@ class TestPermissionsFindOne:
 
         # assert response
         assert permission == fake_permissions[0]
+
+
+class TestPermissionsGet:
+    @responses.activate
+    def test(self):
+        # data
+        id = "94"
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
+
+        # behavior
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{id}",
+            json=fake_permission,
+        )
+
+        # setup
+        config = Config(api_key="12345", url="https://connect.example/")
+        session = requests.Session()
+        permissions = Permissions(config, session, content_guid=content_guid)
+
+        # invoke
+        permission = permissions.get(id)
+
+        # assert
+        assert permission == fake_permission
