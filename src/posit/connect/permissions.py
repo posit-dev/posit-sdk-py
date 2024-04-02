@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 from typing import List, overload
 
 from requests.sessions import Session as Session
 
-from posit.connect.config import Config
-
 from . import urls
 
+from .config import Config
 from .resources import Resource, Resources
 
 
