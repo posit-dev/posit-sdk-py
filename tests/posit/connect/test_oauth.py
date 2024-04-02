@@ -1,6 +1,6 @@
 import responses
 
-from posit.connect import Client
+from posit.connect import Connect
 
 
 class TestOAuthIntegrations:
@@ -40,6 +40,6 @@ class TestOAuthIntegrations:
                 "token_type": "Bearer",
             },
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         assert con.oauth.get_credentials()["access_token"] == "sdk-user-token"
         assert con.oauth.get_credentials("cit")["access_token"] == "viewer-token"

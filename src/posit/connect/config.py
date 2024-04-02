@@ -1,4 +1,4 @@
-"""Client configuration."""
+"""Configuration."""
 
 import os
 

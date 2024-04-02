@@ -2,7 +2,7 @@ import abc
 import os
 from typing import Callable, Dict, Optional
 
-from ..client import Client
+from ..client import Connect
 from ..oauth import OAuthIntegration
 
 HeaderFactory = Callable[[], Dict[str, str]]
@@ -51,7 +51,7 @@ def is_local() -> bool:
 
 
 def viewer_credentials_provider(
-    client: Optional[Client] = None, user_session_token: Optional[str] = None
+    client: Optional[Connect] = None, user_session_token: Optional[str] = None
 ) -> Optional[CredentialsProvider]:
     # If the content is not running on Connect then viewer auth should
     # fall back to the locally configured credentials hierarchy
@@ -59,7 +59,7 @@ def viewer_credentials_provider(
         return None
 
     if client is None:
-        client = Client()
+        client = Connect()
 
     # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.
     # user_session_token is required to impersonate the viewer.
@@ -71,5 +71,5 @@ def viewer_credentials_provider(
     return PositOAuthIntegrationCredentialsProvider(client.oauth, user_session_token)
 
 
-def service_account_credentials_provider(client: Optional[Client] = None):
+def service_account_credentials_provider(client: Optional[Connect] = None):
     raise NotImplementedError

@@ -1,6 +1,8 @@
-"""Contains the Client class."""
+"""The Connect interface."""
 
 from __future__ import annotations
+
+import contextlib
 
 from requests import Response, Session
 from typing import Optional
@@ -14,7 +16,7 @@ from .content import Content
 from .users import User, Users
 
 
-class Client:
+class Connect(contextlib.AbstractContextManager):
     """Main interface for Posit Connect."""
 
     def __init__(
@@ -22,12 +24,17 @@ class Client:
         api_key: Optional[str] = None,
         url: Optional[str] = None,
     ) -> None:
-        """
-        Initialize the Client instance.
+        """Initialize a Connect client.
 
-        Args:
-            api_key (str, optional): API key for authentication. Defaults to None.
+        api_key (str, optional): API key for authentication. Defaults to None.
             url (str, optional): API url URL. Defaults to None.
+
+        Parameters
+        ----------
+        api_key : Optional[str], optional
+            API key for authentication, by default None
+        url : Optional[str], optional
+            API url, by default None
         """
         # Create a Config object.
         self.config = Config(api_key=api_key, url=url)
@@ -96,22 +103,26 @@ class Client:
         return Content(config=self.config, session=self.session)
 
     def __del__(self):
-        """Close the session when the Client instance is deleted."""
+        """Finalize the instance.
+
+        Closes the open requests.Session if it exists.
+        """
         if hasattr(self, "session") and self.session is not None:
             self.session.close()
 
-    def __enter__(self):
-        """Enter method for using the client as a context manager."""
-        return self
-
     def __exit__(self, exc_type, exc_value, exc_tb):
-        """
-        Close the session if it exists.
+        """Exit the runtime context.
 
-        Args:
-            exc_type: The type of the exception raised (if any).
-            exc_value: The exception instance raised (if any).
-            exc_tb: The traceback for the exception raised (if any).
+        Closes the open requests.Session if it exists.
+
+        Parameters
+        ----------
+        exc_type : _type_
+            The type of the exception raised (if any).
+        exc_value : _type_
+            The exception instance raised (if any).
+        exc_tb : _type_
+            The traceback for the exception raised (if any).
         """
         if hasattr(self, "session") and self.session is not None:
             self.session.close()

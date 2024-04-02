@@ -3,7 +3,7 @@ import responses
 
 from unittest.mock import MagicMock, patch
 
-from posit.connect import Client
+from posit.connect import Connect
 
 from .api import load_mock  # type: ignore
 
@@ -26,7 +26,7 @@ def MockSession():
         yield mock
 
 
-class TestClient:
+class TestConnect:
     def test_init(
         self,
         MockAuth: MagicMock,
@@ -35,7 +35,7 @@ class TestClient:
     ):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        Client(api_key=api_key, url=url)
+        Connect(api_key=api_key, url=url)
         MockAuth.assert_called_once_with(config=MockConfig.return_value)
         MockConfig.assert_called_once_with(api_key=api_key, url=url)
         MockSession.assert_called_once()
@@ -43,30 +43,30 @@ class TestClient:
     def test__del__(self, MockAuth, MockConfig, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
-        del client
+        con = Connect(api_key=api_key, url=url)
+        del con
         MockSession.return_value.close.assert_called_once()
 
     def test__enter__(self):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        with Client(api_key=api_key, url=url) as client:
-            assert isinstance(client, Client)
+        with Connect(api_key=api_key, url=url) as con:
+            assert isinstance(con, Connect)
 
     def test__exit__(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        with Client(api_key=api_key, url=url) as client:
-            assert isinstance(client, Client)
+        with Connect(api_key=api_key, url=url) as con:
+            assert isinstance(con, Connect)
         MockSession.return_value.close.assert_called_once()
 
     @responses.activate
     def test_connect_version(self):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        con = Connect(api_key=api_key, url=url)
 
         # The actual server_settings response has a lot more attributes, but we
         # don't need to include them all here because we don't use them
@@ -74,7 +74,7 @@ class TestClient:
             "http://foo.bar/__api__/server_settings",
             json={"version": "2024.01.0"},
         )
-        assert client.connect_version == "2024.01.0"
+        assert con.connect_version == "2024.01.0"
 
     @responses.activate
     def test_me_request(self):
@@ -83,14 +83,14 @@ class TestClient:
             json=load_mock("v1/user.json"),
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         assert con.me.username == "carlos12"
 
     def test_request(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
-        client.request("GET", "/foo")
+        con = Connect(api_key=api_key, url=url)
+        con.request("GET", "/foo")
         MockSession.return_value.request.assert_called_once_with(
             "GET", "http://foo.bar/__api__/foo"
         )
@@ -98,33 +98,33 @@ class TestClient:
     def test_get(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
-        client.get("/foo")
-        client.session.get.assert_called_once_with("http://foo.bar/__api__/foo")
+        con = Connect(api_key=api_key, url=url)
+        con.get("/foo")
+        con.session.get.assert_called_once_with("http://foo.bar/__api__/foo")
 
     def test_post(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
-        client.post("/foo")
-        client.session.post.assert_called_once_with("http://foo.bar/__api__/foo")
+        con = Connect(api_key=api_key, url=url)
+        con.post("/foo")
+        con.session.post.assert_called_once_with("http://foo.bar/__api__/foo")
 
     def test_put(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
-        client.put("/foo")
-        client.session.put.assert_called_once_with("http://foo.bar/__api__/foo")
+        con = Connect(api_key=api_key, url=url)
+        con.put("/foo")
+        con.session.put.assert_called_once_with("http://foo.bar/__api__/foo")
 
     def test_patch(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
-        client.patch("/foo")
-        client.session.patch.assert_called_once_with("http://foo.bar/__api__/foo")
+        con = Connect(api_key=api_key, url=url)
+        con.patch("/foo")
+        con.session.patch.assert_called_once_with("http://foo.bar/__api__/foo")
 
     def test_delete(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
-        client.delete("/foo")
+        con = Connect(api_key=api_key, url=url)
+        con.delete("/foo")

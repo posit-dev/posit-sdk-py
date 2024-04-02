@@ -4,7 +4,7 @@ import pytest
 import requests
 import responses
 
-from posit.connect.client import Client
+from posit.connect import Connect
 from posit.connect.users import User
 
 from .api import load_mock  # type: ignore
@@ -99,7 +99,7 @@ class TestUserLock:
             "https://connect.example/__api__/v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
             json=load_mock("v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6.json"),
         )
-        c = Client(api_key="12345", url="https://connect.example/")
+        c = Connect(api_key="12345", url="https://connect.example/")
         user = c.users.get("a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6")
         assert user.guid == "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
 
@@ -120,7 +120,7 @@ class TestUserLock:
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
-        c = Client(api_key="12345", url="https://connect.example/")
+        c = Connect(api_key="12345", url="https://connect.example/")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
@@ -141,7 +141,7 @@ class TestUserLock:
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
-        c = Client(api_key="12345", url="https://connect.example/")
+        c = Connect(api_key="12345", url="https://connect.example/")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
@@ -165,7 +165,7 @@ class TestUserUnlock:
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
-        c = Client(api_key="12345", url="https://connect.example/")
+        c = Connect(api_key="12345", url="https://connect.example/")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
@@ -185,7 +185,7 @@ class TestUsers:
             json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert carlos.username == "carlos12"
         assert carlos.first_name == "Carlos"
@@ -202,7 +202,7 @@ class TestUsers:
             },
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert carlos.username == "carlos12"
         assert carlos["some_new_field"] == "some_new_value"
@@ -219,7 +219,7 @@ class TestUsers:
             json={"first_name": "Carlitos"},
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
 
         assert patch_request.call_count == 0
@@ -241,7 +241,7 @@ class TestUsers:
             status=500,
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         with pytest.raises(requests.HTTPError, match="500 Server Error"):
             carlos.update(first_name="Carlitos")
@@ -253,7 +253,7 @@ class TestUsers:
             json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
 
         with pytest.raises(
@@ -269,7 +269,7 @@ class TestUsers:
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
             match=[responses.matchers.query_param_matcher({"page_size": 1})],
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         count = con.users.count()
         assert count == 3
 
@@ -282,7 +282,7 @@ class TestUsersFindOne:
             "https://connect.example/__api__/v1/users",
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         user = con.users.find_one()
         assert user.username == "al"
         assert len(responses.calls) == 1
@@ -300,7 +300,7 @@ class TestUsersFindOne:
             ],
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         con.users.find_one(**params)
         responses.assert_call_count(
             "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
@@ -314,7 +314,7 @@ class TestUsersFindOne:
             json={"total": 0, "current_page": 1, "results": []},
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         user = con.users.find_one()
         assert user is None
 
@@ -341,7 +341,7 @@ class TestUsersFind:
             ],
             json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         users = con.users.find()
         assert len(users) == 3
         assert users[0] == {
@@ -380,7 +380,7 @@ class TestUsersFind:
             ],
             json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         con.users.find(**params)
         responses.assert_call_count(
             "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
@@ -390,7 +390,7 @@ class TestUsersFind:
     @responses.activate
     def test_params_not_dict_like(self):
         # validate input params are propagated to the query params
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Connect(api_key="12345", url="https://connect.example/")
         not_dict_like = "string"
         with pytest.raises(ValueError):
             con.users.find(not_dict_like)
