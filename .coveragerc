@@ -2,9 +2,7 @@
 
 [report]
 # exclude '...' (ellipsis literal). This option uses regex, so an escaped literal is required.
-# exclude 'raise NotImplementedError()'.
 exclude_also =
     \.\.\.
-    raise NotImplementedError()
 
 fail_under = 80

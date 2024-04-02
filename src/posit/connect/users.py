@@ -214,15 +214,6 @@ class Users(Resources):
             **response.json(),
         )
 
-    def create(self) -> User:
-        raise NotImplementedError()
-
-    def update(self) -> User:
-        raise NotImplementedError()
-
-    def delete(self) -> None:
-        raise NotImplementedError()
-
     def count(self) -> int:
         response: requests.Response = self.session.get(
             self.url, params={"page_size": 1}
