@@ -70,6 +70,46 @@ class Permissions(Resources):
         super().__init__(config, session)
         self.content_guid = content_guid
 
+    @overload
+    def create(self, principal_guid: str, principal_type: str, role: str) -> Permission:
+        """Create a permission.
+
+        Parameters
+        ----------
+        principal_guid : str
+        principal_type : str
+        role : str
+
+        Returns
+        -------
+        Permission
+        """
+        ...
+
+    @overload
+    def create(self, *args, **kwargs) -> Permission:
+        """Create a permission.
+
+        Returns
+        -------
+        Permission
+        """
+        ...
+
+    def create(self, *args, **kwargs) -> Permission:
+        """Create a permission.
+
+        Returns
+        -------
+        Permission
+        """
+        ...
+        body = dict(*args, **kwargs)
+        path = f"v1/content/{self.content_guid}/permissions"
+        url = urls.append_path(self.config.url, path)
+        response = self.session.post(url, json=body)
+        return Permission(self.config, self.session, **response.json())
+
     def find(self, *args, **kwargs) -> List[Permission]:
         """Find permissions.
 
