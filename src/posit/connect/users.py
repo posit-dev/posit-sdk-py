@@ -151,7 +151,7 @@ class User(Resource):
         super().update(**response.json())
 
 
-class Users(Resources[User]):
+class Users(Resources):
     def __init__(self, config: Config, session: requests.Session) -> None:
         self.url = urls.append_path(config.url, "v1/users")
         self.config = config
@@ -160,10 +160,12 @@ class Users(Resources[User]):
     @overload
     def find(
         self, prefix: str = ..., user_role: str = ..., account_status: str = ...
-    ) -> List[User]: ...
+    ) -> List[User]:
+        ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[User]: ...
+    def find(self, *args, **kwargs) -> List[User]:
+        ...
 
     def find(self, *args, **kwargs):
         params = dict(*args, **kwargs)
@@ -181,10 +183,12 @@ class Users(Resources[User]):
     @overload
     def find_one(
         self, prefix: str = ..., user_role: str = ..., account_status: str = ...
-    ) -> User | None: ...
+    ) -> User | None:
+        ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> User | None: ...
+    def find_one(self, *args, **kwargs) -> User | None:
+        ...
 
     def find_one(self, *args, **kwargs) -> User | None:
         params = dict(*args, **kwargs)
