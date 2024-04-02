@@ -326,15 +326,6 @@ class Content(Resources):
         response = self.session.get(url)
         return ContentItem(self.config, self.session, **response.json())
 
-    def create(self) -> ContentItem:
-        raise NotImplementedError()
-
-    def update(self) -> ContentItem:
-        raise NotImplementedError()
-
-    def delete(self) -> None:
-        raise NotImplementedError()
-
     def count(self) -> int:
         results = self.session.get(self.url).json()
         return len(results)
