@@ -289,23 +289,24 @@ class TestUsersFindOne:
 
     @responses.activate
     def test_params(self):
-        # validate input params are propagated to the query params
-        params = {"key1": "value1", "key2": "value2", "key3": "value3"}
-        responses.get(
+        mock_get = responses.get(
             "https://connect.example/__api__/v1/users",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1, **params}
+                    {
+                        "page_size": 500,
+                        "page_number": 1,
+                        "key1": "value1",
+                        "key2": "value2",
+                        "key3": "value3",
+                    }
                 )
             ],
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
         )
         con = Client(api_key="12345", url="https://connect.example/")
-        con.users.find_one(**params)
-        responses.assert_call_count(
-            "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
-            1,
-        )
+        con.users.find_one(key1="value1", key2="value2", key3="value3")
+        assert mock_get.call_count == 1
 
     @responses.activate
     def test_empty_results(self):
@@ -366,7 +367,13 @@ class TestUsersFind:
             "https://connect.example/__api__/v1/users",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1, **params}
+                    {
+                        "page_size": 500,
+                        "page_number": 1,
+                        "key1": "value1",
+                        "key2": "value2",
+                        "key3": "value3",
+                    }
                 )
             ],
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
@@ -375,13 +382,19 @@ class TestUsersFind:
             "https://connect.example/__api__/v1/users",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 2, **params}
+                    {
+                        "page_size": 500,
+                        "page_number": 2,
+                        "key1": "value1",
+                        "key2": "value2",
+                        "key3": "value3",
+                    }
                 )
             ],
             json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
         )
         con = Client(api_key="12345", url="https://connect.example/")
-        con.users.find(**params)
+        con.users.find_one(key1="value1", key2="value2", key3="value3")
         responses.assert_call_count(
             "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
             1,

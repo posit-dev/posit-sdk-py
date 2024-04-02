@@ -55,18 +55,17 @@ class Permission(Resource):
 
     def update(self, *args, **kwargs) -> None:
         """Update the permission."""
-        body = dict(*args, **kwargs)
+        body = {
+            "principal_guid": self.principal_guid,
+            "principal_type": self.principal_type,
+            "role": self.role,
+        }
+        body.update(*args, **kwargs)
         path = f"v1/content/{self.content_guid}/permissions/{self.id}"
         url = urls.append_path(self.config.url, path)
         response = self.session.put(
             url,
-            json={
-                "principal_guid": self.principal_guid,
-                "principal_type": self.principal_type,
-                "role": self.role,
-                # shorthand to overwrite the above fields with method arguments
-                **body,
-            },
+            json=body,
         )
         super().update(**response.json())
 

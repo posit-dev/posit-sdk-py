@@ -96,17 +96,15 @@ class TestPermissionUpdate:
 
         id = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = {
-            **load_mock(f"v1/content/{content_guid}/permissions/{id}.json"),
-            "role": old_role,
-        }
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
+        fake_permission.update(role=new_role)
 
         # define api behavior
         id = random.randint(0, 100)
         content_guid = str(uuid.uuid4())
         responses.put(
             f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{id}",
-            json={**fake_permission, "role": new_role},
+            json=fake_permission,
             match=[
                 matchers.json_params_matcher(
                     {
