@@ -193,6 +193,12 @@ class ContentItem(Resource):
     def permissions(self) -> Permissions:
         return Permissions(self.config, self.session, content_guid=self.guid)
 
+    def delete(self) -> None:
+        """Delete the content item."""
+        path = f"v1/content/{self.guid}"
+        url = urls.append_path(self.config.url, path)
+        self.session.delete(url)
+
     @overload
     def update(
         self,
