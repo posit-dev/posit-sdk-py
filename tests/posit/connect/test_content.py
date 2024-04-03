@@ -19,9 +19,11 @@ class TestContent:
         assert content.guid == guid
 
         new_name = "New Name"
+        fake_content = load_mock(f"v1/content/{guid}.json")
+        fake_content.update(name=new_name)
         responses.patch(
             f"https://connect.example/__api__/v1/content/{guid}",
-            json={**load_mock(f"v1/content/{guid}.json"), "name": new_name},
+            json=fake_content,
         )
 
         content.update(name=new_name)
