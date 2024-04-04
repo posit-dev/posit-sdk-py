@@ -1,0 +1,26 @@
+project:
+  type: website
+
+# tell quarto to read the generated sidebar
+metadata-files:
+  - _sidebar.yml
+
+
+quartodoc:
+  # the name used to import the package you want to create reference docs for
+  package: posit
+
+  # write sidebar data to this file
+  sidebar: _sidebar.yml
+
+  sections:
+    - title: Posit Connect
+      desc: Basic objects and their methods
+      contents:
+        - connect.Client
+        - connect.users.Users
+        - connect.users.User
+        - connect.content.Content
+        - connect.content.ContentItem
+        - connect.permissions.Permissions
+        - connect.permissions.Permission
