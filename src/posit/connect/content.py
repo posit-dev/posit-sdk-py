@@ -18,6 +18,10 @@ class ContentItem(Resource):
     """A piece of content."""
 
     @property
+    def id(self) -> str:
+        return self.get("id")  # type: ignore
+
+    @property
     def guid(self) -> str:
         return self.get("guid")  # type: ignore
 
@@ -186,10 +190,6 @@ class ContentItem(Resource):
         return self.get("app_role")  # type: ignore
 
     @property
-    def id(self) -> str:
-        return self.get("id")  # type: ignore
-
-    @property
     def permissions(self) -> Permissions:
         return Permissions(self.config, self.session, content_guid=self.guid)
 
@@ -222,69 +222,45 @@ class ContentItem(Resource):
         default_py_environment_management: Optional[bool] = ...,
         service_account_name: Optional[str] = ...,
     ) -> None:
-        """
-        Update the content item.
+        """Update the content item.
 
-        Args:
-            name (str): The name of the content.
-            title (Optional[str]): The title of the content.
-            description (str): The description of the content.
-            access_type (str): The access type of the content.
-            owner_guid (Optional[str]): The owner GUID of the content.
-            connection_timeout (Optional[int]): The connection timeout in seconds.
-            read_timeout (Optional[int]): The read timeout in seconds.
-            init_timeout (Optional[int]): The initialization timeout in seconds.
-            idle_timeout (Optional[int]): The idle timeout in seconds.
-            max_processes (Optional[int]): The maximum number of processes.
-            min_processes (Optional[int]): The minimum number of processes.
-            max_conns_per_process (Optional[int]): The maximum number of connections per process.
-            load_factor (Optional[float]): The load factor.
-            cpu_request (Optional[float]): The CPU request.
-            cpu_limit (Optional[float]): The CPU limit.
-            memory_request (Optional[int]): The memory request in bytes.
-            memory_limit (Optional[int]): The memory limit in bytes.
-            amd_gpu_limit (Optional[int]): The AMD GPU limit.
-            nvidia_gpu_limit (Optional[int]): The NVIDIA GPU limit.
-            run_as (Optional[str]): The user to run as.
-            run_as_current_user (Optional[bool]): Whether to run as the current user.
-            default_image_name (Optional[str]): The default image name.
-            default_r_environment_management (Optional[bool]): Whether to use default R environment management.
-            default_py_environment_management (Optional[bool]): Whether to use default Python environment management.
-            service_account_name (Optional[str]): The service account name.
-
-        Returns
-        -------
-            None
+        Parameters
+        ----------
+        name : str, optional
+        title : Optional[str], optional
+        description : str, optional
+        access_type : str, optional
+        owner_guid : Optional[str], optional
+        connection_timeout : Optional[int], optional
+        read_timeout : Optional[int], optional
+        init_timeout : Optional[int], optional
+        idle_timeout : Optional[int], optional
+        max_processes : Optional[int], optional
+        min_processes : Optional[int], optional
+        max_conns_per_process : Optional[int], optional
+        load_factor : Optional[float], optional
+        cpu_request : Optional[float], optional
+        cpu_limit : Optional[float], optional
+        memory_request : Optional[int], optional
+        memory_limit : Optional[int], optional
+        amd_gpu_limit : Optional[int], optional
+        nvidia_gpu_limit : Optional[int], optional
+        run_as : Optional[str], optional
+        run_as_current_user : Optional[bool], optional
+        default_image_name : Optional[str], optional
+        default_r_environment_management : Optional[bool], optional
+        default_py_environment_management : Optional[bool], optional
+        service_account_name : Optional[str], optional
         """
         ...
 
     @overload
     def update(self, *args, **kwargs) -> None:
-        """
-        Update the content item.
-
-        Args:
-            *args
-            **kwargs
-
-        Returns
-        -------
-            None
-        """
+        """Update the content item."""
         ...
 
     def update(self, *args, **kwargs) -> None:
-        """
-        Update the content item.
-
-        Args:
-            *args
-            **kwargs
-
-        Returns
-        -------
-            None
-        """
+        """Update the content item."""
         body = dict(*args, **kwargs)
         url = urls.append_path(self.config.url, f"v1/content/{self.guid}")
         response = self.session.patch(url, json=body)
@@ -297,7 +273,109 @@ class Content(Resources):
         self.config = config
         self.session = session
 
+    def count(self) -> int:
+        """Count the number of content items.
+
+        Returns
+        -------
+        int
+        """
+        results = self.session.get(self.url).json()
+        return len(results)
+
+    @overload
+    def create(
+        self,
+        name: str = ...,
+        title: Optional[str] = ...,
+        description: str = ...,
+        access_type: str = ...,
+        connection_timeout: Optional[int] = ...,
+        read_timeout: Optional[int] = ...,
+        init_timeout: Optional[int] = ...,
+        idle_timeout: Optional[int] = ...,
+        max_processes: Optional[int] = ...,
+        min_processes: Optional[int] = ...,
+        max_conns_per_process: Optional[int] = ...,
+        load_factor: Optional[float] = ...,
+        cpu_request: Optional[float] = ...,
+        cpu_limit: Optional[float] = ...,
+        memory_request: Optional[int] = ...,
+        memory_limit: Optional[int] = ...,
+        amd_gpu_limit: Optional[int] = ...,
+        nvidia_gpu_limit: Optional[int] = ...,
+        run_as: Optional[str] = ...,
+        run_as_current_user: Optional[bool] = ...,
+        default_image_name: Optional[str] = ...,
+        default_r_environment_management: Optional[bool] = ...,
+        default_py_environment_management: Optional[bool] = ...,
+        service_account_name: Optional[str] = ...,
+    ) -> ContentItem:
+        """Create a content item.
+
+        Parameters
+        ----------
+        name : str, optional
+        title : Optional[str], optional
+        description : str, optional
+        access_type : str, optional
+        connection_timeout : Optional[int], optional
+        read_timeout : Optional[int], optional
+        init_timeout : Optional[int], optional
+        idle_timeout : Optional[int], optional
+        max_processes : Optional[int], optional
+        min_processes : Optional[int], optional
+        max_conns_per_process : Optional[int], optional
+        load_factor : Optional[float], optional
+        cpu_request : Optional[float], optional
+        cpu_limit : Optional[float], optional
+        memory_request : Optional[int], optional
+        memory_limit : Optional[int], optional
+        amd_gpu_limit : Optional[int], optional
+        nvidia_gpu_limit : Optional[int], optional
+        run_as : Optional[str], optional
+        run_as_current_user : Optional[bool], optional
+        default_image_name : Optional[str], optional
+        default_r_environment_management : Optional[bool], optional
+        default_py_environment_management : Optional[bool], optional
+        service_account_name : Optional[str], optional
+
+        Returns
+        -------
+        ContentItem
+        """
+        ...
+
+    @overload
+    def create(self, *args, **kwargs) -> ContentItem:
+        """Create a content item.
+
+        Returns
+        -------
+        ContentItem
+        """
+        ...
+
+    def create(self, *args, **kwargs) -> ContentItem:
+        """Create a content item.
+
+        Returns
+        -------
+        ContentItem
+        """
+        body = dict(*args, **kwargs)
+        path = "v1/content"
+        url = urls.append_path(self.config.url, path)
+        response = self.session.post(url, json=body)
+        return ContentItem(self.config, self.session, **response.json())
+
     def find(self) -> List[ContentItem]:
+        """Find content items.
+
+        Returns
+        -------
+        List[ContentItem]
+        """
         results = self.session.get(self.url).json()
         items = (
             ContentItem(
@@ -310,6 +388,12 @@ class Content(Resources):
         return [item for item in items]
 
     def find_one(self) -> ContentItem | None:
+        """Find a content item.
+
+        Returns
+        -------
+        ContentItem | None
+        """
         results = self.session.get(self.url).json()
         items = (
             ContentItem(
@@ -321,11 +405,17 @@ class Content(Resources):
         )
         return next(items, None)
 
-    def get(self, id: str) -> ContentItem:
-        url = urls.append_path(self.url, id)
+    def get(self, guid: str) -> ContentItem:
+        """Get a content item.
+
+        Parameters
+        ----------
+        guid : str
+
+        Returns
+        -------
+        ContentItem
+        """
+        url = urls.append_path(self.url, guid)
         response = self.session.get(url)
         return ContentItem(self.config, self.session, **response.json())
-
-    def count(self) -> int:
-        results = self.session.get(self.url).json()
-        return len(results)

@@ -1,5 +1,7 @@
 import responses
 
+from responses import matchers
+
 from posit.connect.client import Client
 from posit.connect.content import ContentItem
 
@@ -28,6 +30,30 @@ class TestContent:
 
         content.update(name=new_name)
         assert content.name == new_name
+
+
+class TestContentCreate:
+    @responses.activate
+    def test(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_content_item = load_mock(f"v1/content/{guid}.json")
+
+        # behavior
+        responses.post(
+            f"https://connect.example/__api__/v1/content",
+            json=load_mock(f"v1/content/{guid}.json"),
+            match=[matchers.json_params_matcher({"name": fake_content_item["name"]})],
+        )
+
+        # setup
+        client = Client(api_key="12345", url="https://connect.example/")
+
+        # invoke
+        content_item = client.content.create(name=fake_content_item["name"])
+
+        # assert
+        assert content_item.name == fake_content_item["name"]
 
 
 class TestContents:
