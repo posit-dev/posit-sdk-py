@@ -71,7 +71,7 @@ class Permission(Resource):
 
 
 class Permissions(Resources):
-    def __init__(self, config: Config, session: Session, *, content_guid: str) -> None:
+    def __init__(self, config: Config, session: Session, content_guid: str) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
 

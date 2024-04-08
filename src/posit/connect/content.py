@@ -10,12 +10,25 @@ from requests import Session
 from . import urls
 
 from .config import Config
+from .bundles import Bundles
 from .permissions import Permissions
 from .resources import Resources, Resource
 
 
 class ContentItem(Resource):
     """A piece of content."""
+
+    # Relationships
+
+    @property
+    def bundles(self) -> Bundles:
+        return Bundles(self.config, self.session, self.guid)
+
+    @property
+    def permissions(self) -> Permissions:
+        return Permissions(self.config, self.session, self.guid)
+
+    # Properties
 
     @property
     def id(self) -> str:
@@ -189,9 +202,7 @@ class ContentItem(Resource):
     def app_role(self) -> str:
         return self.get("app_role")  # type: ignore
 
-    @property
-    def permissions(self) -> Permissions:
-        return Permissions(self.config, self.session, content_guid=self.guid)
+    # Accessor Methods
 
     def delete(self) -> None:
         """Delete the content item."""
