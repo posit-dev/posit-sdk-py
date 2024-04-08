@@ -37,7 +37,6 @@
     "default_py_environment_management": null,
     "run_as": null,
     "run_as_current_user": false,
-    "owner_guid": "87c12c08-11cd-4de1-8da3-12a7579c4998",
     "content_url": "https://connect.example/content/f2f37341-e21d-3d80-c698-a935ad614066/",
     "dashboard_url": "https://connect.example/connect/#/apps/f2f37341-e21d-3d80-c698-a935ad614066",
     "app_role": "viewer",

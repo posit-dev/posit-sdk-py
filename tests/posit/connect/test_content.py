@@ -138,7 +138,7 @@ class TestContentItemAttributes:
         assert self.item.run_as_current_user is False
 
     def test_owner_guid(self):
-        assert self.item.owner_guid == "87c12c08-11cd-4de1-8da3-12a7579c4998"
+        assert self.item.owner_guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
     def test_content_url(self):
         assert (
