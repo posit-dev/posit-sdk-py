@@ -37,9 +37,24 @@
     "default_py_environment_management": null,
     "run_as": null,
     "run_as_current_user": false,
-    "owner_guid": "87c12c08-11cd-4de1-8da3-12a7579c4998",
     "content_url": "https://connect.example/content/f2f37341-e21d-3d80-c698-a935ad614066/",
     "dashboard_url": "https://connect.example/connect/#/apps/f2f37341-e21d-3d80-c698-a935ad614066",
     "app_role": "viewer",
-    "id": "8274"
+    "id": "8274",
+    "owner_guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+    "owner": {
+        "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+        "username": "carlos12",
+        "first_name": "Carlos",
+        "last_name": "User"
+    },
+    "tags": [
+        {
+            "id": "101",
+            "name": "financial-statements",
+            "parent_id": "102",
+            "created_time": "2006-01-02T15:04:05Z",
+            "updated_time": "2006-01-02T15:04:05Z"
+        }
+    ]
 }

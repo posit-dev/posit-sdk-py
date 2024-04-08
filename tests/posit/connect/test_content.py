@@ -138,7 +138,7 @@ class TestContentItemAttributes:
         assert self.item.run_as_current_user is False
 
     def test_owner_guid(self):
-        assert self.item.owner_guid == "87c12c08-11cd-4de1-8da3-12a7579c4998"
+        assert self.item.owner_guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
     def test_content_url(self):
         assert (
@@ -155,8 +155,27 @@ class TestContentItemAttributes:
     def test_app_role(self):
         assert self.item.app_role == "viewer"
 
+    def test_owner(self):
+        assert self.item.owner == {
+            "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+            "username": "carlos12",
+            "first_name": "Carlos",
+            "last_name": "User",
+        }
+
     def test_permissions(self):
         assert isinstance(self.item.permissions, Permissions)
+
+    def test_tags(self):
+        assert self.item.tags == [
+            {
+                "id": "101",
+                "name": "financial-statements",
+                "parent_id": "102",
+                "created_time": "2006-01-02T15:04:05Z",
+                "updated_time": "2006-01-02T15:04:05Z",
+            }
+        ]
 
 
 class TestContentItemDelete:
