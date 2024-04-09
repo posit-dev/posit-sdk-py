@@ -205,8 +205,8 @@ class ContentItem(Resource):
     # CRUD Methods
 
     @property
-    def tags(self) -> List[dict] | None:
-        return self.get("tags")
+    def tags(self) -> List[dict]:
+        return self.get("tags", [])
 
     def delete(self) -> None:
         """Delete the content item."""
