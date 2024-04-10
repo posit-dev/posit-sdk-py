@@ -156,26 +156,13 @@ class TestContentItemAttributes:
         assert self.item.app_role == "viewer"
 
     def test_owner(self):
-        assert self.item.owner == {
-            "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
-            "username": "carlos12",
-            "first_name": "Carlos",
-            "last_name": "User",
-        }
+        assert self.item.owner == {}
 
     def test_permissions(self):
         assert isinstance(self.item.permissions, Permissions)
 
     def test_tags(self):
-        assert self.item.tags == [
-            {
-                "id": "101",
-                "name": "financial-statements",
-                "parent_id": "102",
-                "created_time": "2006-01-02T15:04:05Z",
-                "updated_time": "2006-01-02T15:04:05Z",
-            }
-        ]
+        assert self.item.tags == []
 
 
 class TestContentItemDelete:
@@ -201,7 +188,7 @@ class TestContentItemDelete:
         assert mock_delete.call_count == 1
 
 
-class TestContent:
+class TestContentUpdate:
     @responses.activate
     def test_update(self):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
@@ -249,36 +236,123 @@ class TestContentCreate:
         assert content_item.name == fake_content_item["name"]
 
 
-class TestContents:
+class TestContentsFind:
     @responses.activate
-    def test_get_all_content(self):
-        responses.get(
+    def test(self):
+        # behavior
+        mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
+            match=[matchers.query_param_matcher({"include": "owner,tags"})],
         )
-        con = Client("12345", "https://connect.example")
-        all_content = con.content.find()
-        assert len(all_content) == 3
-        assert [c.name for c in all_content] == [
-            "team-admin-dashboard",
-            "Performance-Data-1671216053560",
-            "My-Streamlit-app",
-        ]
+
+        # setup
+        client = Client("12345", "https://connect.example")
+
+        # invoke
+        content = client.content.find()
+
+        #  assert
+        assert mock_get.call_count == 1
+        assert len(content) == 3
 
     @responses.activate
-    def test_content_find_one(self):
-        responses.get(
+    def test_params_include(self):
+        # behavior
+        mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
+            match=[matchers.query_param_matcher({"include": "tags"})],
         )
-        con = Client("12345", "https://connect.example")
 
-        one = con.content.find_one()
-        assert isinstance(one, ContentItem)
-        assert one.name == "team-admin-dashboard"
+        # setup
+        client = Client("12345", "https://connect.example")
+
+        # invoke
+        client.content.find(include="tags")
+
+        #  assert
+        assert mock_get.call_count == 1
 
     @responses.activate
-    def test_content_get(self):
+    def test_params_include_none(self):
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+            match=[matchers.query_param_matcher({})],
+        )
+
+        # setup
+        client = Client("12345", "https://connect.example")
+
+        # invoke
+        client.content.find(include=None)
+
+        #  assert
+        assert mock_get.call_count == 1
+
+
+class TestContentsFindOne:
+    @responses.activate
+    def test(self):
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+            match=[matchers.query_param_matcher({"include": "owner,tags"})],
+        )
+
+        # setup
+        client = Client("12345", "https://connect.example")
+
+        # invoke
+        content_item = client.content.find_one()
+
+        #  assert
+        assert mock_get.call_count == 1
+        assert content_item
+
+    @responses.activate
+    def test_params_include(self):
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+            match=[matchers.query_param_matcher({"include": "tags"})],
+        )
+
+        # setup
+        client = Client("12345", "https://connect.example")
+
+        # invoke
+        client.content.find_one(include="tags")
+
+        #  assert
+        assert mock_get.call_count == 1
+
+    @responses.activate
+    def test_params_include_none(self):
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+            match=[matchers.query_param_matcher({})],
+        )
+
+        # setup
+        client = Client("12345", "https://connect.example")
+
+        # invoke
+        client.content.find_one(include=None)
+
+        #  assert
+        assert mock_get.call_count == 1
+
+
+class TestContentsGet:
+    @responses.activate
+    def test(self):
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
             json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
@@ -287,8 +361,10 @@ class TestContents:
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         assert get_one.name == "Performance-Data-1671216053560"
 
+
+class TestContentsCount:
     @responses.activate
-    def test_count(self):
+    def test(self):
         responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),

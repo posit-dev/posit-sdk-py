@@ -392,7 +392,10 @@ class Content(Resources):
 
     @overload
     def find(
-        self, owner_guid: str = ..., name: str = ..., include: str = "owner,tags"
+        self,
+        owner_guid: str = ...,
+        name: str = ...,
+        include: Optional[str] = "owner,tags",
     ) -> List[ContentItem]:
         """Find content items.
 
@@ -402,7 +405,7 @@ class Content(Resources):
             The owner's unique identifier, by default ...
         name : str, optional
             The simple URL friendly name, by default ...
-        include : str, optional
+        include : Optional[str], optional
             Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
 
         Returns
@@ -412,20 +415,37 @@ class Content(Resources):
         ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[ContentItem]:
-        ...
-
-    def find(self, *args, **kwargs) -> List[ContentItem]:
+    def find(
+        self, *args, include: Optional[str] = "owner,tags", **kwargs
+    ) -> List[ContentItem]:
         """Find content items.
+
+        Parameters
+        ----------
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
 
         Returns
         -------
         List[ContentItem]
         """
-        params = dict(*args, **kwargs)
-        if "include" not in params:
-            params["include"] = "owner,tags"
+        ...
 
+    def find(
+        self, *args, include: Optional[str] = "owner,tags", **kwargs
+    ) -> List[ContentItem]:
+        """Find content items.
+
+        Parameters
+        ----------
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+
+        Returns
+        -------
+        List[ContentItem]
+        """
+        params = dict(*args, include=include, **kwargs)
         response = self.session.get(self.url, params=params)
         results = response.json()
         items = (
@@ -440,9 +460,12 @@ class Content(Resources):
 
     @overload
     def find_one(
-        self, owner_guid: str = ..., name: str = ..., include: str = "owner,tags"
+        self,
+        owner_guid: str = ...,
+        name: str = ...,
+        include: Optional[str] = "owner,tags",
     ) -> ContentItem | None:
-        """Find a content item.
+        """Find content items.
 
         Parameters
         ----------
@@ -450,7 +473,7 @@ class Content(Resources):
             The owner's unique identifier, by default ...
         name : str, optional
             The simple URL friendly name, by default ...
-        include : str, optional
+        include : Optional[str], optional
             Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
 
         Returns
@@ -460,8 +483,15 @@ class Content(Resources):
         ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> ContentItem | None:
-        """Find a content item.
+    def find_one(
+        self, *args, include: Optional[str] = "owner,tags", **kwargs
+    ) -> ContentItem | None:
+        """Find content items.
+
+        Parameters
+        ----------
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
 
         Returns
         -------
@@ -469,14 +499,21 @@ class Content(Resources):
         """
         ...
 
-    def find_one(self, *args, **kwargs) -> ContentItem | None:
-        """Find a content item.
+    def find_one(
+        self, *args, include: Optional[str] = "owner,tags", **kwargs
+    ) -> ContentItem | None:
+        """Find content items.
+
+        Parameters
+        ----------
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
 
         Returns
         -------
         ContentItem | None
         """
-        items = self.find(*args, **kwargs)
+        items = self.find(*args, include=include, **kwargs)
         return next(iter(items), None)
 
     def get(self, guid: str) -> ContentItem:
