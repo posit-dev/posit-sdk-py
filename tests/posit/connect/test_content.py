@@ -138,7 +138,7 @@ class TestContentItemAttributes:
         assert self.item.run_as_current_user is False
 
     def test_owner_guid(self):
-        assert self.item.owner_guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+        assert self.item.owner_guid == "87c12c08-11cd-4de1-8da3-12a7579c4998"
 
     def test_content_url(self):
         assert (
@@ -312,6 +312,58 @@ class TestContentsFindOne:
         #  assert
         assert mock_get.call_count == 1
         assert content_item
+
+    @responses.activate
+    def test_owner_guid(self):
+        # data
+        owner_guid = "a01792e3-2e67-402e-99af-be04a48da074"
+
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+            match=[
+                matchers.query_param_matcher(
+                    {"owner_guid": owner_guid, "include": "owner,tags"}
+                )
+            ],
+        )
+
+        # setup
+        client = Client("12345", "https://connect.example")
+
+        # invoke
+        content_item = client.content.find_one(owner_guid=owner_guid)
+
+        #  assert
+        assert mock_get.call_count == 1
+        assert content_item
+        assert content_item.owner_guid == owner_guid
+
+    @responses.activate
+    def test_name(self):
+        # data
+        name = "team-admin-dashboard"
+
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+            match=[
+                matchers.query_param_matcher({"name": name, "include": "owner,tags"})
+            ],
+        )
+
+        # setup
+        client = Client("12345", "https://connect.example")
+
+        # invoke
+        content_item = client.content.find_one(name=name)
+
+        #  assert
+        assert mock_get.call_count == 1
+        assert content_item
+        assert content_item.name == name
 
     @responses.activate
     def test_params_include(self):
