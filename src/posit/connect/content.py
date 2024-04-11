@@ -202,7 +202,7 @@ class ContentItem(Resource):
     def app_role(self) -> str:
         return self.get("app_role")  # type: ignore
 
-    # Accessor Methods
+    # CRUD Methods
 
     def delete(self) -> None:
         """Delete the content item."""

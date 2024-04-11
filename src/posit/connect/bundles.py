@@ -90,7 +90,7 @@ class Bundle(Resource):
     def metadata(self) -> BundleMetadata:
         return BundleMetadata(self.config, self.session, **self.get("metadata", {}))
 
-    # Accessor Methods
+    # CRUD Methods
 
     def delete(self) -> None:
         path = f"v1/content/{self.content_guid}/bundles/{self.id}"
