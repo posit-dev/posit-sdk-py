@@ -4,7 +4,7 @@ from typing import List, overload
 
 from . import urls
 
-from .cursors import Paginator
+from .cursors import CursorPaginator
 from .resources import Resource, Resources
 
 
@@ -142,7 +142,7 @@ class Visits(Resources):
 
         path = "/v1/instrumentation/content/visits"
         url = urls.append_path(self.config.url, path)
-        paginator = Paginator(self.session, url, params=params)
+        paginator = CursorPaginator(self.session, url, params=params)
         results = paginator.fetch_results()
         return [
             Visit(
@@ -202,7 +202,7 @@ class Visits(Resources):
         params = rename_params(params)
         path = "/v1/instrumentation/content/visits"
         url = urls.append_path(self.config.url, path)
-        paginator = Paginator(self.session, url, params=params)
+        paginator = CursorPaginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         visits = (

@@ -10,12 +10,12 @@ _MAX_PAGE_SIZE = 500
 
 
 @dataclass
-class Page:
+class CursorPage:
     paging: dict
     results: List[dict]
 
 
-class Paginator:
+class CursorPaginator:
     def __init__(self, session: requests.Session, url: str, params: dict = {}) -> None:
         self.session = session
         self.url = url
@@ -36,7 +36,7 @@ class Paginator:
             results.extend(page.results)
         return results
 
-    def fetch_pages(self) -> Generator[Page, None, None]:
+    def fetch_pages(self) -> Generator[CursorPage, None, None]:
         """Fetch pages.
 
         Yields
@@ -54,7 +54,7 @@ class Paginator:
                 # stop if a next page is not defined
                 return
 
-    def fetch_page(self, next: str | None = None) -> Page:
+    def fetch_page(self, next: str | None = None) -> CursorPage:
         """Fetch a page.
 
         Parameters
@@ -72,4 +72,4 @@ class Paginator:
             "limit": _MAX_PAGE_SIZE,
         }
         response = self.session.get(self.url, params=params)
-        return Page(**response.json())
+        return CursorPage(**response.json())
