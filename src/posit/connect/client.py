@@ -12,6 +12,7 @@ from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
 from .users import User, Users
+from .visits import Visits
 
 
 class Client:
@@ -94,6 +95,10 @@ class Client:
         Content
         """
         return Content(config=self.config, session=self.session)
+
+    @property
+    def visits(self) -> Visits:
+        return Visits(self.config, self.session)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
