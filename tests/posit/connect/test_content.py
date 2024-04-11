@@ -255,6 +255,9 @@ class TestContentsFind:
         #  assert
         assert mock_get.call_count == 1
         assert len(content) == 3
+        assert content[0].name == "team-admin-dashboard"
+        assert content[1].name == "Performance-Data-1671216053560"
+        assert content[2].name == "My-Streamlit-app"
 
     @responses.activate
     def test_params_include(self):
