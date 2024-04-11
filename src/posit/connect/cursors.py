@@ -48,7 +48,6 @@ class CursorPaginator:
             page = self.fetch_page(next)
             yield page
             cursors: dict = page.paging.get("cursors", {})
-            assert next != cursors.get("next")
             next = cursors.get("next")
             if not next:
                 # stop if a next page is not defined

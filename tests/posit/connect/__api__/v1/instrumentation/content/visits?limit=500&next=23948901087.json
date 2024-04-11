@@ -1,0 +1,10 @@
+{
+    "paging": {
+        "cursors": {
+            "previous": "23948901087"
+        },
+        "first": "http://localhost:3443/__api__/v1/instrumentation/content/visits",
+        "previous": "http://localhost:3443/__api__/v1/instrumentation/content/visits?previous=23948901087"
+    },
+    "results": []
+}

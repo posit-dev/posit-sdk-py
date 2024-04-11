@@ -13,7 +13,9 @@ class TestVisitAttributes:
         cls.visit = Visit(
             None,
             None,
-            **load_mock("v1/instrumentation/content/visits.json")["results"][0],
+            **load_mock("v1/instrumentation/content/visits?limit=500.json")["results"][
+                0
+            ],
         )
 
     def test_content_guid(self):
@@ -45,9 +47,10 @@ class TestVisitsFind:
     @responses.activate
     def test(self):
         # behavior
-        mock_get = responses.get(
+        mock_get = [None] * 2
+        mock_get[0] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits.json"),
+            json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -57,9 +60,11 @@ class TestVisitsFind:
             ],
         )
 
-        mock_get_sentinel = responses.get(
+        mock_get[1] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
-            json={"paging": {}, "results": []},
+            json=load_mock(
+                "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
+            ),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -77,8 +82,8 @@ class TestVisitsFind:
         visits = c.visits.find()
 
         # assert
-        assert mock_get.call_count == 1
-        assert mock_get_sentinel.call_count == 1
+        assert mock_get[0].call_count == 1
+        assert mock_get[1].call_count == 1
         assert len(visits) == 1
 
 
@@ -86,12 +91,28 @@ class TestVisitsFindOne:
     @responses.activate
     def test(self):
         # behavior
-        mock_get = responses.get(
+        mock_get = [None] * 2
+        mock_get[0] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits.json"),
+            json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
             match=[
                 matchers.query_param_matcher(
                     {
+                        "limit": 500,
+                    }
+                )
+            ],
+        )
+
+        mock_get[1] = responses.get(
+            f"https://connect.example/__api__/v1/instrumentation/content/visits",
+            json=load_mock(
+                "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
+            ),
+            match=[
+                matchers.query_param_matcher(
+                    {
+                        "next": "23948901087",
                         "limit": 500,
                     }
                 )
@@ -105,8 +126,10 @@ class TestVisitsFindOne:
         visit = c.visits.find_one()
 
         # assert
-        assert mock_get.call_count == 1
+        assert mock_get[0].call_count == 1
+        assert mock_get[1].call_count == 0
         assert visit
+        assert visit.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
 
 
 class TestRenameParams:
