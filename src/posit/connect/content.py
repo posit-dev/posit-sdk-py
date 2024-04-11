@@ -191,6 +191,10 @@ class ContentItem(Resource):
         return self.get("owner_guid")  # type: ignore
 
     @property
+    def owner(self) -> str:
+        return self.get("owner", {})  # type: ignore
+
+    @property
     def content_url(self) -> str:
         return self.get("content_url")  # type: ignore
 
@@ -202,11 +206,11 @@ class ContentItem(Resource):
     def app_role(self) -> str:
         return self.get("app_role")  # type: ignore
 
-    # CRUD Methods
-
     @property
     def tags(self) -> List[dict]:
         return self.get("tags", [])
+
+    # CRUD Methods
 
     def delete(self) -> None:
         """Delete the content item."""
