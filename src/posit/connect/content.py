@@ -191,6 +191,10 @@ class ContentItem(Resource):
         return self.get("owner_guid")  # type: ignore
 
     @property
+    def owner(self) -> str:
+        return self.get("owner", {})  # type: ignore
+
+    @property
     def content_url(self) -> str:
         return self.get("content_url")  # type: ignore
 
@@ -201,6 +205,10 @@ class ContentItem(Resource):
     @property
     def app_role(self) -> str:
         return self.get("app_role")  # type: ignore
+
+    @property
+    def tags(self) -> List[dict]:
+        return self.get("tags", [])
 
     # CRUD Methods
 
@@ -386,14 +394,64 @@ class Content(Resources):
         response = self.session.post(url, json=body)
         return ContentItem(self.config, self.session, **response.json())
 
-    def find(self) -> List[ContentItem]:
+    @overload
+    def find(
+        self,
+        owner_guid: str = ...,
+        name: str = ...,
+        include: Optional[str] = "owner,tags",
+    ) -> List[ContentItem]:
         """Find content items.
+
+        Parameters
+        ----------
+        owner_guid : str, optional
+            The owner's unique identifier, by default ...
+        name : str, optional
+            The simple URL friendly name, by default ...
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
 
         Returns
         -------
         List[ContentItem]
         """
-        results = self.session.get(self.url).json()
+        ...
+
+    @overload
+    def find(
+        self, *args, include: Optional[str] = "owner,tags", **kwargs
+    ) -> List[ContentItem]:
+        """Find content items.
+
+        Parameters
+        ----------
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+
+        Returns
+        -------
+        List[ContentItem]
+        """
+        ...
+
+    def find(
+        self, *args, include: Optional[str] = "owner,tags", **kwargs
+    ) -> List[ContentItem]:
+        """Find content items.
+
+        Parameters
+        ----------
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+
+        Returns
+        -------
+        List[ContentItem]
+        """
+        params = dict(*args, include=include, **kwargs)
+        response = self.session.get(self.url, params=params)
+        results = response.json()
         items = (
             ContentItem(
                 config=self.config,
@@ -404,23 +462,63 @@ class Content(Resources):
         )
         return [item for item in items]
 
-    def find_one(self) -> ContentItem | None:
-        """Find a content item.
+    @overload
+    def find_one(
+        self,
+        owner_guid: str = ...,
+        name: str = ...,
+        include: Optional[str] = "owner,tags",
+    ) -> ContentItem | None:
+        """Find content items.
+
+        Parameters
+        ----------
+        owner_guid : str, optional
+            The owner's unique identifier, by default ...
+        name : str, optional
+            The simple URL friendly name, by default ...
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
 
         Returns
         -------
         ContentItem | None
         """
-        results = self.session.get(self.url).json()
-        items = (
-            ContentItem(
-                config=self.config,
-                session=self.session,
-                **result,
-            )
-            for result in results
-        )
-        return next(items, None)
+        ...
+
+    @overload
+    def find_one(
+        self, *args, include: Optional[str] = "owner,tags", **kwargs
+    ) -> ContentItem | None:
+        """Find content items.
+
+        Parameters
+        ----------
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+
+        Returns
+        -------
+        ContentItem | None
+        """
+        ...
+
+    def find_one(
+        self, *args, include: Optional[str] = "owner,tags", **kwargs
+    ) -> ContentItem | None:
+        """Find content items.
+
+        Parameters
+        ----------
+        include : Optional[str], optional
+            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+
+        Returns
+        -------
+        ContentItem | None
+        """
+        items = self.find(*args, include=include, **kwargs)
+        return next(iter(items), None)
 
     def get(self, guid: str) -> ContentItem:
         """Get a content item.
