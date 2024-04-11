@@ -11,6 +11,7 @@ from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
+from .usage import Usage
 from .users import User, Users
 from .visits import Visits
 
@@ -95,6 +96,10 @@ class Client:
         Content
         """
         return Content(config=self.config, session=self.session)
+
+    @property
+    def usage(self) -> Usage:
+        return Usage(self.config, self.session)
 
     @property
     def visits(self) -> Visits:

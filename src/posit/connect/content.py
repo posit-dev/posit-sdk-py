@@ -212,12 +212,6 @@ class ContentItem(Resource):
 
     # CRUD Methods
 
-    @property
-    def tags(self) -> List[dict]:
-        return self.get("tags", [])
-
-    # CRUD Methods
-
     def delete(self) -> None:
         """Delete the content item."""
         path = f"v1/content/{self.guid}"
