@@ -1,5 +1,7 @@
 import responses
 
+from responses import matchers
+
 from posit.connect import Client
 from posit.connect.visits import Visit, rename_params
 
@@ -46,11 +48,26 @@ class TestVisitsFind:
         mock_get = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
             json=load_mock("v1/instrumentation/content/visits.json"),
+            match=[
+                matchers.query_param_matcher(
+                    {
+                        "limit": 500,
+                    }
+                )
+            ],
         )
 
         mock_get_sentinel = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
             json={"paging": {}, "results": []},
+            match=[
+                matchers.query_param_matcher(
+                    {
+                        "next": "23948901087",
+                        "limit": 500,
+                    }
+                )
+            ],
         )
 
         # setup
@@ -72,6 +89,13 @@ class TestVisitsFindOne:
         mock_get = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
             json=load_mock("v1/instrumentation/content/visits.json"),
+            match=[
+                matchers.query_param_matcher(
+                    {
+                        "limit": 500,
+                    }
+                )
+            ],
         )
 
         # setup
