@@ -42,7 +42,7 @@ ignore = [
     # NumPy style docstring convention with noted exceptions.
     # https://docs.astral.sh/ruff/faq/#does-ruff-support-numpy-or-google-style-docstrings
     #
-    # This docstring style works with [quarotdoc](https://machow.github.io/quartodoc/get-started/overview.html).
+    # This docstring style works with [quartodoc](https://machow.github.io/quartodoc/get-started/overview.html).
     #
     'D101', # TODO(#135) implement docstring for public class
     'D103', # TODO(#135) implement docstring for public functions
