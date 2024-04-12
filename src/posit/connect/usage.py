@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, overload
 
-from . import urls
+from . import config, urls
 
 from .cursors import CursorPaginator
 from .resources import Resource, Resources
@@ -109,12 +109,11 @@ class Usage(Resources):
         params = rename_params(params)
 
         path = "/v1/instrumentation/shiny/usage"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         paginator = CursorPaginator(self.session, url, params=params)
         results = paginator.fetch_results()
         return [
             UsageEvent(
-                config=self.config,
                 session=self.session,
                 **result,
             )
@@ -168,13 +167,12 @@ class Usage(Resources):
         params = dict(*args, **kwargs)
         params = rename_params(params)
         path = "/v1/instrumentation/shiny/usage"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         paginator = CursorPaginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         visits = (
             UsageEvent(
-                config=self.config,
                 session=self.session,
                 **result,
             )

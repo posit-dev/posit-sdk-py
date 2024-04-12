@@ -104,7 +104,7 @@ class Client:
 
     @property
     def usage(self) -> Usage:
-        return Usage(self.config, self.session)
+        return Usage(self.session)
 
     @property
     def visits(self) -> Visits:

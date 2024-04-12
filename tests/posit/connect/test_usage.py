@@ -12,7 +12,6 @@ class TestUsageEventAttributes:
     def setup_class(cls):
         cls.event = UsageEvent(
             None,
-            None,
             **load_mock("v1/instrumentation/shiny/usage?limit=500.json")["results"][0],
         )
 
@@ -65,7 +64,7 @@ class TestUsageFind:
         )
 
         # setup
-        c = Client("12345", "https://connect.example")
+        c = Client()
 
         # invoke
         usage = c.usage.find()
@@ -109,7 +108,7 @@ class TestUsageFindOne:
         )
 
         # setup
-        c = Client("12345", "https://connect.example")
+        c = Client()
 
         # invoke
         event = c.usage.find_one()
