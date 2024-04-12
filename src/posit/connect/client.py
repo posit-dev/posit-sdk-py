@@ -136,7 +136,7 @@ class Client:
         -------
             Response: A requests.Response object.
         """
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         return self.session.request(method, url, **kwargs)
 
     def get(self, path: str, **kwargs) -> Response:
@@ -152,7 +152,7 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         return self.session.get(url, **kwargs)
 
     def post(self, path: str, **kwargs) -> Response:
@@ -168,7 +168,7 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         return self.session.post(url, **kwargs)
 
     def put(self, path: str, **kwargs) -> Response:
@@ -184,7 +184,7 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         return self.session.put(url, **kwargs)
 
     def patch(self, path: str, **kwargs) -> Response:
@@ -200,7 +200,7 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         return self.session.patch(url, **kwargs)
 
     def delete(self, path: str, **kwargs) -> Response:
@@ -216,5 +216,5 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         return self.session.delete(url, **kwargs)

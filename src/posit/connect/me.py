@@ -18,6 +18,6 @@ def get(config: Config, session: requests.Session) -> User:
     -------
         User: The current user.
     """
-    url = urls.append_path(config.url, "v1/user")
+    url = urls.append(config.url, "v1/user")
     response = session.get(url)
     return User(config, session, **response.json())

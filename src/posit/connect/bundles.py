@@ -94,7 +94,7 @@ class Bundle(Resource):
 
     def delete(self) -> None:
         path = f"v1/content/{self.content_guid}/bundles/{self.id}"
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         self.session.delete(url)
 
 
@@ -105,7 +105,7 @@ class Bundles(Resources):
 
     def find(self) -> List[Bundle]:
         path = f"v1/content/{self.content_guid}/bundles"
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         response = self.session.get(url)
         results = response.json()
         return [
@@ -123,7 +123,7 @@ class Bundles(Resources):
 
     def get(self, id: str) -> Bundle:
         path = f"v1/content/{self.content_guid}/bundles/{id}"
-        url = urls.append_path(self.config.url, path)
+        url = urls.append(self.config.url, path)
         response = self.session.get(url)
         result = response.json()
         return Bundle(self.config, self.session, **result)

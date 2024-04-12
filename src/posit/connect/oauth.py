@@ -15,7 +15,7 @@ class Credentials(TypedDict, total=False):
 
 class OAuthIntegration:
     def __init__(self, config: Config, session: Session) -> None:
-        self.url = urls.append_path(config.url, "v1/oauth/integrations/credentials")
+        self.url = urls.append(config.url, "v1/oauth/integrations/credentials")
         self.config = config
         self.session = session
 
