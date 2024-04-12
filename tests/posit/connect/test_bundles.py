@@ -9,10 +9,8 @@ from .api import load_mock  # type: ignore
 
 class TestBundleProperties:
     def setup_class(cls):
-        c = config.Config(api_key="12345", url="https://connect.example/")
         session = requests.Session()
         cls.bundle = Bundle(
-            c,
             session,
             **load_mock(
                 f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"

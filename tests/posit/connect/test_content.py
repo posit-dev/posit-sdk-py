@@ -3,8 +3,8 @@ import responses
 
 from responses import matchers
 
+from posit.connect import config
 from posit.connect.client import Client
-from posit.connect.config import Config
 from posit.connect.content import ContentItem
 from posit.connect.permissions import Permissions
 
@@ -15,10 +15,12 @@ class TestContentItemAttributes:
     @classmethod
     def setup_class(cls):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "http://example.com"
         session = requests.Session()
         fake_item = load_mock(f"v1/content/{guid}.json")
-        cls.item = ContentItem(config, session, **fake_item)
+        cls.item = ContentItem(session, **fake_item)
 
     def test_id(self):
         assert self.item.id == "8274"
@@ -176,10 +178,13 @@ class TestContentItemDelete:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/"
+
         session = requests.Session()
         fake_item = load_mock(f"v1/content/{guid}.json")
-        item = ContentItem(config, session, **fake_item)
+        item = ContentItem(session, **fake_item)
 
         # invoke
         item.delete()

@@ -14,9 +14,8 @@ class Credentials(TypedDict, total=False):
 
 
 class OAuthIntegration:
-    def __init__(self, config: config.Config, session: Session) -> None:
-        self.url = urls.append(config.url, "v1/oauth/integrations/credentials")
-        self.config = config
+    def __init__(self, session: Session) -> None:
+        self.url = urls.append(config.Config().url, "v1/oauth/integrations/credentials")
         self.session = session
 
     def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
@@ -25,7 +24,7 @@ class OAuthIntegration:
         data = dict()
         data["grant_type"] = "urn:ietf:params:oauth:grant-type:token-exchange"
         data["subject_token_type"] = "urn:posit:connect:api-key"
-        data["subject_token"] = self.config.api_key
+        data["subject_token"] = config.Config().api_key
 
         # if this content is running on Connect, then it is allowed to request
         # the content viewer's credentials

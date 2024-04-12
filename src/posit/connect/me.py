@@ -6,7 +6,7 @@ from . import config
 from .users import User
 
 
-def get(config: config.Config, session: requests.Session) -> User:
+def get(session: requests.Session) -> User:
     """
     Gets the current user.
 
@@ -18,6 +18,7 @@ def get(config: config.Config, session: requests.Session) -> User:
     -------
         User: The current user.
     """
-    url = urls.append(config.url, "v1/user")
+    c = config.Config()
+    url = urls.append(c.url, "v1/user")
     response = session.get(url)
-    return User(config, session, **response.json())
+    return User(session, **response.json())

@@ -1,59 +1,54 @@
 """Client configuration."""
 
-import os
+from __future__ import annotations
 
-from typing import Optional
+import os
 
 from . import urls
 
 
-def _get_api_key() -> str:
-    """Return the system configured api key.
-
-    Reads the environment variable 'CONNECT_API_KEY'.
-
-    Raises
-    ------
-        ValueError: If CONNECT_API_KEY is not set or invalid
-
-    Returns
-    -------
-        str
-    """
-    value = os.environ.get("CONNECT_API_KEY")
-    if not value:
-        raise ValueError(
-            "Invalid value for 'CONNECT_API_KEY': Must be a non-empty string."
-        )
-    return value
-
-
-def _get_url() -> str:
-    """Return the system configured url.
-
-    Reads the environment variable 'CONNECT_SERVER'.
-
-    Raises
-    ------
-        ValueError: If CONNECT_SERVER is not set or invalid
-
-    Returns
-    -------
-        str
-    """
-    value = os.environ.get("CONNECT_SERVER")
-    if not value:
-        raise ValueError(
-            "Invalid value for 'CONNECT_SERVER': Must be a non-empty string."
-        )
-    return value
+def reset():
+    Config.instance = None
 
 
 class Config:
     """Configuration object."""
 
-    def __init__(
-        self, api_key: Optional[str] = None, url: Optional[str] = None
-    ) -> None:
-        self.api_key = api_key or _get_api_key()
-        self.url = urls.create(url or _get_url())
+    instance = None
+    properties: dict
+
+    def __new__(cls):
+        if cls.instance is None:
+            cls.instance = super(Config, cls).__new__(cls)
+            cls.instance.properties = {}
+        return cls.instance
+
+    @property
+    def api_key(self) -> str:
+        api_key = self.properties.get("api_key")
+        if api_key is None:
+            api_key = os.environ.get("CONNECT_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "Invalid value for 'CONNECT_API_KEY': Must be a non-empty string."
+                )
+        return api_key
+
+    @api_key.setter
+    def api_key(self, api_key: str) -> None:
+        self.properties["api_key"] = api_key
+
+    @property
+    def url(self) -> urls.Url:
+        url = self.properties.get("url")
+        if url is None:
+            url = os.environ.get("CONNECT_SERVER")
+            if not url:
+                raise ValueError(
+                    "Invalid value for 'CONNECT_SERVER': Must be a non-empty string."
+                )
+        return urls.create(url)
+
+    @url.setter
+    def url(self, url: urls.Url) -> None:
+        self.properties["url"] = url

@@ -86,31 +86,28 @@ class Bundle(Resource):
 
     @property
     def metadata(self) -> BundleMetadata:
-        return BundleMetadata(self.config, self.session, **self.get("metadata", {}))
+        return BundleMetadata(self.session, **self.get("metadata", {}))
 
     # CRUD Methods
 
     def delete(self) -> None:
         path = f"v1/content/{self.content_guid}/bundles/{self.id}"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         self.session.delete(url)
 
 
 class Bundles(Resources):
-    def __init__(
-        self, config: config.Config, session: Session, content_guid: str
-    ) -> None:
-        super().__init__(config, session)
+    def __init__(self, session: Session, content_guid: str) -> None:
+        super().__init__(session)
         self.content_guid = content_guid
 
     def find(self) -> List[Bundle]:
         path = f"v1/content/{self.content_guid}/bundles"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         response = self.session.get(url)
         results = response.json()
         return [
             Bundle(
-                self.config,
                 self.session,
                 **result,
             )
@@ -123,7 +120,7 @@ class Bundles(Resources):
 
     def get(self, id: str) -> Bundle:
         path = f"v1/content/{self.content_guid}/bundles/{id}"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         response = self.session.get(url)
         result = response.json()
-        return Bundle(self.config, self.session, **result)
+        return Bundle(self.session, **result)

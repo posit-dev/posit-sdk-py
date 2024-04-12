@@ -12,7 +12,6 @@ class TestVisitAttributes:
     def setup_class(cls):
         cls.visit = Visit(
             None,
-            None,
             **load_mock("v1/instrumentation/content/visits?limit=500.json")["results"][
                 0
             ],

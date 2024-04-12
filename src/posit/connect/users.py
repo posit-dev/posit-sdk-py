@@ -70,12 +70,12 @@ class User(Resource):
         -------
             None
         """
-        _me = me.get(self.config, self.session)
+        _me = me.get(self.session)
         if _me.guid == self.guid and not force:
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior."
             )
-        url = urls.append(self.config.url, f"v1/users/{self.guid}/lock")
+        url = urls.append(config.Config().url, f"v1/users/{self.guid}/lock")
         body = {"locked": True}
         self.session.post(url, json=body)
         super().update(locked=True)
@@ -88,7 +88,7 @@ class User(Resource):
         -------
             None
         """
-        url = urls.append(self.config.url, f"v1/users/{self.guid}/lock")
+        url = urls.append(config.Config().url, f"v1/users/{self.guid}/lock")
         body = {"locked": False}
         self.session.post(url, json=body)
         super().update(locked=False)
@@ -146,15 +146,15 @@ class User(Resource):
             None
         """
         body = dict(*args, **kwargs)
-        url = urls.append(self.config.url, f"v1/users/{self.guid}")
+        url = urls.append(config.Config().url, f"v1/users/{self.guid}")
         response = self.session.put(url, json=body)
         super().update(**response.json())
 
 
 class Users(Resources):
-    def __init__(self, config: config.Config, session: requests.Session) -> None:
-        self.url = urls.append(config.url, "v1/users")
-        self.config = config
+    def __init__(self, session: requests.Session) -> None:
+        c = config.Config()
+        self.url = urls.append(c.url, "v1/users")
         self.session = session
 
     @overload
@@ -173,7 +173,6 @@ class Users(Resources):
         results = paginator.fetch_results()
         return [
             User(
-                config=self.config,
                 session=self.session,
                 **user,
             )
@@ -197,7 +196,6 @@ class Users(Resources):
         results = (result for page in pages for result in page.results)
         users = (
             User(
-                config=self.config,
                 session=self.session,
                 **result,
             )
@@ -206,10 +204,9 @@ class Users(Resources):
         return next(users, None)
 
     def get(self, id: str) -> User:
-        url = urls.append(self.config.url, f"v1/users/{id}")
+        url = urls.append(config.Config().url, f"v1/users/{id}")
         response = self.session.get(url)
         return User(
-            config=self.config,
             session=self.session,
             **response.json(),
         )

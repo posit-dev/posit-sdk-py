@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, overload
 
-from . import urls
+from . import config, urls
 
 from .cursors import CursorPaginator
 from .resources import Resource, Resources
@@ -141,12 +141,11 @@ class Visits(Resources):
         params = rename_params(params)
 
         path = "/v1/instrumentation/content/visits"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         paginator = CursorPaginator(self.session, url, params=params)
         results = paginator.fetch_results()
         return [
             Visit(
-                config=self.config,
                 session=self.session,
                 **result,
             )
@@ -201,13 +200,12 @@ class Visits(Resources):
         params = dict(*args, **kwargs)
         params = rename_params(params)
         path = "/v1/instrumentation/content/visits"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         paginator = CursorPaginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         visits = (
             Visit(
-                config=self.config,
                 session=self.session,
                 **result,
             )

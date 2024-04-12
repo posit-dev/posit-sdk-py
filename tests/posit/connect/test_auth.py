@@ -1,15 +1,14 @@
-from unittest.mock import MagicMock, Mock, patch
+from unittest import mock
 
-from posit.connect.auth import Auth
+from posit.connect import auth, config
 
 
 class TestAuth:
-    @patch("posit.connect.auth.config.Config")
-    def test_auth_headers(self, Config: MagicMock):
-        config = Config.return_value
-        config.api_key = "foobar"
-        auth = Auth(config=config)
-        r = Mock()
+    def test_auth_headers(self):
+        c = config.Config()
+        c.api_key = "12345"
+        r = mock.Mock()
         r.headers = {}
-        auth(r)
-        assert r.headers == {"Authorization": f"Key {config.api_key}"}
+        a = auth.Auth()
+        a(r)
+        assert r.headers == {"Authorization": f"Key {c.api_key}"}

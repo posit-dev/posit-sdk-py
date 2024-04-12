@@ -31,11 +31,17 @@ class Client:
             url (str, optional): API url URL. Defaults to None.
         """
         # Create a Config object.
-        self.config = config.Config(api_key=api_key, url=url)
+        c = config.Config()
+        if api_key:
+            c.api_key = api_key
+        if url:
+            c.url = url
+        self.config = c
+
         # Create a Session object for making HTTP requests.
         session = Session()
         # Authenticate the session using the provided Config.
-        session.auth = Auth(config=self.config)
+        session.auth = Auth()
         # Add error handling hooks to the session.
         session.hooks["response"].append(hooks.handle_errors)
 
@@ -64,7 +70,7 @@ class Client:
         -------
         User
         """
-        return me.get(self.config, self.session)
+        return me.get(self.session)
 
     @property
     def oauth(self) -> OAuthIntegration:
@@ -74,7 +80,7 @@ class Client:
         -------
         OAuthIntegration
         """
-        return OAuthIntegration(config=self.config, session=self.session)
+        return OAuthIntegration(self.session)
 
     @property
     def users(self) -> Users:
@@ -84,7 +90,7 @@ class Client:
         -------
         Users
         """
-        return Users(config=self.config, session=self.session)
+        return Users(self.session)
 
     @property
     def content(self) -> Content:
@@ -94,7 +100,7 @@ class Client:
         -------
         Content
         """
-        return Content(config=self.config, session=self.session)
+        return Content(self.session)
 
     @property
     def usage(self) -> Usage:
@@ -102,7 +108,7 @@ class Client:
 
     @property
     def visits(self) -> Visits:
-        return Visits(self.config, self.session)
+        return Visits(self.session)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
@@ -140,7 +146,7 @@ class Client:
         -------
             Response: A requests.Response object.
         """
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         return self.session.request(method, url, **kwargs)
 
     def get(self, path: str, **kwargs) -> Response:
@@ -156,7 +162,7 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         return self.session.get(url, **kwargs)
 
     def post(self, path: str, **kwargs) -> Response:
@@ -172,7 +178,7 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         return self.session.post(url, **kwargs)
 
     def put(self, path: str, **kwargs) -> Response:
@@ -188,7 +194,7 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         return self.session.put(url, **kwargs)
 
     def patch(self, path: str, **kwargs) -> Response:
@@ -204,7 +210,7 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         return self.session.patch(url, **kwargs)
 
     def delete(self, path: str, **kwargs) -> Response:
@@ -220,5 +226,5 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         return self.session.delete(url, **kwargs)

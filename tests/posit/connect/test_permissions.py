@@ -8,7 +8,7 @@ import responses
 
 from responses import matchers
 
-from posit.connect.config import Config
+from posit.connect import config
 from posit.connect.permissions import Permission, Permissions
 
 from .api import load_mock  # type: ignore
@@ -27,10 +27,13 @@ class TestPermissionDelete:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/__api__"
+
         session = requests.Session()
         fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
-        permission = Permission(config, session, **fake_permission)
+        permission = Permission(session, **fake_permission)
 
         # invoke
         permission.delete()
@@ -72,10 +75,11 @@ class TestPermissionUpdate:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permission = Permission(
-            config,
             session,
             id=id,
             content_guid=content_guid,
@@ -117,10 +121,12 @@ class TestPermissionUpdate:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permission = Permission(
-            config, session, id=id, content_guid=content_guid, role=old_role
+            session, id=id, content_guid=content_guid, role=old_role
         )
 
         # assert role change with respect to api response
@@ -143,9 +149,11 @@ class TestPermissionsCount:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/__api__"
         session = requests.Session()
-        permissions = Permissions(config, session, content_guid=content_guid)
+        permissions = Permissions(session, content_guid=content_guid)
 
         # invoke
         count = permissions.count()
@@ -186,9 +194,11 @@ class TestPermissionsCreate:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/__api__"
         session = requests.Session()
-        permissions = Permissions(config, session, content_guid=content_guid)
+        permissions = Permissions(session, content_guid=content_guid)
 
         # invoke
         permission = permissions.create(
@@ -213,9 +223,11 @@ class TestPermissionsFind:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/__api__"
         session = requests.Session()
-        permissions = Permissions(config, session, content_guid=content_guid)
+        permissions = Permissions(session, content_guid=content_guid)
 
         # invoke
         permissions = permissions.find()
@@ -238,9 +250,11 @@ class TestPermissionsFindOne:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/__api__"
         session = requests.Session()
-        permissions = Permissions(config, session, content_guid=content_guid)
+        permissions = Permissions(session, content_guid=content_guid)
 
         # invoke
         permission = permissions.find_one()
@@ -264,9 +278,11 @@ class TestPermissionsGet:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
+        c = config.Config()
+        c.api_key = "12345"
+        c.url = "https://connect.example/__api__"
         session = requests.Session()
-        permissions = Permissions(config, session, content_guid=content_guid)
+        permissions = Permissions(session, content_guid=content_guid)
 
         # invoke
         permission = permissions.get(id)

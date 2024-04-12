@@ -27,19 +27,6 @@ def MockSession():
 
 
 class TestClient:
-    def test_init(
-        self,
-        MockAuth: MagicMock,
-        MockConfig: MagicMock,
-        MockSession: MagicMock,
-    ):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        Client(api_key=api_key, url=url)
-        MockAuth.assert_called_once_with(config=MockConfig.return_value)
-        MockConfig.assert_called_once_with(api_key=api_key, url=url)
-        MockSession.assert_called_once()
-
     def test__del__(self, MockAuth, MockConfig, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"

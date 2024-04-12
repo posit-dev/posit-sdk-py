@@ -5,14 +5,12 @@ from typing import Any, Generic, List, Optional, TypeVar
 
 import requests
 
-from .config import Config
+from . import config
 
 
 class Resource(ABC, dict):
-    def __init__(self, config: Config, session: requests.Session, **kwargs):
+    def __init__(self, session: requests.Session, **kwargs):
         super().__init__(**kwargs)
-        self.config: Config
-        super().__setattr__("config", config)
         self.session: requests.Session
         super().__setattr__("session", session)
 
@@ -21,6 +19,6 @@ class Resource(ABC, dict):
 
 
 class Resources(ABC):
-    def __init__(self, config: Config, session: requests.Session) -> None:
-        self.config = config
+    def __init__(self, session: requests.Session) -> None:
+        self.config = config.Config()
         self.session = session

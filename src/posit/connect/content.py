@@ -22,11 +22,11 @@ class ContentItem(Resource):
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.config, self.session, self.guid)
+        return Bundles(self.session, self.guid)
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.config, self.session, self.guid)
+        return Permissions(self.session, self.guid)
 
     # Properties
 
@@ -215,7 +215,7 @@ class ContentItem(Resource):
     def delete(self) -> None:
         """Delete the content item."""
         path = f"v1/content/{self.guid}"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         self.session.delete(url)
 
     @overload
@@ -287,15 +287,15 @@ class ContentItem(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update the content item."""
         body = dict(*args, **kwargs)
-        url = urls.append(self.config.url, f"v1/content/{self.guid}")
+        url = urls.append(config.Config().url, f"v1/content/{self.guid}")
         response = self.session.patch(url, json=body)
         super().update(**response.json())
 
 
 class Content(Resources):
-    def __init__(self, config: config.Config, session: Session) -> None:
-        self.url = urls.append(config.url, "v1/content")
-        self.config = config
+    def __init__(self, session: Session) -> None:
+        c = config.Config()
+        self.url = urls.append(c.url, "v1/content")
         self.session = session
 
     def count(self) -> int:
@@ -390,9 +390,9 @@ class Content(Resources):
         """
         body = dict(*args, **kwargs)
         path = "v1/content"
-        url = urls.append(self.config.url, path)
+        url = urls.append(config.Config().url, path)
         response = self.session.post(url, json=body)
-        return ContentItem(self.config, self.session, **response.json())
+        return ContentItem(self.session, **response.json())
 
     @overload
     def find(
@@ -454,7 +454,6 @@ class Content(Resources):
         results = response.json()
         items = (
             ContentItem(
-                config=self.config,
                 session=self.session,
                 **result,
             )
@@ -533,4 +532,4 @@ class Content(Resources):
         """
         url = urls.append(self.url, guid)
         response = self.session.get(url)
-        return ContentItem(self.config, self.session, **response.json())
+        return ContentItem(self.session, **response.json())
