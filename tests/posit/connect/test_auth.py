@@ -4,7 +4,7 @@ from posit.connect.auth import Auth
 
 
 class TestAuth:
-    @patch("posit.connect.auth.Config")
+    @patch("posit.connect.auth.config.Config")
     def test_auth_headers(self, Config: MagicMock):
         config = Config.return_value
         config.api_key = "foobar"

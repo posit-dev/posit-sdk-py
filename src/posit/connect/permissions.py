@@ -6,7 +6,7 @@ from requests.sessions import Session as Session
 
 from . import urls
 
-from .config import Config
+from . import config
 from .resources import Resource, Resources
 
 
@@ -71,7 +71,9 @@ class Permission(Resource):
 
 
 class Permissions(Resources):
-    def __init__(self, config: Config, session: Session, content_guid: str) -> None:
+    def __init__(
+        self, config: config.Config, session: Session, content_guid: str
+    ) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
 

@@ -9,7 +9,7 @@ from requests import Session
 
 from . import urls
 
-from .config import Config
+from . import config
 from .bundles import Bundles
 from .permissions import Permissions
 from .resources import Resources, Resource
@@ -293,7 +293,7 @@ class ContentItem(Resource):
 
 
 class Content(Resources):
-    def __init__(self, config: Config, session: Session) -> None:
+    def __init__(self, config: config.Config, session: Session) -> None:
         self.url = urls.append(config.url, "v1/content")
         self.config = config
         self.session = session

@@ -7,7 +7,7 @@ import requests
 
 from . import me, urls
 
-from .config import Config
+from . import config
 from .paginator import Paginator
 from .resources import Resource, Resources
 
@@ -152,7 +152,7 @@ class User(Resource):
 
 
 class Users(Resources):
-    def __init__(self, config: Config, session: requests.Session) -> None:
+    def __init__(self, config: config.Config, session: requests.Session) -> None:
         self.url = urls.append(config.url, "v1/users")
         self.config = config
         self.session = session

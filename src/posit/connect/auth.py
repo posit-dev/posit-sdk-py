@@ -1,18 +1,17 @@
 """Provides authentication functionality."""
 
-from requests import PreparedRequest
-from requests.auth import AuthBase
+import requests
 
-from .config import Config
+from . import config
 
 
-class Auth(AuthBase):
+class Auth(requests.auth.AuthBase):
     """Handles authentication for API requests."""
 
-    def __init__(self, config: Config) -> None:
-        self._config = config
+    def __init__(self, config: config.Config) -> None:
+        self.config = config
 
-    def __call__(self, r: PreparedRequest) -> PreparedRequest:
+    def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
         """Add authorization header to the request."""
-        r.headers["Authorization"] = f"Key {self._config.api_key}"
+        r.headers["Authorization"] = f"Key {self.config.api_key}"
         return r

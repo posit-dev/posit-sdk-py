@@ -5,10 +5,9 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import hooks, me, urls
+from . import config, hooks, me, urls
 
 from .auth import Auth
-from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
 from .usage import Usage
@@ -32,7 +31,7 @@ class Client:
             url (str, optional): API url URL. Defaults to None.
         """
         # Create a Config object.
-        self.config = Config(api_key=api_key, url=url)
+        self.config = config.Config(api_key=api_key, url=url)
         # Create a Session object for making HTTP requests.
         session = Session()
         # Authenticate the session using the provided Config.

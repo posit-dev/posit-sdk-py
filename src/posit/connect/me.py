@@ -2,11 +2,11 @@ import requests
 
 from . import urls
 
-from .config import Config
+from . import config
 from .users import User
 
 
-def get(config: Config, session: requests.Session) -> User:
+def get(config: config.Config, session: requests.Session) -> User:
     """
     Gets the current user.
 

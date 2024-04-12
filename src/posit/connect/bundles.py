@@ -4,9 +4,7 @@ from typing import List
 
 from requests.sessions import Session as Session
 
-from posit.connect.config import Config
-
-from . import urls
+from . import config, urls
 
 from .resources import Resources, Resource
 
@@ -99,7 +97,9 @@ class Bundle(Resource):
 
 
 class Bundles(Resources):
-    def __init__(self, config: Config, session: Session, content_guid: str) -> None:
+    def __init__(
+        self, config: config.Config, session: Session, content_guid: str
+    ) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
 

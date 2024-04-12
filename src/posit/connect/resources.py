@@ -8,9 +8,6 @@ import requests
 from .config import Config
 
 
-T = TypeVar("T")
-
-
 class Resource(ABC, dict):
     def __init__(self, config: Config, session: requests.Session, **kwargs):
         super().__init__(**kwargs)

@@ -16,7 +16,7 @@ def MockAuth():
 
 @pytest.fixture
 def MockConfig():
-    with patch("posit.connect.client.Config") as mock:
+    with patch("posit.connect.client.config.Config") as mock:
         yield mock
 
 
