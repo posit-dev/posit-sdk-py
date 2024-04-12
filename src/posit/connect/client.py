@@ -5,15 +5,15 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import hooks, me, urls
+from . import config, hooks, me, metrics, urls
 
 from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
-from .usage import Usage
+from .metrics.usage import Usage
 from .users import User, Users
-from .visits import Visits
+from .metrics.visits import Visits
 
 
 class Client:
@@ -98,12 +98,14 @@ class Client:
         return Content(config=self.config, session=self.session)
 
     @property
-    def usage(self) -> Usage:
-        return Usage(self.config, self.session)
+    def metrics(self) -> metrics.Metrics:
+        """The metrics API interface.
 
-    @property
-    def visits(self) -> Visits:
-        return Visits(self.config, self.session)
+        Returns
+        -------
+        metrics.Metrics
+        """
+        return metrics.Metrics(self.config, self.session)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""

@@ -1,14 +1,9 @@
-import warnings
-
-from abc import ABC, abstractmethod
-from typing import Any, Generic, List, Optional, TypeVar
+from abc import ABC
+from typing import Any
 
 import requests
 
 from .config import Config
-
-
-T = TypeVar("T")
 
 
 class Resource(ABC, dict):
