@@ -27,10 +27,6 @@ class TestPermissionDelete:
         )
 
         # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/__api__"
-
         session = requests.Session()
         fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
         permission = Permission(session, **fake_permission)
@@ -75,9 +71,6 @@ class TestPermissionUpdate:
         )
 
         # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permission = Permission(
             session,
@@ -121,9 +114,6 @@ class TestPermissionUpdate:
         )
 
         # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permission = Permission(
             session, id=id, content_guid=content_guid, role=old_role
@@ -149,9 +139,6 @@ class TestPermissionsCount:
         )
 
         # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permissions = Permissions(session, content_guid=content_guid)
 
@@ -194,9 +181,6 @@ class TestPermissionsCreate:
         )
 
         # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permissions = Permissions(session, content_guid=content_guid)
 
@@ -223,9 +207,6 @@ class TestPermissionsFind:
         )
 
         # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permissions = Permissions(session, content_guid=content_guid)
 
@@ -250,9 +231,6 @@ class TestPermissionsFindOne:
         )
 
         # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permissions = Permissions(session, content_guid=content_guid)
 
@@ -278,9 +256,6 @@ class TestPermissionsGet:
         )
 
         # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/__api__"
         session = requests.Session()
         permissions = Permissions(session, content_guid=content_guid)
 

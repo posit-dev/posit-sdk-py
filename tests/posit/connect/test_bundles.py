@@ -97,7 +97,7 @@ class TestBundleDelete:
         )
 
         # setup
-        c = Client("12345", "https://connect.example")
+        c = Client()
         bundle = c.content.get(content_guid).bundles.get(bundle_id)
 
         # invoke
@@ -126,7 +126,7 @@ class TestBundlesFind:
         )
 
         # setup
-        c = Client("12345", "https://connect.example")
+        c = Client()
 
         # invoke
         bundles = c.content.get(content_guid).bundles.find()
@@ -155,7 +155,7 @@ class TestBundlesFindOne:
         )
 
         # setup
-        c = Client("12345", "https://connect.example")
+        c = Client()
 
         # invoke
         bundle = c.content.get(content_guid).bundles.find_one()
@@ -184,7 +184,7 @@ class TestBundlesGet:
         )
 
         # setup
-        c = Client("12345", "https://connect.example")
+        c = Client()
 
         # invoke
         bundle = c.content.get(content_guid).bundles.get(bundle_id)

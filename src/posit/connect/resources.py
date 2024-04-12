@@ -20,5 +20,4 @@ class Resource(ABC, dict):
 
 class Resources(ABC):
     def __init__(self, session: requests.Session) -> None:
-        self.config = config.Config()
         self.session = session

@@ -28,37 +28,27 @@ def MockSession():
 
 class TestClient:
     def test__del__(self, MockAuth, MockConfig, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        client = Client()
         del client
         MockSession.return_value.close.assert_called_once()
 
     def test__enter__(self):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        with Client(api_key=api_key, url=url) as client:
+        with Client() as client:
             assert isinstance(client, Client)
 
     def test__exit__(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        with Client(api_key=api_key, url=url) as client:
+        with Client() as client:
             assert isinstance(client, Client)
         MockSession.return_value.close.assert_called_once()
 
     @responses.activate
     def test_connect_version(self):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        client = Client()
 
         # The actual server_settings response has a lot more attributes, but we
         # don't need to include them all here because we don't use them
         responses.get(
-            "http://foo.bar/__api__/server_settings",
+            "https://connect.example/__api__/server_settings",
             json={"version": "2024.01.0"},
         )
         assert client.connect_version == "2024.01.0"
@@ -74,44 +64,40 @@ class TestClient:
         assert con.me.username == "carlos12"
 
     def test_request(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        client = Client()
         client.request("GET", "/foo")
         MockSession.return_value.request.assert_called_once_with(
-            "GET", "http://foo.bar/__api__/foo"
+            "GET", "https://connect.example/__api__/foo"
         )
 
     def test_get(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        client = Client()
         client.get("/foo")
-        client.session.get.assert_called_once_with("http://foo.bar/__api__/foo")
+        client.session.get.assert_called_once_with(
+            "https://connect.example/__api__/foo"
+        )
 
     def test_post(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        client = Client()
         client.post("/foo")
-        client.session.post.assert_called_once_with("http://foo.bar/__api__/foo")
+        client.session.post.assert_called_once_with(
+            "https://connect.example/__api__/foo"
+        )
 
     def test_put(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        client = Client()
         client.put("/foo")
-        client.session.put.assert_called_once_with("http://foo.bar/__api__/foo")
+        client.session.put.assert_called_once_with(
+            "https://connect.example/__api__/foo"
+        )
 
     def test_patch(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        client = Client()
         client.patch("/foo")
-        client.session.patch.assert_called_once_with("http://foo.bar/__api__/foo")
+        client.session.patch.assert_called_once_with(
+            "https://connect.example/__api__/foo"
+        )
 
     def test_delete(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        client = Client()
         client.delete("/foo")

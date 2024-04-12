@@ -75,7 +75,7 @@ class TestVisitsFind:
         )
 
         # setup
-        c = Client("12345", "https://connect.example")
+        c = Client()
 
         # invoke
         visits = c.visits.find()
@@ -119,7 +119,7 @@ class TestVisitsFindOne:
         )
 
         # setup
-        c = Client("12345", "https://connect.example")
+        c = Client()
 
         # invoke
         visit = c.visits.find_one()

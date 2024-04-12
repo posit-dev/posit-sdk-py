@@ -15,9 +15,6 @@ class TestContentItemAttributes:
     @classmethod
     def setup_class(cls):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "http://example.com"
         session = requests.Session()
         fake_item = load_mock(f"v1/content/{guid}.json")
         cls.item = ContentItem(session, **fake_item)
@@ -177,11 +174,6 @@ class TestContentItemDelete:
             f"https://connect.example/__api__/v1/content/{guid}"
         )
 
-        # setup
-        c = config.Config()
-        c.api_key = "12345"
-        c.url = "https://connect.example/"
-
         session = requests.Session()
         fake_item = load_mock(f"v1/content/{guid}.json")
         item = ContentItem(session, **fake_item)
@@ -201,7 +193,7 @@ class TestContentUpdate:
             f"https://connect.example/__api__/v1/content/{guid}",
             json=load_mock(f"v1/content/{guid}.json"),
         )
-        con = Client("12345", "https://connect.example")
+        con = Client()
         content = con.content.get(guid)
         assert content.guid == guid
 
@@ -252,7 +244,7 @@ class TestContentsFind:
         )
 
         # setup
-        client = Client("12345", "https://connect.example")
+        client = Client()
 
         # invoke
         content = client.content.find()
@@ -274,7 +266,7 @@ class TestContentsFind:
         )
 
         # setup
-        client = Client("12345", "https://connect.example")
+        client = Client()
 
         # invoke
         client.content.find(include="tags")
@@ -292,7 +284,7 @@ class TestContentsFind:
         )
 
         # setup
-        client = Client("12345", "https://connect.example")
+        client = Client()
 
         # invoke
         client.content.find(include=None)
@@ -312,7 +304,7 @@ class TestContentsFindOne:
         )
 
         # setup
-        client = Client("12345", "https://connect.example")
+        client = Client()
 
         # invoke
         content_item = client.content.find_one()
@@ -338,7 +330,7 @@ class TestContentsFindOne:
         )
 
         # setup
-        client = Client("12345", "https://connect.example")
+        client = Client()
 
         # invoke
         content_item = client.content.find_one(owner_guid=owner_guid)
@@ -363,7 +355,7 @@ class TestContentsFindOne:
         )
 
         # setup
-        client = Client("12345", "https://connect.example")
+        client = Client()
 
         # invoke
         content_item = client.content.find_one(name=name)
@@ -383,7 +375,7 @@ class TestContentsFindOne:
         )
 
         # setup
-        client = Client("12345", "https://connect.example")
+        client = Client()
 
         # invoke
         client.content.find_one(include="tags")
@@ -401,7 +393,7 @@ class TestContentsFindOne:
         )
 
         # setup
-        client = Client("12345", "https://connect.example")
+        client = Client()
 
         # invoke
         client.content.find_one(include=None)
@@ -417,7 +409,7 @@ class TestContentsGet:
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
             json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
         )
-        con = Client("12345", "https://connect.example")
+        con = Client()
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         assert get_one.name == "Performance-Data-1671216053560"
 

@@ -7,10 +7,6 @@ import os
 from . import urls
 
 
-def reset():
-    Config.instance = None
-
-
 class Config:
     """Configuration object."""
 

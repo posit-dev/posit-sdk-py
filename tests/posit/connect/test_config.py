@@ -8,28 +8,25 @@ from posit.connect import config
 
 @pytest.fixture(autouse=True)
 def setup():
-    config.reset()
+    # capture the convert config settings
+    c = config.Config()
+    # reset the config before each test
+    config.Config.instance = None
+    # invoke the test
     yield
-
-
-class TestSingletonBehavior:
-    def test(self):
-        c = config.Config()
-        assert c
-        assert c == config.Config()
-        config.reset()
-        assert c != config.Config()
+    # set the config back to previous state
+    config.Config.instance = c
 
 
 class TestApiKey:
     def test(self):
-        api_key = "12345"
         c = config.Config()
+        api_key = "test-api-key"
         c.api_key = api_key
         assert c.api_key == api_key
 
     def test_env(self, monkeypatch: pytest.MonkeyPatch):
-        api_key = "12345"
+        api_key = "test-api-key"
         monkeypatch.setenv("CONNECT_API_KEY", api_key)
         assert os.getenv("CONNECT_API_KEY") == api_key
         c = config.Config()
@@ -45,13 +42,13 @@ class TestApiKey:
 
 class TestUrl:
     def test(self):
-        url = "http://example.com/__api__"
+        url = f"http://test-url.com/__api__"
         c = config.Config()
         c.url = url
         assert c.url == url
 
     def test_env(self, monkeypatch: pytest.MonkeyPatch):
-        url = "http://example.com/__api__"
+        url = f"http://test-url.com/__api__"
         monkeypatch.setenv("CONNECT_SERVER", url)
         assert os.getenv("CONNECT_SERVER") == url
         c = config.Config()
