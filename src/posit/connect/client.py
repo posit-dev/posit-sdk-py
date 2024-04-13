@@ -110,9 +110,7 @@ class Client:
         >>> from posit import (
         ...     connect,
         ... )
-        >>> client = (
-        ...     connect.Client()
-        ... )
+        >>> client = connect.Client()
         >>> client.metrics.views.find_one()
         {'content_guid': '2243770d-ace0-4782-87f9-fe2aeca14fc8', 'user_guid': '434f97ab-4b97-4443-8490-ed1052f37b29', 'variant_key': 'dZnFUBMR', 'rendering_id': '3029259', 'bundle_id': '49747', 'started': '2023-10-27T16:19:40Z', 'ended': '2023-10-27T16:19:40Z', 'data_version': 3, 'path': None}
         """
