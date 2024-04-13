@@ -99,7 +99,9 @@ class Client:
 
     @property
     def metrics(self) -> metrics.Metrics:
-        """The metrics API interface.
+        """The Metrics API interface.
+
+        The Metrics API is a software interface designed for capturing, retrieving, and managing quantitative data measurements. It is commonly used for monitoring and analyzing system performance, user behavior, and business processes. This API facilitates real-time data collection and accessibility, enabling organizations to make informed decisions based on key performance indicators (KPIs).
 
         Returns
         -------
@@ -107,12 +109,12 @@ class Client:
 
         Examples
         --------
-        >>> from posit import (
-        ...     connect,
-        ... )
+        >>> from posit import connect
         >>> client = connect.Client()
-        >>> client.metrics.views.find_one()
-        {'content_guid': '2243770d-ace0-4782-87f9-fe2aeca14fc8', 'user_guid': '434f97ab-4b97-4443-8490-ed1052f37b29', 'variant_key': 'dZnFUBMR', 'rendering_id': '3029259', 'bundle_id': '49747', 'started': '2023-10-27T16:19:40Z', 'ended': '2023-10-27T16:19:40Z', 'data_version': 3, 'path': None}
+        >>> content_guid = "2243770d-ace0-4782-87f9-fe2aeca14fc8"
+        >>> view_events = client.metrics.views.find(content_guid=content_guid)
+        >>> len(view_events)
+        24
         """
         return metrics.Metrics(self.config, self.session)
 
