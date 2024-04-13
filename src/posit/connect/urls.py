@@ -31,14 +31,10 @@ def create(url: str) -> Url:
 
     Examples
     --------
-    >>> urls.create(
-    ...     "http://example.com"
-    ... )
+    >>> urls.create("http://example.com")
     http://example.com/__api__
 
-    >>> urls.create(
-    ...     "http://example.com/__api__"
-    ... )
+    >>> urls.create("http://example.com/__api__")
     http://example.com/__api__
 
     """
@@ -77,12 +73,8 @@ def append(url: Url, path: str) -> Url:
 
     Examples
     --------
-    >>> url = urls.create(
-    ...     "http://example.com/__api__"
-    ... )
-    >>> urls.append(
-    ...     url, "path"
-    ... )
+    >>> url = urls.create("http://example.com/__api__")
+    >>> urls.append(url, "path")
     http://example.com/__api__/path
     """
     # Removes leading '/' from path to avoid double slashes.

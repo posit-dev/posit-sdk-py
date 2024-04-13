@@ -34,7 +34,7 @@ version_file = "src/posit/_version.py"
 
 [tool.ruff.format]
 docstring-code-format = true
-docstring-code-line-length = 20
+docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
 select = ["D"]
