@@ -159,7 +159,10 @@ class Users(Resources):
 
     @overload
     def find(
-        self, prefix: str = ..., user_role: str = ..., account_status: str = ...
+        self,
+        prefix: str = ...,
+        user_role: str = ...,
+        account_status: str = ...,
     ) -> List[User]:
         ...
 
@@ -182,7 +185,10 @@ class Users(Resources):
 
     @overload
     def find_one(
-        self, prefix: str = ..., user_role: str = ..., account_status: str = ...
+        self,
+        prefix: str = ...,
+        user_role: str = ...,
+        account_status: str = ...,
     ) -> User | None:
         ...
 

@@ -16,11 +16,17 @@ DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
 SQL_HTTP_PATH = os.getenv("DATABRICKS_PATH")
 
-session_token = _get_websocket_headers().get("Posit-Connect-User-Session-Token")
+session_token = _get_websocket_headers().get(
+    "Posit-Connect-User-Session-Token"
+)
 
-credentials_provider = viewer_credentials_provider(user_session_token=session_token)
+credentials_provider = viewer_credentials_provider(
+    user_session_token=session_token
+)
 
-cfg = Config(host=DATABRICKS_HOST_URL, credentials_provider=credentials_provider)
+cfg = Config(
+    host=DATABRICKS_HOST_URL, credentials_provider=credentials_provider
+)
 databricks_user = CurrentUserAPI(ApiClient(cfg)).me()
 st.write(f"Hello, {databricks_user.display_name}!")
 

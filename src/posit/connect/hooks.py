@@ -12,7 +12,9 @@ def handle_errors(response: Response, *args, **kwargs) -> Response:
             message = data["error"]
             http_status = response.status_code
             http_status_message = responses[http_status]
-            raise ClientError(error_code, message, http_status, http_status_message)
+            raise ClientError(
+                error_code, message, http_status, http_status_message
+            )
         except JSONDecodeError:
             # No JSON error message from Connect, so just raise
             response.raise_for_status()

@@ -223,7 +223,11 @@ class TestContentCreate:
         responses.post(
             f"https://connect.example/__api__/v1/content",
             json=load_mock(f"v1/content/{guid}.json"),
-            match=[matchers.json_params_matcher({"name": fake_content_item["name"]})],
+            match=[
+                matchers.json_params_matcher(
+                    {"name": fake_content_item["name"]}
+                )
+            ],
         )
 
         # setup
@@ -353,7 +357,9 @@ class TestContentsFindOne:
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
             match=[
-                matchers.query_param_matcher({"name": name, "include": "owner,tags"})
+                matchers.query_param_matcher(
+                    {"name": name, "include": "owner,tags"}
+                )
             ],
         )
 
@@ -410,7 +416,9 @@ class TestContentsGet:
     def test(self):
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
-            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+            json=load_mock(
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+            ),
         )
         con = Client("12345", "https://connect.example")
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")

@@ -29,7 +29,9 @@ class TestPermissionDelete:
         # setup
         config = Config(api_key="12345", url="https://connect.example/")
         session = requests.Session()
-        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
+        fake_permission = load_mock(
+            f"v1/content/{content_guid}/permissions/{id}.json"
+        )
         permission = Permission(config, session, **fake_permission)
 
         # invoke
@@ -96,7 +98,9 @@ class TestPermissionUpdate:
 
         id = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
+        fake_permission = load_mock(
+            f"v1/content/{content_guid}/permissions/{id}.json"
+        )
         fake_permission.update(role=new_role)
 
         # define api behavior
@@ -134,7 +138,9 @@ class TestPermissionsCount:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
+        fake_permissions = load_mock(
+            f"v1/content/{content_guid}/permissions.json"
+        )
 
         # define api behavior
         responses.get(
@@ -192,7 +198,9 @@ class TestPermissionsCreate:
 
         # invoke
         permission = permissions.create(
-            principal_guid=principal_guid, principal_type=principal_type, role=role
+            principal_guid=principal_guid,
+            principal_type=principal_type,
+            role=role,
         )
 
         # assert
@@ -204,7 +212,9 @@ class TestPermissionsFind:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
+        fake_permissions = load_mock(
+            f"v1/content/{content_guid}/permissions.json"
+        )
 
         # define api behavior
         responses.get(
@@ -229,7 +239,9 @@ class TestPermissionsFindOne:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
+        fake_permissions = load_mock(
+            f"v1/content/{content_guid}/permissions.json"
+        )
 
         # define api behavior
         responses.get(
@@ -255,7 +267,9 @@ class TestPermissionsGet:
         # data
         id = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{id}.json")
+        fake_permission = load_mock(
+            f"v1/content/{content_guid}/permissions/{id}.json"
+        )
 
         # behavior
         responses.get(

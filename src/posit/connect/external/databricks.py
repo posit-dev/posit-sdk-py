@@ -36,9 +36,9 @@ class PositOAuthIntegrationCredentialsProvider(CredentialsProvider):
 
     def __call__(self, *args, **kwargs) -> HeaderFactory:
         def inner() -> Dict[str, str]:
-            access_token = self.posit_oauth.get_credentials(self.user_session_token)[
-                "access_token"
-            ]
+            access_token = self.posit_oauth.get_credentials(
+                self.user_session_token
+            )["access_token"]
             return {"Authorization": f"Bearer {access_token}"}
 
         return inner
@@ -68,7 +68,9 @@ def viewer_credentials_provider(
             "The user-session-token is required for viewer authentication."
         )
 
-    return PositOAuthIntegrationCredentialsProvider(client.oauth, user_session_token)
+    return PositOAuthIntegrationCredentialsProvider(
+        client.oauth, user_session_token
+    )
 
 
 def service_account_credentials_provider(client: Optional[Client] = None):

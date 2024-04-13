@@ -19,7 +19,9 @@ class OAuthIntegration:
         self.config = config
         self.session = session
 
-    def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
+    def get_credentials(
+        self, user_session_token: Optional[str] = None
+    ) -> Credentials:
         # craft a basic credential exchange request where the self.config.api_key owner
         # is requesting their own credentials
         data = dict()

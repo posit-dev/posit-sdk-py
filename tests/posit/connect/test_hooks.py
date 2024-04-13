@@ -52,7 +52,8 @@ def test_response_client_error_with_json_payload():
     response.status_code = 400
     response.raw = io.BytesIO(b'{"code":0,"error":"foobar"}')
     with pytest.raises(
-        ClientError, match=r"foobar \(Error Code: 0, HTTP Status: 400 Bad Request\)"
+        ClientError,
+        match=r"foobar \(Error Code: 0, HTTP Status: 400 Bad Request\)",
     ):
         handle_errors(response)
 
