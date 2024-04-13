@@ -101,7 +101,12 @@ class Client:
     def metrics(self) -> metrics.Metrics:
         """The Metrics API interface.
 
-        The Metrics API is a software interface designed for capturing, retrieving, and managing quantitative data measurements. It is commonly used for monitoring and analyzing system performance, user behavior, and business processes. This API facilitates real-time data collection and accessibility, enabling organizations to make informed decisions based on key performance indicators (KPIs).
+        The Metrics API is designed for capturing, retrieving, and managing
+        quantitative measurements of Connect interactions. It is commonly used
+        for monitoring and analyzing system performance, user behavior, and
+        business processes. This API facilitates real-time data collection and
+        accessibility, enabling organizations to make informed decisions based
+        on key performance indicators (KPIs).
 
         Returns
         -------
