@@ -71,7 +71,9 @@ class Permission(Resource):
 
 
 class Permissions(Resources):
-    def __init__(self, config: Config, session: Session, content_guid: str) -> None:
+    def __init__(
+        self, config: Config, session: Session, content_guid: str
+    ) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
 
@@ -85,7 +87,9 @@ class Permissions(Resources):
         return len(self.find())
 
     @overload
-    def create(self, principal_guid: str, principal_type: str, role: str) -> Permission:
+    def create(
+        self, principal_guid: str, principal_type: str, role: str
+    ) -> Permission:
         """Create a permission.
 
         Parameters
@@ -136,7 +140,10 @@ class Permissions(Resources):
         url = urls.append(self.config.url, path)
         response = self.session.get(url, json=body)
         results = response.json()
-        return [Permission(self.config, self.session, **result) for result in results]
+        return [
+            Permission(self.config, self.session, **result)
+            for result in results
+        ]
 
     def find_one(self, *args, **kwargs) -> Permission | None:
         """Find a permission.

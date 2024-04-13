@@ -10,7 +10,8 @@ class TestClientError:
         http_status = 404
         http_message = "Foo Bar"
         with pytest.raises(
-            ClientError, match=r"foo \(Error Code: 0, HTTP Status: 404 Foo Bar\)"
+            ClientError,
+            match=r"foo \(Error Code: 0, HTTP Status: 404 Foo Bar\)",
         ):
             raise ClientError(
                 error_code=error_code,

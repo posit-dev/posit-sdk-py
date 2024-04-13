@@ -88,7 +88,9 @@ class Bundle(Resource):
 
     @property
     def metadata(self) -> BundleMetadata:
-        return BundleMetadata(self.config, self.session, **self.get("metadata", {}))
+        return BundleMetadata(
+            self.config, self.session, **self.get("metadata", {})
+        )
 
     # CRUD Methods
 
@@ -99,7 +101,9 @@ class Bundle(Resource):
 
 
 class Bundles(Resources):
-    def __init__(self, config: Config, session: Session, content_guid: str) -> None:
+    def __init__(
+        self, config: Config, session: Session, content_guid: str
+    ) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
 

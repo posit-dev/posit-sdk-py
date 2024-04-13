@@ -9,7 +9,9 @@ class TestCreate:
         assert urls.create(url) == url
 
     def test_append_path(self):
-        assert urls.create("http://example.com/") == "http://example.com/__api__"
+        assert (
+            urls.create("http://example.com/") == "http://example.com/__api__"
+        )
 
     def test_missing_scheme(self):
         with pytest.raises(ValueError):

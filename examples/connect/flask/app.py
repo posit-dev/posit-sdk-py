@@ -28,7 +28,9 @@ def get_fares():
     global rows
 
     session_token = request.headers.get("Posit-Connect-User-Session-Token")
-    credentials_provider = viewer_credentials_provider(user_session_token=session_token)
+    credentials_provider = viewer_credentials_provider(
+        user_session_token=session_token
+    )
 
     if rows is None:
         query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"

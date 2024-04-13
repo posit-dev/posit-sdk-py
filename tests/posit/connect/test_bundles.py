@@ -24,7 +24,9 @@ class TestBundleProperties:
         assert self.bundle.id == "101"
 
     def test_content_guid(self):
-        assert self.bundle.content_guid == "f2f37341-e21d-3d80-c698-a935ad614066"
+        assert (
+            self.bundle.content_guid == "f2f37341-e21d-3d80-c698-a935ad614066"
+        )
 
     def test_created_time(self):
         assert self.bundle.created_time == "2006-01-02T15:04:05Z07:00"
@@ -69,7 +71,10 @@ class TestBundleProperties:
         assert self.bundle.metadata.source_commit == "string"
 
     def test_metadata_archive_md5(self):
-        assert self.bundle.metadata.archive_md5 == "37324238a80595c453c706b22adb83d3"
+        assert (
+            self.bundle.metadata.archive_md5
+            == "37324238a80595c453c706b22adb83d3"
+        )
 
     def test_metadata_archive_sha1(self):
         assert (
@@ -92,7 +97,9 @@ class TestBundleDelete:
 
         mock_bundle_get = responses.get(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
+            json=load_mock(
+                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
+            ),
         )
 
         mock_bundle_delete = responses.delete(
@@ -183,7 +190,9 @@ class TestBundlesGet:
 
         mock_bundle_get = responses.get(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
+            json=load_mock(
+                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
+            ),
         )
 
         # setup
