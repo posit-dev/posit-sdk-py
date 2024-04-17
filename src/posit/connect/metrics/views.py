@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 
-from typing import List
+from typing import List, overload
 
 from requests.sessions import Session as Session
 
@@ -147,7 +147,50 @@ class ViewEvent(resources.Resource):
 
 
 class Views(resources.Resources):
+    @overload
+    def find(
+        self,
+        content_guid: str = ...,
+        min_data_version: int = ...,
+        start: str = ...,
+        end: str = ...,
+    ) -> List[ViewEvent]:
+        """Find view events.
+
+        Parameters
+        ----------
+        content_guid : str, optional
+            Filter by an associated unique content identifer, by default ...
+        min_data_version : int, optional
+            Filter by a minimum data version, by default ...
+        start : str, optional
+            Filter by the start time, by default ...
+        end : str, optional
+            Filter by the end time, by default ...
+
+        Returns
+        -------
+        List[ViewEvent]
+        """
+        ...
+
+    @overload
     def find(self, *args, **kwargs) -> List[ViewEvent]:
+        """Find view events.
+
+        Returns
+        -------
+        List[ViewEvent]
+        """
+        ...
+
+    def find(self, *args, **kwargs) -> List[ViewEvent]:
+        """Find view events.
+
+        Returns
+        -------
+        List[ViewEvent]
+        """
         events = []
         finders = (visits.Visits, usage.Usage)
         for finder in finders:
@@ -160,7 +203,50 @@ class Views(resources.Resources):
             )
         return events
 
+    @overload
+    def find_one(
+        self,
+        content_guid: str = ...,
+        min_data_version: int = ...,
+        start: str = ...,
+        end: str = ...,
+    ) -> ViewEvent | None:
+        """Find a view event.
+
+        Parameters
+        ----------
+        content_guid : str, optional
+            Filter by an associated unique content identifer, by default ...
+        min_data_version : int, optional
+            Filter by a minimum data version, by default ...
+        start : str, optional
+            Filter by the start time, by default ...
+        end : str, optional
+            Filter by the end time, by default ...
+
+        Returns
+        -------
+        Visit | None
+        """
+        ...
+
+    @overload
     def find_one(self, *args, **kwargs) -> ViewEvent | None:
+        """Find a view event.
+
+        Returns
+        -------
+        Visit | None
+        """
+        ...
+
+    def find_one(self, *args, **kwargs) -> ViewEvent | None:
+        """Find a view event.
+
+        Returns
+        -------
+        ViewEvent | None
+        """
         finders = (visits.Visits, usage.Usage)
         for finder in finders:
             instance = finder(self.config, self.session)

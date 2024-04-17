@@ -177,7 +177,6 @@ class Visits(Resources):
         Returns
         -------
         Visit | None
-            _description_
         """
         ...
 
