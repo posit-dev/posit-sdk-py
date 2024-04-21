@@ -14,82 +14,44 @@ url = Mock()
 
 
 class TestUserAttributes:
+    def setup_class(cls):
+        cls.user = User(
+            None,
+            **load_mock("v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6.json"),
+        )
+
     def test_guid(self):
-        user = User(session, url)
-        assert hasattr(user, "guid")
-        assert user.guid is None
-        user = User(session, url, guid="test_guid")
-        assert user.guid == "test_guid"
+        assert self.user.guid == "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
 
     def test_email(self):
-        user = User(session, url)
-        assert hasattr(user, "email")
-        assert user.email is None
-        user = User(session, url, email="test@example.com")
-        assert user.email == "test@example.com"
+        assert self.user.email == "random_email@example.com"
 
     def test_username(self):
-        user = User(session, url)
-        assert hasattr(user, "username")
-        assert user.username is None
-        user = User(session, url, username="test_user")
-        assert user.username == "test_user"
+        assert self.user.username == "random_username"
 
     def test_first_name(self):
-        user = User(session, url)
-        assert hasattr(user, "first_name")
-        assert user.first_name is None
-        user = User(session, url, first_name="John")
-        assert user.first_name == "John"
+        assert self.user.first_name == "Random"
 
     def test_last_name(self):
-        user = User(session, url)
-        assert hasattr(user, "last_name")
-        assert user.last_name is None
-        user = User(session, url, last_name="Doe")
-        assert user.last_name == "Doe"
+        assert self.user.last_name == "User"
 
     def test_user_role(self):
-        user = User(session, url)
-        assert hasattr(user, "user_role")
-        assert user.user_role is None
-        user = User(session, url, user_role="admin")
-        assert user.user_role == "admin"
+        assert self.user.user_role == "admin"
 
     def test_created_time(self):
-        user = User(session, url)
-        assert hasattr(user, "created_time")
-        assert user.created_time is None
-        user = User(session, url, created_time="2022-01-01T00:00:00")
-        assert user.created_time == "2022-01-01T00:00:00"
+        assert self.user.created_time == "2022-01-01T00:00:00Z"
 
     def test_updated_time(self):
-        user = User(session, url)
-        assert hasattr(user, "updated_time")
-        assert user.updated_time is None
-        user = User(session, url, updated_time="2022-01-01T00:00:00")
-        assert user.updated_time == "2022-01-01T00:00:00"
+        assert self.user.updated_time == "2022-03-15T12:34:56Z"
 
     def test_active_time(self):
-        user = User(session, url)
-        assert hasattr(user, "active_time")
-        assert user.active_time is None
-        user = User(session, url, active_time="2022-01-01T00:00:00")
-        assert user.active_time == "2022-01-01T00:00:00"
+        assert self.user.active_time == "2022-02-28T18:30:00Z"
 
     def test_confirmed(self):
-        user = User(session, url)
-        assert hasattr(user, "confirmed")
-        assert user.confirmed is None
-        user = User(session, url, confirmed=True)
-        assert user.confirmed is True
+        assert self.user.confirmed is False
 
     def test_locked(self):
-        user = User(session, url)
-        assert hasattr(user, "locked")
-        assert user.locked is None
-        user = User(session, url, locked=False)
-        assert user.locked is False
+        assert self.user.locked is True
 
 
 class TestUserLock:
@@ -101,7 +63,7 @@ class TestUserLock:
                 "v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6.json"
             ),
         )
-        c = Client(api_key="12345", url="https://connect.example/")
+        c = Client("12345", "https://connect.example/__api__")
         user = c.users.get("a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6")
         assert user.guid == "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
 
@@ -126,7 +88,7 @@ class TestUserLock:
                 "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
             ),
         )
-        c = Client(api_key="12345", url="https://connect.example/")
+        c = Client("12345", "https://connect.example/__api__")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
@@ -151,7 +113,7 @@ class TestUserLock:
                 "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
             ),
         )
-        c = Client(api_key="12345", url="https://connect.example/")
+        c = Client("12345", "https://connect.example/__api__")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
@@ -179,7 +141,7 @@ class TestUserUnlock:
                 "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
             ),
         )
-        c = Client(api_key="12345", url="https://connect.example/")
+        c = Client("12345", "https://connect.example/__api__")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert user.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
@@ -201,7 +163,7 @@ class TestUsers:
             ),
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert carlos.username == "carlos12"
         assert carlos.first_name == "Carlos"
@@ -218,7 +180,7 @@ class TestUsers:
             },
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         assert carlos.username == "carlos12"
         assert carlos["some_new_field"] == "some_new_value"
@@ -241,7 +203,7 @@ class TestUsers:
             json={"first_name": "Carlitos"},
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
 
         assert patch_request.call_count == 0
@@ -265,7 +227,7 @@ class TestUsers:
             status=500,
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
         with pytest.raises(requests.HTTPError, match="500 Server Error"):
             carlos.update(first_name="Carlitos")
@@ -279,7 +241,7 @@ class TestUsers:
             ),
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         carlos = con.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
 
         with pytest.raises(
@@ -295,7 +257,7 @@ class TestUsers:
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
             match=[responses.matchers.query_param_matcher({"page_size": 1})],
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         count = con.users.count()
         assert count == 3
 
@@ -308,7 +270,7 @@ class TestUsersFindOne:
             "https://connect.example/__api__/v1/users",
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         user = con.users.find_one()
         assert user.username == "al"
         assert len(responses.calls) == 1
@@ -330,7 +292,7 @@ class TestUsersFindOne:
             ],
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         con.users.find_one(key1="value1", key2="value2", key3="value3")
         assert mock_get.call_count == 1
 
@@ -341,7 +303,7 @@ class TestUsersFindOne:
             json={"total": 0, "current_page": 1, "results": []},
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         user = con.users.find_one()
         assert user is None
 
@@ -368,7 +330,8 @@ class TestUsersFind:
             ],
             json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+
+        con = Client("12345", "https://connect.example/__api__")
         users = con.users.find()
         assert len(users) == 3
         assert users[0] == {
@@ -387,8 +350,6 @@ class TestUsersFind:
 
     @responses.activate
     def test_params(self):
-        # validate input params are propagated to the query params
-        params = {"key1": "value1", "key2": "value2", "key3": "value3"}
         responses.get(
             "https://connect.example/__api__/v1/users",
             match=[
@@ -419,7 +380,7 @@ class TestUsersFind:
             ],
             json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
         )
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         con.users.find_one(key1="value1", key2="value2", key3="value3")
         responses.assert_call_count(
             "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
@@ -429,7 +390,7 @@ class TestUsersFind:
     @responses.activate
     def test_params_not_dict_like(self):
         # validate input params are propagated to the query params
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client("12345", "https://connect.example/__api__")
         not_dict_like = "string"
         with pytest.raises(ValueError):
             con.users.find(not_dict_like)

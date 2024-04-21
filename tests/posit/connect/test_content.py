@@ -1,9 +1,11 @@
+from unittest import mock
+
 import requests
 import responses
 
 from responses import matchers
 
-from posit.connect.client import Client
+from posit.connect.client import Client, context
 from posit.connect.config import Config
 from posit.connect.content import ContentItem
 from posit.connect.permissions import Permissions
@@ -14,11 +16,12 @@ from .api import load_mock  # type: ignore
 class TestContentItemAttributes:
     @classmethod
     def setup_class(cls):
-        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
-        fake_item = load_mock(f"v1/content/{guid}.json")
-        cls.item = ContentItem(config, session, **fake_item)
+        cls.item = ContentItem(
+            None,
+            **load_mock(
+                f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+            ),
+        )
 
     def test_id(self):
         assert self.item.id == "8274"
@@ -176,10 +179,11 @@ class TestContentItemDelete:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
+        ctx = context.Context(
+            "12345", requests.Session(), "https://connect.example/__api__"
+        )
         fake_item = load_mock(f"v1/content/{guid}.json")
-        item = ContentItem(config, session, **fake_item)
+        item = ContentItem(ctx, **fake_item)
 
         # invoke
         item.delete()

@@ -6,7 +6,7 @@ from requests.sessions import Session as Session
 
 from posit.connect.config import Config
 
-from . import urls
+from . import context, urls
 
 from .resources import Resources, Resource
 
@@ -88,34 +88,29 @@ class Bundle(Resource):
 
     @property
     def metadata(self) -> BundleMetadata:
-        return BundleMetadata(
-            self.config, self.session, **self.get("metadata", {})
-        )
+        return BundleMetadata(self.ctx, **self.get("metadata", {}))
 
     # CRUD Methods
 
     def delete(self) -> None:
         path = f"v1/content/{self.content_guid}/bundles/{self.id}"
-        url = urls.append(self.config.url, path)
-        self.session.delete(url)
+        url = urls.append(self.ctx.url, path)
+        self.ctx.session.delete(url)
 
 
 class Bundles(Resources):
-    def __init__(
-        self, config: Config, session: Session, content_guid: str
-    ) -> None:
-        super().__init__(config, session)
+    def __init__(self, ctx: context.Context, content_guid: str) -> None:
+        super().__init__(ctx)
         self.content_guid = content_guid
 
     def find(self) -> List[Bundle]:
         path = f"v1/content/{self.content_guid}/bundles"
-        url = urls.append(self.config.url, path)
-        response = self.session.get(url)
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.get(url)
         results = response.json()
         return [
             Bundle(
-                self.config,
-                self.session,
+                self.ctx,
                 **result,
             )
             for result in results
@@ -127,7 +122,7 @@ class Bundles(Resources):
 
     def get(self, id: str) -> Bundle:
         path = f"v1/content/{self.content_guid}/bundles/{id}"
-        url = urls.append(self.config.url, path)
-        response = self.session.get(url)
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.get(url)
         result = response.json()
-        return Bundle(self.config, self.session, **result)
+        return Bundle(self.ctx, **result)

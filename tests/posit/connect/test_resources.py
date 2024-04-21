@@ -8,8 +8,7 @@ from requests.sessions import Session as Session
 
 from posit.connect.resources import Resource, Resources
 
-config = Mock()
-session = Mock()
+ctx = Mock()
 
 
 class FakeResource(Resource):
@@ -23,16 +22,15 @@ class TestResource:
         k = "foo"
         v = "bar"
         d = dict({k: v})
-        r = FakeResource(config, session, **d)
-        assert r.session == session
-        assert r.config == config
+        r = FakeResource(ctx, **d)
+        assert r.ctx == ctx
 
     def test__getitem__(self):
         warnings.filterwarnings("ignore", category=FutureWarning)
         k = "foo"
         v = "bar"
         d = dict({k: v})
-        r = FakeResource(config, session, **d)
+        r = FakeResource(ctx, **d)
         assert r.__getitem__(k) == d.__getitem__(k)
         assert r[k] == d[k]
 
@@ -42,7 +40,7 @@ class TestResource:
         v1 = "bar"
         v2 = "baz"
         d = dict({k: v1})
-        r = FakeResource(config, session, **d)
+        r = FakeResource(ctx, **d)
         assert r[k] == v1
         r[k] = v2
         assert r[k] == v2
@@ -52,7 +50,7 @@ class TestResource:
         k = "foo"
         v = "bar"
         d = dict({k: v})
-        r = FakeResource(config, session, **d)
+        r = FakeResource(ctx, **d)
         assert k in r
         assert r[k] == v
         del r[k]
@@ -62,5 +60,5 @@ class TestResource:
         k = "foo"
         v = "bar"
         d = dict({k: v})
-        r = FakeResource(config, session, **d)
+        r = FakeResource(ctx, **d)
         assert r.foo == v

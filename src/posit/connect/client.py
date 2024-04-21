@@ -5,7 +5,7 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import hooks, me, urls
+from . import context, hooks, me, urls
 
 from .auth import Auth
 from .config import Config
@@ -20,9 +20,7 @@ class Client:
     """Main interface for Posit Connect."""
 
     def __init__(
-        self,
-        api_key: Optional[str] = None,
-        url: Optional[str] = None,
+        self, api_key: str | None = None, url: str | None = None
     ) -> None:
         """
         Initialize the Client instance.
@@ -32,16 +30,17 @@ class Client:
             url (str, optional): API url URL. Defaults to None.
         """
         # Create a Config object.
-        self.config = Config(api_key=api_key, url=url)
+        cfg = Config(api_key, url)
+
         # Create a Session object for making HTTP requests.
         session = Session()
         # Authenticate the session using the provided Config.
-        session.auth = Auth(config=self.config)
+        session.auth = Auth(cfg.api_key)
         # Add error handling hooks to the session.
         session.hooks["response"].append(hooks.handle_errors)
 
         # Store the Session object.
-        self.session = session
+        self.ctx = context.Context(cfg.api_key, session, cfg.url)
 
         # Internal attributes to hold settings we fetch lazily
         self._server_settings = None
@@ -65,7 +64,7 @@ class Client:
         -------
         User
         """
-        return me.get(self.config, self.session)
+        return me.get(self.ctx)
 
     @property
     def oauth(self) -> OAuthIntegration:
@@ -75,7 +74,7 @@ class Client:
         -------
         OAuthIntegration
         """
-        return OAuthIntegration(config=self.config, session=self.session)
+        return OAuthIntegration(self.ctx)
 
     @property
     def users(self) -> Users:
@@ -85,7 +84,7 @@ class Client:
         -------
         Users
         """
-        return Users(config=self.config, session=self.session)
+        return Users(self.ctx)
 
     @property
     def content(self) -> Content:
@@ -95,20 +94,19 @@ class Client:
         -------
         Content
         """
-        return Content(config=self.config, session=self.session)
+        return Content(self.ctx)
 
     @property
     def usage(self) -> Usage:
-        return Usage(self.config, self.session)
+        return Usage(self.ctx)
 
     @property
     def visits(self) -> Visits:
-        return Visits(self.config, self.session)
+        return Visits(self.ctx)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
-        if hasattr(self, "session") and self.session is not None:
-            self.session.close()
+        self.ctx.session.close()
 
     def __enter__(self):
         """Enter method for using the client as a context manager."""
@@ -123,8 +121,7 @@ class Client:
             exc_value: The exception instance raised (if any).
             exc_tb: The traceback for the exception raised (if any).
         """
-        if hasattr(self, "session") and self.session is not None:
-            self.session.close()
+        self.ctx.session.close()
 
     def request(self, method: str, path: str, **kwargs) -> Response:
         """
@@ -141,8 +138,8 @@ class Client:
         -------
             Response: A requests.Response object.
         """
-        url = urls.append(self.config.url, path)
-        return self.session.request(method, url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.request(method, url, **kwargs)
 
     def get(self, path: str, **kwargs) -> Response:
         """
@@ -157,8 +154,8 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
-        return self.session.get(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.get(url, **kwargs)
 
     def post(self, path: str, **kwargs) -> Response:
         """
@@ -173,8 +170,8 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
-        return self.session.post(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.post(url, **kwargs)
 
     def put(self, path: str, **kwargs) -> Response:
         """
@@ -189,8 +186,8 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
-        return self.session.put(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.put(url, **kwargs)
 
     def patch(self, path: str, **kwargs) -> Response:
         """
@@ -205,8 +202,8 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
-        return self.session.patch(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.patch(url, **kwargs)
 
     def delete(self, path: str, **kwargs) -> Response:
         """
@@ -221,5 +218,5 @@ class Client:
             Response: A requests.Response object.
 
         """
-        url = urls.append(self.config.url, path)
-        return self.session.delete(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.delete(url, **kwargs)

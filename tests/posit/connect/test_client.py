@@ -1,77 +1,46 @@
-import pytest
 import responses
 
-from unittest.mock import MagicMock, patch
+from unittest import mock
 
 from posit.connect import Client
 
 from .api import load_mock  # type: ignore
 
 
-@pytest.fixture
-def MockAuth():
-    with patch("posit.connect.client.Auth") as mock:
-        yield mock
-
-
-@pytest.fixture
-def MockConfig():
-    with patch("posit.connect.client.Config") as mock:
-        yield mock
-
-
-@pytest.fixture
-def MockSession():
-    with patch("posit.connect.client.Session") as mock:
-        yield mock
-
-
 class TestClient:
-    def test_init(
-        self,
-        MockAuth: MagicMock,
-        MockConfig: MagicMock,
-        MockSession: MagicMock,
-    ):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        Client(api_key=api_key, url=url)
-        MockAuth.assert_called_once_with(config=MockConfig.return_value)
-        MockConfig.assert_called_once_with(api_key=api_key, url=url)
-        MockSession.assert_called_once()
-
-    def test__del__(self, MockAuth, MockConfig, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+    def test__del__(self):
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        client = Client(api_key, url)
+        session = mock.Mock()
+        client.ctx.session = session
         del client
-        MockSession.return_value.close.assert_called_once()
+        session.close.assert_called_once
 
     def test__enter__(self):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        with Client(api_key=api_key, url=url) as client:
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        with Client(api_key, url) as client:
             assert isinstance(client, Client)
 
-    def test__exit__(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        with Client(api_key=api_key, url=url) as client:
-            assert isinstance(client, Client)
-        MockSession.return_value.close.assert_called_once()
+    def test__exit__(self):
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        session = mock.Mock()
+        with Client(api_key, url) as client:
+            client.ctx.session = session
+        session.close.assert_called_once()
 
     @responses.activate
     def test_connect_version(self):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        client = Client(api_key, url)
 
         # The actual server_settings response has a lot more attributes, but we
         # don't need to include them all here because we don't use them
         responses.get(
-            "http://foo.bar/__api__/server_settings",
+            "https://connect.example/__api__/server_settings",
             json={"version": "2024.01.0"},
         )
         assert client.connect_version == "2024.01.0"
@@ -86,53 +55,56 @@ class TestClient:
         con = Client(api_key="12345", url="https://connect.example/")
         assert con.me.username == "carlos12"
 
-    def test_request(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+    @responses.activate
+    def test_request(self):
+        mock = responses.get("https://connect.example/__api__/foo")
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        client = Client(api_key, url)
         client.request("GET", "/foo")
-        MockSession.return_value.request.assert_called_once_with(
-            "GET", "http://foo.bar/__api__/foo"
-        )
+        assert mock.call_count == 1
 
-    def test_get(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+    @responses.activate
+    def test_get(self):
+        mock = responses.get("https://connect.example/__api__/foo")
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        client = Client(api_key, url)
         client.get("/foo")
-        client.session.get.assert_called_once_with(
-            "http://foo.bar/__api__/foo"
-        )
+        assert mock.call_count == 1
 
-    def test_post(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+    @responses.activate
+    def test_post(self):
+        mock = responses.post("https://connect.example/__api__/foo")
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        client = Client(api_key, url)
         client.post("/foo")
-        client.session.post.assert_called_once_with(
-            "http://foo.bar/__api__/foo"
-        )
+        assert mock.call_count == 1
 
-    def test_put(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+    @responses.activate
+    def test_put(self):
+        mock = responses.put("https://connect.example/__api__/foo")
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        client = Client(api_key, url)
         client.put("/foo")
-        client.session.put.assert_called_once_with(
-            "http://foo.bar/__api__/foo"
-        )
+        assert mock.call_count == 1
 
-    def test_patch(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+    @responses.activate
+    def test_patch(self):
+        mock = responses.patch("https://connect.example/__api__/foo")
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        client = Client(api_key, url)
         client.patch("/foo")
-        client.session.patch.assert_called_once_with(
-            "http://foo.bar/__api__/foo"
-        )
+        assert mock.call_count == 1
 
-    def test_delete(self, MockSession):
-        api_key = "foobar"
-        url = "http://foo.bar/__api__"
-        client = Client(api_key=api_key, url=url)
+    @responses.activate
+    def test_delete(self):
+        mock = responses.delete("https://connect.example/__api__/foo")
+        api_key = "12345"
+        url = "https://connect.example/__api__"
+        client = Client(api_key, url)
         client.delete("/foo")
+        assert mock.call_count == 1

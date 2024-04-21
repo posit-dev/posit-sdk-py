@@ -5,7 +5,7 @@ from typing import List, overload
 import requests
 
 
-from . import me, urls
+from . import context, me, urls
 
 from .config import Config
 from .paginator import Paginator
@@ -70,14 +70,14 @@ class User(Resource):
         -------
             None
         """
-        _me = me.get(self.config, self.session)
+        _me = me.get(self.ctx)
         if _me.guid == self.guid and not force:
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior."
             )
-        url = urls.append(self.config.url, f"v1/users/{self.guid}/lock")
+        url = urls.append(self.ctx.url, f"v1/users/{self.guid}/lock")
         body = {"locked": True}
-        self.session.post(url, json=body)
+        self.ctx.session.post(url, json=body)
         super().update(locked=True)
 
     def unlock(self):
@@ -88,9 +88,9 @@ class User(Resource):
         -------
             None
         """
-        url = urls.append(self.config.url, f"v1/users/{self.guid}/lock")
+        url = urls.append(self.ctx.url, f"v1/users/{self.guid}/lock")
         body = {"locked": False}
-        self.session.post(url, json=body)
+        self.ctx.session.post(url, json=body)
         super().update(locked=False)
 
     @overload
@@ -146,16 +146,15 @@ class User(Resource):
             None
         """
         body = dict(*args, **kwargs)
-        url = urls.append(self.config.url, f"v1/users/{self.guid}")
-        response = self.session.put(url, json=body)
+        url = urls.append(self.ctx.url, f"v1/users/{self.guid}")
+        response = self.ctx.session.put(url, json=body)
         super().update(**response.json())
 
 
 class Users(Resources):
-    def __init__(self, config: Config, session: requests.Session) -> None:
-        self.url = urls.append(config.url, "v1/users")
-        self.config = config
-        self.session = session
+    def __init__(self, ctx: context.Context) -> None:
+        self.ctx = ctx
+        self.url = urls.append(ctx.url, "v1/users")
 
     @overload
     def find(
@@ -172,12 +171,11 @@ class Users(Resources):
 
     def find(self, *args, **kwargs):
         params = dict(*args, **kwargs)
-        paginator = Paginator(self.session, self.url, params=params)
+        paginator = Paginator(self.ctx, self.url, params=params)
         results = paginator.fetch_results()
         return [
             User(
-                config=self.config,
-                session=self.session,
+                self.ctx,
                 **user,
             )
             for user in results
@@ -198,13 +196,12 @@ class Users(Resources):
 
     def find_one(self, *args, **kwargs) -> User | None:
         params = dict(*args, **kwargs)
-        paginator = Paginator(self.session, self.url, params=params)
+        paginator = Paginator(self.ctx, self.url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (
             User(
-                config=self.config,
-                session=self.session,
+                self.ctx,
                 **result,
             )
             for result in results
@@ -212,16 +209,15 @@ class Users(Resources):
         return next(users, None)
 
     def get(self, id: str) -> User:
-        url = urls.append(self.config.url, f"v1/users/{id}")
-        response = self.session.get(url)
+        url = urls.append(self.ctx.url, f"v1/users/{id}")
+        response = self.ctx.session.get(url)
         return User(
-            config=self.config,
-            session=self.session,
+            self.ctx,
             **response.json(),
         )
 
     def count(self) -> int:
-        response: requests.Response = self.session.get(
+        response: requests.Response = self.ctx.session.get(
             self.url, params={"page_size": 1}
         )
         result: dict = response.json()

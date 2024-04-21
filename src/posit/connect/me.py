@@ -1,12 +1,9 @@
 import requests
 
-from . import urls
-
-from .config import Config
-from .users import User
+from . import context, urls, users
 
 
-def get(config: Config, session: requests.Session) -> User:
+def get(ctx: context.Context) -> users.User:
     """
     Gets the current user.
 
@@ -18,6 +15,6 @@ def get(config: Config, session: requests.Session) -> User:
     -------
         User: The current user.
     """
-    url = urls.append(config.url, "v1/user")
-    response = session.get(url)
-    return User(config, session, **response.json())
+    url = urls.append(ctx.url, "v1/user")
+    response = ctx.session.get(url)
+    return users.User(ctx, **response.json())

@@ -7,7 +7,7 @@ from typing import List, Optional, overload
 
 from requests import Session
 
-from . import urls
+from . import context, urls
 
 from .config import Config
 from .bundles import Bundles
@@ -22,11 +22,11 @@ class ContentItem(Resource):
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.config, self.session, self.guid)
+        return Bundles(self.ctx, self.guid)
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.config, self.session, self.guid)
+        return Permissions(self.ctx, self.guid)
 
     # Properties
 
@@ -215,8 +215,8 @@ class ContentItem(Resource):
     def delete(self) -> None:
         """Delete the content item."""
         path = f"v1/content/{self.guid}"
-        url = urls.append(self.config.url, path)
-        self.session.delete(url)
+        url = urls.append(self.ctx.url, path)
+        self.ctx.session.delete(url)
 
     @overload
     def update(
@@ -287,16 +287,15 @@ class ContentItem(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update the content item."""
         body = dict(*args, **kwargs)
-        url = urls.append(self.config.url, f"v1/content/{self.guid}")
-        response = self.session.patch(url, json=body)
+        url = urls.append(self.ctx.url, f"v1/content/{self.guid}")
+        response = self.ctx.session.patch(url, json=body)
         super().update(**response.json())
 
 
 class Content(Resources):
-    def __init__(self, config: Config, session: Session) -> None:
-        self.url = urls.append(config.url, "v1/content")
-        self.config = config
-        self.session = session
+    def __init__(self, ctx: context.Context) -> None:
+        super().__init__(ctx)
+        self.url = urls.append(ctx.url, "v1/content")
 
     def count(self) -> int:
         """Count the number of content items.
@@ -305,7 +304,7 @@ class Content(Resources):
         -------
         int
         """
-        results = self.session.get(self.url).json()
+        results = self.ctx.session.get(self.url).json()
         return len(results)
 
     @overload
@@ -390,9 +389,9 @@ class Content(Resources):
         """
         body = dict(*args, **kwargs)
         path = "v1/content"
-        url = urls.append(self.config.url, path)
-        response = self.session.post(url, json=body)
-        return ContentItem(self.config, self.session, **response.json())
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.post(url, json=body)
+        return ContentItem(self.ctx, **response.json())
 
     @overload
     def find(
@@ -450,16 +449,9 @@ class Content(Resources):
         List[ContentItem]
         """
         params = dict(*args, include=include, **kwargs)
-        response = self.session.get(self.url, params=params)
+        response = self.ctx.session.get(self.url, params=params)
         results = response.json()
-        items = (
-            ContentItem(
-                config=self.config,
-                session=self.session,
-                **result,
-            )
-            for result in results
-        )
+        items = (ContentItem(self.ctx, **result) for result in results)
         return [item for item in items]
 
     @overload
@@ -532,5 +524,5 @@ class Content(Resources):
         ContentItem
         """
         url = urls.append(self.url, guid)
-        response = self.session.get(url)
-        return ContentItem(self.config, self.session, **response.json())
+        response = self.ctx.session.get(url)
+        return ContentItem(self.ctx, **response.json())

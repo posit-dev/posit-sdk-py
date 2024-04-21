@@ -12,7 +12,6 @@ class TestUsageEventAttributes:
     def setup_class(cls):
         cls.event = UsageEvent(
             None,
-            None,
             **load_mock("v1/instrumentation/shiny/usage?limit=500.json")[
                 "results"
             ][0],
