@@ -31,11 +31,12 @@ build:
 
 # Target for cleaning up generated files and directories
 clean:
+	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
 	find . -name "*.egg-info" -exec rm -rf {} +
 	find . -name "*.pyc" -exec rm -f {} +
 	find . -name "__pycache__" -exec rm -rf {} +
 	find . -name "_version.py" -exec rm -rf {} +
-	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
+	find . -type d -empty -delete
 
 # Target for generating coverage report
 cov:
