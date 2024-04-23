@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from typing import List
+from typing import BinaryIO, List
 
 from requests.sessions import Session as Session
 
-from posit.connect.config import Config
 
-from . import urls
-
-from .resources import Resources, Resource
+from . import config, resources, urls
 
 
-class BundleMetadata(Resource):
+class BundleMetadata(resources.Resource):
     @property
     def source(self) -> str | None:
         return self.get("source")
@@ -37,7 +34,7 @@ class BundleMetadata(Resource):
         return self.get("archive_sha1")
 
 
-class Bundle(Resource):
+class Bundle(resources.Resource):
     @property
     def id(self) -> str:
         return self["id"]
@@ -99,13 +96,65 @@ class Bundle(Resource):
         url = urls.append(self.config.url, path)
         self.session.delete(url)
 
+    def download(self) -> bytes:
+        """Download a bundle.
 
-class Bundles(Resources):
+        Returns
+        -------
+        bytes
+            Archive contents in bytes representation.
+
+        Examples
+        --------
+        >>> with open('archive.tar.gz', 'wb') as file:
+        >>>     data = bundle.download()
+        >>>     file.write(data)
+        """
+        path = f"v1/content/{self.content_guid}/bundles/{self.id}/download"
+        url = urls.append(self.config.url, path)
+        response = self.session.get(url, stream=True)
+        return response.content
+
+
+class Bundles(resources.Resources):
     def __init__(
-        self, config: Config, session: Session, content_guid: str
+        self, config: config.Config, session: Session, content_guid: str
     ) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
+
+    def create(self, data: BinaryIO | bytes) -> Bundle:
+        """Create a bundle.
+
+        Create a bundle by upload via archive format.
+
+        Parameters
+        ----------
+        data : BinaryIO | bytes
+            Archive contents in BinaryIO or bytes representation.
+
+        Returns
+        -------
+        Bundle
+
+        Examples
+        --------
+        Create a bundle using a file object.
+
+        >>> with open('bundle.tar.gz', 'rb') as file:
+        >>>     bundle.create(file)
+
+        Create a bundle using bytes.
+
+        >>> with open('bundle.tar.gz', 'rb') as file:
+        >>>     data = file.read()
+        >>>     bundle.create(data)
+        """
+        path = f"v1/content/{self.content_guid}/bundles"
+        url = urls.append(self.config.url, path)
+        response = self.session.post(url, data=data)
+        result = response.json()
+        return Bundle(self.config, self.session, **result)
 
     def find(self) -> List[Bundle]:
         path = f"v1/content/{self.content_guid}/bundles"

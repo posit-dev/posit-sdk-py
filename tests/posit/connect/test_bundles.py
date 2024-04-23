@@ -1,11 +1,13 @@
 import requests
 import responses
 
+from responses import matchers
+
 from posit.connect import Client
 from posit.connect.config import Config
 from posit.connect.bundles import Bundle
 
-from .api import load_mock  # type: ignore
+from .api import load_mock, get_path  # type: ignore
 
 
 class TestBundleProperties:
@@ -117,6 +119,83 @@ class TestBundleDelete:
         assert mock_content_get.call_count == 1
         assert mock_bundle_get.call_count == 1
         assert mock_bundle_delete.call_count == 1
+
+
+class TestBundleDownload:
+    @responses.activate
+    def test(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        bundle_id = "101"
+        path = get_path(
+            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
+        )
+
+        # behavior
+        mock_content_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_bundle_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
+            json=load_mock(
+                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
+            ),
+        )
+
+        mock_bundle_download = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}/download",
+            body=path.read_bytes(),
+        )
+
+        # setup
+        c = Client("12345", "https://connect.example")
+        bundle = c.content.get(content_guid).bundles.get(bundle_id)
+
+        # invoke
+        data = bundle.download()
+
+        # assert
+        assert mock_content_get.call_count == 1
+        assert mock_bundle_get.call_count == 1
+        assert mock_bundle_download.call_count == 1
+        assert data == path.read_bytes()
+
+
+class TestBundlesCreate:
+    @responses.activate
+    def test(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        bundle_id = "101"
+        path = get_path(
+            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
+        )
+
+        # behavior
+        mock_content_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_bundle_post = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles",
+            json=load_mock(
+                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
+            ),
+        )
+
+        # setup
+        c = Client("12345", "https://connect.example")
+        content = c.content.get(content_guid)
+
+        # invoke
+        data = path.read_bytes()
+        bundle = content.bundles.create(data)
+
+        # # assert
+        assert bundle.id == "101"
+        assert mock_content_get.call_count == 1
+        assert mock_bundle_post.call_count == 1
 
 
 class TestBundlesFind:
