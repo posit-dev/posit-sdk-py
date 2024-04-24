@@ -5,15 +5,15 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import hooks, me, urls
+from . import config, hooks, me, metrics, urls
 
 from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
-from .usage import Usage
+from .metrics.usage import Usage
 from .users import User, Users
-from .visits import Visits
+from .metrics.visits import Visits
 
 
 class Client:
@@ -98,12 +98,30 @@ class Client:
         return Content(config=self.config, session=self.session)
 
     @property
-    def usage(self) -> Usage:
-        return Usage(self.config, self.session)
+    def metrics(self) -> metrics.Metrics:
+        """The Metrics API interface.
 
-    @property
-    def visits(self) -> Visits:
-        return Visits(self.config, self.session)
+        The Metrics API is designed for capturing, retrieving, and managing
+        quantitative measurements of Connect interactions. It is commonly used
+        for monitoring and analyzing system performance, user behavior, and
+        business processes. This API facilitates real-time data collection and
+        accessibility, enabling organizations to make informed decisions based
+        on key performance indicators (KPIs).
+
+        Returns
+        -------
+        metrics.Metrics
+
+        Examples
+        --------
+        >>> from posit import connect
+        >>> client = connect.Client()
+        >>> content_guid = "2243770d-ace0-4782-87f9-fe2aeca14fc8"
+        >>> view_events = client.metrics.views.find(content_guid=content_guid)
+        >>> len(view_events)
+        24
+        """
+        return metrics.Metrics(self.config, self.session)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import List, overload
 
-from . import urls
+from .. import urls
 
-from .cursors import CursorPaginator
-from .resources import Resource, Resources
+from ..cursors import CursorPaginator
+from ..resources import Resource, Resources
 
 
-class Visit(Resource):
+class UsageEvent(Resource):
     @property
     def content_guid(self) -> str:
         """The associated unique content identifier.
@@ -30,46 +30,24 @@ class Visit(Resource):
         return self["user_guid"]
 
     @property
-    def rendering_id(self) -> int | None:
-        """The render id associated with the visit.
-
-        Returns
-        -------
-        int | None
-            The render id, or None if the associated content type is static.
-        """
-        return self["rendering_id"]
-
-    @property
-    def bundle_id(self) -> int:
-        """The bundle id associated with the visit.
-
-        Returns
-        -------
-        int
-        """
-        return self["bundle_id"]
-
-    @property
-    def variant_key(self) -> str | None:
-        """The variant key associated with the visit.
-
-        Returns
-        -------
-        str | None
-            The variant key, or None if the associated content type is static.
-        """
-        return self.get("variant_key")
-
-    @property
-    def time(self) -> str:
-        """The visit timestamp.
+    def started(self) -> str:
+        """The started timestamp.
 
         Returns
         -------
         str
         """
-        return self["time"]
+        return self["started"]
+
+    @property
+    def ended(self) -> str:
+        """The ended timestamp.
+
+        Returns
+        -------
+        str
+        """
+        return self["ended"]
 
     @property
     def data_version(self) -> int:
@@ -81,18 +59,8 @@ class Visit(Resource):
         """
         return self["data_version"]
 
-    @property
-    def path(self) -> str:
-        """The path requested by the user.
 
-        Returns
-        -------
-        str
-        """
-        return self["path"]
-
-
-class Visits(Resources):
+class Usage(Resources):
     @overload
     def find(
         self,
@@ -100,8 +68,8 @@ class Visits(Resources):
         min_data_version: int = ...,
         start: str = ...,
         end: str = ...,
-    ) -> List[Visit]:
-        """Find visits.
+    ) -> List[UsageEvent]:
+        """Find usage.
 
         Parameters
         ----------
@@ -116,36 +84,36 @@ class Visits(Resources):
 
         Returns
         -------
-        List[Visit]
+        List[UsageEvent]
         """
         ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[Visit]:
-        """Find visits.
+    def find(self, *args, **kwargs) -> List[UsageEvent]:
+        """Find usage.
 
         Returns
         -------
-        List[Visit]
+        List[UsageEvent]
         """
         ...
 
-    def find(self, *args, **kwargs) -> List[Visit]:
-        """Find visits.
+    def find(self, *args, **kwargs) -> List[UsageEvent]:
+        """Find usage.
 
         Returns
         -------
-        List[Visit]
+        List[UsageEvent]
         """
         params = dict(*args, **kwargs)
         params = rename_params(params)
 
-        path = "/v1/instrumentation/content/visits"
+        path = "/v1/instrumentation/shiny/usage"
         url = urls.append(self.config.url, path)
         paginator = CursorPaginator(self.session, url, params=params)
         results = paginator.fetch_results()
         return [
-            Visit(
+            UsageEvent(
                 config=self.config,
                 session=self.session,
                 **result,
@@ -160,8 +128,8 @@ class Visits(Resources):
         min_data_version: int = ...,
         start: str = ...,
         end: str = ...,
-    ) -> Visit | None:
-        """Find a visit.
+    ) -> UsageEvent | None:
+        """Find a usage event.
 
         Parameters
         ----------
@@ -176,37 +144,36 @@ class Visits(Resources):
 
         Returns
         -------
-        Visit | None
-            _description_
+        UsageEvent | None
         """
         ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> Visit | None:
-        """Find a visit.
+    def find_one(self, *args, **kwargs) -> UsageEvent | None:
+        """Find a usage event.
 
         Returns
         -------
-        Visit | None
+        UsageEvent | None
         """
         ...
 
-    def find_one(self, *args, **kwargs) -> Visit | None:
-        """Find a visit.
+    def find_one(self, *args, **kwargs) -> UsageEvent | None:
+        """Find a usage event.
 
         Returns
         -------
-        Visit | None
+        UsageEvent | None
         """
         params = dict(*args, **kwargs)
         params = rename_params(params)
-        path = "/v1/instrumentation/content/visits"
+        path = "/v1/instrumentation/shiny/usage"
         url = urls.append(self.config.url, path)
         paginator = CursorPaginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         visits = (
-            Visit(
+            UsageEvent(
                 config=self.config,
                 session=self.session,
                 **result,
