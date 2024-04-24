@@ -1,9 +1,9 @@
 from __future__ import annotations
+import io
 
-from typing import BinaryIO, List
+import requests
 
-from requests.sessions import Session as Session
-
+from typing import List
 
 from . import config, resources, urls
 
@@ -96,60 +96,109 @@ class Bundle(resources.Resource):
         url = urls.append(self.config.url, path)
         self.session.delete(url)
 
-    def download(self) -> bytes:
+    def download(self, output: io.BufferedWriter | str):
         """Download a bundle.
 
-        Returns
-        -------
-        bytes
-            Archive contents in bytes representation.
+        Download a bundle to a file or memory.
+
+        Parameters
+        ----------
+        output: io.BufferedWriter | str
+            An io.BufferedWriter instance or a str representing a relative or absolute path.
+
+        Raises
+        ------
+        TypeError
+            If the output is not of type `io.BufferedWriter` or `str`.
 
         Examples
         --------
-        >>> with open('archive.tar.gz', 'wb') as file:
-        >>>     data = bundle.download()
-        >>>     file.write(data)
+        Write to a file.
+        >>> bundle.download("bundle.tar.gz")
+        None
+
+        Write to an io.BufferedWriter.
+        >>> with open('bundle.tar.gz', 'wb') as file:
+        >>>     bundle.download(file)
+        None
         """
+        if not isinstance(output, (io.BufferedWriter, str)):
+            raise TypeError(
+                f"download() expected argument type 'io.BufferedWriter` or 'str', but got '{type(input).__name__}'"
+            )
+
         path = f"v1/content/{self.content_guid}/bundles/{self.id}/download"
         url = urls.append(self.config.url, path)
         response = self.session.get(url, stream=True)
-        return response.content
+        if isinstance(output, io.BufferedWriter):
+            for chunk in response.iter_content():
+                output.write(chunk)
+            return
+
+        if isinstance(output, str):
+            with open(output, "wb") as file:
+                for chunk in response.iter_content():
+                    file.write(chunk)
+            return
 
 
 class Bundles(resources.Resources):
     def __init__(
-        self, config: config.Config, session: Session, content_guid: str
+        self,
+        config: config.Config,
+        session: requests.Session,
+        content_guid: str,
     ) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
 
-    def create(self, data: BinaryIO | bytes) -> Bundle:
+    def create(self, input: io.BufferedReader | bytes | str) -> Bundle:
         """Create a bundle.
 
-        Create a bundle by upload via archive format.
+        Create a bundle from a file or memory.
 
         Parameters
         ----------
-        data : BinaryIO | bytes
-            Archive contents in BinaryIO or bytes representation.
+        input : io.BufferedReader | bytes | str
+            Input archive for bundle creation. A 'str' type assumes a relative or absolute filepath.
 
         Returns
         -------
         Bundle
+            The created bundle.
+
+        Raises
+        ------
+        TypeError
+            If the input is not of type `io.BufferedReader`, `bytes`, or `str`.
 
         Examples
         --------
-        Create a bundle using a file object.
-
+        Create a bundle from io.BufferedReader
         >>> with open('bundle.tar.gz', 'rb') as file:
         >>>     bundle.create(file)
+        None
 
-        Create a bundle using bytes.
-
+        Create a bundle from bytes.
         >>> with open('bundle.tar.gz', 'rb') as file:
-        >>>     data = file.read()
+        >>>     data: bytes = file.read()
         >>>     bundle.create(data)
+        None
+
+        Create a bundle from pathname.
+        >>> bundle.create("bundle.tar.gz")
+        None
         """
+        if isinstance(input, (io.BufferedReader, bytes)):
+            data = input
+        elif isinstance(input, str):
+            with open(input, "rb") as file:
+                data = file.read()
+        else:
+            raise TypeError(
+                f"create() expected argument type 'io.BufferedReader', 'bytes', or 'str', but got '{type(input).__name__}'"
+            )
+
         path = f"v1/content/{self.content_guid}/bundles"
         url = urls.append(self.config.url, path)
         response = self.session.post(url, data=data)
