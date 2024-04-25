@@ -7,7 +7,7 @@ from typing import List, Optional, overload
 
 from requests import Session
 
-from . import urls
+from . import tasks, urls
 
 from .config import Config
 from .bundles import Bundles
@@ -217,6 +217,21 @@ class ContentItem(Resource):
         path = f"v1/content/{self.guid}"
         url = urls.append(self.config.url, path)
         self.session.delete(url)
+
+    def deploy(self) -> tasks.Task:
+        """Deploy the content.
+
+        Returns
+        -------
+        tasks.Task
+            The task for the deployment.
+        """
+        path = f"v1/content/{self.guid}/deploy"
+        url = urls.append(self.config.url, path)
+        response = self.session.post(url, json={"bundle_id": None})
+        result = response.json()
+        ts = tasks.Tasks(self.config, self.session)
+        return ts.get(result["task_id"])
 
     @overload
     def update(
