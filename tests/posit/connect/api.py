@@ -29,3 +29,7 @@ def load_mock(path: str) -> dict:
     >>> data = load_mock("v1/example.jsonc")
     """
     return json.loads((Path(__file__).parent / "__api__" / path).read_text())
+
+
+def get_path(path: str) -> Path:
+    return Path(__file__).parent / "__api__" / path
