@@ -3,7 +3,7 @@ import io
 
 import requests
 
-from typing import BinaryIO, List
+from typing import List
 
 from . import config, resources, tasks, urls
 
