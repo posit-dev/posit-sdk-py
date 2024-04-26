@@ -128,25 +128,16 @@ class Task(resources.Resource):
         result = response.json()
         super().update(**result)
 
-    def wait_for(self, sleep: int = 1) -> None:
+    def wait_for(self) -> None:
         """Wait for the task to finish.
-
-        Parameters
-        ----------
-        sleep : int, optional
-            Maximum number of seconds to wait between status checks.
 
         Examples
         --------
         >>> task.wait_for()
         None
-
-        Wait five seconds between status checks.
-        >>> task.wait_for(5)
-        None
         """
         while not self.is_finished:
-            self.update(wait=sleep)
+            self.update()
 
 
 class Tasks(resources.Resources):
