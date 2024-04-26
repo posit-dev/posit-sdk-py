@@ -112,7 +112,7 @@ class Task(resources.Resource):
         Parameters
         ----------
         sleep : int, optional
-            Maximum number of seconds to wait between task status checks.
+            Maximum number of seconds to wait between status checks.
         """
         while not self.is_finished:
             self.update(wait=sleep)

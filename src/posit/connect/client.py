@@ -5,7 +5,7 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import config, hooks, me, metrics, urls
+from . import config, hooks, me, metrics, tasks, urls
 
 from .auth import Auth
 from .config import Config
@@ -76,6 +76,16 @@ class Client:
         OAuthIntegration
         """
         return OAuthIntegration(config=self.config, session=self.session)
+
+    @property
+    def tasks(self) -> tasks.Tasks:
+        """The tasks resource interface.
+
+        Returns
+        -------
+        tasks.Tasks
+        """
+        return tasks.Tasks(self.config, self.session)
 
     @property
     def users(self) -> Users:

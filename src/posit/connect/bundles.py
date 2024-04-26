@@ -99,10 +99,18 @@ class Bundle(resources.Resource):
     def deploy(self) -> tasks.Task:
         """Deploy the bundle.
 
+        Spawns an asynchronous task, which activates the bundle.
+
         Returns
         -------
         tasks.Task
             The task for the deployment.
+
+        Examples
+        --------
+        >>> task = bundle.deploy()
+        >>> task.wait_for()
+        None
         """
         path = f"v1/content/{self.content_guid}/deploy"
         url = urls.append(self.config.url, path)

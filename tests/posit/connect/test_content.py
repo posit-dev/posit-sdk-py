@@ -188,6 +188,44 @@ class TestContentItemDelete:
         assert mock_delete.call_count == 1
 
 
+class TestContentDeploy:
+    @responses.activate
+    def test(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        bundle_id = "101"
+        task_id = "jXhOhdm5OOSkGhJw"
+
+        # behavior
+        mock_content_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_content_deploy = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/deploy",
+            match=[matchers.json_params_matcher({"bundle_id": None})],
+            json={"task_id": task_id},
+        )
+
+        mock_tasks_get = responses.get(
+            f"https://connect.example/__api__/v1/tasks/{task_id}",
+            json=load_mock(f"v1/tasks/{task_id}.json"),
+        )
+
+        # setup
+        c = Client("12345", "https://connect.example")
+        content = c.content.get(content_guid)
+
+        # invoke
+        task = content.deploy()
+
+        # assert
+        task.id == task_id
+        assert mock_content_get.call_count == 1
+        assert mock_content_deploy.call_count == 1
+        assert mock_tasks_get.call_count == 1
+
+
 class TestContentUpdate:
     @responses.activate
     def test_update(self):

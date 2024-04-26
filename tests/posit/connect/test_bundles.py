@@ -4,6 +4,7 @@ import pytest
 import requests
 import responses
 
+from responses import matchers
 from unittest import mock
 
 from posit.connect import Client
@@ -122,6 +123,52 @@ class TestBundleDelete:
         assert mock_content_get.call_count == 1
         assert mock_bundle_get.call_count == 1
         assert mock_bundle_delete.call_count == 1
+
+
+class TestBundleDeploy:
+    @responses.activate
+    def test(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        bundle_id = "101"
+        task_id = "jXhOhdm5OOSkGhJw"
+
+        # behavior
+        mock_content_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_bundle_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
+            json=load_mock(
+                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
+            ),
+        )
+
+        mock_bundle_deploy = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/deploy",
+            match=[matchers.json_params_matcher({"bundle_id": bundle_id})],
+            json={"task_id": task_id},
+        )
+
+        mock_tasks_get = responses.get(
+            f"https://connect.example/__api__/v1/tasks/{task_id}",
+            json=load_mock(f"v1/tasks/{task_id}.json"),
+        )
+
+        # setup
+        c = Client("12345", "https://connect.example")
+        bundle = c.content.get(content_guid).bundles.get(bundle_id)
+
+        # invoke
+        task = bundle.deploy()
+
+        # assert
+        task.id == task_id
+        assert mock_content_get.call_count == 1
+        assert mock_bundle_get.call_count == 1
+        assert mock_bundle_deploy.call_count == 1
+        assert mock_tasks_get.call_count == 1
 
 
 class TestBundleDownload:
