@@ -98,7 +98,29 @@ class Task(resources.Resource):
         ...
 
     def update(self, *args, **kwargs) -> None:
-        """Update the task."""
+        """Update the task.
+
+        See Also
+        --------
+        task.wait_for : Wait for the task to complete.
+
+        Notes
+        -----
+        When waiting for a task to complete, one should consider utilizing `task.wait_for`.
+
+        Examples
+        --------
+        >>> task.output
+        [
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+        ]
+        >>> task.update()
+        >>> task.output
+        [
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "Pretium aenean pharetra magna ac placerat vestibulum lectus mauris."
+        ]
+        """
         params = dict(*args, **kwargs)
         path = f"v1/tasks/{self.id}"
         url = urls.append(self.config.url, path)
@@ -113,6 +135,15 @@ class Task(resources.Resource):
         ----------
         sleep : int, optional
             Maximum number of seconds to wait between status checks.
+
+        Examples
+        --------
+        >>> task.wait_for()
+        None
+
+        Wait five seconds between status checks.
+        >>> task.wait_for(5)
+        None
         """
         while not self.is_finished:
             self.update(wait=sleep)

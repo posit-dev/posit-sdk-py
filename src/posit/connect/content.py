@@ -221,10 +221,18 @@ class ContentItem(Resource):
     def deploy(self) -> tasks.Task:
         """Deploy the content.
 
+        Spawns an asynchronous task, which activates the latest bundle.
+
         Returns
         -------
         tasks.Task
             The task for the deployment.
+
+        Examples
+        --------
+        >>> task = content.deploy()
+        >>> task.wait_for()
+        None
         """
         path = f"v1/content/{self.guid}/deploy"
         url = urls.append(self.config.url, path)
