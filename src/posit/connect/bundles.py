@@ -5,7 +5,7 @@ import requests
 
 from typing import List
 
-from . import config, resources, urls
+from . import config, resources, tasks, urls
 
 
 class BundleMetadata(resources.Resource):
@@ -95,6 +95,29 @@ class Bundle(resources.Resource):
         path = f"v1/content/{self.content_guid}/bundles/{self.id}"
         url = urls.append(self.config.url, path)
         self.session.delete(url)
+
+    def deploy(self) -> tasks.Task:
+        """Deploy the bundle.
+
+        Spawns an asynchronous task, which activates the bundle.
+
+        Returns
+        -------
+        tasks.Task
+            The task for the deployment.
+
+        Examples
+        --------
+        >>> task = bundle.deploy()
+        >>> task.wait_for()
+        None
+        """
+        path = f"v1/content/{self.content_guid}/deploy"
+        url = urls.append(self.config.url, path)
+        response = self.session.post(url, json={"bundle_id": self.id})
+        result = response.json()
+        ts = tasks.Tasks(self.config, self.session)
+        return ts.get(result["task_id"])
 
     def download(self, output: io.BufferedWriter | str):
         """Download a bundle.
