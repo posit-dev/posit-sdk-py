@@ -1,9 +1,9 @@
 from .. import resources
 
-from . import views
+from . import usage
 
 
 class Metrics(resources.Resources):
     @property
-    def views(self) -> views.Views:
-        return views.Views(self.config, self.session)
+    def usage(self) -> usage.Usage:
+        return usage.Usage(self.config, self.session)
