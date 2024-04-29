@@ -11,7 +11,7 @@ from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
-from .metrics.usage import Usage
+from .metrics.shiny_usage import ShinyUsage
 from .users import User, Users
 from .metrics.visits import Visits
 
@@ -127,8 +127,8 @@ class Client:
         >>> from posit import connect
         >>> client = connect.Client()
         >>> content_guid = "2243770d-ace0-4782-87f9-fe2aeca14fc8"
-        >>> view_events = client.metrics.views.find(content_guid=content_guid)
-        >>> len(view_events)
+        >>> events = client.metrics.usage.find(content_guid=content_guid)
+        >>> len(events)
         24
         """
         return metrics.Metrics(self.config, self.session)

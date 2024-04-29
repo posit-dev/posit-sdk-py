@@ -1,14 +1,66 @@
 from __future__ import annotations
 
+import itertools
+
 from typing import List, overload
 
-from .. import urls
+from requests.sessions import Session as Session
 
-from ..cursors import CursorPaginator
-from ..resources import Resource, Resources
+from . import shiny_usage, visits
+
+from .. import resources
 
 
-class UsageEvent(Resource):
+class UsageEvent(resources.Resource):
+    @staticmethod
+    def from_event(
+        event: visits.VisitEvent | shiny_usage.ShinyUsageEvent,
+    ) -> UsageEvent:
+        if type(event) == visits.VisitEvent:
+            return UsageEvent.from_visit_event(event)
+
+        if type(event) == shiny_usage.ShinyUsageEvent:
+            return UsageEvent.from_shiny_usage_event(event)
+
+        raise TypeError
+
+    @staticmethod
+    def from_visit_event(event: visits.VisitEvent) -> UsageEvent:
+        return UsageEvent(
+            event.config,
+            event.session,
+            content_guid=event.content_guid,
+            user_guid=event.user_guid,
+            variant_key=event.variant_key,
+            rendering_id=event.rendering_id,
+            bundle_id=event.bundle_id,
+            started=event.time,
+            ended=event.time,
+            data_version=event.data_version,
+            path=event.path,
+        )
+
+    @staticmethod
+    def from_shiny_usage_event(
+        event: shiny_usage.ShinyUsageEvent,
+    ) -> UsageEvent:
+        return UsageEvent(
+            event.config,
+            event.session,
+            content_guid=event.content_guid,
+            user_guid=event.user_guid,
+            variant_key=None,
+            rendering_id=None,
+            bundle_id=None,
+            started=event.started,
+            ended=event.ended,
+            data_version=event.data_version,
+            path=None,
+        )
+
+    def __init__(self, config: resources.Config, session: Session, **kwargs):
+        super().__init__(config, session, **kwargs)
+
     @property
     def content_guid(self) -> str:
         """The associated unique content identifier.
@@ -30,8 +82,40 @@ class UsageEvent(Resource):
         return self["user_guid"]
 
     @property
+    def variant_key(self) -> str | None:
+        """The variant key associated with the visit.
+
+        Returns
+        -------
+        str | None
+            The variant key, or None if the associated content type is static.
+        """
+        return self["variant_key"]
+
+    @property
+    def rendering_id(self) -> int | None:
+        """The render id associated with the visit.
+
+        Returns
+        -------
+        int | None
+            The render id, or None if the associated content type is static.
+        """
+        return self["rendering_id"]
+
+    @property
+    def bundle_id(self) -> int | None:
+        """The bundle id associated with the visit.
+
+        Returns
+        -------
+        int
+        """
+        return self["bundle_id"]
+
+    @property
     def started(self) -> str:
-        """The started timestamp.
+        """The visit timestamp.
 
         Returns
         -------
@@ -41,7 +125,7 @@ class UsageEvent(Resource):
 
     @property
     def ended(self) -> str:
-        """The ended timestamp.
+        """The visit timestamp.
 
         Returns
         -------
@@ -59,8 +143,18 @@ class UsageEvent(Resource):
         """
         return self["data_version"]
 
+    @property
+    def path(self) -> str | None:
+        """The path requested by the user.
 
-class Usage(Resources):
+        Returns
+        -------
+        str
+        """
+        return self["path"]
+
+
+class Usage(resources.Resources):
     @overload
     def find(
         self,
@@ -69,7 +163,7 @@ class Usage(Resources):
         start: str = ...,
         end: str = ...,
     ) -> List[UsageEvent]:
-        """Find usage.
+        """Find view events.
 
         Parameters
         ----------
@@ -90,7 +184,7 @@ class Usage(Resources):
 
     @overload
     def find(self, *args, **kwargs) -> List[UsageEvent]:
-        """Find usage.
+        """Find view events.
 
         Returns
         -------
@@ -99,27 +193,23 @@ class Usage(Resources):
         ...
 
     def find(self, *args, **kwargs) -> List[UsageEvent]:
-        """Find usage.
+        """Find view events.
 
         Returns
         -------
         List[UsageEvent]
         """
-        params = dict(*args, **kwargs)
-        params = rename_params(params)
-
-        path = "/v1/instrumentation/shiny/usage"
-        url = urls.append(self.config.url, path)
-        paginator = CursorPaginator(self.session, url, params=params)
-        results = paginator.fetch_results()
-        return [
-            UsageEvent(
-                config=self.config,
-                session=self.session,
-                **result,
+        events = []
+        finders = (visits.Visits, shiny_usage.ShinyUsage)
+        for finder in finders:
+            instance = finder(self.config, self.session)
+            events.extend(
+                [
+                    UsageEvent.from_event(event)
+                    for event in instance.find(*args, **kwargs)  # type: ignore[attr-defined]
+                ]
             )
-            for result in results
-        ]
+        return events
 
     @overload
     def find_one(
@@ -129,7 +219,7 @@ class Usage(Resources):
         start: str = ...,
         end: str = ...,
     ) -> UsageEvent | None:
-        """Find a usage event.
+        """Find a view event.
 
         Parameters
         ----------
@@ -144,64 +234,31 @@ class Usage(Resources):
 
         Returns
         -------
-        UsageEvent | None
+        Visit | None
         """
         ...
 
     @overload
     def find_one(self, *args, **kwargs) -> UsageEvent | None:
-        """Find a usage event.
+        """Find a view event.
 
         Returns
         -------
-        UsageEvent | None
+        Visit | None
         """
         ...
 
     def find_one(self, *args, **kwargs) -> UsageEvent | None:
-        """Find a usage event.
+        """Find a view event.
 
         Returns
         -------
         UsageEvent | None
         """
-        params = dict(*args, **kwargs)
-        params = rename_params(params)
-        path = "/v1/instrumentation/shiny/usage"
-        url = urls.append(self.config.url, path)
-        paginator = CursorPaginator(self.session, url, params=params)
-        pages = paginator.fetch_pages()
-        results = (result for page in pages for result in page.results)
-        visits = (
-            UsageEvent(
-                config=self.config,
-                session=self.session,
-                **result,
-            )
-            for result in results
-        )
-        return next(visits, None)
-
-
-def rename_params(params: dict) -> dict:
-    """Rename params from the internal to the external signature.
-
-    The API accepts `from` as a querystring parameter. Since `from` is a reserved word in Python, the SDK uses the name `start` instead. The querystring parameter `to` takes the same form for consistency.
-
-    Parameters
-    ----------
-    params : dict
-
-    Returns
-    -------
-    dict
-    """
-    if "start" in params:
-        params["from"] = params["start"]
-        del params["start"]
-
-    if "end" in params:
-        params["to"] = params["end"]
-        del params["end"]
-
-    return params
+        finders = (visits.Visits, shiny_usage.ShinyUsage)
+        for finder in finders:
+            instance = finder(self.config, self.session)
+            event = instance.find_one(*args, **kwargs)  # type: ignore[attr-defined]
+            if event:
+                return UsageEvent.from_event(event)
+        return None
