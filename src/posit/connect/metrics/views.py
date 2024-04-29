@@ -45,9 +45,13 @@ class ViewEvent(resources.Resource):
             event.session,
             content_guid=event.content_guid,
             user_guid=event.user_guid,
+            variant_key=None,
+            rendering_id=None,
+            bundle_id=None,
             started=event.started,
             ended=event.ended,
             data_version=event.data_version,
+            path=None,
         )
 
     def __init__(self, config: resources.Config, session: Session, **kwargs):
@@ -82,7 +86,7 @@ class ViewEvent(resources.Resource):
         str | None
             The variant key, or None if the associated content type is static.
         """
-        return self.get("variant_key")
+        return self["variant_key"]
 
     @property
     def rendering_id(self) -> int | None:
@@ -93,7 +97,7 @@ class ViewEvent(resources.Resource):
         int | None
             The render id, or None if the associated content type is static.
         """
-        return self.get("rendering_id")
+        return self["rendering_id"]
 
     @property
     def bundle_id(self) -> int | None:
@@ -103,7 +107,7 @@ class ViewEvent(resources.Resource):
         -------
         int
         """
-        return self.get("bundle_id")
+        return self["bundle_id"]
 
     @property
     def started(self) -> str:
@@ -143,7 +147,7 @@ class ViewEvent(resources.Resource):
         -------
         str
         """
-        return self.get("path")
+        return self["path"]
 
 
 class Views(resources.Resources):
