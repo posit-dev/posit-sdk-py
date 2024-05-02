@@ -15,6 +15,26 @@ from .permissions import Permissions
 from .resources import Resources, Resource
 
 
+class ContentItemOwner(Resource):
+    """The owner of a piece of content."""
+
+    @property
+    def guid(self) -> str:
+        return self.get("guid")  # type: ignore
+
+    @property
+    def username(self) -> str:
+        return self.get("username")  # type: ignore
+
+    @property
+    def first_name(self) -> Optional[str]:
+        return self.get("first_name")  # type: ignore
+
+    @property
+    def last_name(self) -> Optional[str]:
+        return self.get("last_name")  # type: ignore
+
+
 class ContentItem(Resource):
     """A piece of content."""
 
@@ -191,7 +211,7 @@ class ContentItem(Resource):
         return self.get("owner_guid")  # type: ignore
 
     @property
-    def owner(self) -> str:
+    def owner(self) -> ContentItemOwner:
         return self.get("owner", {})  # type: ignore
 
     @property
