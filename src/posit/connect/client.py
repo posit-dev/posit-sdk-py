@@ -5,15 +5,13 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import config, hooks, me, metrics, tasks, urls
+from . import hooks, me, metrics, tasks, urls
 
 from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
-from .metrics.shiny_usage import ShinyUsage
 from .users import User, Users
-from .metrics.visits import Visits
 
 
 class Client:
@@ -37,6 +35,8 @@ class Client:
         session = Session()
         # Authenticate the session using the provided Config.
         session.auth = Auth(config=self.config)
+        # Add hook for checking for deprecation warnings.
+        session.hooks["response"].append(hooks.check_for_deprecation_header)
         # Add error handling hooks to the session.
         session.hooks["response"].append(hooks.handle_errors)
 

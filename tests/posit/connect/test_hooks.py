@@ -1,10 +1,12 @@
 import io
 
 import pytest
+import responses
 
 from requests import HTTPError, Response
 from unittest.mock import Mock, patch
 
+from posit.connect import Client
 from posit.connect.errors import ClientError
 from posit.connect.hooks import handle_errors
 
@@ -64,3 +66,14 @@ def test_response_client_error_without_payload():
     response.raw = io.BytesIO(b"Plain text 404 Not Found")
     with pytest.raises(HTTPError):
         handle_errors(response)
+
+
+@responses.activate
+def test_deprecation_warning():
+    responses.get(
+        "https://connect.example/__api__/v0", headers={"X-Deprecated-Endpoint": "v1/"}
+    )
+    c = Client("12345", "https://connect.example")
+
+    with pytest.warns(DeprecationWarning):
+        c.get("v0")
