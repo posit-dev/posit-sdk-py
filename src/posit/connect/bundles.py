@@ -1,3 +1,5 @@
+"""Bundle resource interface."""
+
 from __future__ import annotations
 import io
 
@@ -9,6 +11,8 @@ from . import config, resources, tasks, urls
 
 
 class BundleMetadata(resources.Resource):
+    """Bundle metadata interface."""
+
     @property
     def source(self) -> str | None:
         return self.get("source")
@@ -35,6 +39,8 @@ class BundleMetadata(resources.Resource):
 
 
 class Bundle(resources.Resource):
+    """Bundle interface."""
+
     @property
     def id(self) -> str:
         return self["id"]

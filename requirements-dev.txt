@@ -5,6 +5,7 @@ pandas
 pre-commit
 pyjson5
 pytest
+quartodoc
 responses
 ruff
 setuptools

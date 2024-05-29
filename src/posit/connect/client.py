@@ -15,7 +15,7 @@ from .users import User, Users
 
 
 class Client:
-    """Main interface for Posit Connect."""
+    """Posit Connect."""
 
     def __init__(
         self,

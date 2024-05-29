@@ -13,20 +13,7 @@ else
 PIP := pip3
 endif
 
-.PHONY:
-	build
-	clean
-	cov
-	default
-	deps
-	dev
-	fmt
-	fix
-	install
-	lint
-	test
-	uninstall
-	version
+.PHONY: build clean cov default deps dev docs fmt fix install lint test uninstall version
 
 # Default target that runs the necessary steps to build the project
 all: deps dev test lint build
@@ -63,6 +50,10 @@ deps:
 # Target for installing the project in editable mode
 dev:
 	$(PIP) install -e .
+
+# Build documentation.
+docs:
+	$(MAKE) -C ./docs build
 
 # Target for fixing linting issues.
 fix:

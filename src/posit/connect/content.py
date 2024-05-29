@@ -1,4 +1,4 @@
-"""Provides the Content resource interface."""
+"""Content resource interface."""
 
 from __future__ import annotations
 

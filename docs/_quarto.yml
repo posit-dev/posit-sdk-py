@@ -1,0 +1,50 @@
+project:
+  type: website
+
+website:
+  title: "Posit SDK"
+  navbar:
+    left:
+      - text: Installation
+        file: installation.qmd
+      - text: Quick Start
+        file: quickstart.qmd
+      - text: Reference
+        file: reference/index.qmd
+
+filters:
+  - interlinks
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+
+quartodoc:
+  title: API Reference
+  style: pkgdown
+  dir: reference
+  package: posit
+  dynamic: true
+  render_interlinks: true
+  options:
+      include_attributes: true
+      include_empty: true
+      include_classes: true
+      include_functions: true
+  sections:
+    - title: Clients
+      desc: >
+        The `Client` is the pythonic interface for Posit Product APIs. Initialize a `Client` to get started utilizing the SDK.
+      contents:
+        - connect.Client
+    - title: Posit Connect
+      package: posit.connect
+      contents:
+        - bundles
+        - content
+        - metrics
+        - permissions
+        - tasks
+        - users
