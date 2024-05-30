@@ -19,7 +19,7 @@ clean:
 	find . -type d -empty -delete
 
 deps:
-	quarto add --no-prompt machow/quartodoc
+	$(QUARTO) add --no-prompt machow/quartodoc
 
 preview:
 	$(QUARTODOC) build
