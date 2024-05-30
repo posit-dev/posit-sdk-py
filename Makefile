@@ -4,8 +4,14 @@
 NAME := posit-sdk
 
 # Command aliases
-PIP := pip3
 PYTHON := python3
+
+# Check if 'uv' is available
+ifneq ($(shell command -v uv 2>/dev/null),)
+PIP := uv pip
+else
+PIP := pip3
+endif
 
 .PHONY:
 	build
@@ -52,7 +58,7 @@ cov-xml:
 
 # Target for installing project dependencies
 deps:
-	$(PIP) install -r requirements.txt -r requirements-dev.txt
+	$(PIP) install --upgrade pip setuptools wheel -r requirements.txt -r requirements-dev.txt
 
 # Target for installing the project in editable mode
 dev:
