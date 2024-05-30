@@ -1,0 +1,72 @@
+name: CI
+on:
+  - push
+  - pull_request
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          check-latest: true
+          cache: 'pip'
+      - run: make deps
+      - run: make lint
+
+  cov:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          check-latest: true
+          cache: 'pip'
+      - run: make deps
+      - run: make dev
+      - run: make test
+      - run: make cov-xml
+      - uses: orgoro/coverage@v3.1
+        with:
+            coverageFile: coverage.xml
+            thresholdAll: 0.8
+            token: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        check-latest: true
+        cache: 'pip'
+    - run: make deps
+    - run: make dev
+    - run: make test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          check-latest: true
+          cache: 'pip'
+      - run: make deps
+      - run: make build
