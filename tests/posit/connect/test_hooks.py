@@ -71,7 +71,8 @@ def test_response_client_error_without_payload():
 @responses.activate
 def test_deprecation_warning():
     responses.get(
-        "https://connect.example/__api__/v0", headers={"X-Deprecated-Endpoint": "v1/"}
+        "https://connect.example/__api__/v0",
+        headers={"X-Deprecated-Endpoint": "v1/"},
     )
     c = Client("12345", "https://connect.example")
 
