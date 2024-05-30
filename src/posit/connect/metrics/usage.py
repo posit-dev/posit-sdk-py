@@ -1,6 +1,6 @@
-from __future__ import annotations
+"""Usage resources."""
 
-import itertools
+from __future__ import annotations
 
 from typing import List, overload
 
@@ -155,6 +155,8 @@ class UsageEvent(resources.Resource):
 
 
 class Usage(resources.Resources):
+    """Usage resource."""
+
     @overload
     def find(
         self,

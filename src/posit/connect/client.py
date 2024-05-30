@@ -5,13 +5,14 @@ from __future__ import annotations
 from requests import Response, Session
 from typing import Optional
 
-from . import hooks, me, tasks, urls
+from . import hooks, me, urls
 
 from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
 from .metrics import Metrics
+from .tasks import Tasks
 from .users import User, Users
 
 
@@ -25,9 +26,24 @@ class Client:
     Parameters
     ----------
     api_key : str, optional
-        API key for authentication, by default None
+        API key for authentication
     url : str, optional
-        API URL, by default None
+        Sever API URL
+
+    Attributes
+    ----------
+    content: Content
+        Content resource.
+    me: User
+        Connect user resource.
+    metrics: Metrics
+        Metrics resource.
+    tasks: Tasks
+        Tasks resource.
+    users: Users
+        Users resource.
+    version: str
+        Server version.
     """
 
     def __init__(
@@ -79,7 +95,7 @@ class Client:
         return OAuthIntegration(config=self.config, session=self.session)
 
     @property
-    def tasks(self) -> tasks.Tasks:
+    def tasks(self) -> Tasks:
         """
         The tasks resource interface.
 
@@ -88,7 +104,7 @@ class Client:
         tasks.Tasks
             The tasks resource instance.
         """
-        return tasks.Tasks(self.config, self.session)
+        return Tasks(self.config, self.session)
 
     @property
     def users(self) -> Users:

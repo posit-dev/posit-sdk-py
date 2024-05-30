@@ -1,4 +1,4 @@
-"""Tasks interface."""
+"""Task resources."""
 
 from __future__ import annotations
 

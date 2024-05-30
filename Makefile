@@ -78,7 +78,7 @@ test:
 
 # Target for uninstalling the project
 uninstall:
-	$(PIP) uninstall -y $(NAME)
+	$(PIP) uninstall $(NAME)
 
 # Target for displaying the project version
 version:

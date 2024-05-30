@@ -1,4 +1,4 @@
-"""Content resource interface."""
+"""Content resources."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from .resources import Resources, Resource
 
 
 class ContentItemOwner(Resource):
-    """The owner of a piece of content."""
+    """Owner information."""
 
     @property
     def guid(self) -> str:
@@ -36,7 +36,105 @@ class ContentItemOwner(Resource):
 
 
 class ContentItem(Resource):
-    """A piece of content."""
+    """Content item resource.
+
+    Attributes
+    ----------
+    bundles : Bundles
+        Bundles resource for the content item.
+    permissions : Permissions
+        Permissions resource for the content item.
+    id : str
+        Unique identifier of the content item.
+    guid : str
+        Globally unique identifier of the content item.
+    name : str
+        Name of the content item.
+    title : Optional[str]
+        Title of the content item.
+    description : str
+        Description of the content item.
+    access_type : str
+        Access type of the content item.
+    connection_timeout : Optional[int]
+        Connection timeout setting for the content item.
+    read_timeout : Optional[int]
+        Read timeout setting for the content item.
+    init_timeout : Optional[int]
+        Initialization timeout setting for the content item.
+    idle_timeout : Optional[int]
+        Idle timeout setting for the content item.
+    max_processes : Optional[int]
+        Maximum number of processes allowed for the content item.
+    min_processes : Optional[int]
+        Minimum number of processes required for the content item.
+    max_conns_per_process : Optional[int]
+        Maximum number of connections per process for the content item.
+    load_factor : Optional[float]
+        Load factor for the content item.
+    cpu_request : Optional[float]
+        CPU request for the content item.
+    cpu_limit : Optional[float]
+        CPU limit for the content item.
+    memory_request : Optional[int]
+        Memory request for the content item.
+    memory_limit : Optional[int]
+        Memory limit for the content item.
+    amd_gpu_limit : Optional[int]
+        AMD GPU limit for the content item.
+    nvidia_gpu_limit : Optional[int]
+        NVIDIA GPU limit for the content item.
+    created_time : str
+        Creation time of the content item.
+    last_deployed_time : str
+        Last deployment time of the content item.
+    bundle_id : Optional[str]
+        Bundle ID associated with the content item.
+    app_mode : str
+        Application mode of the content item.
+    content_category : Optional[str]
+        Content category of the content item.
+    parameterized : bool
+        Indicates if the content item is parameterized.
+    cluster_name : Optional[str]
+        Name of the cluster associated with the content item.
+    image_name : Optional[str]
+        Name of the image associated with the content item.
+    default_image_name : Optional[str]
+        Default image name for the content item.
+    default_r_environment_management : Optional[bool]
+        Indicates if R environment management is enabled by default.
+    default_py_environment_management : Optional[bool]
+        Indicates if Python environment management is enabled by default.
+    service_account_name : Optional[str]
+        Name of the service account associated with the content item.
+    r_version : Optional[str]
+        R version used by the content item.
+    r_environment_management : Optional[bool]
+        Indicates if R environment management is enabled.
+    py_version : Optional[str]
+        Python version used by the content item.
+    py_environment_management : Optional[bool]
+        Indicates if Python environment management is enabled.
+    quarto_version : Optional[str]
+        Quarto version used by the content item.
+    run_as : Optional[str]
+        User to run the content item as.
+    run_as_current_user : bool
+        Indicates if the content item runs as the current user.
+    owner_guid : str
+        GUID of the owner of the content item.
+    owner : ContentItemOwner
+        Owner information of the content item.
+    content_url : str
+        URL of the content item.
+    dashboard_url : str
+        Dashboard URL of the content item.
+    app_role : str
+        Application role of the content item.
+    tags : List[dict]
+        Tags associated with the content item.
+    """
 
     # Relationships
 
@@ -336,6 +434,8 @@ class ContentItem(Resource):
 
 
 class Content(Resources):
+    """Content resource."""
+
     def __init__(self, config: Config, session: Session) -> None:
         self.url = urls.append(config.url, "v1/content")
         self.config = config

@@ -1,9 +1,9 @@
+"""User resources."""
+
 from __future__ import annotations
 from typing import List, overload
 
-
 import requests
-
 
 from . import me, urls
 
@@ -13,6 +13,25 @@ from .resources import Resource, Resources
 
 
 class User(Resource):
+    """User resource.
+
+    Attributes
+    ----------
+    guid : str
+    email : str
+    username : str
+    first_name : str
+    last_name : str
+    user_role : str
+    created_time : str
+    updated_time : str
+    active_time : str
+    confirmed : bool
+        Whether the user has confirmed their email address.
+    locked : bool
+        Whether the user is locked.
+    """
+
     @property
     def guid(self) -> str:
         return self.get("guid")  # type: ignore
@@ -152,6 +171,8 @@ class User(Resource):
 
 
 class Users(Resources):
+    """Users resource."""
+
     def __init__(self, config: Config, session: requests.Session) -> None:
         self.url = urls.append(config.url, "v1/users")
         self.config = config

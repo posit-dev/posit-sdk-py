@@ -9,7 +9,7 @@ website:
         file: installation.qmd
       - text: Quick Start
         file: quickstart.qmd
-      - text: Reference
+      - text: API
         file: reference/index.qmd
 
 filters:
@@ -18,8 +18,8 @@ filters:
 format:
   html:
     theme: cosmo
-    css: styles.css
     toc: true
+    page-layout: full
 
 interlinks:
   sources:
@@ -35,7 +35,6 @@ quartodoc:
   package: posit
   render_interlinks: true
   options:
-      include_attributes: true
       include_classes: true
       include_functions: true
       include_empty: true
@@ -47,22 +46,23 @@ quartodoc:
       contents:
         - name: connect.Client
           members:
-            - content
-            - metrics
-            - tasks
-            - users
+            # methods
             - request
             - get
             - post
             - put
             - patch
             - delete
-    - title: Posit Connect
+    - title: Posit Connect Resources
       package: posit
       contents:
         - connect.bundles
         - connect.content
-        - connect.metrics.Metrics
         - connect.permissions
         - connect.tasks
         - connect.users
+    - title: Posit Connect Metrics
+      package: posit
+      contents:
+        - connect.metrics
+        - connect.metrics.usage
