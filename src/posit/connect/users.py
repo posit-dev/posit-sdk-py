@@ -163,12 +163,10 @@ class Users(Resources):
         prefix: str = ...,
         user_role: str = ...,
         account_status: str = ...,
-    ) -> List[User]:
-        ...
+    ) -> List[User]: ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[User]:
-        ...
+    def find(self, *args, **kwargs) -> List[User]: ...
 
     def find(self, *args, **kwargs):
         params = dict(*args, **kwargs)
@@ -189,12 +187,10 @@ class Users(Resources):
         prefix: str = ...,
         user_role: str = ...,
         account_status: str = ...,
-    ) -> User | None:
-        ...
+    ) -> User | None: ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> User | None:
-        ...
+    def find_one(self, *args, **kwargs) -> User | None: ...
 
     def find_one(self, *args, **kwargs) -> User | None:
         params = dict(*args, **kwargs)
