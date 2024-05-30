@@ -1,1 +1,1 @@
-from .client import Client, User  # noqa
+from .client import Client  # noqa

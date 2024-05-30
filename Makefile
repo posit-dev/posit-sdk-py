@@ -53,7 +53,7 @@ dev:
 
 # Build documentation.
 docs:
-	$(MAKE) -C ./docs build
+	$(MAKE) -C ./docs
 
 # Target for fixing linting issues.
 fix:

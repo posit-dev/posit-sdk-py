@@ -21,30 +21,48 @@ format:
     css: styles.css
     toc: true
 
+interlinks:
+  sources:
+    python:
+      url: https://docs.python.org/3/
+    requests:
+      url: https://requests.readthedocs.io/en/latest/
+
 quartodoc:
   title: API Reference
   style: pkgdown
   dir: reference
   package: posit
-  dynamic: true
   render_interlinks: true
   options:
       include_attributes: true
-      include_empty: true
       include_classes: true
       include_functions: true
+      include_empty: true
   sections:
     - title: Clients
+      package: posit
       desc: >
-        The `Client` is the pythonic interface for Posit Product APIs. Initialize a `Client` to get started utilizing the SDK.
+        The `Client` is the entrypoint for each Posit product. Initialize a `Client` to get started.
       contents:
-        - connect.Client
+        - name: connect.Client
+          members:
+            - content
+            - metrics
+            - tasks
+            - users
+            - request
+            - get
+            - post
+            - put
+            - patch
+            - delete
     - title: Posit Connect
-      package: posit.connect
+      package: posit
       contents:
-        - bundles
-        - content
-        - metrics
-        - permissions
-        - tasks
-        - users
+        - connect.bundles
+        - connect.content
+        - connect.metrics.Metrics
+        - connect.permissions
+        - connect.tasks
+        - connect.users
