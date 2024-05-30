@@ -95,11 +95,7 @@ class Client:
         return OAuthIntegration(config=self.config, session=self.session)
 
     @property
-<<<<<<< HEAD
     def tasks(self) -> Tasks:
-=======
-    def tasks(self) -> tasks.Tasks:
->>>>>>> 8cd77a2 (--wip-- [skip ci])
         """
         The tasks resource interface.
 
