@@ -70,6 +70,13 @@ interlinks:
     requests:
       url: https://requests.readthedocs.io/en/latest/
 
+interlinks:
+  sources:
+    python:
+      url: https://docs.python.org/3/
+    requests:
+      url: https://requests.readthedocs.io/en/latest/
+
 quartodoc:
   title: API Reference
   style: pkgdown
