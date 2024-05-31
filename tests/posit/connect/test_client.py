@@ -63,7 +63,7 @@ class TestClient:
         MockSession.return_value.close.assert_called_once()
 
     @responses.activate
-    def test_connect_version(self):
+    def test_version(self):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
         client = Client(api_key=api_key, url=url)
@@ -74,7 +74,7 @@ class TestClient:
             "http://foo.bar/__api__/server_settings",
             json={"version": "2024.01.0"},
         )
-        assert client.connect_version == "2024.01.0"
+        assert client.version == "2024.01.0"
 
     @responses.activate
     def test_me_request(self):
