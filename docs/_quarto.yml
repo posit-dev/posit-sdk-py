@@ -1,5 +1,5 @@
 project:
-  type: website
+  type: posit-docs
 
 execute:
   freeze: auto
