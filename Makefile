@@ -82,4 +82,4 @@ uninstall:
 
 # Target for displaying the project version
 version:
-	$(PYTHON) -m setuptools_scm
+	@$(PYTHON) -m setuptools_scm

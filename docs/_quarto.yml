@@ -1,8 +1,8 @@
 project:
-  type: website
+  type: posit-docs
 
 website:
-  title: "Posit SDK"
+  title: "Posit SDK <small>{{< env VERSION >}}</small>"
   navbar:
     left:
       - text: Installation
@@ -14,12 +14,6 @@ website:
 
 filters:
   - interlinks
-
-format:
-  html:
-    theme: cosmo
-    toc: true
-    page-layout: full
 
 interlinks:
   sources:

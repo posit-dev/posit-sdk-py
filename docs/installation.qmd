@@ -21,7 +21,7 @@ These dependencies are installed automatically during installation.
 Use the following command to install Posit's SDK
 
 ```bash
-$ pip install posit-SDK
+$ pip install posit-sdk
 ```
 
 The SDK is now installed. Check out the [Quickstart](./quickstart.qmd).
