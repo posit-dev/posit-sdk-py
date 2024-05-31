@@ -1,0 +1,29 @@
+name: Documentation
+on:
+  - pull_request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  default:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          check-latest: true
+          cache: 'pip'
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - run: make deps
+      - run: make dev
+      - run: make docs
+      - uses: actions/setup-node@v4
+      - uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: netlify
+          path: docs
+          render: false
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

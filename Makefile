@@ -9,11 +9,7 @@ else
 PIP := pip3
 endif
 
-<<<<<<< HEAD
 .PHONY: build clean cov default deps dev docs fmt fix install it lint test uninstall version
-=======
-.PHONY: build clean cov default deps dev docs fmt fix install lint test uninstall version
->>>>>>> ab34e79 (--wip-- [skip ci])
 
 all: deps dev test lint build
 
