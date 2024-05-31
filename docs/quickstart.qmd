@@ -6,7 +6,7 @@ toc-title: "Contents"
 toc-depth: 2
 ---
 
-# Setup
+## Setup
 
 After [installing](./installation.qmd) the SDK, you need to import it. Here's a simple example of to get you started.
 
@@ -14,9 +14,9 @@ After [installing](./installation.qmd) the SDK, you need to import it. Here's a 
 >>> import posit
 ```
 
-# Basic Usage
+## Basic Usage
 
-## Initialize a Client
+### Initialize a Client
 
 To get started, initialize a Client to work with your Posit products. For this example, we will work with Posit Connect.
 
@@ -30,7 +30,7 @@ Keeping your API key secret is essential to protect your application's security,
 >>> client = connect.Client(api_key="btOVKLXjt8CoGP2gXvSuTqu025MJV4da", url="https://connect.example.com")
 ```
 
-## Who am I?
+### Who am I?
 
 Your API key is your secret identity. Now that we're connected, let's double check our username.
 
@@ -39,7 +39,7 @@ Your API key is your secret identity. Now that we're connected, let's double che
 'gandalf'
 ```
 
-## How much content do I have access to?
+### How much content do I have access to?
 
 One of the best features of Connect is the ability to share incredible content with your peers. Let's see just how much content we have access to!
 
@@ -51,6 +51,6 @@ One of the best features of Connect is the ability to share incredible content w
 Voilà! I have a whopping 5,754 pieces of content to browse.
 
 
-# Next Steps
+## Next Steps
 
 Check out the [API](./reference/index.qmd) for a full API reference.

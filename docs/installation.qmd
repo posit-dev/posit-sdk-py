@@ -6,17 +6,17 @@ toc-title: "Contents"
 toc-depth: 2
 ---
 
-# Python Version
+## Python Version
 
 We recommend using the latest version of Python avaiable to you. The Posit SDK supports Python 3.8 and newer.
 
-# Dependencies
+## Dependencies
 
 These dependencies are installed automatically during installation.
 
 - [Requests](https://requests.readthedocs.io/en/latest/) provides the HTTP layer.
 
-# Install Posit's SDK
+## Install Posit's SDK
 
 Use the following command to install Posit's SDK
 
