@@ -80,17 +80,3 @@ jobs:
           cache: 'pip'
       - run: make deps
       - run: make build
-
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          check-latest: true
-          cache: 'pip'
-      - uses: quarto-dev/quarto-actions/setup@v2
-      - run: make deps
-      - run: make dev
-      - run: make docs

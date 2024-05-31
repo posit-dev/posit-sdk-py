@@ -1,0 +1,4 @@
+- source: project
+  netlify:
+    - id: "5cea1f56-7935-4387-975a-18a7905d15ee"
+      url: "https://posit-sdk-py.netlify.app"

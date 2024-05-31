@@ -1,6 +1,9 @@
 project:
   type: website
 
+execute:
+  freeze: auto
+
 website:
   title: "Posit SDK <small>{{< env VERSION >}}</small>"
   bread-crumbs: true
