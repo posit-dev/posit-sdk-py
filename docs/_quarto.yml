@@ -1,5 +1,5 @@
 project:
-  type: website
+  type: posit-docs
 
 website:
   title: "Posit SDK <small>{{< env VERSION >}}</small>"
