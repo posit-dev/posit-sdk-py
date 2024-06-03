@@ -1,0 +1,24 @@
+{
+    "paging": {
+        "cursors": {
+            "previous": "23948901087",
+            "next": "23948901087"
+        },
+        "first": "http://localhost:3443/__api__/v1/instrumentation/content/visits",
+        "previous": "http://localhost:3443/__api__/v1/instrumentation/content/visits?previous=23948901087",
+        "next": "http://localhost:3443/__api__/v1/instrumentation/content/visits?next=23948901087",
+        "last": "http://localhost:3443/__api__/v1/instrumentation/content/visits?last=true"
+    },
+    "results": [
+        {
+            "content_guid": "bd1d2285-6c80-49af-8a83-a200effe3cb3",
+            "user_guid": "08e3a41d-1f8e-47f2-8855-f05ea3b0d4b2",
+            "variant_key": "HidI2Kwq",
+            "rendering_id": 7,
+            "bundle_id": 33,
+            "time": "2018-09-15T18:00:00-05:00",
+            "data_version": 1,
+            "path": "/logs"
+        }
+    ]
+}

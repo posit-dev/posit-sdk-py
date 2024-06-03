@@ -1,0 +1,22 @@
+{
+    "id": "101",
+    "content_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+    "created_time": "2006-01-02T15:04:05Z07:00",
+    "cluster_name": "Local",
+    "image_name": "Local",
+    "r_version": "3.5.1",
+    "r_environment_management": true,
+    "py_version": "3.8.2",
+    "py_environment_management": true,
+    "quarto_version": "0.2.22",
+    "active": false,
+    "size": 1000000,
+    "metadata": {
+        "source": "string",
+        "source_repo": "string",
+        "source_branch": "string",
+        "source_commit": "string",
+        "archive_md5": "37324238a80595c453c706b22adb83d3",
+        "archive_sha1": "a2f7d13d87657df599aeeabdb70194d508cfa92f"
+    }
+}

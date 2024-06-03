@@ -1,0 +1,8 @@
+_extensions/
+_inv/
+_site/
+.quarto/
+objects.json
+reference/
+
+/.quarto/

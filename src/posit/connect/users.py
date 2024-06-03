@@ -1,9 +1,9 @@
+"""User resources."""
+
 from __future__ import annotations
 from typing import List, overload
 
-
 import requests
-
 
 from . import me, urls
 
@@ -13,6 +13,25 @@ from .resources import Resource, Resources
 
 
 class User(Resource):
+    """User resource.
+
+    Attributes
+    ----------
+    guid : str
+    email : str
+    username : str
+    first_name : str
+    last_name : str
+    user_role : str
+    created_time : str
+    updated_time : str
+    active_time : str
+    confirmed : bool
+        Whether the user has confirmed their email address.
+    locked : bool
+        Whether the user is locked.
+    """
+
     @property
     def guid(self) -> str:
         return self.get("guid")  # type: ignore
@@ -75,7 +94,7 @@ class User(Resource):
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior."
             )
-        url = urls.append_path(self.config.url, f"v1/users/{self.guid}/lock")
+        url = urls.append(self.config.url, f"v1/users/{self.guid}/lock")
         body = {"locked": True}
         self.session.post(url, json=body)
         super().update(locked=True)
@@ -88,7 +107,7 @@ class User(Resource):
         -------
             None
         """
-        url = urls.append_path(self.config.url, f"v1/users/{self.guid}/lock")
+        url = urls.append(self.config.url, f"v1/users/{self.guid}/lock")
         body = {"locked": False}
         self.session.post(url, json=body)
         super().update(locked=False)
@@ -146,26 +165,29 @@ class User(Resource):
             None
         """
         body = dict(*args, **kwargs)
-        url = urls.append_path(self.config.url, f"v1/users/{self.guid}")
+        url = urls.append(self.config.url, f"v1/users/{self.guid}")
         response = self.session.put(url, json=body)
         super().update(**response.json())
 
 
 class Users(Resources):
+    """Users resource."""
+
     def __init__(self, config: Config, session: requests.Session) -> None:
-        self.url = urls.append_path(config.url, "v1/users")
+        self.url = urls.append(config.url, "v1/users")
         self.config = config
         self.session = session
 
     @overload
     def find(
-        self, prefix: str = ..., user_role: str = ..., account_status: str = ...
-    ) -> List[User]:
-        ...
+        self,
+        prefix: str = ...,
+        user_role: str = ...,
+        account_status: str = ...,
+    ) -> List[User]: ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[User]:
-        ...
+    def find(self, *args, **kwargs) -> List[User]: ...
 
     def find(self, *args, **kwargs):
         params = dict(*args, **kwargs)
@@ -182,13 +204,14 @@ class Users(Resources):
 
     @overload
     def find_one(
-        self, prefix: str = ..., user_role: str = ..., account_status: str = ...
-    ) -> User | None:
-        ...
+        self,
+        prefix: str = ...,
+        user_role: str = ...,
+        account_status: str = ...,
+    ) -> User | None: ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> User | None:
-        ...
+    def find_one(self, *args, **kwargs) -> User | None: ...
 
     def find_one(self, *args, **kwargs) -> User | None:
         params = dict(*args, **kwargs)
@@ -206,7 +229,7 @@ class Users(Resources):
         return next(users, None)
 
     def get(self, id: str) -> User:
-        url = urls.append_path(self.config.url, f"v1/users/{id}")
+        url = urls.append(self.config.url, f"v1/users/{id}")
         response = self.session.get(url)
         return User(
             config=self.config,

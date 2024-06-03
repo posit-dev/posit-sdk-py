@@ -4,23 +4,16 @@
 NAME := posit-sdk
 
 # Command aliases
-PIP := pip3
 PYTHON := python3
 
-.PHONY:
-	build
-	clean
-	cov
-	default
-	deps
-	dev
-	fmt
-	fix
-	install
-	lint
-	test
-	uninstall
-	version
+# Check if 'uv' is available
+ifneq ($(shell command -v uv 2>/dev/null),)
+PIP := uv pip
+else
+PIP := pip3
+endif
+
+.PHONY: build clean cov default deps dev docs fmt fix install lint test uninstall version
 
 # Default target that runs the necessary steps to build the project
 all: deps dev test lint build
@@ -31,11 +24,12 @@ build:
 
 # Target for cleaning up generated files and directories
 clean:
+	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
 	find . -name "*.egg-info" -exec rm -rf {} +
 	find . -name "*.pyc" -exec rm -f {} +
 	find . -name "__pycache__" -exec rm -rf {} +
 	find . -name "_version.py" -exec rm -rf {} +
-	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
+	find . -type d -empty -delete
 
 # Target for generating coverage report
 cov:
@@ -51,11 +45,15 @@ cov-xml:
 
 # Target for installing project dependencies
 deps:
-	$(PIP) install -r requirements.txt -r requirements-dev.txt
+	$(PIP) install --upgrade pip setuptools wheel -r requirements.txt -r requirements-dev.txt
 
 # Target for installing the project in editable mode
 dev:
 	$(PIP) install -e .
+
+# Build documentation.
+docs:
+	$(MAKE) -C ./docs
 
 # Target for fixing linting issues.
 fix:
@@ -80,8 +78,8 @@ test:
 
 # Target for uninstalling the project
 uninstall:
-	$(PIP) uninstall -y $(NAME)
+	$(PIP) uninstall $(NAME)
 
 # Target for displaying the project version
 version:
-	$(PYTHON) -m setuptools_scm
+	@$(PYTHON) -m setuptools_scm

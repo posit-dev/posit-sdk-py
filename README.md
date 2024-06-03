@@ -40,8 +40,6 @@ with Client(api_key="my-secret-api-key", url="https://example.com") as client:
     print(client)
 ```
 
-
-
 ## Contributing
 
 We welcome contributions to the Posit SDK for Python! If you would like to contribute, see the [CONTRIBUTING](CONTRIBUTING.md) guide for instructions.

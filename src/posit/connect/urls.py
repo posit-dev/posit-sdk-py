@@ -4,38 +4,39 @@ import posixpath
 
 from urllib.parse import urlsplit, urlunsplit
 
-
-def server_to_api_url(url: str) -> str:
-    """
-    Fixes the given URL by appending '__api__' if it doesn't already end with it.
-
-    Args:
-        url (str): The URL to fix.
-
-    Returns
-    -------
-        str: The fixed URL.
-    """
-    url = url.rstrip("/")
-    if not url.endswith("__api__"):
-        return append_path(url, "__api__")
-    return url
+Url = str
 
 
-def validate(url: str) -> None:
-    """
-    Check if the given URL is valid.
+def create(url: str) -> Url:
+    """Create a Url.
 
-    Args:
-        url (str): The URL to be validated.
+    Asserts that the Url is a proper Posit Connect endpoint. The path '__api__' is appended to the Url if it isn't already present.
+
+    Parameters
+    ----------
+    url : str
+        The original Url.
 
     Returns
     -------
-        bool: True if the URL is valid, False otherwise.
+    Url
+        The validated and formatted Url.
 
     Raises
     ------
-        ValueError: If the URL is missing a scheme or is not absolute.
+    ValueError
+        The Url is missing a scheme.
+    ValueError
+        The Url is missing a network location (i.e., a domain name).
+
+    Examples
+    --------
+    >>> urls.create("http://example.com")
+    http://example.com/__api__
+
+    >>> urls.create("http://example.com/__api__")
+    http://example.com/__api__
+
     """
     split = urlsplit(url, allow_fragments=False)
     if not split.scheme:
@@ -48,24 +49,41 @@ def validate(url: str) -> None:
             f"url must be absolute (e.g., http://example.com/__api__): {url}"
         )
 
+    url = url.rstrip("/")
+    if not url.endswith("__api__"):
+        url = append(url, "__api__")
 
-def append_path(url: str, path: str) -> str:
-    """
-    Appends a path to a URL.
+    return url
 
-    Args:
-        url (str): The original URL.
-        path (str): The path to append.
+
+def append(url: Url, path: str) -> Url:
+    """Append a path to a Url.
+
+    Parameters
+    ----------
+    url : Url
+        A valid Url.
+    path : str
+        A valid Url path.
 
     Returns
     -------
-        str: The modified URL with the appended path.
+    Url
+        The original Url with the path appended to the end.
+
+    Examples
+    --------
+    >>> url = urls.create("http://example.com/__api__")
+    >>> urls.append(url, "path")
+    http://example.com/__api__/path
     """
-    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlsplit
-    split = urlsplit(url, allow_fragments=False)
     # Removes leading '/' from path to avoid double slashes.
     path = path.lstrip("/")
-    # Prepend the path with the existing URL path.
+    # Removes trailing '/' from path to avoid double slashes.
+    path = path.rstrip("/")
+    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlsplit
+    split = urlsplit(url, allow_fragments=False)
+    # Append the path to unmodified Url path.
     path = posixpath.join(split.path, path)
     # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlunsplit
     return urlunsplit((split.scheme, split.netloc, path, split.query, None))

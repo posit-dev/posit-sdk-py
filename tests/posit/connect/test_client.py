@@ -74,7 +74,7 @@ class TestClient:
             "http://foo.bar/__api__/server_settings",
             json={"version": "2024.01.0"},
         )
-        assert client.connect_version == "2024.01.0"
+        assert client.version == "2024.01.0"
 
     @responses.activate
     def test_me_request(self):
@@ -100,28 +100,36 @@ class TestClient:
         url = "http://foo.bar/__api__"
         client = Client(api_key=api_key, url=url)
         client.get("/foo")
-        client.session.get.assert_called_once_with("http://foo.bar/__api__/foo")
+        client.session.get.assert_called_once_with(
+            "http://foo.bar/__api__/foo"
+        )
 
     def test_post(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
         client = Client(api_key=api_key, url=url)
         client.post("/foo")
-        client.session.post.assert_called_once_with("http://foo.bar/__api__/foo")
+        client.session.post.assert_called_once_with(
+            "http://foo.bar/__api__/foo"
+        )
 
     def test_put(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
         client = Client(api_key=api_key, url=url)
         client.put("/foo")
-        client.session.put.assert_called_once_with("http://foo.bar/__api__/foo")
+        client.session.put.assert_called_once_with(
+            "http://foo.bar/__api__/foo"
+        )
 
     def test_patch(self, MockSession):
         api_key = "foobar"
         url = "http://foo.bar/__api__"
         client = Client(api_key=api_key, url=url)
         client.patch("/foo")
-        client.session.patch.assert_called_once_with("http://foo.bar/__api__/foo")
+        client.session.patch.assert_called_once_with(
+            "http://foo.bar/__api__/foo"
+        )
 
     def test_delete(self, MockSession):
         api_key = "foobar"
