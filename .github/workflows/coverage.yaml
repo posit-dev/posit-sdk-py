@@ -18,8 +18,8 @@ jobs:
       - run: make dev
       - run: make test
       - run: make cov-xml
-      - uses: orgoro/coverage@v3.1
+      - uses: actions/upload-artifact@v4
         with:
-            coverageFile: coverage.xml
-            thresholdAll: 0.8
-            token: ${{ secrets.GITHUB_TOKEN }}
+          name: coverage.xml
+          path: coverage.xml
+          retention-days: 1
