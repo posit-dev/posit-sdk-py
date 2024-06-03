@@ -1,115 +1,139 @@
-"""Contains the Client class."""
+"""Client connection for Posit Connect."""
 
 from __future__ import annotations
 
 from requests import Response, Session
 from typing import Optional
 
-from . import hooks, me, metrics, tasks, urls
+from . import hooks, me, urls
 
 from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
 from .content import Content
+from .metrics import Metrics
+from .tasks import Tasks
 from .users import User, Users
 
 
 class Client:
-    """Main interface for Posit Connect."""
+    """
+    Client connection for Posit Connect.
+
+    This class provides an interface to interact with the Posit Connect API,
+    allowing for authentication, resource management, and data retrieval.
+
+    Parameters
+    ----------
+    api_key : str, optional
+        API key for authentication
+    url : str, optional
+        Sever API URL
+
+    Attributes
+    ----------
+    content: Content
+        Content resource.
+    me: User
+        Connect user resource.
+    metrics: Metrics
+        Metrics resource.
+    tasks: Tasks
+        Tasks resource.
+    users: Users
+        Users resource.
+    version: str
+        Server version.
+    """
 
     def __init__(
         self,
         api_key: Optional[str] = None,
         url: Optional[str] = None,
     ) -> None:
-        """
-        Initialize the Client instance.
-
-        Args:
-            api_key (str, optional): API key for authentication. Defaults to None.
-            url (str, optional): API url URL. Defaults to None.
-        """
-        # Create a Config object.
         self.config = Config(api_key=api_key, url=url)
-        # Create a Session object for making HTTP requests.
         session = Session()
-        # Authenticate the session using the provided Config.
         session.auth = Auth(config=self.config)
-        # Add hook for checking for deprecation warnings.
         session.hooks["response"].append(hooks.check_for_deprecation_header)
-        # Add error handling hooks to the session.
         session.hooks["response"].append(hooks.handle_errors)
-
-        # Store the Session object.
         self.session = session
 
-        # Internal attributes to hold settings we fetch lazily
-        self._server_settings = None
-
     @property
-    def connect_version(self):
-        """The server version.
-
-        Return:
-            str
+    def version(self) -> str:
         """
-        if self._server_settings is None:
-            self._server_settings = self.get("server_settings").json()
-        return self._server_settings["version"]
+        The server version.
+
+        Returns
+        -------
+        str
+            The version of the Posit Connect server.
+        """
+        return self.get("server_settings").json()["version"]
 
     @property
     def me(self) -> User:
-        """The connected user.
+        """
+        The connected user.
 
         Returns
         -------
         User
+            The currently authenticated user.
         """
         return me.get(self.config, self.session)
 
     @property
     def oauth(self) -> OAuthIntegration:
-        """An OAuthIntegration.
+        """
+        An OAuthIntegration.
 
         Returns
         -------
         OAuthIntegration
+            The OAuth integration instance.
         """
         return OAuthIntegration(config=self.config, session=self.session)
 
     @property
-    def tasks(self) -> tasks.Tasks:
-        """The tasks resource interface.
+    def tasks(self) -> Tasks:
+        """
+        The tasks resource interface.
 
         Returns
         -------
         tasks.Tasks
+            The tasks resource instance.
         """
-        return tasks.Tasks(self.config, self.session)
+        return Tasks(self.config, self.session)
 
     @property
     def users(self) -> Users:
-        """The users resource interface.
+        """
+        The users resource interface.
 
         Returns
         -------
         Users
+            The users resource instance.
         """
         return Users(config=self.config, session=self.session)
 
     @property
     def content(self) -> Content:
-        """The content resource interface.
+        """
+        The content resource interface.
 
         Returns
         -------
         Content
+            The content resource instance.
         """
         return Content(config=self.config, session=self.session)
 
     @property
-    def metrics(self) -> metrics.Metrics:
-        """The Metrics API interface.
+    def metrics(self) -> Metrics:
+        """
+        The Metrics API interface.
 
         The Metrics API is designed for capturing, retrieving, and managing
         quantitative measurements of Connect interactions. It is commonly used
@@ -120,7 +144,8 @@ class Client:
 
         Returns
         -------
-        metrics.Metrics
+        Metrics
+            The metrics API instance.
 
         Examples
         --------
@@ -131,7 +156,7 @@ class Client:
         >>> len(events)
         24
         """
-        return metrics.Metrics(self.config, self.session)
+        return Metrics(self.config, self.session)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
@@ -146,10 +171,14 @@ class Client:
         """
         Close the session if it exists.
 
-        Args:
-            exc_type: The type of the exception raised (if any).
-            exc_value: The exception instance raised (if any).
-            exc_tb: The traceback for the exception raised (if any).
+        Parameters
+        ----------
+        exc_type : type
+            The type of the exception raised (if any).
+        exc_value : Exception
+            The exception instance raised (if any).
+        exc_tb : traceback
+            The traceback for the exception raised (if any).
         """
         if hasattr(self, "session") and self.session is not None:
             self.session.close()
@@ -158,16 +187,21 @@ class Client:
         """
         Send an HTTP request.
 
-        A facade for requests.Session.request.
+        A facade for [](`requests.request`) configured for the target server.
 
-        Args:
-            method (str): The HTTP method to use for the request.
-            path (str): Appended to the url object attribute.
-            **kwargs: Additional keyword arguments passed to requests.Session.post.
+        Parameters
+        ----------
+        method : str
+            The HTTP method to use for the request.
+        path : str
+            Appended to the url object attribute.
+        **kwargs
+            Additional keyword arguments passed to [](`requests.request`).
 
         Returns
         -------
-            Response: A requests.Response object.
+        Response
+            A [](`requests.Response`) object.
         """
         url = urls.append(self.config.url, path)
         return self.session.request(method, url, **kwargs)
@@ -176,14 +210,19 @@ class Client:
         """
         Send a GET request.
 
-        Args:
-            path (str): Appended to the configured base url.
-            **kwargs: Additional keyword arguments passed to requests.Session.get.
+        A facade for [](`requests.get`) configured for the target server.
+
+        Parameters
+        ----------
+        path : str
+            Appended to the configured base url.
+        **kwargs
+            Additional keyword arguments passed to [](`requests.get`).
 
         Returns
         -------
-            Response: A requests.Response object.
-
+        Response
+            A [](`requests.Response`) object.
         """
         url = urls.append(self.config.url, path)
         return self.session.get(url, **kwargs)
@@ -192,14 +231,19 @@ class Client:
         """
         Send a POST request.
 
-        Args:
-            path (str): Appended to the configured base url.
-            **kwargs: Additional keyword arguments passed to requests.Session.post.
+        A facade for [](`requests.post`) configured for the target server.
+
+        Parameters
+        ----------
+        path : str
+            Appended to the configured base url.
+        **kwargs
+            Additional keyword arguments passed to [](`requests.post`).
 
         Returns
         -------
-            Response: A requests.Response object.
-
+        Response
+            A [](`requests.Response`) object.
         """
         url = urls.append(self.config.url, path)
         return self.session.post(url, **kwargs)
@@ -208,14 +252,19 @@ class Client:
         """
         Send a PUT request.
 
-        Args:
-            path (str): Appended to the configured base url.
-            **kwargs: Additional keyword arguments passed to requests.Session.put.
+        A facade for [](`requests.put`) configured for the target server.
+
+        Parameters
+        ----------
+        path : str
+            Appended to the configured base url.
+        **kwargs
+            Additional keyword arguments passed to [](`requests.put`).
 
         Returns
         -------
-            Response: A requests.Response object.
-
+        Response
+            A [](`requests.Response`) object.
         """
         url = urls.append(self.config.url, path)
         return self.session.put(url, **kwargs)
@@ -224,14 +273,19 @@ class Client:
         """
         Send a PATCH request.
 
-        Args:
-            path (str): Appended to the configured base url.
-            **kwargs: Additional keyword arguments passed to requests.Session.patch.
+        A facade for [](`requests.patch`) configured for the target server.
+
+        Parameters
+        ----------
+        path : str
+            Appended to the configured base url.
+        **kwargs
+            Additional keyword arguments passed to [](`requests.patch`).
 
         Returns
         -------
-            Response: A requests.Response object.
-
+        Response
+            A [](`requests.Response`) object.
         """
         url = urls.append(self.config.url, path)
         return self.session.patch(url, **kwargs)
@@ -240,14 +294,19 @@ class Client:
         """
         Send a DELETE request.
 
-        Args:
-            path (str): Appended to the configured base url.
-            **kwargs: Additional keyword arguments passed to requests.Session.delete.
+        A facade for [](`requests.delete`) configured for the target server.
+
+        Parameters
+        ----------
+        path : str
+            Appended to the configured base url.
+        **kwargs
+            Additional keyword arguments passed to [](`requests.delete`).
 
         Returns
         -------
-            Response: A requests.Response object.
-
+        Response
+            A [](`requests.Response`) object.
         """
         url = urls.append(self.config.url, path)
         return self.session.delete(url, **kwargs)

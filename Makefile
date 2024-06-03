@@ -13,20 +13,7 @@ else
 PIP := pip3
 endif
 
-.PHONY:
-	build
-	clean
-	cov
-	default
-	deps
-	dev
-	fmt
-	fix
-	install
-	lint
-	test
-	uninstall
-	version
+.PHONY: build clean cov default deps dev docs fmt fix install lint test uninstall version
 
 # Default target that runs the necessary steps to build the project
 all: deps dev test lint build
@@ -64,6 +51,10 @@ deps:
 dev:
 	$(PIP) install -e .
 
+# Build documentation.
+docs:
+	$(MAKE) -C ./docs
+
 # Target for fixing linting issues.
 fix:
 	$(PYTHON) -m ruff check --fix
@@ -87,8 +78,8 @@ test:
 
 # Target for uninstalling the project
 uninstall:
-	$(PIP) uninstall -y $(NAME)
+	$(PIP) uninstall $(NAME)
 
 # Target for displaying the project version
 version:
-	$(PYTHON) -m setuptools_scm
+	@$(PYTHON) -m setuptools_scm

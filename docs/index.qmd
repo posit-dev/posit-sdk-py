@@ -1,0 +1,7 @@
+---
+title: Posit SDK for Python
+---
+
+> A Pythonic interface for developers to work with Posit professional products. It's lightweight and expressive.
+
+Welcome to the Posit SDK for Python documentation! Get started with [Installation](./installation.qmd) and then check out [Quickstart](./quickstart.qmd). A full API reference is available in the [API](./reference/index.qmd) section.

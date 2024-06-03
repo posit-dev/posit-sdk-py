@@ -1,0 +1,56 @@
+---
+title: "Quickstart"
+format: html
+toc: true
+toc-title: "Contents"
+toc-depth: 2
+---
+
+## Setup
+
+After [installing](./installation.qmd) the SDK, you need to import it. Here's a simple example to get you started:
+
+```python
+>>> import posit
+```
+
+## Basic usage
+
+### Initialize a client
+
+To get started, initialize a client to work with your Posit products. For this example, we will work with Posit Connect.
+
+::: {.callout-warning}
+Keeping your API key secret is essential to protect your application's security, prevent unauthorized access and usage, and ensure data privacy and regulatory compliance. By default, the API key is read from the `CONNECT_API_KEY` environment variable when not provided by during client initialization.
+:::
+
+
+```python
+>>> from posit import connect
+>>> client = connect.Client(api_key="btOVKLXjt8CoGP2gXvSuTqu025MJV4da", url="https://connect.example.com")
+```
+
+### Who am I?
+
+Your API key is your secret identity. Now that we're connected, let's double check our username.
+
+```python
+>>> client.me.username
+'gandalf'
+```
+
+### How much content do I have access to?
+
+One of the best features of Connect is the ability to share content with your peers. Let's see just how much content we have access to!
+
+```python
+>>> client.content.count()
+5754
+```
+
+Voilà! I have a whopping 5,754 pieces of content to browse.
+
+
+## Next steps
+
+Check out the [API Reference](./reference/index.qmd) for more information.

@@ -1,0 +1,27 @@
+---
+title: "Installation"
+format: html
+toc: true
+toc-title: "Contents"
+toc-depth: 2
+---
+
+## Python version
+
+We recommend using the latest version of Python available to you. The Posit SDK supports Python 3.8 and newer.
+
+## Dependencies
+
+These dependencies are installed automatically during installation.
+
+- [Requests](https://requests.readthedocs.io/en/latest/) provides the HTTP layer.
+
+## Install the Posit SDK
+
+Use the following command to install the Posit SDK:
+
+```bash
+$ pip install posit-sdk
+```
+
+The SDK is now installed. Check out the [Quickstart](./quickstart.qmd) section.

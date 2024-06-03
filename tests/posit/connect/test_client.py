@@ -74,7 +74,7 @@ class TestClient:
             "http://foo.bar/__api__/server_settings",
             json={"version": "2024.01.0"},
         )
-        assert client.connect_version == "2024.01.0"
+        assert client.version == "2024.01.0"
 
     @responses.activate
     def test_me_request(self):
