@@ -1,8 +1,5 @@
 .DEFAULT_GOAL := all
 
-VERSION := $(shell make -C ../ version)
-export VERSION
-
 # Command aliases
 PIP ?= pip3
 QUARTO ?= quarto
