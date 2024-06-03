@@ -14,13 +14,14 @@ permissions:
 jobs:
   default:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: coverage.xml
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: techman83/coverage@6aed45bb96bc879e66b35f0d88f6cf9adf01334c
+      - uses: techman83/coverage@feat/workflow_run
         with:
             coverageFile: coverage.xml
             token: ${{ secrets.GITHUB_TOKEN }}
