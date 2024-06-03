@@ -1,4 +1,4 @@
-# Posit SDK for Python
+# Tinkering
 
 This package provides a Pythonic interface for developers to work against the public APIs of Posit's professional products. It is intended to be lightweight yet expressive.
 
