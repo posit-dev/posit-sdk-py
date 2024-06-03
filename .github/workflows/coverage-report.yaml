@@ -1,0 +1,26 @@
+name: Coverage Report
+on:
+  workflow_run:
+    workflows: ["Coverage"]
+    types:
+      - completed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+jobs:
+  default:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage.xml
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: orgoro/coverage@v3.1
+        with:
+            coverageFile: coverage.xml
+            token: ${{ secrets.GITHUB_TOKEN }}
