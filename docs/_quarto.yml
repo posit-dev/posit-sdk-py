@@ -24,6 +24,22 @@ website:
           href: "https://docs.posit.co"
         - text: "Posit Support"
           href: "https://support.posit.co/hc/en-us/"
+  page-footer:
+    left: |
+      Copyright &copy; 2000-{{< env CURRENT_YEAR >}} Posit Software, PBC. All Rights Reserved.
+    center: |
+      Posit PRODUCT {{< env VERSION >}}
+    right:
+      - icon: question-circle-fill
+        aria-label: 'Link to Posit Support'
+        href: "https://support.posit.co/hc/en-us"
+      - icon: lightbulb-fill
+        aria-label: 'Link to Posit Solutions'
+        href: "https://solutions.posit.co/"
+      - text: "<img alt='Link to Posit Documentation' src='_extensions/posit-dev/posit-docs/assets/images/posit-guide-ltmd.svg' id='footer-right-logo'>"
+        href: "https://docs.posit.co/"
+      - text: "<img alt='Link to main Posit site' src='_extensions/posit-dev/posit-docs/assets/images/posit-icon-fullcolor.svg' id='footer-right-posit-logo'>"
+        href: "https://posit.co/"
   search:
     copy-button: true
     show-item-context: true
