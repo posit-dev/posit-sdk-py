@@ -1,14 +1,15 @@
 services:
   sdk:
     build: ..
-    # todo - replace rsconnect bootstrap with sdk implementation and invoke it as part of test suite setup
-    command: >
-      sh -c "
-        export CONNECT_API_KEY=$(rsconnect bootstrap -i -s http://connect:3939 --raw);
-        make test
-      "
+    # Run integration test suite.
+    #
+    # Target is relative to the ./integration directory, not the project root
+    # directory. The execution base directory is determined by the 'volumes'
+    # property.
+    command: make _test
     environment:
         - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}
+        # Port 3939 is the default port for Connect
         - CONNECT_SERVER=http://connect:3939
         - CONNECT_VERSION=${CONNECT_VERSION}
     volumes:
