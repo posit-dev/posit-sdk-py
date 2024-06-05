@@ -9,7 +9,7 @@ else
 PIP := pip3
 endif
 
-.PHONY: build clean cov default deps dev docs fmt fix install lint test uninstall version
+.PHONY: build clean cov default deps dev docs fmt fix install it lint test uninstall version
 
 all: deps dev test lint build
 
@@ -51,12 +51,15 @@ fmt:
 install:
 	$(PIP) install dist/*.whl
 
+it:
+	$(MAKE) -C ./integration
+
 lint:
 	$(PYTHON) -m mypy --install-types --non-interactive .
 	$(PYTHON) -m ruff check
 
 test:
-	$(PYTHON) -m coverage run --source=src --omit=_version.py -m pytest tests/unit
+	$(PYTHON) -m coverage run --source=src --omit=_version.py -m pytest tests
 
 uninstall:
 	$(PIP) uninstall $(NAME)

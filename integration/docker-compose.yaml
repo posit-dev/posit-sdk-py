@@ -1,0 +1,41 @@
+services:
+  sdk:
+    build: ..
+    # todo - replace rsconnect bootstrap with sdk implementation and invoke it as part of test suite setup
+    command: >
+      sh -c "
+        export CONNECT_API_KEY=$(rsconnect bootstrap -i -s http://connect:3939 --raw);
+        make test
+      "
+    environment:
+        - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}
+        - CONNECT_SERVER=http://connect:3939
+        - CONNECT_VERSION=${CONNECT_VERSION}
+    volumes:
+      - .:/sdk
+    depends_on:
+      connect:
+        condition: service_healthy
+    networks:
+      - test
+  connect:
+    image: rstudio/rstudio-connect:${CONNECT_IMAGE_TAG}
+    environment:
+      - CONNECT_BOOTSTRAP_ENABLED=true
+      - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}
+    networks:
+      - test
+    privileged: true
+    volumes:
+      - /var/lib/rstudio-connect
+      - ./license.lic:/var/lib/rstudio-connect/rstudio-connect.lic:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3939"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  test:
+    driver: bridge
