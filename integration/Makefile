@@ -112,4 +112,4 @@ help:
 # Typically call from docker-compose.yaml. Assumes Connect server is running
 # on local network.
 test:
-	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest
+	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest --junit-xml=./reports/$(CONNECT_VERSION).xml

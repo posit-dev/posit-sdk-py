@@ -1,10 +1,6 @@
 services:
   tests:
-<<<<<<< HEAD
     image: posit-sdk-py:latest
-=======
-    build: ..
->>>>>>> d6b6fc5 (cleanup)
     # Run integration test suite.
     #
     # Target is relative to the ./integration directory, not the project root
