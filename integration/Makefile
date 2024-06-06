@@ -44,7 +44,6 @@ PYTHON ?= python3
 # ---------
 #   make 2024.05.1
 #   make 2023.01.0
-#   make 2024.05.0 CONNECT_IMAGE_TAG=jammy  # override image tag to 'latest'
 $(CONNECT_VERSIONS): %: down-% up-%
 
 # Run for each Connect version.
@@ -60,7 +59,7 @@ latest:
 #
 # Examples:
 # ---------
-#   make down-all
+#   make down
 #   make down-2024.05.0
 down: $(CONNECT_VERSIONS:%=down-%)
 down-%: CONNECT_VERSION=$*
@@ -75,7 +74,7 @@ down-%:
 #
 # Examples:
 # ---------
-#   make up-all
+#   make up
 #   make up-2024.05.0
 up: $(CONNECT_VERSIONS:%=up-%)
 up-%: CONNECT_VERSION=$*

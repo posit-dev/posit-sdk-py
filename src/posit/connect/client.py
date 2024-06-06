@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import requests
-
 from requests import Response, Session
 from typing import Optional
 
