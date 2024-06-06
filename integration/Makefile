@@ -89,12 +89,12 @@ up-%:
 # Show help message.
 help:
 	@echo "Makefile Targets:"
-	@echo "  all              Run test suite for each Connect version."
+	@echo "  all (default)    Run test suite for all Connect versions."
 	@echo "  latest           Run test suite for latest Connect version."
 	@echo "  <version>        Run test suite for the specified Connect version. (e.g., make 2024.05.0)"
-	@echo "  down-all         Tear down Docker resources for all Connect versions."
+	@echo "  down             Tear down Docker resources for all Connect versions."
 	@echo "  down-<version>   Tear down Docker resources for specific Connect version (e.g., make down-2024.05.0)."
-	@echo "  up-all           Start Docker Compose for each Connect version."
+	@echo "  up               Start Docker Compose for all Connect version."
 	@echo "  up-<version>     Start Docker Compose for specific Connect version (e.g., make up-2024.05.0)."
 	@echo "  help             Show this help message."
 	@echo
