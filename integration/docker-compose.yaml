@@ -1,19 +1,19 @@
 services:
-  sdk:
+  tests:
     build: ..
     # Run integration test suite.
     #
     # Target is relative to the ./integration directory, not the project root
-    # directory. The execution base directory is determined by the 'volumes'
-    # property.
-    command: make _test
+    # directory. The execution base directory is determined by the 'WORKDIR'
+    # in the Dockerfile.
+    command: make -C ./integration test
     environment:
         - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}
         # Port 3939 is the default port for Connect
         - CONNECT_SERVER=http://connect:3939
         - CONNECT_VERSION=${CONNECT_VERSION}
     volumes:
-      - .:/sdk
+      - .:/sdk/integration
     depends_on:
       connect:
         condition: service_healthy

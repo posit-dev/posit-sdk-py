@@ -1,17 +1,51 @@
 .DEFAULT_GOAL := all
 
-.PHONY: clean all down-% down-all latest test up-% up-all
+.PHONY: $(CONNECT_VERSIONS) \
+		all \
+        down \
+        down-% \
+        latest \
+        test \
+        up \
+        up-% \
+        help
 
 # Versions
-CONNECT_VERSIONS := 2024.05.0 2024.04.1 2024.04.0 2024.03.0 2024.02.0 2024.01.0 2023.12.0 2023.10.0 2023.09.0 2023.07.0 2023.06.0 2023.05.0 2023.01.1 2023.01.0 2022.12.0 2022.11.0
+CONNECT_VERSIONS := 2024.05.0 \
+                    2024.04.1 \
+                    2024.04.0 \
+                    2024.03.0 \
+                    2024.02.0 \
+                    2024.01.0 \
+                    2023.12.0 \
+                    2023.10.0 \
+                    2023.09.0 \
+                    2023.07.0 \
+                    2023.06.0 \
+                    2023.05.0 \
+                    2023.01.1 \
+                    2023.01.0 \
+                    2022.12.0 \
+                    2022.11.0
 
 # Environment Variables
 NAME = posit-sdk
 CONNECT_BOOTSTRAP_SECRETKEY ?= $(shell head -c 32 /dev/random | base64)
 
 # Binaries
-DOCKER_COMPOSE ?= docker-compose
+DOCKER_COMPOSE ?= docker compose
 PYTHON ?= python3
+
+# Run against a specific Connect version.
+#
+# Matches any version defined in CONNECT_VERSIONS.
+#
+# Examples:
+# ---------
+#   make 2024.05.1
+#   make 2023.01.0
+#   make 2024.05.0 CONNECT_IMAGE_TAG=jammy  # override image tag to 'latest'
+$(CONNECT_VERSIONS): %: down-% up-%
 
 # Run for each Connect version.
 all: $(CONNECT_VERSIONS:%=up-%)
@@ -20,27 +54,15 @@ all: $(CONNECT_VERSIONS:%=up-%)
 latest:
 	$(MAKE) $(firstword $(CONNECT_VERSIONS))
 
-# Run against a specific Connect version.
-#
-# Matches any version defined in CONNECT_VERSIONS.
-#
-# Examples:
-# ---------
-# 	make 2024.05.1
-#	make 2023.01.0
-# 	make 2024.05.0 CONNECT_IMAGE_TAG=jammy  # override image tag to 'latest'
-$(CONNECT_VERSIONS):
-	$(MAKE) up-$@
-
 # Tear down resources.
 #
-# Destory Docker resources for Connect version.
+# Destroy Docker resources for Connect version.
 #
 # Examples:
 # ---------
-#	make down-all
-# 	make down-2024.05.0
-down-all: $(CONNECT_VERSIONS:%=down-%)
+#   make down-all
+#   make down-2024.05.0
+down: $(CONNECT_VERSIONS:%=down-%)
 down-%: CONNECT_VERSION=$*
 down-%: CONNECT_IMAGE_TAG=jammy-$*
 down-%:
@@ -49,20 +71,20 @@ down-%:
 	CONNECT_VERSION=$* \
 	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) down -v
 
-# Create, start, and run Docker compose.
+# Create, start, and run Docker Compose.
 #
 # Examples:
 # ---------
-#	make up-all
-# 	make up-2024.05.0
-up-all: $(CONNECT_VERSIONS:%=up-%)
+#   make up-all
+#   make up-2024.05.0
+up: $(CONNECT_VERSIONS:%=up-%)
 up-%: CONNECT_VERSION=$*
 up-%: CONNECT_IMAGE_TAG=jammy-$*
-up-%: down-%
+up-%:
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
 	CONNECT_IMAGE_TAG=$(CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
-	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) -f docker-compose.yaml up --abort-on-container-exit --always-recreate-deps --build --remove-orphans
+	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) up --abort-on-container-exit --build
 
 # Show help message.
 help:
@@ -85,5 +107,5 @@ help:
 #
 # Typically call from docker-compose.yaml. Assumes Connect server is running
 # on local network.
-_test:
+test:
 	CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest
