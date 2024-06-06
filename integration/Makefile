@@ -84,7 +84,7 @@ up-%:
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
 	CONNECT_IMAGE_TAG=$(CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
-	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) up --abort-on-container-exit --build
+	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) up -V --abort-on-container-exit --build
 
 # Show help message.
 help:
@@ -108,4 +108,4 @@ help:
 # Typically call from docker-compose.yaml. Assumes Connect server is running
 # on local network.
 test:
-	CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest
+	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest
