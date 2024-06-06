@@ -1,6 +1,6 @@
 name: CI
 on:
-  - push
+  - pull_request
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -42,6 +42,7 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         CONNECT_VERSION:
           - preview
@@ -68,6 +69,30 @@ jobs:
       env:
         CONNECT_LICENSE: ${{ secrets.CONNECT_LICENSE }}
     - run: make -C ./integration ${{ matrix.CONNECT_VERSION }}
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ${{ matrix.CONNECT_VERSION }} - Integration Test Report
+        path: integration/reports/*.xml
+
+  integration-test-report:
+    needs: integration-test
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+    if: always()
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: integration-test-results
+          comment_mode: off
+          files: "artifacts/**/*.xml"
+          report_individual_runs: true
+
 
   build:
     runs-on: ubuntu-latest
