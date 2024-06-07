@@ -56,7 +56,7 @@ latest:
 
 # Build Dockerfile
 build:
-	docker build -t posit-sdk-py:latest ..
+	docker buildx build -t posit-sdk-py:latest ..
 
 # Tear down resources.
 #
