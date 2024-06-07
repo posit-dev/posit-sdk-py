@@ -2,6 +2,7 @@
 
 .PHONY: $(CONNECT_VERSIONS) \
 		all \
+		build \
         down \
         down-% \
         latest \
@@ -47,11 +48,15 @@ PYTHON ?= python3
 $(CONNECT_VERSIONS): %: down-% up-%
 
 # Run for each Connect version.
-all: $(CONNECT_VERSIONS:%=up-%)
+all: $(CONNECT_VERSIONS:%=%)
 
 # Run latest Connect version.
 latest:
 	$(MAKE) $(firstword $(CONNECT_VERSIONS))
+
+# Build Dockerfile
+build:
+	docker build -t posit-sdk-py:latest ..
 
 # Tear down resources.
 #
@@ -79,11 +84,11 @@ down-%:
 up: $(CONNECT_VERSIONS:%=up-%)
 up-%: CONNECT_VERSION=$*
 up-%: CONNECT_IMAGE_TAG=jammy-$*
-up-%:
+up-%: build
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
 	CONNECT_IMAGE_TAG=$(CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
-	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) up -V --abort-on-container-exit --build
+	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) up -V --abort-on-container-exit --no-build
 
 # Show help message.
 help:

@@ -1,6 +1,6 @@
 services:
   tests:
-    build: ..
+    image: posit-sdk-py:latest
     # Run integration test suite.
     #
     # Target is relative to the ./integration directory, not the project root
