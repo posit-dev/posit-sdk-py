@@ -6,6 +6,7 @@ pre-commit
 pyjson5
 pytest
 quartodoc
+rsconnect
 responses
 ruff
 setuptools

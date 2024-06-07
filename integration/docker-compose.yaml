@@ -1,0 +1,42 @@
+services:
+  tests:
+    image: posit-sdk-py:latest
+    # Run integration test suite.
+    #
+    # Target is relative to the ./integration directory, not the project root
+    # directory. The execution base directory is determined by the 'WORKDIR'
+    # in the Dockerfile.
+    command: make -C ./integration test
+    environment:
+        - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}
+        # Port 3939 is the default port for Connect
+        - CONNECT_SERVER=http://connect:3939
+        - CONNECT_VERSION=${CONNECT_VERSION}
+    volumes:
+      - .:/sdk/integration
+    depends_on:
+      connect:
+        condition: service_healthy
+    networks:
+      - test
+  connect:
+    image: rstudio/rstudio-connect:${CONNECT_IMAGE_TAG}
+    environment:
+      - CONNECT_BOOTSTRAP_ENABLED=true
+      - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}
+    networks:
+      - test
+    privileged: true
+    volumes:
+      - /var/lib/rstudio-connect
+      - ./license.lic:/var/lib/rstudio-connect/rstudio-connect.lic:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3939"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  test:
+    driver: bridge
