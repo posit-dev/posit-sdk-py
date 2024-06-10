@@ -20,9 +20,8 @@ jobs:
       - run: make deps
       - run: make dev
       - run: make docs
-      - uses: quarto-dev/quarto-actions/publish@v2
-        with:
-          target: netlify
-          path: docs
-          render: false
+      - uses: actions/setup-node@v4
+      - run: npx -y netlify-cli deploy --dir docs/_site
+        env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: 5cea1f56-7935-4387-975a-18a7905d15ee
