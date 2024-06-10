@@ -6,6 +6,7 @@ QUARTO ?= quarto
 QUARTODOC ?= quartodoc
 
 # Environment variables
+NETLIFY_SITE_ID ?= 5cea1f56-7935-4387-975a-18a7905d15ee
 CURRENT_YEAR ?= $(shell date +%Y)
 VERSION ?= $(shell make --silent -C ../ version | tail -n 1)
 
@@ -41,3 +42,7 @@ preview:
 	CURRENT_YEAR=$(CURRENT_YEAR) \
 	VERSION=$(VERSION) \
 	$(QUARTO) preview
+
+
+netlify:
+	NETLIFY_SITE_ID=$(NETLIFY_SITE_ID) npx -y netlify-cli deploy --dir _site --json | jq '.deploy_url'
