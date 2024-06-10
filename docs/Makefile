@@ -7,7 +7,7 @@ QUARTODOC ?= quartodoc
 
 # Environment variables
 CURRENT_YEAR ?= $(shell date +%Y)
-VERSION ?= $(shell make -C ../ version)
+VERSION ?= $(shell make --silent -C ../ version | tail -n 1)
 
 .PHONY: all \
 		api \
