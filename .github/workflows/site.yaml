@@ -5,7 +5,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  default:
+  preview:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,21 +25,6 @@ jobs:
         env:
             NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: |
-          preview_url=$(make --silent -C ./docs netlify | tail -n 1)
-          echo "preview_url=$preview_url" >> $GITHUB_OUTPUT
-      - uses: actions/github-script@v6
-        env:
-          preview_url: ${{ steps.netlify.outputs.preview_url }}
-        with:
-          script: |
-            const url = process.env.preview_url;
-            const issue_number = context.payload.pull_request.number;
-            const repo = context.repo.repo;
-            const owner = context.repo.owner;
-            console.log(`🚀 Check out the documentation site for preview [here](${url}).`)
-            github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number,
-              body: `🚀 Check out the documentation site for preview [here](${url}).`
-            })
+          preview_url=$(make --silent -C ./docs netlify | tail -n 1 | tr -d '"')
+          echo "# 🚀 Site Preview" >> $GITHUB_STEP_SUMMARY
+          echo "$preview_url" >> $GITHUB_STEP_SUMMARY
