@@ -1,6 +1,6 @@
 services:
   tests:
-    image: posit-sdk-py:latest
+    image: ${IMAGE_TAG}
     # Run integration test suite.
     #
     # Target is relative to the ./integration directory, not the project root
@@ -20,7 +20,7 @@ services:
     networks:
       - test
   connect:
-    image: rstudio/rstudio-connect:${CONNECT_IMAGE_TAG}
+    image: ${CONNECT_IMAGE}:${CONNECT_IMAGE_TAG}
     environment:
       - CONNECT_BOOTSTRAP_ENABLED=true
       - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}

@@ -44,6 +44,7 @@ jobs:
     strategy:
       matrix:
         CONNECT_VERSION:
+          - preview
           - 2024.05.0
           - 2024.04.1
           - 2024.04.0

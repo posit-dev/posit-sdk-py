@@ -31,13 +31,15 @@ CONNECT_VERSIONS := 2024.05.0 \
 
 # Environment Variables
 NAME = posit-sdk
+IMAGE_TAG ?= posit-sdk-py:latest
 CONNECT_BOOTSTRAP_SECRETKEY ?= $(shell head -c 32 /dev/random | base64)
+CONNECT_IMAGE ?= rstudio/rstudio-connect
 
 # Binaries
 DOCKER_COMPOSE ?= docker compose
 PYTHON ?= python3
 
-# Run against a specific Connect version.
+# Run test suite for a specific Connect version.
 #
 # Matches any version defined in CONNECT_VERSIONS.
 #
@@ -47,16 +49,23 @@ PYTHON ?= python3
 #   make 2023.01.0
 $(CONNECT_VERSIONS): %: down-% up-%
 
-# Run for each Connect version.
-all: $(CONNECT_VERSIONS:%=%)
+# Run test suite against all Connect versions.
+all: $(CONNECT_VERSIONS:%=%) preview
 
-# Run latest Connect version.
+# Run test suite against latest Connect version.
 latest:
 	$(MAKE) $(firstword $(CONNECT_VERSIONS))
 
+# Run test suite against preview Connect version.
+preview:
+	$(MAKE) \
+	CONNECT_IMAGE=rstudio/rstudio-connect-preview \
+	CONNECT_IMAGE_TAG=dev-jammy-daily \
+	down-preview up-preview
+
 # Build Dockerfile
 build:
-	docker build -t posit-sdk-py:latest ..
+	docker build -t $(IMAGE_TAG) ..
 
 # Tear down resources.
 #
@@ -67,12 +76,14 @@ build:
 #   make down
 #   make down-2024.05.0
 down: $(CONNECT_VERSIONS:%=down-%)
-down-%: CONNECT_VERSION=$*
 down-%: CONNECT_IMAGE_TAG=jammy-$*
+down-%: CONNECT_VERSION=$*
 down-%:
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
+	CONNECT_IMAGE=$(CONNECT_IMAGE) \
 	CONNECT_IMAGE_TAG=$(CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
+	IMAGE_TAG=$(IMAGE_TAG) \
 	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) down -v
 
 # Create, start, and run Docker Compose.
@@ -86,8 +97,10 @@ up-%: CONNECT_VERSION=$*
 up-%: CONNECT_IMAGE_TAG=jammy-$*
 up-%: build
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
+	CONNECT_IMAGE=$(CONNECT_IMAGE) \
 	CONNECT_IMAGE_TAG=$(CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
+	IMAGE_TAG=$(IMAGE_TAG) \
 	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) up -V --abort-on-container-exit --no-build
 
 # Show help message.
@@ -95,6 +108,7 @@ help:
 	@echo "Makefile Targets:"
 	@echo "  all (default)    Run test suite for all Connect versions."
 	@echo "  latest           Run test suite for latest Connect version."
+	@echo "  preview           Run test suite for preview Connect version."
 	@echo "  <version>        Run test suite for the specified Connect version. (e.g., make 2024.05.0)"
 	@echo "  down             Tear down Docker resources for all Connect versions."
 	@echo "  down-<version>   Tear down Docker resources for specific Connect version (e.g., make down-2024.05.0)."
@@ -105,6 +119,7 @@ help:
 	@echo "Common Usage:"
 	@echo "  make -j 4        Run test suite in parallel for all Connect versions."
 	@echo "  make latest      Run test suite for latest Connect version."
+	@echo "  make preview     Run test suite for preview Connect version."
 	@echo "  make 2024.05.0   Run test suite for specific Connect version."
 
 # Run tests.
@@ -112,4 +127,4 @@ help:
 # Typically call from docker-compose.yaml. Assumes Connect server is running
 # on local network.
 test:
-	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest
+	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest -s
