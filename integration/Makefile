@@ -39,6 +39,10 @@ CONNECT_IMAGE ?= rstudio/rstudio-connect
 DOCKER_COMPOSE ?= docker compose
 PYTHON ?= python3
 
+clean:
+	rm -rf logs reports
+	find . -type d -empty -delete
+
 # Run test suite for a specific Connect version.
 #
 # Matches any version defined in CONNECT_VERSIONS.
@@ -108,12 +112,11 @@ help:
 	@echo "Makefile Targets:"
 	@echo "  all (default)    Run test suite for all Connect versions."
 	@echo "  latest           Run test suite for latest Connect version."
-	@echo "  preview           Run test suite for preview Connect version."
+	@echo "  preview          Run test suite for preview Connect version."
 	@echo "  <version>        Run test suite for the specified Connect version. (e.g., make 2024.05.0)"
-	@echo "  down             Tear down Docker resources for all Connect versions."
-	@echo "  down-<version>   Tear down Docker resources for specific Connect version (e.g., make down-2024.05.0)."
 	@echo "  up               Start Docker Compose for all Connect version."
-	@echo "  up-<version>     Start Docker Compose for specific Connect version (e.g., make up-2024.05.0)."
+	@echo "  down             Tear down Docker resources for all Connect versions."
+	@echo "  clean            Clean up the project directory."
 	@echo "  help             Show this help message."
 	@echo
 	@echo "Common Usage:"
@@ -127,4 +130,5 @@ help:
 # Typically call from docker-compose.yaml. Assumes Connect server is running
 # on local network.
 test:
-	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest --junit-xml=./reports/$(CONNECT_VERSION).xml
+	mkdir -p logs
+	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest --junit-xml=./reports/$(CONNECT_VERSION).xml > ./logs/$(CONNECT_VERSION).log
