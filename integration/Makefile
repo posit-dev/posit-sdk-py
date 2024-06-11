@@ -39,6 +39,13 @@ CONNECT_IMAGE ?= rstudio/rstudio-connect
 DOCKER_COMPOSE ?= docker compose
 PYTHON ?= python3
 
+# Determine if `uv` is available
+ifneq ($(shell command -v uv 2>/dev/null),)
+PIP := uv pip
+else
+PIP := pip3
+endif
+
 clean:
 	rm -rf logs reports
 	find . -type d -empty -delete
