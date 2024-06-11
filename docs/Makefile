@@ -54,4 +54,4 @@ preview:
 	$(QUARTO) preview
 
 deploy:
-	NETLIFY_SITE_ID=$(NETLIFY_SITE_ID) npx -y netlify-cli deploy --dir _site --json $(NETLIFY_ARGS)
+	@NETLIFY_SITE_ID=$(NETLIFY_SITE_ID) npx -y netlify-cli deploy --dir _site --json $(NETLIFY_ARGS)
