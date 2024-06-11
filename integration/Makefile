@@ -1,3 +1,5 @@
+include ../vars.mk
+
 .DEFAULT_GOAL := all
 
 .PHONY: $(CONNECT_VERSIONS) \
@@ -28,23 +30,6 @@ CONNECT_VERSIONS := 2024.05.0 \
                     2023.01.0 \
                     2022.12.0 \
                     2022.11.0
-
-# Environment Variables
-NAME = posit-sdk
-IMAGE_TAG ?= posit-sdk-py:latest
-CONNECT_BOOTSTRAP_SECRETKEY ?= $(shell head -c 32 /dev/random | base64)
-CONNECT_IMAGE ?= rstudio/rstudio-connect
-
-# Binaries
-DOCKER_COMPOSE ?= docker compose
-PYTHON ?= python3
-
-# Determine if `uv` is available
-ifneq ($(shell command -v uv 2>/dev/null),)
-PIP := uv pip
-else
-PIP := pip3
-endif
 
 clean:
 	rm -rf logs reports
