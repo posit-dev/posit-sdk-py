@@ -9,6 +9,16 @@ QUARTODOC ?= quartodoc
 NETLIFY_SITE_ID ?= 5cea1f56-7935-4387-975a-18a7905d15ee
 CURRENT_YEAR ?= $(shell date +%Y)
 VERSION ?= $(shell make --silent -C ../ version | tail -n 1)
+ENV ?= dev
+
+
+# Determine Netlify arguments from environment
+ifeq ($(ENV), prod)
+    NETLIFY_ARGS := --prod
+else
+    NETLIFY_ARGS :=
+endif
+
 
 .PHONY: all \
 		api \
@@ -43,6 +53,5 @@ preview:
 	VERSION=$(VERSION) \
 	$(QUARTO) preview
 
-
-netlify:
-	NETLIFY_SITE_ID=$(NETLIFY_SITE_ID) npx -y netlify-cli deploy --dir _site --json | jq '.deploy_url'
+deploy:
+	@NETLIFY_SITE_ID=$(NETLIFY_SITE_ID) npx -y netlify-cli deploy --dir _site --json $(NETLIFY_ARGS)

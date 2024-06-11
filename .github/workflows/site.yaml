@@ -16,15 +16,15 @@ jobs:
           python-version: 3.x
           check-latest: true
           cache: 'pip'
+      - uses: actions/setup-node@v4
       - uses: quarto-dev/quarto-actions/setup@v2
       - run: make deps
       - run: make dev
       - run: make docs
-      - uses: actions/setup-node@v4
-      - id: netlify
-        env:
-            NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        run: |
-          preview_url=$(make --silent -C ./docs netlify | tail -n 1 | tr -d '"')
+      - run: |
+          preview_url=$(make deploy | jq '.deploy_url' | tail -n 1 | tr -d '"')
           echo "# 🚀 Site Preview" >> $GITHUB_STEP_SUMMARY
           echo "$preview_url" >> $GITHUB_STEP_SUMMARY
+        working-directory: docs
+        env:
+            NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
