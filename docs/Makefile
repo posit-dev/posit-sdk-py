@@ -11,7 +11,6 @@ CURRENT_YEAR ?= $(shell date +%Y)
 VERSION ?= $(shell make --silent -C ../ version | tail -n 1)
 ENV ?= dev
 
-
 # Determine Netlify arguments from environment
 ifeq ($(ENV), prod)
     NETLIFY_ARGS := --prod
@@ -19,6 +18,12 @@ else
     NETLIFY_ARGS :=
 endif
 
+# Determine if `uv` is available
+ifneq ($(shell command -v uv 2>/dev/null),)
+PIP := uv pip
+else
+PIP := pip3
+endif
 
 .PHONY: all \
 		api \
