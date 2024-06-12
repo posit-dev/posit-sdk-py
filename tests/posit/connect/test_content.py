@@ -5,10 +5,32 @@ from responses import matchers
 
 from posit.connect.client import Client
 from posit.connect.config import Config
-from posit.connect.content import ContentItem
+from posit.connect.content import ContentItem, ContentItemOwner
 from posit.connect.permissions import Permissions
 
 from .api import load_mock  # type: ignore
+
+
+class TestContentOwnerAttributes:
+    @classmethod
+    def setup_class(cls):
+        guid = "20a79ce3-6e87-4522-9faf-be24228800a4"
+        config = Config(api_key="12345", url="https://connect.example/")
+        session = requests.Session()
+        fake_item = load_mock(f"v1/users/{guid}.json")
+        cls.item = ContentItemOwner(config, session, **fake_item)
+
+    def test_guid(self):
+        assert self.item.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+
+    def test_username(self):
+        assert self.item.username == "carlos12"
+
+    def test_first_name(self):
+        assert self.item.first_name == "Carlos"
+
+    def test_last_name(self):
+        assert self.item.last_name == "User"
 
 
 class TestContentItemAttributes:
@@ -138,7 +160,7 @@ class TestContentItemAttributes:
         assert self.item.run_as_current_user is False
 
     def test_owner_guid(self):
-        assert self.item.owner_guid == "87c12c08-11cd-4de1-8da3-12a7579c4998"
+        assert self.item.owner_guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
     def test_content_url(self):
         assert (
@@ -156,13 +178,44 @@ class TestContentItemAttributes:
         assert self.item.app_role == "viewer"
 
     def test_owner(self):
-        assert self.item.owner == {}
+        assert self.item.owner == {
+            "username": "carlos12",
+            "first_name": "Carlos",
+            "last_name": "User",
+            "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+        }
 
     def test_permissions(self):
         assert isinstance(self.item.permissions, Permissions)
 
     def test_tags(self):
         assert self.item.tags == []
+
+
+class TestContentItemGetContentOwner:
+    @responses.activate
+    def test_owner(self):
+        mock_content = load_mock(
+            "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+        )
+        # remove owner from response to force fetch on attribute
+        del mock_content["owner"]
+        responses.get(
+            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=mock_content,
+        )
+
+        responses.get(
+            f"https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock(
+                f"v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
+            ),
+        )
+
+        c = Client("12345", "https://connect.example")
+        item = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
+        owner = item.owner
+        assert owner.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
 
 class TestContentItemDelete:

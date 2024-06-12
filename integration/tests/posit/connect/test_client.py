@@ -1,6 +1,3 @@
-import os
-import pytest
-
 from posit import connect
 
 

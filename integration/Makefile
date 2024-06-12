@@ -138,4 +138,4 @@ help:
 # on local network.
 test:
 	mkdir -p logs
-	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest --junit-xml=./reports/$(CONNECT_VERSION).xml > ./logs/$(CONNECT_VERSION).log
+	CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest -s --junit-xml=./reports/$(CONNECT_VERSION).xml | tee ./logs/$(CONNECT_VERSION).log
