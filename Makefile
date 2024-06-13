@@ -1,13 +1,6 @@
+include vars.mk
+
 .DEFAULT_GOAL := all
-
-NAME := posit-sdk
-PYTHON := python3
-
-ifneq ($(shell command -v uv 2>/dev/null),)
-PIP := uv pip
-else
-PIP := pip3
-endif
 
 .PHONY: build clean cov default deps dev docs fmt fix install it lint test uninstall version
 
@@ -17,6 +10,8 @@ build:
 	$(PYTHON) -m build
 
 clean:
+	$(MAKE) -C ./docs $@
+	$(MAKE) -C ./integration $@
 	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
 	find . -name "*.egg-info" -exec rm -rf {} +
 	find . -name "*.pyc" -exec rm -f {} +

@@ -21,10 +21,11 @@ jobs:
       - run: make deps
       - run: make dev
       - run: make docs
-      - run: |
-          preview_url=$(make deploy | jq '.deploy_url' | tail -n 1 | tr -d '"')
-          echo "# 🚀 Site Preview" >> $GITHUB_STEP_SUMMARY
-          echo "$preview_url" >> $GITHUB_STEP_SUMMARY
+      - id: preview
         working-directory: docs
         env:
             NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          preview_url=$(make deploy | jq '.deploy_url' | tail -n 1 | tr -d '"')
+          echo "# 🚀 Site Preview" >> $GITHUB_STEP_SUMMARY
+          echo "$preview_url" >> $GITHUB_STEP_SUMMARY
