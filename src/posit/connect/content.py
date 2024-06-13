@@ -149,11 +149,12 @@ class ContentItem(Resource):
 
     @property
     def owner(self) -> ContentItemOwner:
-        if "owner" in self:
-            return self["owner"]
-        user = Users(self.config, self.session).get(self.owner_guid)
-        owner = ContentItemOwner(self.config, self.session, **user)
-        return owner
+        if "owner" not in self:
+            # It is possible to get a content item that does not contain owner.
+            # "owner" is an optional additional request param.
+            # If it's not included, we can retrieve the information by `owner_guid`
+            self["owner"] = Users(self.config, self.session).get(self.owner_guid)
+        return ContentItemOwner(self.config, self.session, **self["owner"])
 
     # Properties
 
