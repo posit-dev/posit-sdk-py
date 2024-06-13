@@ -13,6 +13,7 @@ from .config import Config
 from .bundles import Bundles
 from .permissions import Permissions
 from .resources import Resources, Resource
+from .users import Users
 
 
 class ContentItemOwner(Resource):
@@ -145,6 +146,17 @@ class ContentItem(Resource):
     @property
     def permissions(self) -> Permissions:
         return Permissions(self.config, self.session, self.guid)
+
+    @property
+    def owner(self) -> ContentItemOwner:
+        if "owner" not in self:
+            # It is possible to get a content item that does not contain owner.
+            # "owner" is an optional additional request param.
+            # If it's not included, we can retrieve the information by `owner_guid`
+            self["owner"] = Users(self.config, self.session).get(
+                self.owner_guid
+            )
+        return ContentItemOwner(self.config, self.session, **self["owner"])
 
     # Properties
 
@@ -307,10 +319,6 @@ class ContentItem(Resource):
     @property
     def owner_guid(self) -> str:
         return self.get("owner_guid")  # type: ignore
-
-    @property
-    def owner(self) -> ContentItemOwner:
-        return self.get("owner", {})  # type: ignore
 
     @property
     def content_url(self) -> str:
