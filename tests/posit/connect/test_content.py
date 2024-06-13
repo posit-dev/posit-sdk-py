@@ -178,12 +178,7 @@ class TestContentItemAttributes:
         assert self.item.app_role == "viewer"
 
     def test_owner(self):
-        assert self.item.owner == {
-            "username": "carlos12",
-            "first_name": "Carlos",
-            "last_name": "User",
-            "guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
-        }
+        assert "owner" not in self.item
 
     def test_permissions(self):
         assert isinstance(self.item.permissions, Permissions)
@@ -198,8 +193,6 @@ class TestContentItemGetContentOwner:
         mock_content = load_mock(
             "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
         )
-        # remove owner from response to force fetch on attribute
-        del mock_content["owner"]
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
             json=mock_content,
