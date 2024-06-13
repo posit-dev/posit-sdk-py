@@ -26,3 +26,8 @@ class TestContent:
         item = self.client.content.find_one(include=None)
         owner = item.owner
         assert owner.guid == self.client.me.guid
+
+    def test_content_item_owner_from_include(self):
+        item = self.client.content.find_one(include="owner")
+        owner = item.owner
+        assert owner.guid == self.client.me.guid

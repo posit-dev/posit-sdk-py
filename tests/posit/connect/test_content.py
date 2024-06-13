@@ -198,7 +198,7 @@ class TestContentItemGetContentOwner:
             json=mock_content,
         )
 
-        responses.get(
+        mock_user_get = responses.get(
             f"https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             json=load_mock(
                 f"v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
@@ -209,6 +209,11 @@ class TestContentItemGetContentOwner:
         item = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         owner = item.owner
         assert owner.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+
+        # load a second time, assert tha owner is loaded from cached result
+        owner = item.owner
+        assert owner.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+        assert mock_user_get.call_count == 1
 
 
 class TestContentItemDelete:
