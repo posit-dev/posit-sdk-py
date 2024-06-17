@@ -2,6 +2,7 @@ from posit import connect
 
 
 class TestContent:
+    @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
         cls.item = cls.client.content.create(
@@ -9,6 +10,11 @@ class TestContent:
             description="Simple sample content for testing",
             access_type="acl",
         )
+
+    @classmethod
+    def teardown_class(cls):
+        cls.item.delete()
+        assert cls.client.content.count() == 0
 
     def test_count(self):
         assert self.client.content.count() == 1

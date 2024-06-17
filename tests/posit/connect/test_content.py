@@ -345,7 +345,7 @@ class TestContentsFind:
         # invoke
         content = client.content.find()
 
-        #  assert
+        # assert
         assert mock_get.call_count == 1
         assert len(content) == 3
         assert content[0].name == "team-admin-dashboard"
