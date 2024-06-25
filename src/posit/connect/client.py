@@ -14,6 +14,7 @@ from .content import Content
 from .metrics import Metrics
 from .tasks import Tasks
 from .users import User, Users
+from .groups import Groups
 
 
 class Client:
@@ -93,6 +94,17 @@ class Client:
             The OAuth integration instance.
         """
         return OAuthIntegration(config=self.config, session=self.session)
+
+    @property
+    def groups(self) -> Groups:
+        """The groups resource interface.
+
+        Returns
+        -------
+        Groups
+            The groups resource interface.
+        """
+        return Groups(self.config, self.session)
 
     @property
     def tasks(self) -> Tasks:

@@ -100,6 +100,7 @@ quartodoc:
       contents:
         - connect.bundles
         - connect.content
+        - connect.groups
         - connect.permissions
         - connect.tasks
         - connect.users
