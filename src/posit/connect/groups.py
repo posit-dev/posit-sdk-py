@@ -31,8 +31,12 @@ class Group(Resource):
         return self.get("name")  # type: ignore
 
     @property
-    def owner_guid(self) -> str:
+    def owner_guid(self) -> str | None:
         return self.get("owner_guid")  # type: ignore
+
+    @property
+    def temp_ticket(self) -> str | None:
+        return self.get("temp_ticket")  # type: ignore
 
     # CRUD Methods
 
@@ -51,7 +55,7 @@ class Groups(Resources):
         self.session = session
 
     @overload
-    def create(self, name: str, unique_id: str | None) -> Group:
+    def create(self, name: str, *, unique_id: str | None) -> Group:
         """Create a group.
 
         Parameters
@@ -62,6 +66,27 @@ class Groups(Resources):
         Returns
         -------
         Group
+        """
+        ...
+
+    @overload
+    def create(self, *, temp_ticket: str) -> Group:
+        """Create a group from a remote authentication provider (LDAP).
+
+        Create a group after obtaining a temporary ticket from `remote`.
+
+        Parameters
+        ----------
+        temp_ticket: str
+
+        Returns
+        -------
+        Group
+
+        Examples
+        --------
+        >>> group = find_one(prefix="example", remote=True)
+        >>> groups.create(temp_ticket=group.temp_ticket)
         """
         ...
 
@@ -78,17 +103,25 @@ class Groups(Resources):
     def create(self, *args, **kwargs) -> Group:
         """Create a group.
 
-        Parameters
-        ----------
-        name: str
-        unique_id: str | None
-
         Returns
         -------
         Group
+
+        Examples
+        --------
+        >>> create("example")
+        >>> create(name="example")
+        >>> create("example", unique_id="00g1a2b3c4d5e6f7g8h9i0j1k2l3m4n5")
+        >>> create(temp_ticket="56jhI0rq19Nw4luL")
         """
         ...
-        body = dict(*args, **kwargs)
+        if len(args) == 1 and isinstance(args[0], str):
+            body = {"name": args[0], **kwargs}
+        elif "temp_ticket" in kwargs:
+            body = {"temp_ticket": kwargs["temp_ticket"]}
+        else:
+            body = kwargs
+
         path = "v1/groups"
         url = urls.append(self.config.url, path)
         response = self.session.post(url, json=body)
@@ -98,25 +131,85 @@ class Groups(Resources):
     def find(
         self,
         prefix: str = ...,
-    ) -> List[Group]: ...
-
-    @overload
-    def find(self, *args, **kwargs) -> List[Group]: ...
-
-    def find(self, *args, **kwargs):
+    ) -> List[Group]:
         """Find groups.
 
         Parameters
         ----------
-        prefix: str
-            Filter by group name prefix. Casing is ignored.
+        prefix : str, optional
+            Filter by group name prefix, by default None
 
         Returns
         -------
         List[Group]
+
+        Examples
+        --------
+        >>> find()
+        >>> find(prefix="example")
         """
-        params = dict(*args, **kwargs)
+        ...
+
+    @overload
+    def find(
+        self,
+        prefix: str = ...,
+        *,
+        remote: bool = True,
+    ) -> List[Group]:
+        """Find groups from a remote authentication provider (LDAP).
+
+        Parameters
+        ----------
+        prefix : str, optional
+            Filter by group name prefix, by default None
+        remote : bool, optional
+            Use a remote provider, by default True
+
+        Returns
+        -------
+        List[Group]
+
+        Examples
+        --------
+        >>> find(remote=True)
+        >>> find(prefix="example", remote=True)
+        """
+        ...
+
+    @overload
+    def find(self, *args, **kwargs) -> List[Group]: ...
+
+    def find(self, *args, **kwargs) -> List[Group]:
+        """Find groups.
+
+        Set remote=True to find groups from a remote authentication provider (LDAP).
+
+        Returns
+        -------
+        List[Group]
+
+        Examples
+        --------
+        >>> find()
+        >>> find("example")
+        >>> find(prefix="example")
+        >>> find(remote=True)
+        >>> find("example", remote=True)
+        >>> find(remote=True, prefix="example")
+        """
+        if len(args) == 1 and isinstance(args[0], str):
+            params = {"name": args[0], **kwargs}
+        else:
+            params = kwargs
+
+        # set path to 'v1/groups/remote' if remote is True
         path = "v1/groups"
+        if "remote" in params:
+            if params["remote"]:
+                path = "v1/groups/remote"
+            del params["remote"]
+
         url = urls.append(self.config.url, path)
         paginator = Paginator(self.session, url, params=params)
         results = paginator.fetch_results()
@@ -133,25 +226,85 @@ class Groups(Resources):
     def find_one(
         self,
         prefix: str = ...,
-    ) -> Group | None: ...
+    ) -> Group | None:
+        """Find a group.
+
+        Parameters
+        ----------
+        prefix : str, optional
+            Filter by group name prefix, by default None
+
+        Returns
+        -------
+        Group | None
+
+        Examples
+        --------
+        >>> find_one()
+        >>> find_one(prefix="example")
+        """
+        ...
+
+    @overload
+    def find_one(
+        self,
+        prefix: str = ...,
+        *,
+        remote: bool = True,
+    ) -> Group | None:
+        """Find a group from a remote authentication provider (LDAP).
+
+        Parameters
+        ----------
+        prefix : str, optional
+            Filter by group name prefix, by default None
+        remote : bool, optional
+            Use a remote provider, by default True
+
+        Returns
+        -------
+        Group | None
+
+        Examples
+        --------
+        >>> find_one(remote=True)
+        >>> find_one(prefix="example", remote=True)
+        """
+        ...
 
     @overload
     def find_one(self, *args, **kwargs) -> Group | None: ...
 
     def find_one(self, *args, **kwargs) -> Group | None:
-        """Find one group.
+        """Find a groups.
 
-        Parameters
-        ----------
-        prefix: str
-            Filter by group name prefix. Casing is ignored.
+        Set remote=True to find groups from a remote authentication provider (LDAP).
 
         Returns
         -------
         Group | None
+
+        Examples
+        --------
+        >>> find_one()
+        >>> find_one("example")
+        >>> find_one(prefix="example")
+        >>> find_one(remote=True)
+        >>> find_one("example", remote=True)
+        >>> find_one(remote=True, prefix="example")
         """
-        params = dict(*args, **kwargs)
+        if len(args) == 1 and isinstance(args[0], str):
+            params = {"name": args[0], **kwargs}
+        else:
+            params = kwargs
+
+        # set path to 'v1/groups/remote' if remote is True
         path = "v1/groups"
+        if "remote" in params:
+            if params["remote"]:
+                path = "v1/groups/remote"
+            del params["remote"]
+
         url = urls.append(self.config.url, path)
         paginator = Paginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
