@@ -19,7 +19,7 @@ class User(Resource):
     Attributes
     ----------
     content: Content
-        Content resource for user. Sets the content item owner identifier (`owner_guid`) to `self.guid`.
+        A content resource scoped to this user.
     guid : str
     email : str
     username : str
