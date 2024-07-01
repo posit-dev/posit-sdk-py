@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, overload
+from collections import defaultdict
+from typing import TYPE_CHECKING, List, Optional, overload
 
 
 from requests import Session
@@ -13,11 +14,10 @@ from .config import Config
 from .bundles import Bundles
 from .permissions import Permissions
 from .resources import Resources, Resource
-from .users import Users
 
 
 class ContentItemOwner(Resource):
-    """Owner information."""
+    """Content item owner resource."""
 
     @property
     def guid(self) -> str:
@@ -153,6 +153,8 @@ class ContentItem(Resource):
             # It is possible to get a content item that does not contain owner.
             # "owner" is an optional additional request param.
             # If it's not included, we can retrieve the information by `owner_guid`
+            from .users import Users
+
             self["owner"] = Users(self.config, self.session).get(
                 self.owner_guid
             )
@@ -442,12 +444,41 @@ class ContentItem(Resource):
 
 
 class Content(Resources):
-    """Content resource."""
+    """Content resource.
 
-    def __init__(self, config: Config, session: Session) -> None:
+    Parameters
+    ----------
+    config : Config
+        Configuration object.
+    session : Session
+        Requests session object.
+    owner_guid : str, optional
+        Content item owner identifier. Filters results to those owned by a specific user (the default is None, which implies not filtering results on owner identifier).
+    """
+
+    def __init__(
+        self,
+        config: Config,
+        session: Session,
+        *,
+        owner_guid: str | None = None,
+    ) -> None:
         self.url = urls.append(config.url, "v1/content")
         self.config = config
         self.session = session
+        self.owner_guid = owner_guid
+
+    def _get_default_params(self) -> dict:
+        """Build default parameters for GET requests.
+
+        Returns
+        -------
+        dict
+        """
+        params = {}
+        if self.owner_guid:
+            params["owner_guid"] = self.owner_guid
+        return params
 
     def count(self) -> int:
         """Count the number of content items.
@@ -456,8 +487,7 @@ class Content(Resources):
         -------
         int
         """
-        results = self.session.get(self.url).json()
-        return len(results)
+        return len(self.find())
 
     @overload
     def create(
@@ -600,18 +630,19 @@ class Content(Resources):
         -------
         List[ContentItem]
         """
-        params = dict(*args, include=include, **kwargs)
+        params = self._get_default_params()
+        params.update(args)
+        params.update(kwargs)
+        params["include"] = include
         response = self.session.get(self.url, params=params)
-        results = response.json()
-        items = (
+        return [
             ContentItem(
                 config=self.config,
                 session=self.session,
                 **result,
             )
-            for result in results
-        )
-        return [item for item in items]
+            for result in response.json()
+        ]
 
     @overload
     def find_one(

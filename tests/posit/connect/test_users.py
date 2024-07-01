@@ -4,6 +4,8 @@ import pytest
 import requests
 import responses
 
+from responses import matchers
+
 from posit.connect.client import Client
 from posit.connect.users import User
 
@@ -90,6 +92,46 @@ class TestUserAttributes:
         assert user.locked is None
         user = User(session, url, locked=False)
         assert user.locked is False
+
+
+class TestUserContent:
+    """Check behavior of content attribute."""
+
+    @responses.activate
+    def test_find(self):
+        """Check GET /v1/content call includes owner_guid query parameter."""
+        # behavior
+        mock_get_user = responses.get(
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock(
+                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
+            ),
+        )
+
+        mock_get_content = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock(
+                "v1/content?owner_guid=20a79ce3-6e87-4522-9faf-be24228800a4.json"
+            ),
+            match=[
+                matchers.query_param_matcher(
+                    {"owner_guid": "20a79ce3-6e87-4522-9faf-be24228800a4"},
+                    strict_match=False,
+                )
+            ],
+        )
+
+        # setup
+        c = Client(api_key="12345", url="https://connect.example/")
+        user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
+
+        # invoke
+        content = user.content.find()
+
+        # assert
+        assert mock_get_user.call_count == 1
+        assert mock_get_content.call_count == 1
+        assert len(content) == 1
 
 
 class TestUserLock:

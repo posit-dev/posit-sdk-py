@@ -8,6 +8,7 @@ import requests
 from . import me, urls
 
 from .config import Config
+from .content import Content
 from .paginator import Paginator
 from .resources import Resource, Resources
 
@@ -17,6 +18,8 @@ class User(Resource):
 
     Attributes
     ----------
+    content: Content
+        A content resource scoped to this user.
     guid : str
     email : str
     username : str
@@ -31,6 +34,10 @@ class User(Resource):
     locked : bool
         Whether the user is locked.
     """
+
+    @property
+    def content(self) -> Content:
+        return Content(self.config, self.session, owner_guid=self.guid)
 
     @property
     def guid(self) -> str:
