@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from requests import Response, Session
-from typing import Optional
+from typing import Optional, overload
 
 from . import hooks, me, urls
 
@@ -47,11 +47,114 @@ class Client:
         Server version.
     """
 
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        url: Optional[str] = None,
-    ) -> None:
+    @overload
+    def __init__(self) -> None:
+        """Initialize a Client instance.
+
+        Creates a client instance using credentials read from the environment.
+
+        Environment Variables
+        ---------------------
+        CONNECT_API_KEY - The API key credential for client authentication.
+        CONNECT_SERVER - The Connect server URL.
+
+        Examples
+        --------
+        Client()
+        """
+        ...
+
+    @overload
+    def __init__(self, url: str) -> None:
+        """Initialize a Client instance.
+
+        Creates a client instance using a provided URL and API key credential read from the environment.
+
+        Environment Variables
+        ---------------------
+        CONNECT_API_KEY - The API key credential for client authentication.
+
+        Parameters
+        ----------
+        url : str
+            The Connect server URL.
+
+        Examples
+        --------
+        Client("https://connect.example.com)
+        """
+        ...
+
+    @overload
+    def __init__(self, url: str, api_key: str) -> None:
+        """Initialize a Client instance.
+
+        Parameters
+        ----------
+        url : str
+            The Connect server URL.
+        api_key : str
+            The API key credential for client authentication.
+
+        Examples
+        --------
+        >>> Client("https://connect.example.com", abcdefghijklmnopqrstuvwxyz012345")
+        """
+        ...
+
+    @overload
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize a Client instance."""
+        ...
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize a Client instance.
+
+        Environment Variables
+        ---------------------
+        CONNECT_API_KEY - The API key credential for client authentication.
+        CONNECT_SERVER - The Connect server URL.
+
+        Parameters
+        ----------
+        *args
+            Variable length argument list. Can accept:
+            - (url: str)
+                url: str
+                    The Connect server URL.
+            - (url: str, api_key: str)
+                url: str
+                    The Connect server URL.
+                api_key: str
+                    The API key credential for client authentication.
+
+        **kwargs
+            Keyword arguments. Can include 'url' and 'api_key'.
+
+        Examples
+        --------
+        >>> Client()
+        >>> Client("https://connect.example.com")
+        >>> Client("https://connect.example.com", abcdefghijklmnopqrstuvwxyz012345")
+        >>> Client(api_key=""abcdefghijklmnopqrstuvwxyz012345", url="https://connect.example.com")
+        """
+        api_key = None
+        url = None
+        if len(args) == 1 and isinstance(args[0], str):
+            url = args[0]
+        elif (
+            len(args) == 2
+            and isinstance(args[0], str)
+            and isinstance(args[1], str)
+        ):
+            url = args[0]
+            api_key = args[1]
+        else:
+            if "api_key" in kwargs and isinstance(kwargs["api_key"], str):
+                api_key = kwargs["api_key"]
+            if "url" in kwargs and isinstance(kwargs["url"], str):
+                url = kwargs["url"]
+
         self.config = Config(api_key=api_key, url=url)
         session = Session()
         session.auth = Auth(config=self.config)

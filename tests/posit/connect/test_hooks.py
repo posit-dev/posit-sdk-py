@@ -74,7 +74,7 @@ def test_deprecation_warning():
         "https://connect.example/__api__/v0",
         headers={"X-Deprecated-Endpoint": "v1/"},
     )
-    c = Client("12345", "https://connect.example")
+    c = Client("https://connect.example", "12345")
 
     with pytest.warns(DeprecationWarning):
         c.get("v0")

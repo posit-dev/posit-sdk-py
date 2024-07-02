@@ -60,7 +60,7 @@ class TestTaskUpdate:
         )
 
         # setup
-        c = connect.Client("12345", "https://connect.example")
+        c = connect.Client("https://connect.example", "12345")
         task = c.tasks.get(id)
         assert not task.is_finished
 
@@ -91,7 +91,7 @@ class TestTaskUpdate:
         )
 
         # setup
-        c = connect.Client("12345", "https://connect.example")
+        c = connect.Client("https://connect.example", "12345")
         task = c.tasks.get(id)
         assert not task.is_finished
 
@@ -122,7 +122,7 @@ class TestTaskWaitFor:
         )
 
         # setup
-        c = connect.Client("12345", "https://connect.example")
+        c = connect.Client("https://connect.example", "12345")
         task = c.tasks.get(id)
         assert not task.is_finished
 
@@ -147,7 +147,7 @@ class TestTasksGet:
         )
 
         # setup
-        c = connect.Client("12345", "https://connect.example")
+        c = connect.Client("https://connect.example", "12345")
 
         # invoke
         task = c.tasks.get(id)
