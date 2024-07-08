@@ -55,22 +55,32 @@ class Groups(Resources):
         self.session = session
 
     @overload
-    def create(self, name: str, *, unique_id: str | None) -> Group:
+    def create(
+        self, name: str, *, unique_id: str | None = None, **kwargs
+    ) -> Group:
         """Create a group.
 
         Parameters
         ----------
         name: str
         unique_id: str | None
+            The unique identifier field, by default None
 
         Returns
         -------
         Group
+
+        Examples
+        --------
+        >>> create("example")
+        >>> create("example", unique_id="string")
+        >>> create(name="example)
+        >>> create(name="example", unique_id="string")
         """
         ...
 
     @overload
-    def create(self, *, temp_ticket: str) -> Group:
+    def create(self, *, temp_ticket: str, **kwargs) -> Group:
         """Create a group from a remote authentication provider (LDAP).
 
         Create a group after obtaining a temporary ticket from `remote`.
@@ -85,8 +95,8 @@ class Groups(Resources):
 
         Examples
         --------
-        >>> group = find_one(prefix="example", remote=True)
-        >>> groups.create(temp_ticket=group.temp_ticket)
+        >>> group = find_one("example", remote=True)
+        >>> create(temp_ticket=group.temp_ticket)
         """
         ...
 
@@ -110,15 +120,14 @@ class Groups(Resources):
         Examples
         --------
         >>> create("example")
-        >>> create(name="example")
-        >>> create("example", unique_id="00g1a2b3c4d5e6f7g8h9i0j1k2l3m4n5")
+        >>> create("example", unique_id="string")
+        >>> create(name="example)
+        >>> create(name="example", unique_id="string")
         >>> create(temp_ticket="56jhI0rq19Nw4luL")
         """
         ...
         if len(args) == 1 and isinstance(args[0], str):
             body = {"name": args[0], **kwargs}
-        elif "temp_ticket" in kwargs:
-            body = {"temp_ticket": kwargs["temp_ticket"]}
         else:
             body = kwargs
 
@@ -129,15 +138,16 @@ class Groups(Resources):
 
     @overload
     def find(
-        self,
-        prefix: str = ...,
+        self, prefix: str = ..., *, remote: bool = False, **kwargs
     ) -> List[Group]:
         """Find groups.
 
         Parameters
         ----------
-        prefix : str, optional
-            Filter by group name prefix, by default None
+        prefix : str,
+            Filter by group name prefix
+        remote : bool, optional
+            Use a remote provider, by default False
 
         Returns
         -------
@@ -146,33 +156,12 @@ class Groups(Resources):
         Examples
         --------
         >>> find()
+        >>> find("example")
         >>> find(prefix="example")
-        """
-        ...
 
-    @overload
-    def find(
-        self,
-        prefix: str = ...,
-        *,
-        remote: bool = True,
-    ) -> List[Group]:
-        """Find groups from a remote authentication provider (LDAP).
-
-        Parameters
-        ----------
-        prefix : str, optional
-            Filter by group name prefix, by default None
-        remote : bool, optional
-            Use a remote provider, by default True
-
-        Returns
-        -------
-        List[Group]
-
-        Examples
-        --------
+        Find groups from a remote authentication provider (LDAP).
         >>> find(remote=True)
+        >>> find("example", remote=True)
         >>> find(prefix="example", remote=True)
         """
         ...
@@ -199,7 +188,7 @@ class Groups(Resources):
         >>> find(remote=True, prefix="example")
         """
         if len(args) == 1 and isinstance(args[0], str):
-            params = {"name": args[0], **kwargs}
+            params = {"prefix": args[0], **kwargs}
         else:
             params = kwargs
 
@@ -224,15 +213,16 @@ class Groups(Resources):
 
     @overload
     def find_one(
-        self,
-        prefix: str = ...,
+        self, prefix: str = ..., *, remote: bool = False, **kwargs
     ) -> Group | None:
-        """Find a group.
+        """Find groups.
 
         Parameters
         ----------
-        prefix : str, optional
-            Filter by group name prefix, by default None
+        prefix : str,
+            Filter by group name prefix
+        remote : bool, optional
+            Use a remote provider, by default False
 
         Returns
         -------
@@ -241,33 +231,12 @@ class Groups(Resources):
         Examples
         --------
         >>> find_one()
+        >>> find_one("example")
         >>> find_one(prefix="example")
-        """
-        ...
 
-    @overload
-    def find_one(
-        self,
-        prefix: str = ...,
-        *,
-        remote: bool = True,
-    ) -> Group | None:
-        """Find a group from a remote authentication provider (LDAP).
-
-        Parameters
-        ----------
-        prefix : str, optional
-            Filter by group name prefix, by default None
-        remote : bool, optional
-            Use a remote provider, by default True
-
-        Returns
-        -------
-        Group | None
-
-        Examples
-        --------
+        Find groups from a remote authentication provider (LDAP).
         >>> find_one(remote=True)
+        >>> find_one("example", remote=True)
         >>> find_one(prefix="example", remote=True)
         """
         ...
@@ -289,12 +258,14 @@ class Groups(Resources):
         >>> find_one()
         >>> find_one("example")
         >>> find_one(prefix="example")
+
+        Find groups from a remote authentication provider (LDAP).
         >>> find_one(remote=True)
         >>> find_one("example", remote=True)
-        >>> find_one(remote=True, prefix="example")
+        >>> find_one(prefix="example", remote=True)
         """
         if len(args) == 1 and isinstance(args[0], str):
-            params = {"name": args[0], **kwargs}
+            params = {"prefix": args[0], **kwargs}
         else:
             params = kwargs
 
@@ -338,17 +309,74 @@ class Groups(Resources):
             **response.json(),
         )
 
-    def count(self) -> int:
+    @overload
+    def count(
+        self, prefix: str = ..., *, remote: bool = False, **kwargs
+    ) -> int:
         """Count the number of groups.
+
+        Parameters
+        ----------
+        prefix : str
+        remote: bool
+            Use a remote provider, by defualt False
 
         Returns
         -------
         int
+            The number of groups.
+
+        Examples
+        --------
+        >>> count()
+        >>> count("example")
+        >>> count(prefix="example")
+
+        Count the number of groups from a remote authentication provider (LDAP).
+        >>> count(remote=True)
+        >>> count("example", remote=True)
+        >>> count(prefix="example", remote=True)
         """
+        ...
+
+    @overload
+    def count(self, *args, **kwargs) -> int: ...
+
+    def count(self, *args, **kwargs) -> int:
+        """Count the number of groups.
+
+        Set remote=True to count groups from a remote authentication provider (LDAP).
+
+        Returns
+        -------
+        int
+            The number of groups.
+
+        Examples
+        --------
+        >>> count()
+        >>> count("example")
+        >>> count(prefix="example")
+
+        Count the number of groups from a remote authentication provider (LDAP).
+        >>> count(remote=True)
+        >>> count("example", remote=True)
+        >>> count(prefix="example", remote=True)
+        """
+        if len(args) == 1 and isinstance(args[0], str):
+            params = {"prefix": args[0], **kwargs}
+        else:
+            params = kwargs
+
         path = "v1/groups"
+        if "remote" in params:
+            if params["remote"]:
+                path = "v1/groups/remote"
+            del params["remote"]
+
         url = urls.append(self.config.url, path)
         response: requests.Response = self.session.get(
-            url, params={"page_size": 1}
+            url, params={**params, "page_size": 1}
         )
         result: dict = response.json()
         return result["total"]
