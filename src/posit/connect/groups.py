@@ -17,8 +17,8 @@ class Group(Resource):
 
     Attributes
     ----------
-    guid : str
-        Unique identifier for the group.
+    guid: str | None
+        The unique identifier (guid) for the group. If None, the group only exists on the remote authentication server. Use `groups.create(temp_ticket=group.temp_ticket)` to create the group on the Connect server.
     name: str
         A human readable name for the group.
     owner_guid: str | None
@@ -28,8 +28,8 @@ class Group(Resource):
     """
 
     @property
-    def guid(self) -> str:
-        return self.get("guid")  # type: ignore
+    def guid(self) -> str | None:
+        return self.get("guid")
 
     @property
     def name(self) -> str:
@@ -37,11 +37,11 @@ class Group(Resource):
 
     @property
     def owner_guid(self) -> str | None:
-        return self.get("owner_guid")  # type: ignore
+        return self.get("owner_guid")
 
     @property
     def temp_ticket(self) -> str | None:
-        return self.get("temp_ticket")  # type: ignore
+        return self.get("temp_ticket")
 
     # CRUD Methods
 
