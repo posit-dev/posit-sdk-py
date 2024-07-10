@@ -55,8 +55,8 @@ class Client:
 
         Environment Variables
         ---------------------
-        CONNECT_API_KEY - The API key credential for client authentication.
         CONNECT_SERVER - The Connect server URL.
+        CONNECT_API_KEY - The API key credential for client authentication.
 
         Examples
         --------
@@ -112,8 +112,8 @@ class Client:
 
         Environment Variables
         ---------------------
-        CONNECT_API_KEY - The API key credential for client authentication.
         CONNECT_SERVER - The Connect server URL.
+        CONNECT_API_KEY - The API key credential for client authentication.
 
         Parameters
         ----------
