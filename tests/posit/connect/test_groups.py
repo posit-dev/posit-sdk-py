@@ -37,44 +37,25 @@ class TestGroupAttributes:
 
 class TestGroupsCreate:
     @responses.activate
-    def test_name_arg(self):
+    def test(self):
         guid = "6f300623-1e0c-48e6-a473-ddf630c0c0c3"
-        name = "test"
+        kwargs = {
+            "name": "name",
+        }
 
         # behavior
+        # note: POST for local calls
         mock_groups_create = responses.post(
             f"https://connect.example.com/__api__/v1/groups",
             json=load_mock(f"v1/groups/{guid}.json"),
-            match=[matchers.json_params_matcher({"name": name})],
+            match=[matchers.json_params_matcher(kwargs)],
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
-        group = c.groups.create(name)
-
-        # assert
-        assert group.guid == guid
-        assert mock_groups_create.call_count == 1
-
-    @responses.activate
-    def test_name_kwarg(self):
-        guid = "6f300623-1e0c-48e6-a473-ddf630c0c0c3"
-        name = "test"
-
-        # behavior
-        mock_groups_create = responses.post(
-            f"https://connect.example.com/__api__/v1/groups",
-            json=load_mock(f"v1/groups/{guid}.json"),
-            match=[matchers.json_params_matcher({"name": name})],
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        group = c.groups.create(name=name)
+        group = c.groups.create(**kwargs)
 
         # assert
         assert group.guid == guid
@@ -82,170 +63,76 @@ class TestGroupsCreate:
         assert mock_groups_create.calls[0].request
 
     @responses.activate
-    def test_temp_ticket(self):
+    def test_remote(self):
         guid = "6f300623-1e0c-48e6-a473-ddf630c0c0c3"
-        ticket = "test"
+        kwargs = {"temp_ticket": "temp_ticket"}
 
         # behavior
-        mock_groups_create = responses.post(
+        # note: PUT for remote calls
+        mock_groups_create = responses.put(
             f"https://connect.example.com/__api__/v1/groups",
             json=load_mock(f"v1/groups/{guid}.json"),
-            match=[matchers.json_params_matcher({"temp_ticket": ticket})],
+            match=[matchers.json_params_matcher(kwargs)],
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
-        group = c.groups.create(temp_ticket=ticket)
+        group = c.groups.create(**kwargs)
 
         # assert
         assert group.guid == guid
         assert mock_groups_create.call_count == 1
+        assert mock_groups_create.calls[0].request
 
 
 class TestGroupsFind:
     @responses.activate
     def test(self):
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1}
-                )
-            ],
-            json=load_mock("v1/groups.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        groups = c.groups.find()
-
-        # assert
-        assert len(groups) == 1
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_prefix_arg(self):
-        prefix = "test"
+        kwargs = {"prefix": "friends"}
 
         # behavior
         mock_groups_get = responses.get(
             "https://connect.example.com/__api__/v1/groups",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1, "prefix": prefix}
+                    {**kwargs, "page_size": 500, "page_number": 1}
                 )
             ],
             json=load_mock("v1/groups.json"),
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
-        groups = c.groups.find(prefix)
+        groups = c.groups.find(**kwargs, remote=False)
 
         # assert
         assert len(groups) == 1
         assert mock_groups_get.call_count == 1
 
     @responses.activate
-    def test_prefix_kwarg(self):
-        prefix = "test"
-
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1, "prefix": prefix}
-                )
-            ],
-            json=load_mock("v1/groups.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        groups = c.groups.find(prefix=prefix)
-
-        # assert
-        assert len(groups) == 1
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_remote_kwarg_as_true(self):
-        remote = True
+    def test_remote(self):
+        kwargs = {"prefix": "friends"}
 
         # behavior
         mock_groups_get = responses.get(
             "https://connect.example.com/__api__/v1/groups/remote",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1}
-                )
-            ],
-            json=load_mock("v1/groups/remote.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        groups = c.groups.find(remote=remote)
-
-        # assert
-        assert len(groups) == 1
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_remote_kwarg_as_false(self):
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1}
+                    {**kwargs, "page_size": 500, "page_number": 1}
                 )
             ],
             json=load_mock("v1/groups.json"),
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
-        groups = c.groups.find(remote=False)
-
-        # assert
-        assert len(groups) == 1
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_kwargs(self):
-        future = "future"
-
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1, "future": future}
-                )
-            ],
-            json=load_mock("v1/groups.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        groups = c.groups.find(future=future)
+        groups = c.groups.find(**kwargs, remote=True)
 
         # assert
         assert len(groups) == 1
@@ -255,143 +142,49 @@ class TestGroupsFind:
 class TestGroupsFindOne:
     @responses.activate
     def test(self):
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1}
-                )
-            ],
-            json=load_mock("v1/groups.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        group = c.groups.find_one()
-
-        # assert
-        assert group
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_prefix_arg(self):
-        prefix = "test"
+        kwargs = {"prefix": "friends"}
 
         # behavior
         mock_groups_get = responses.get(
             "https://connect.example.com/__api__/v1/groups",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1, "prefix": prefix}
+                    {**kwargs, "page_size": 500, "page_number": 1}
                 )
             ],
             json=load_mock("v1/groups.json"),
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
-        group = c.groups.find_one(prefix)
+        group = c.groups.find_one(**kwargs, remote=False)
 
         # assert
         assert group
         assert mock_groups_get.call_count == 1
 
     @responses.activate
-    def test_prefix_kwarg(self):
-        prefix = "test"
+    def test_remote(self):
+        kwargs = {"prefix": "friends"}
 
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1, "prefix": prefix}
-                )
-            ],
-            json=load_mock("v1/groups.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        group = c.groups.find_one(prefix=prefix)
-
-        # assert
-        assert group
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_remote_kwarg_as_true(self):
         # behavior
         mock_groups_get = responses.get(
             "https://connect.example.com/__api__/v1/groups/remote",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1}
-                )
-            ],
-            json=load_mock("v1/groups/remote.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        group = c.groups.find_one(remote=True)
-
-        # assert
-        assert group
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_remote_kwarg_as_false(self):
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1}
+                    {**kwargs, "page_size": 500, "page_number": 1}
                 )
             ],
             json=load_mock("v1/groups.json"),
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
-        group = c.groups.find_one(remote=False)
-
-        # assert
-        assert group
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_kwargs(self):
-        future = "future"
-
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"page_size": 500, "page_number": 1, "future": future}
-                )
-            ],
-            json=load_mock("v1/groups.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        group = c.groups.find_one(future=future)
+        group = c.groups.find_one(**kwargs, remote=True)
 
         # assert
         assert group
@@ -410,7 +203,7 @@ class TestGroupsGet:
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
         group = c.groups.get(guid)
@@ -423,81 +216,49 @@ class TestGroupsGet:
 class TestGroupsCount:
     @responses.activate
     def test(self):
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[responses.matchers.query_param_matcher({"page_size": 1})],
-            json=load_mock("v1/groups.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        count = c.groups.count()
-
-        # assert
-        assert count == 1
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_prefix_arg(self):
-        prefix = "example"
+        kwargs = {"prefix": "friends"}
 
         # behavior
         mock_groups_get = responses.get(
             "https://connect.example.com/__api__/v1/groups",
             match=[
                 responses.matchers.query_param_matcher(
-                    {"page_size": 1, "prefix": prefix},
+                    {**kwargs, "page_size": 1}
                 )
             ],
             json=load_mock("v1/groups.json"),
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
-        count = c.groups.count(prefix)
+        count = c.groups.count(**kwargs, remote=False)
 
         # assert
         assert count == 1
         assert mock_groups_get.call_count == 1
 
     @responses.activate
-    def test_remote_kwarg_as_true(self):
+    def test_remote(self):
+        kwargs = {"prefix": "friends"}
+
         # behavior
         mock_groups_get = responses.get(
             "https://connect.example.com/__api__/v1/groups/remote",
-            match=[responses.matchers.query_param_matcher({"page_size": 1})],
-            json=load_mock("v1/groups/remote.json"),
-        )
-
-        # setup
-        c = Client("12345", "https://connect.example.com")
-
-        # invoke
-        count = c.groups.count(remote=True)
-
-        # assert
-        assert count == 1
-        assert mock_groups_get.call_count == 1
-
-    @responses.activate
-    def test_remote_kwarg_as_false(self):
-        # behavior
-        mock_groups_get = responses.get(
-            "https://connect.example.com/__api__/v1/groups",
-            match=[responses.matchers.query_param_matcher({"page_size": 1})],
+            match=[
+                responses.matchers.query_param_matcher(
+                    {**kwargs, "page_size": 1}
+                )
+            ],
             json=load_mock("v1/groups.json"),
         )
 
         # setup
-        c = Client("12345", "https://connect.example.com")
+        c = Client("https://connect.example.com", "12345")
 
         # invoke
-        count = c.groups.count(remote=False)
+        count = c.groups.count(**kwargs, remote=True)
 
         # assert
         assert count == 1
