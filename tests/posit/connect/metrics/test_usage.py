@@ -165,7 +165,7 @@ class TestUsageFind:
         )
 
         # setup
-        c = connect.Client("12345", "https://connect.example")
+        c = connect.Client("https://connect.example", "12345")
 
         # invoke
         events = c.metrics.usage.find()
@@ -239,7 +239,7 @@ class TestUsageFindOne:
         )
 
         # setup
-        c = connect.Client("12345", "https://connect.example")
+        c = connect.Client("https://connect.example", "12345")
 
         # invoke
         view_event = c.metrics.usage.find_one()
@@ -275,7 +275,7 @@ class TestUsageFindOne:
         )
 
         # setup
-        c = connect.Client("12345", "https://connect.example")
+        c = connect.Client("https://connect.example", "12345")
 
         # invoke
         view_event = c.metrics.usage.find_one(content_guid="not-found")
