@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import secrets
+
 from collections import defaultdict
 from typing import TYPE_CHECKING, List, Optional, overload
-
 
 from requests import Session
 
@@ -12,6 +13,7 @@ from . import tasks, urls
 
 from .config import Config
 from .bundles import Bundles
+from .environment_variables import EnvironmentVariables
 from .permissions import Permissions
 from .resources import Resources, Resource
 
@@ -142,6 +144,10 @@ class ContentItem(Resource):
     @property
     def bundles(self) -> Bundles:
         return Bundles(self.config, self.session, self.guid)
+
+    @property
+    def environment_variables(self) -> EnvironmentVariables:
+        return EnvironmentVariables(self.config, self.session, self.guid)
 
     @property
     def permissions(self) -> Permissions:
@@ -368,6 +374,12 @@ class ContentItem(Resource):
         result = response.json()
         ts = tasks.Tasks(self.config, self.session)
         return ts.get(result["task_id"])
+
+    def restart(self) -> None:
+        random_hash = secrets.token_hex(32)
+        self.environment_variables.set(**{random_hash: random_hash})
+        self.environment_variables.unset(random_hash)
+        return
 
     @overload
     def update(
