@@ -13,7 +13,7 @@ from . import tasks, urls
 
 from .config import Config
 from .bundles import Bundles
-from .environment_variables import EnvironmentVariables
+from .env import EnvVars
 from .permissions import Permissions
 from .resources import Resources, Resource
 
@@ -146,8 +146,8 @@ class ContentItem(Resource):
         return Bundles(self.config, self.session, self.guid)
 
     @property
-    def environment_variables(self) -> EnvironmentVariables:
-        return EnvironmentVariables(self.config, self.session, self.guid)
+    def environment_variables(self) -> EnvVars:
+        return EnvVars(self.config, self.session, self.guid)
 
     @property
     def permissions(self) -> Permissions:
@@ -377,9 +377,8 @@ class ContentItem(Resource):
 
     def restart(self) -> None:
         random_hash = secrets.token_hex(32)
-        self.environment_variables.set(**{random_hash: random_hash})
-        self.environment_variables.unset(random_hash)
-        return
+        self.environment_variables[random_hash] = random_hash
+        del self.environment_variables[random_hash]
 
     @overload
     def update(
