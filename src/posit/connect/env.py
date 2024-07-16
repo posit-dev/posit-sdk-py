@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from typing import Any, List, Iterable, MutableMapping, Optional, overload
 
 from requests import Session
 
 from . import urls
 from .config import Config
-from .resources import Resource, Resources
+from .resources import Resources
 
 
 class EnvVars(Resources):
