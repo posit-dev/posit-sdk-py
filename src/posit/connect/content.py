@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, List, Optional, overload
 from requests import Session
 
 from . import tasks, urls
-from .support import create_github_issue_link
 from ._variants import _Variants
 from .bundles import Bundles
 from .config import Config
