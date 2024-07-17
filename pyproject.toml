@@ -25,6 +25,12 @@ dependencies = ["requests>=2.31.0,<3"]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
+[tool.mypy]
+exclude = [
+    'scratch/',
+]
+
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib"]
@@ -69,6 +75,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["D"]
+"scratch/*" = ["D"]
 "tests/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
