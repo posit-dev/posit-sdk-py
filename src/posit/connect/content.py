@@ -10,12 +10,13 @@ from typing import TYPE_CHECKING, List, Optional, overload
 from requests import Session
 
 from . import tasks, urls
-from ._variants import _Variants
+from .variants import Variants
 from .bundles import Bundles
 from .config import Config
 from .env import EnvVars
 from .permissions import Permissions
 from .resources import Resource, Resources
+from .tasks import Task
 
 
 class ContentItemOwner(Resource):
@@ -170,7 +171,7 @@ class ContentItem(Resource):
         ts = tasks.Tasks(self.config, self.session)
         return ts.get(result["task_id"])
 
-    def refresh(self) -> None:
+    def refresh(self) -> Task | None:
         """Trigger a content refresh.
 
         Submit a refresh request to the server for the content. After submission, the server executes an asynchronous process to refresh the content. This is useful when content is dependent on external information, such as a dataset.
@@ -187,9 +188,9 @@ class ContentItem(Resource):
         --------
         >>> refresh()
         """
-        self._handle_restart_or_refresh()
+        return self._handle_restart_or_refresh()
 
-    def restart(self) -> None:
+    def restart(self) -> Task | None:
         """Initiate a content restart.
 
         Sends a restart request to the server for the content. Once submitted, the server performs an asynchronous process to restart the content. This is particularly useful when the content relies on external information loaded into application memory, such as datasets. Additionally, restarting can help clear memory leaks or reduce excessive memory usage that might build up over time.
@@ -206,7 +207,7 @@ class ContentItem(Resource):
         --------
         >>> restart()
         """
-        self._handle_restart_or_refresh()
+        return self._handle_restart_or_refresh()
 
     @overload
     def update(
@@ -281,7 +282,7 @@ class ContentItem(Resource):
         response = self.session.patch(url, json=body)
         super().update(**response.json())
 
-    def _handle_restart_or_refresh(self) -> None:
+    def _handle_restart_or_refresh(self) -> Task | None:
         """Handle the restart or refresh request.
 
         Submit a re-whatever request depending on the application mode. When the application mode supports variants, submit a render request. When the application relies on a server process, the process is restarted via setting an environment variable.
@@ -319,7 +320,7 @@ class ContentItem(Resource):
             "tensorflow-saved-model",
         }:
             random_hash = secrets.token_hex(32)
-            key = f".POSIT_SDK_RESTART_{random_hash}"
+            key = f".CONNECT_RESTART_TMP_{random_hash}"
             self.environment_variables.create(key, random_hash)
             self.environment_variables.delete(key)
             return
@@ -352,8 +353,8 @@ class ContentItem(Resource):
         return ContentItemOwner(self.config, self.session, **self["owner"])
 
     @property
-    def _variants(self) -> _Variants:
-        return _Variants(self.config, self.session, self.guid)
+    def _variants(self) -> Variants:
+        return Variants(self.config, self.session, self.guid)
 
     # Properties
 
