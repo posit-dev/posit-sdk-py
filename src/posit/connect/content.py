@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
+from posixpath import dirname
 import secrets
-import warnings
-from collections import defaultdict
-from typing import TYPE_CHECKING, List, Optional, overload
+from typing import List, Optional, overload
 
 from requests import Session
 
@@ -188,7 +187,7 @@ class ContentItem(Resource):
         --------
         >>> refresh()
         """
-        return self._handle_restart_or_refresh()
+        return self._re_whatever()
 
     def restart(self) -> Task | None:
         """Initiate a content restart.
@@ -207,7 +206,7 @@ class ContentItem(Resource):
         --------
         >>> restart()
         """
-        return self._handle_restart_or_refresh()
+        return self._re_whatever()
 
     @overload
     def update(
@@ -282,14 +281,26 @@ class ContentItem(Resource):
         response = self.session.patch(url, json=body)
         super().update(**response.json())
 
-    def _handle_restart_or_refresh(self) -> Task | None:
-        """Handle the restart or refresh request.
+    def _re_whatever(self) -> Task | None:
+        """Submit a re-whatever request (i.e., restart, refresh, etc).
 
-        Submit a re-whatever request depending on the application mode. When the application mode supports variants, submit a render request. When the application relies on a server process, the process is restarted via setting an environment variable.
+        A re-whatever is a catch-all term for restarting, refreshing, or re-whatever-ing the content requires to bounce it to a new state.
+
+        refresh:
+            For content that require variants. Find the default variant and render it again.
+
+        restart:
+            For content that require server threads. Toggle an unique environment variable and open the content, which activates a new server thread.
+
+        Returns
+        -------
+        Task | None:
+            A task for the content render when available, otherwise None
 
         Raises
         ------
         RuntimeError
+            Found an incorrect number of default variants.
         """
         if self.app_mode in {
             "rmd-static",
@@ -323,7 +334,10 @@ class ContentItem(Resource):
             key = f".CONNECT_RESTART_TMP_{random_hash}"
             self.environment_variables.create(key, random_hash)
             self.environment_variables.delete(key)
-            return
+            # GET via the base Connect URL to force create a new worker thread.
+            url = urls.append(dirname(self.config.url), f"content/{self.guid}")
+            self.session.get(url)
+            return None
 
     # Relationships
 
