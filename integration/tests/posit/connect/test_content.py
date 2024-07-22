@@ -1,6 +1,11 @@
 from pathlib import Path
+from packaging import version
+
+import pytest
 
 from posit import connect
+
+from . import CONNECT_VERSION
 
 
 class TestContent:
@@ -36,6 +41,10 @@ class TestContent:
         owner = item.owner
         assert owner.guid == self.client.me.guid
 
+    @pytest.mark.skipif(
+        CONNECT_VERSION <= version.parse("2023.01.1"),
+        reason="Python 3.12 not available",
+    )
     def test_restart(self):
         # create content
         content = self.client.content.create(name="example-flask-minimal")
@@ -53,6 +62,10 @@ class TestContent:
         # delete content
         content.delete()
 
+    @pytest.mark.skipif(
+        CONNECT_VERSION <= version.parse("2023.01.1"),
+        reason="Quarto not available",
+    )
     def test_refresh(self):
         # create content
         content = self.client.content.create(name="example-quarto-minimal")
@@ -65,8 +78,10 @@ class TestContent:
         # deploy bundle
         task = bundle.deploy()
         task.wait_for()
-        # restart content
-        task = content.restart()
-        task.wait_for()
+        # refresh content
+        task = content.refresh()
+        if task:
+            task.wait_for()
+
         # delete content
         content.delete()
