@@ -307,8 +307,12 @@ class ContentItem(Resource):
         --------
         >>> _re_whatever()
         """
-        # Update content to obtain the current state
+        # Update the item to its current state.
+        # The 'app_mode' is not set until a bundle is created and deployed.
+        # During the deployment process, the 'app_mode' is read from manifest.json and written to the database.
+        # Until this occurs the 'app_mode' will be 'unknown'.
         self.update()
+
         if self.app_mode in {
             "rmd-static",
             "jupyter-static",
