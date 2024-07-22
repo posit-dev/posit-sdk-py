@@ -34,7 +34,7 @@ class Variants(Resources):
         path = f"applications/{self.content_guid}/variants"
         url = urls.append(self.config.url, path)
         response = self.session.get(url)
-        results = response.json()
+        results = response.json() or []
         return [
             Variant(self.config, self.session, **result) for result in results
         ]

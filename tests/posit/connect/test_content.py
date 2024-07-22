@@ -1,3 +1,4 @@
+import pytest
 import requests
 import responses
 
@@ -524,3 +525,69 @@ class TestContentsCount:
         con = Client(api_key="12345", url="https://connect.example/")
         count = con.content.count()
         assert count == 3
+
+
+class TestRefresh:
+    @responses.activate
+    def test(self):
+        get_content = responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock(
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+            ),
+        )
+
+        patch_content = responses.patch(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock(
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+            ),
+        )
+
+        get_variants = responses.get(
+            "https://connect.example.com/__api__/applications/f2f37341-e21d-3d80-c698-a935ad614066/variants",
+            json=load_mock(
+                "applications/f2f37341-e21d-3d80-c698-a935ad614066/variants.json"
+            ),
+        )
+
+        post_render = responses.post(
+            "https://connect.example.com/__api__/variants/6627/render",
+            json=load_mock("variants/6627/render.json"),
+        )
+
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
+        task = content.refresh()
+        assert task is not None
+
+        assert get_content.call_count == 1
+        assert patch_content.call_count == 1
+        assert get_variants.call_count == 1
+        assert post_render.call_count == 1
+
+    @responses.activate
+    def test_missing_default(self):
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock(
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+            ),
+        )
+
+        responses.patch(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock(
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+            ),
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/applications/f2f37341-e21d-3d80-c698-a935ad614066/variants",
+            json=[],
+        )
+
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
+        with pytest.raises(RuntimeError):
+            content.refresh()

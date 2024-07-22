@@ -24,6 +24,7 @@ cov:
 
 cov-html:
 	$(PYTHON) -m coverage html
+	open htmlcov/index.html
 
 cov-xml:
 	$(PYTHON) -m coverage xml
