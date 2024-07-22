@@ -196,11 +196,11 @@ class EnvVars(Resources):
                     d.update(other)
                 except (TypeError, ValueError):
                     raise TypeError(
-                        f"update expected a {MutableMapping.__name__} or {Iterable.__name__}, got {type(other).__name__}"
+                        f"update expected a {MutableMapping} or {Iterable}, got {type(other)}"
                     )
             else:
                 raise TypeError(
-                    f"update expected a {MutableMapping.__name__} or {Iterable.__name__}, got {type(other).__name__}"
+                    f"update expected a {MutableMapping} or {Iterable}, got {type(other)}"
                 )
 
         if kwargs:
