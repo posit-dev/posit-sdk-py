@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-from posixpath import dirname
 import secrets
-from typing import List, Optional, overload
 import warnings
+from posixpath import dirname
+from typing import List, Optional, overload
 
 from requests import Session
 
 from . import tasks, urls
-from .variants import Variants
 from .bundles import Bundles
 from .config import Config
 from .env import EnvVars
 from .permissions import Permissions
 from .resources import Resource, Resources
 from .tasks import Task
+from .variants import Variants
 
 
 class ContentItemOwner(Resource):
