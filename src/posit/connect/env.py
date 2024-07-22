@@ -82,7 +82,7 @@ class EnvVars(Resources):
         ...     "postgres://user:password@localhost:5432/database",
         ... )
         """
-        self[key] = value
+        self.update({key: value})
 
     def delete(self, key: str, /) -> None:
         """Delete the environment variable.
@@ -96,7 +96,7 @@ class EnvVars(Resources):
         --------
         >>> delete("DATABASE_URL")
         """
-        del self[key]
+        self.update({key: None})
 
     def find(self) -> List[str]:
         """Find environment variables.
@@ -186,15 +186,23 @@ class EnvVars(Resources):
         ... )
         """
         d = dict[str, str]()
-        if other:
+        if other is not None:
             if isinstance(other, MutableMapping):
                 d.update(other)
-            elif isinstance(other, Iterable):
-                d.update(other)
+            elif isinstance(other, Iterable) and not isinstance(
+                other, (str, bytes)
+            ):
+                try:
+                    d.update(other)
+                except (TypeError, ValueError):
+                    raise TypeError(
+                        f"update expected a {MutableMapping.__name__} or {Iterable.__name__}, got {type(other).__name__}"
+                    )
             else:
                 raise TypeError(
-                    f"update expected a {MutableMapping[str, Optional[str]].__name__} or {Iterable[tuple[str, Optional[str]]].__name__}, got {type(other).__name__}"
+                    f"update expected a {MutableMapping.__name__} or {Iterable.__name__}, got {type(other).__name__}"
                 )
+
         if kwargs:
             d.update(kwargs)
 
