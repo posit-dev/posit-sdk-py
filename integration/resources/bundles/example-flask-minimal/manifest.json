@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "locale": "en_US.UTF-8",
+  "metadata": {
+    "appmode": "python-api",
+    "entrypoint": "hello"
+  },
+  "python": {
+    "version": "3.12.2",
+    "package_manager": {
+      "name": "pip",
+      "version": "24.1.2",
+      "package_file": "requirements.txt"
+    }
+  },
+  "files": {
+    "requirements.txt": {
+      "checksum": "2861f6872b39701536a1fdf2c7bff86b"
+    },
+    "hello.py": {
+      "checksum": "09f4dee97c8b7e2770157cf5d7fb6a73"
+    }
+  }
+}

@@ -5,6 +5,7 @@ from __future__ import annotations
 from posixpath import dirname
 import secrets
 from typing import List, Optional, overload
+import warnings
 
 from requests import Session
 
@@ -301,7 +302,13 @@ class ContentItem(Resource):
         ------
         RuntimeError
             Found an incorrect number of default variants.
+
+        Examples
+        --------
+        >>> _re_whatever()
         """
+        # Update content to obtain the current state
+        self.update()
         if self.app_mode in {
             "rmd-static",
             "jupyter-static",
@@ -331,13 +338,18 @@ class ContentItem(Resource):
             "tensorflow-saved-model",
         }:
             random_hash = secrets.token_hex(32)
-            key = f".CONNECT_RESTART_TMP_{random_hash}"
+            key = f"_CONNECT_RESTART_TMP_{random_hash}"
             self.environment_variables.create(key, random_hash)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
             url = urls.append(dirname(self.config.url), f"content/{self.guid}")
             self.session.get(url)
             return None
+
+        warnings.warn(
+            f"Content '{self.guid}' with application mode '{self.app_mode}' does not require restarts"
+        )
+        return None
 
     # Relationships
 
