@@ -1,6 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, List, Iterable, MutableMapping, Optional, overload
+from typing import (
+    Any,
+    Dict,
+    List,
+    Iterable,
+    MutableMapping,
+    Optional,
+    overload,
+)
 
 from requests import Session
 
@@ -185,7 +193,7 @@ class EnvVars(Resources):
         ...     ]
         ... )
         """
-        d = dict[str, str]()
+        d: Dict[str, str] = {}
         if other is not None:
             if isinstance(other, MutableMapping):
                 d.update(other)
