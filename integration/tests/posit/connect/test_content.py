@@ -42,7 +42,7 @@ class TestContent:
         assert owner.guid == self.client.me.guid
 
     @pytest.mark.skipif(
-        CONNECT_VERSION <= version.parse("2023.01.1"),
+        CONNECT_VERSION <= version.parse("2024.04.1"),
         reason="Python 3.12 not available",
     )
     def test_restart(self):
