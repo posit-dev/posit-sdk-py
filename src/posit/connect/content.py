@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import secrets
-import warnings
 from posixpath import dirname
 from typing import List, Optional, overload
 
@@ -171,43 +170,80 @@ class ContentItem(Resource):
         ts = tasks.Tasks(self.config, self.session)
         return ts.get(result["task_id"])
 
-    def refresh(self) -> Task | None:
-        """Trigger a content refresh.
+    def render(self) -> Task:
+        """Render the content.
 
-        Submit a refresh request to the server for the content. After submission, the server executes an asynchronous process to refresh the content. This is useful when content is dependent on external information, such as a dataset which has been updated.
+        Submit a render request to the server for the content. After submission, the server executes an asynchronous process to render the content. This is useful when content is dependent on external information, such as a dataset.
 
         See Also
         --------
         restart
 
-        Notes
-        -----
-        This method is identical to `restart` and exists to provide contextual clarity. Both methods produce identical results. When working with documents, natural language prefers "refresh this content" instead of "restart this content" since documents do not require a system process. When writing software that operates on multiple types of content (e.g., applications, documents, scripts, etc.), you may use either 'refresh' or 'restart' to achive the same result.
-
         Examples
         --------
-        >>> refresh()
+        >>> render()
         """
-        return self._re_whatever()
+        self.update()
 
-    def restart(self) -> Task | None:
-        """Initiate a content restart.
+        if self.app_mode in {
+            "rmd-static",
+            "jupyter-static",
+            "quarto-static",
+        }:
+            variants = self._variants.find()
+            variants = [variant for variant in variants if variant.is_default]
+            if len(variants) != 1:
+                raise RuntimeError(
+                    f"Found {len(variants)} default variants. Expected 1. Without a single default variant, the content cannot be refreshed. This is indicative of a corrupted state."
+                )
+            variant = variants[0]
+            return variant.render()
+        else:
+            raise ValueError(
+                f"Restart not supported for this application mode. Found {self.app_mode}"
+            )
+
+    def restart(self) -> None:
+        """Mark for restart.
 
         Sends a restart request to the server for the content. Once submitted, the server performs an asynchronous process to restart the content. This is particularly useful when the content relies on external information loaded into application memory, such as datasets. Additionally, restarting can help clear memory leaks or reduce excessive memory usage that might build up over time.
 
         See Also
         --------
-        refresh
-
-        Notes
-        -----
-        This method is identical to `refresh` and exists to provide contextual clarity. Both methods produce identical results. When working with applications, natural language prefers "restart this content" instead of "refresh this content" since applications require a system process. When writing software that operates on multiple types of content (e.g., applications, documents, scripts, etc.), you may use either 'restart' or 'refresh' to achieve the same result.
+        render
 
         Examples
         --------
         >>> restart()
         """
-        return self._re_whatever()
+        self.update()
+
+        if self.app_mode in {
+            "api",
+            "jupyter-voila",
+            "python-api",
+            "python-bokeh",
+            "python-dash",
+            "python-fastapi",
+            "python-shiny",
+            "python-streamlit",
+            "quarto-shiny",
+            "rmd-shiny",
+            "shiny",
+            "tensorflow-saved-model",
+        }:
+            random_hash = secrets.token_hex(32)
+            key = f"_CONNECT_RESTART_TMP_{random_hash}"
+            self.environment_variables.create(key, random_hash)
+            self.environment_variables.delete(key)
+            # GET via the base Connect URL to force create a new worker thread.
+            url = urls.append(dirname(self.config.url), f"content/{self.guid}")
+            self.session.get(url)
+            return None
+        else:
+            raise ValueError(
+                f"Restart not supported for this application mode. Found {self.app_mode}"
+            )
 
     @overload
     def update(
@@ -281,79 +317,6 @@ class ContentItem(Resource):
         url = urls.append(self.config.url, f"v1/content/{self.guid}")
         response = self.session.patch(url, json=body)
         super().update(**response.json())
-
-    def _re_whatever(self) -> Task | None:
-        """Submit a re-whatever request (i.e., restart, refresh, etc).
-
-        A re-whatever is a catch-all term for restarting, refreshing, or re-whatever-ing the content requires to bounce it to a new state.
-
-        refresh:
-            For content that require variants. Find the default variant and render it again.
-
-        restart:
-            For content that require server threads. Toggle an unique environment variable and open the content, which activates a new server thread.
-
-        Returns
-        -------
-        Task | None:
-            A task for the content render when available, otherwise None
-
-        Raises
-        ------
-        RuntimeError
-            Found an incorrect number of default variants.
-
-        Examples
-        --------
-        >>> _re_whatever()
-        """
-        # Update the item to its current state.
-        # The 'app_mode' is not set until a bundle is created and deployed.
-        # During the deployment process, the 'app_mode' is read from manifest.json and written to the database.
-        # Until this occurs the 'app_mode' will be 'unknown'.
-        self.update()
-
-        if self.app_mode in {
-            "rmd-static",
-            "jupyter-static",
-            "quarto-static",
-        }:
-            variants = self._variants.find()
-            variants = [variant for variant in variants if variant.is_default]
-            if len(variants) != 1:
-                raise RuntimeError(
-                    f"Found {len(variants)} default variants. Expected 1. Without a single default variant, the content cannot be refreshed. This is indicative of a corrupted state."
-                )
-            variant = variants[0]
-            return variant.render()
-
-        if self.app_mode in {
-            "api",
-            "jupyter-voila",
-            "python-api",
-            "python-bokeh",
-            "python-dash",
-            "python-fastapi",
-            "python-shiny",
-            "python-streamlit",
-            "quarto-shiny",
-            "rmd-shiny",
-            "shiny",
-            "tensorflow-saved-model",
-        }:
-            random_hash = secrets.token_hex(32)
-            key = f"_CONNECT_RESTART_TMP_{random_hash}"
-            self.environment_variables.create(key, random_hash)
-            self.environment_variables.delete(key)
-            # GET via the base Connect URL to force create a new worker thread.
-            url = urls.append(dirname(self.config.url), f"content/{self.guid}")
-            self.session.get(url)
-            return None
-
-        warnings.warn(
-            f"Content '{self.guid}' with application mode '{self.app_mode}' does not require restarts"
-        )
-        return None
 
     # Relationships
 

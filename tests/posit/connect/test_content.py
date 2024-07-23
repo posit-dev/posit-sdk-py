@@ -527,7 +527,7 @@ class TestContentsCount:
         assert count == 3
 
 
-class TestRefresh:
+class TestRender:
     @responses.activate
     def test(self):
         # data
@@ -559,7 +559,7 @@ class TestRefresh:
         content = c.content.get(guid)
 
         # invoke
-        task = content.refresh()
+        task = content.render()
 
         # assert
         assert task is not None
@@ -567,6 +567,32 @@ class TestRefresh:
         assert patch_content.call_count == 1
         assert get_variants.call_count == 1
         assert post_render.call_count == 1
+
+    @responses.activate
+    def test_app_mode_is_other(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fixture_content = load_mock(f"v1/content/{guid}.json")
+        fixture_content.update(app_mode="other")
+
+        # behavior
+        responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=fixture_content,
+        )
+
+        responses.patch(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=fixture_content,
+        )
+
+        # setup
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get(guid)
+
+        # invoke
+        with pytest.raises(ValueError):
+            content.render()
 
     @responses.activate
     def test_missing_default(self):
@@ -592,7 +618,7 @@ class TestRefresh:
         c = Client("https://connect.example.com", "12345")
         content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         with pytest.raises(RuntimeError):
-            content.refresh()
+            content.render()
 
 
 class TestRestart:
@@ -659,11 +685,9 @@ class TestRestart:
         content = c.content.get(guid)
 
         # invoke
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            task = content.restart()
+        with pytest.raises(ValueError):
+            content.restart()
 
         # assert
-        assert task is None
         assert mock_get_content.call_count == 1
         assert mock_patch_content.call_count == 1
