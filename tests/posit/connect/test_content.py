@@ -527,7 +527,7 @@ class TestContentsCount:
         assert count == 3
 
 
-class TestRerender:
+class TestRender:
     @responses.activate
     def test(self):
         # data
@@ -559,7 +559,7 @@ class TestRerender:
         content = c.content.get(guid)
 
         # invoke
-        task = content.rerender()
+        task = content.render()
 
         # assert
         assert task is not None
@@ -592,7 +592,7 @@ class TestRerender:
 
         # invoke
         with pytest.raises(ValueError):
-            content.rerender()
+            content.render()
 
     @responses.activate
     def test_missing_default(self):
@@ -618,7 +618,7 @@ class TestRerender:
         c = Client("https://connect.example.com", "12345")
         content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         with pytest.raises(RuntimeError):
-            content.rerender()
+            content.render()
 
 
 class TestRestart:

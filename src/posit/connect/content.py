@@ -170,10 +170,10 @@ class ContentItem(Resource):
         ts = tasks.Tasks(self.config, self.session)
         return ts.get(result["task_id"])
 
-    def rerender(self) -> Task:
-        """Rerender the content.
+    def render(self) -> Task:
+        """Render the content.
 
-        Submit a render request to the server for the content. After submission, the server executes an asynchronous process to rerender the content. This is useful when content is dependent on external information, such as a dataset.
+        Submit a render request to the server for the content. After submission, the server executes an asynchronous process to render the content. This is useful when content is dependent on external information, such as a dataset.
 
         See Also
         --------
@@ -181,7 +181,7 @@ class ContentItem(Resource):
 
         Examples
         --------
-        >>> rerender()
+        >>> render()
         """
         self.update()
 
@@ -210,7 +210,7 @@ class ContentItem(Resource):
 
         See Also
         --------
-        rerender
+        render
 
         Examples
         --------

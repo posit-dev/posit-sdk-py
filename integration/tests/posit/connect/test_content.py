@@ -66,7 +66,7 @@ class TestContent:
         CONNECT_VERSION <= version.parse("2023.01.1"),
         reason="Quarto not available",
     )
-    def test_rerender(self):
+    def test_render(self):
         # create content
         content = self.client.content.create(name="example-quarto-minimal")
         # create bundle
@@ -78,8 +78,8 @@ class TestContent:
         # deploy bundle
         task = bundle.deploy()
         task.wait_for()
-        # rerender
-        task = content.rerender()
+        # render
+        task = content.render()
         task.wait_for()
         # delete content
         content.delete()
