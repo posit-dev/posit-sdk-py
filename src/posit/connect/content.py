@@ -174,7 +174,7 @@ class ContentItem(Resource):
     def refresh(self) -> Task | None:
         """Trigger a content refresh.
 
-        Submit a refresh request to the server for the content. After submission, the server executes an asynchronous process to refresh the content. This is useful when content is dependent on external information, such as a dataset.
+        Submit a refresh request to the server for the content. After submission, the server executes an asynchronous process to refresh the content. This is useful when content is dependent on external information, such as a dataset which has been updated.
 
         See Also
         --------
