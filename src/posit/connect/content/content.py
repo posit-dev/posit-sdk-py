@@ -18,7 +18,7 @@ from ..tasks import Task
 from ..variants import Variants
 
 
-class ContentItemOwner(Resource):
+class ContentOwner(Resource):
     """Content item owner resource."""
 
     @property
@@ -38,7 +38,7 @@ class ContentItemOwner(Resource):
         return self.get("last_name")  # type: ignore
 
 
-class ContentItem(Resource):
+class Content(Resource):
     """Content item resource.
 
     Attributes
@@ -333,7 +333,7 @@ class ContentItem(Resource):
         return Permissions(self.config, self.session, self.guid)
 
     @property
-    def owner(self) -> ContentItemOwner:
+    def owner(self) -> ContentOwner:
         if "owner" not in self:
             # It is possible to get a content item that does not contain owner.
             # "owner" is an optional additional request param.
@@ -343,7 +343,7 @@ class ContentItem(Resource):
             self["owner"] = Users(self.config, self.session).get(
                 self.owner_guid
             )
-        return ContentItemOwner(self.config, self.session, **self["owner"])
+        return ContentOwner(self.config, self.session, **self["owner"])
 
     @property
     def _variants(self) -> Variants:
@@ -528,8 +528,8 @@ class ContentItem(Resource):
         return self.get("tags", [])
 
 
-class Content(Resources):
-    """Content resource.
+class Contents(Resources):
+    """Contents resource.
 
     Parameters
     ----------
@@ -601,7 +601,7 @@ class Content(Resources):
         default_r_environment_management: Optional[bool] = ...,
         default_py_environment_management: Optional[bool] = ...,
         service_account_name: Optional[str] = ...,
-    ) -> ContentItem:
+    ) -> Content:
         """Create a content item.
 
         Parameters
@@ -638,7 +638,7 @@ class Content(Resources):
         ...
 
     @overload
-    def create(self, *args, **kwargs) -> ContentItem:
+    def create(self, *args, **kwargs) -> Content:
         """Create a content item.
 
         Returns
@@ -647,7 +647,7 @@ class Content(Resources):
         """
         ...
 
-    def create(self, *args, **kwargs) -> ContentItem:
+    def create(self, *args, **kwargs) -> Content:
         """Create a content item.
 
         Returns
@@ -658,7 +658,7 @@ class Content(Resources):
         path = "v1/content"
         url = urls.append(self.config.url, path)
         response = self.session.post(url, json=body)
-        return ContentItem(self.config, self.session, **response.json())
+        return Content(self.config, self.session, **response.json())
 
     @overload
     def find(
@@ -666,7 +666,7 @@ class Content(Resources):
         owner_guid: str = ...,
         name: str = ...,
         include: Optional[str] = "owner,tags",
-    ) -> List[ContentItem]:
+    ) -> List[Content]:
         """Find content items.
 
         Parameters
@@ -687,7 +687,7 @@ class Content(Resources):
     @overload
     def find(
         self, *args, include: Optional[str] = "owner,tags", **kwargs
-    ) -> List[ContentItem]:
+    ) -> List[Content]:
         """Find content items.
 
         Parameters
@@ -703,7 +703,7 @@ class Content(Resources):
 
     def find(
         self, *args, include: Optional[str] = "owner,tags", **kwargs
-    ) -> List[ContentItem]:
+    ) -> List[Content]:
         """Find content items.
 
         Parameters
@@ -721,7 +721,7 @@ class Content(Resources):
         params["include"] = include
         response = self.session.get(self.url, params=params)
         return [
-            ContentItem(
+            Content(
                 config=self.config,
                 session=self.session,
                 **result,
@@ -735,7 +735,7 @@ class Content(Resources):
         owner_guid: str = ...,
         name: str = ...,
         include: Optional[str] = "owner,tags",
-    ) -> ContentItem | None:
+    ) -> Content | None:
         """Find content items.
 
         Parameters
@@ -756,7 +756,7 @@ class Content(Resources):
     @overload
     def find_one(
         self, *args, include: Optional[str] = "owner,tags", **kwargs
-    ) -> ContentItem | None:
+    ) -> Content | None:
         """Find content items.
 
         Parameters
@@ -772,7 +772,7 @@ class Content(Resources):
 
     def find_one(
         self, *args, include: Optional[str] = "owner,tags", **kwargs
-    ) -> ContentItem | None:
+    ) -> Content | None:
         """Find content items.
 
         Parameters
@@ -787,7 +787,7 @@ class Content(Resources):
         items = self.find(*args, include=include, **kwargs)
         return next(iter(items), None)
 
-    def get(self, guid: str) -> ContentItem:
+    def get(self, guid: str) -> Content:
         """Get a content item.
 
         Parameters
@@ -800,4 +800,4 @@ class Content(Resources):
         """
         url = urls.append(self.url, guid)
         response = self.session.get(url)
-        return ContentItem(self.config, self.session, **response.json())
+        return Content(self.config, self.session, **response.json())

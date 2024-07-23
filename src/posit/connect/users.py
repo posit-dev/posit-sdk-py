@@ -8,7 +8,7 @@ import requests
 from . import me, urls
 
 from .config import Config
-from .content import Content
+from .content import Contents
 from .paginator import Paginator
 from .resources import Resource, Resources
 
@@ -36,8 +36,8 @@ class User(Resource):
     """
 
     @property
-    def content(self) -> Content:
-        return Content(self.config, self.session, owner_guid=self.guid)
+    def content(self) -> Contents:
+        return Contents(self.config, self.session, owner_guid=self.guid)
 
     @property
     def guid(self) -> str:
