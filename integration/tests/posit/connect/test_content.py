@@ -57,7 +57,7 @@ class TestContent:
         # deploy bundle
         task = bundle.deploy()
         task.wait_for()
-        # restart content
+        # restart
         content.restart()
         # delete content
         content.delete()
@@ -66,7 +66,7 @@ class TestContent:
         CONNECT_VERSION <= version.parse("2023.01.1"),
         reason="Quarto not available",
     )
-    def test_refresh(self):
+    def test_rerender(self):
         # create content
         content = self.client.content.create(name="example-quarto-minimal")
         # create bundle
@@ -78,10 +78,8 @@ class TestContent:
         # deploy bundle
         task = bundle.deploy()
         task.wait_for()
-        # refresh content
-        task = content.refresh()
-        if task:
-            task.wait_for()
-
+        # rerender
+        task = content.rerender()
+        task.wait_for()
         # delete content
         content.delete()
