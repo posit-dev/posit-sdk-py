@@ -8,14 +8,14 @@ from typing import List, Optional, overload
 
 from requests import Session
 
-from . import tasks, urls
-from .bundles import Bundles
-from .config import Config
-from .env import EnvVars
-from .permissions import Permissions
-from .resources import Resource, Resources
-from .tasks import Task
-from .variants import Variants
+from .. import tasks, urls
+from ..bundles import Bundles
+from ..config import Config
+from ..env import EnvVars
+from ..permissions import Permissions
+from ..resources import Resource, Resources
+from ..tasks import Task
+from ..variants import Variants
 
 
 class ContentItemOwner(Resource):
@@ -338,7 +338,7 @@ class ContentItem(Resource):
             # It is possible to get a content item that does not contain owner.
             # "owner" is an optional additional request param.
             # If it's not included, we can retrieve the information by `owner_guid`
-            from .users import Users
+            from ..users import Users
 
             self["owner"] = Users(self.config, self.session).get(
                 self.owner_guid
