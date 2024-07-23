@@ -14,7 +14,8 @@ include ../vars.mk
         help
 
 # Versions
-CONNECT_VERSIONS := 2024.05.0 \
+CONNECT_VERSIONS := 2024.06.0 \
+                    2024.05.0 \
                     2024.04.1 \
                     2024.04.0 \
                     2024.03.0 \
