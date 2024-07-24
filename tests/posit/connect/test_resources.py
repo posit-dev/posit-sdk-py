@@ -1,3 +1,4 @@
+from unittest import mock
 from unittest.mock import Mock
 import pytest
 import warnings
@@ -6,6 +7,7 @@ from typing import Any, List, Optional
 
 from requests.sessions import Session as Session
 
+from posit.connect.context import Context
 from posit.connect.resources import Resource, Resources
 
 config = Mock()
@@ -23,16 +25,16 @@ class TestResource:
         k = "foo"
         v = "bar"
         d = dict({k: v})
-        r = FakeResource(config, session, **d)
-        assert r.session == session
-        assert r.config == config
+        c = mock.Mock()
+        r = FakeResource(c, **d)
+        assert r.ctx == c
 
     def test__getitem__(self):
         warnings.filterwarnings("ignore", category=FutureWarning)
         k = "foo"
         v = "bar"
         d = dict({k: v})
-        r = FakeResource(config, session, **d)
+        r = FakeResource(mock.Mock(), **d)
         assert r.__getitem__(k) == d.__getitem__(k)
         assert r[k] == d[k]
 
@@ -42,7 +44,7 @@ class TestResource:
         v1 = "bar"
         v2 = "baz"
         d = dict({k: v1})
-        r = FakeResource(config, session, **d)
+        r = FakeResource(mock.Mock(), **d)
         assert r[k] == v1
         r[k] = v2
         assert r[k] == v2
@@ -52,7 +54,7 @@ class TestResource:
         k = "foo"
         v = "bar"
         d = dict({k: v})
-        r = FakeResource(config, session, **d)
+        r = FakeResource(mock.Mock(), **d)
         assert k in r
         assert r[k] == v
         del r[k]
@@ -62,5 +64,5 @@ class TestResource:
         k = "foo"
         v = "bar"
         d = dict({k: v})
-        r = FakeResource(config, session, **d)
+        r = FakeResource(mock.Mock(), **d)
         assert r.foo == v

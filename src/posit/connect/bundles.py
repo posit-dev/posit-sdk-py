@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import io
-import requests
 from typing import List
-from . import config, resources, tasks, urls
+
+from . import resources, tasks, urls
+from .context import Context
 
 
 class BundleMetadata(resources.Resource):
@@ -135,15 +136,13 @@ class Bundle(resources.Resource):
 
     @property
     def metadata(self) -> BundleMetadata:
-        return BundleMetadata(
-            self.config, self.session, **self.get("metadata", {})
-        )
+        return BundleMetadata(self.ctx, **self.get("metadata", {}))
 
     def delete(self) -> None:
         """Delete the bundle."""
         path = f"v1/content/{self.content_guid}/bundles/{self.id}"
-        url = urls.append(self.config.url, path)
-        self.session.delete(url)
+        url = urls.append(self.ctx.url, path)
+        self.ctx.session.delete(url)
 
     def deploy(self) -> tasks.Task:
         """Deploy the bundle.
@@ -162,10 +161,10 @@ class Bundle(resources.Resource):
         None
         """
         path = f"v1/content/{self.content_guid}/deploy"
-        url = urls.append(self.config.url, path)
-        response = self.session.post(url, json={"bundle_id": self.id})
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.post(url, json={"bundle_id": self.id})
         result = response.json()
-        ts = tasks.Tasks(self.config, self.session)
+        ts = tasks.Tasks(self.ctx)
         return ts.get(result["task_id"])
 
     def download(self, output: io.BufferedWriter | str) -> None:
@@ -200,8 +199,8 @@ class Bundle(resources.Resource):
             )
 
         path = f"v1/content/{self.content_guid}/bundles/{self.id}/download"
-        url = urls.append(self.config.url, path)
-        response = self.session.get(url, stream=True)
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.get(url, stream=True)
         if isinstance(output, io.BufferedWriter):
             for chunk in response.iter_content():
                 output.write(chunk)
@@ -231,11 +230,10 @@ class Bundles(resources.Resources):
 
     def __init__(
         self,
-        config: config.Config,
-        session: requests.Session,
+        ctx: Context,
         content_guid: str,
     ) -> None:
-        super().__init__(config, session)
+        super().__init__(ctx)
         self.content_guid = content_guid
 
     def create(self, input: io.BufferedReader | bytes | str) -> Bundle:
@@ -287,10 +285,10 @@ class Bundles(resources.Resources):
             )
 
         path = f"v1/content/{self.content_guid}/bundles"
-        url = urls.append(self.config.url, path)
-        response = self.session.post(url, data=data)
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.post(url, data=data)
         result = response.json()
-        return Bundle(self.config, self.session, **result)
+        return Bundle(self.ctx, **result)
 
     def find(self) -> List[Bundle]:
         """Find all bundles.
@@ -301,12 +299,10 @@ class Bundles(resources.Resources):
             List of all found bundles.
         """
         path = f"v1/content/{self.content_guid}/bundles"
-        url = urls.append(self.config.url, path)
-        response = self.session.get(url)
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.get(url)
         results = response.json()
-        return [
-            Bundle(self.config, self.session, **result) for result in results
-        ]
+        return [Bundle(self.ctx, **result) for result in results]
 
     def find_one(self) -> Bundle | None:
         """Find a bundle.
@@ -333,7 +329,7 @@ class Bundles(resources.Resources):
             The bundle with the specified ID.
         """
         path = f"v1/content/{self.content_guid}/bundles/{id}"
-        url = urls.append(self.config.url, path)
-        response = self.session.get(url)
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.get(url)
         result = response.json()
-        return Bundle(self.config, self.session, **result)
+        return Bundle(self.ctx, **result)

@@ -2,18 +2,13 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-from typing import TYPE_CHECKING, List, Optional, overload
-
-
-from requests import Session
+from typing import List, Optional, overload
 
 from . import tasks, urls
-
-from .config import Config
 from .bundles import Bundles
+from .context import Context
 from .permissions import Permissions
-from .resources import Resources, Resource
+from .resources import Resource, Resources
 
 
 class ContentItemOwner(Resource):
@@ -141,11 +136,11 @@ class ContentItem(Resource):
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.config, self.session, self.guid)
+        return Bundles(self.ctx, self.guid)
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.config, self.session, self.guid)
+        return Permissions(self.ctx, self.guid)
 
     @property
     def owner(self) -> ContentItemOwner:
@@ -155,10 +150,8 @@ class ContentItem(Resource):
             # If it's not included, we can retrieve the information by `owner_guid`
             from .users import Users
 
-            self["owner"] = Users(self.config, self.session).get(
-                self.owner_guid
-            )
-        return ContentItemOwner(self.config, self.session, **self["owner"])
+            self["owner"] = Users(self.ctx).get(self.owner_guid)
+        return ContentItemOwner(self.ctx, **self["owner"])
 
     # Properties
 
@@ -343,8 +336,8 @@ class ContentItem(Resource):
     def delete(self) -> None:
         """Delete the content item."""
         path = f"v1/content/{self.guid}"
-        url = urls.append(self.config.url, path)
-        self.session.delete(url)
+        url = urls.append(self.ctx.url, path)
+        self.ctx.session.delete(url)
 
     def deploy(self) -> tasks.Task:
         """Deploy the content.
@@ -363,10 +356,10 @@ class ContentItem(Resource):
         None
         """
         path = f"v1/content/{self.guid}/deploy"
-        url = urls.append(self.config.url, path)
-        response = self.session.post(url, json={"bundle_id": None})
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.post(url, json={"bundle_id": None})
         result = response.json()
-        ts = tasks.Tasks(self.config, self.session)
+        ts = tasks.Tasks(self.ctx)
         return ts.get(result["task_id"])
 
     @overload
@@ -438,8 +431,8 @@ class ContentItem(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update the content item."""
         body = dict(*args, **kwargs)
-        url = urls.append(self.config.url, f"v1/content/{self.guid}")
-        response = self.session.patch(url, json=body)
+        url = urls.append(self.ctx.url, f"v1/content/{self.guid}")
+        response = self.ctx.session.patch(url, json=body)
         super().update(**response.json())
 
 
@@ -458,14 +451,12 @@ class Content(Resources):
 
     def __init__(
         self,
-        config: Config,
-        session: Session,
+        ctx: Context,
         *,
         owner_guid: str | None = None,
     ) -> None:
-        self.url = urls.append(config.url, "v1/content")
-        self.config = config
-        self.session = session
+        self.ctx = ctx
+        self.url = urls.append(ctx.url, "v1/content")
         self.owner_guid = owner_guid
 
     def _get_default_params(self) -> dict:
@@ -571,9 +562,9 @@ class Content(Resources):
         """
         body = dict(*args, **kwargs)
         path = "v1/content"
-        url = urls.append(self.config.url, path)
-        response = self.session.post(url, json=body)
-        return ContentItem(self.config, self.session, **response.json())
+        url = urls.append(self.ctx.url, path)
+        response = self.ctx.session.post(url, json=body)
+        return ContentItem(self.ctx, **response.json())
 
     @overload
     def find(
@@ -634,11 +625,10 @@ class Content(Resources):
         params.update(args)
         params.update(kwargs)
         params["include"] = include
-        response = self.session.get(self.url, params=params)
+        response = self.ctx.session.get(self.url, params=params)
         return [
             ContentItem(
-                config=self.config,
-                session=self.session,
+                self.ctx,
                 **result,
             )
             for result in response.json()
@@ -714,5 +704,5 @@ class Content(Resources):
         ContentItem
         """
         url = urls.append(self.url, guid)
-        response = self.session.get(url)
-        return ContentItem(self.config, self.session, **response.json())
+        response = self.ctx.session.get(url)
+        return ContentItem(self.ctx, **response.json())

@@ -1,3 +1,5 @@
+from unittest import mock
+from unittest.mock import Mock
 import requests
 import responses
 
@@ -6,6 +8,7 @@ from responses import matchers
 from posit.connect.client import Client
 from posit.connect.config import Config
 from posit.connect.content import ContentItem, ContentItemOwner
+from posit.connect.context import Context
 from posit.connect.permissions import Permissions
 
 from .api import load_mock  # type: ignore
@@ -15,10 +18,8 @@ class TestContentOwnerAttributes:
     @classmethod
     def setup_class(cls):
         guid = "20a79ce3-6e87-4522-9faf-be24228800a4"
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
         fake_item = load_mock(f"v1/users/{guid}.json")
-        cls.item = ContentItemOwner(config, session, **fake_item)
+        cls.item = ContentItemOwner(mock.Mock(), **fake_item)
 
     def test_guid(self):
         assert self.item.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
@@ -37,10 +38,8 @@ class TestContentItemAttributes:
     @classmethod
     def setup_class(cls):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
         fake_item = load_mock(f"v1/content/{guid}.json")
-        cls.item = ContentItem(config, session, **fake_item)
+        cls.item = ContentItem(Mock(), **fake_item)
 
     def test_id(self):
         assert self.item.id == "8274"
@@ -227,10 +226,13 @@ class TestContentItemDelete:
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
+        ctx = Context(
+            api_key="12345",
+            session=requests.Session(),
+            url="https://connect.example/__api__",
+        )
         fake_item = load_mock(f"v1/content/{guid}.json")
-        item = ContentItem(config, session, **fake_item)
+        item = ContentItem(ctx, **fake_item)
 
         # invoke
         item.delete()

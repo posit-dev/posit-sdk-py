@@ -4,6 +4,7 @@ import requests
 from responses import matchers
 
 from posit.connect import Client, config
+from posit.connect.context import Context
 from posit.connect.metrics import shiny_usage
 
 from ..api import load_mock  # type: ignore
@@ -12,7 +13,6 @@ from ..api import load_mock  # type: ignore
 class TestShinyUsageEventAttributes:
     def setup_class(cls):
         cls.event = shiny_usage.ShinyUsageEvent(
-            None,
             None,
             **load_mock("v1/instrumentation/shiny/usage?limit=500.json")[
                 "results"
@@ -70,11 +70,14 @@ class TestShinyUsageFind:
         )
 
         # setup
-        c = config.Config("12345", "https://connect.example")
-        session = requests.Session()
+        ctx = Context(
+            api_key="12345",
+            session=requests.Session(),
+            url="https://connect.example/__api__",
+        )
 
         # invoke
-        events = shiny_usage.ShinyUsage(c, session).find()
+        events = shiny_usage.ShinyUsage(ctx).find()
 
         # assert
         assert mock_get[0].call_count == 1
@@ -115,11 +118,14 @@ class TestShinyUsageFindOne:
         )
 
         # setup
-        c = config.Config("12345", "https://connect.example")
-        session = requests.Session()
+        ctx = Context(
+            api_key="12345",
+            session=requests.Session(),
+            url="https://connect.example/__api__",
+        )
 
         # invoke
-        event = shiny_usage.ShinyUsage(c, session).find_one()
+        event = shiny_usage.ShinyUsage(ctx).find_one()
 
         # assert
         assert mock_get[0].call_count == 1

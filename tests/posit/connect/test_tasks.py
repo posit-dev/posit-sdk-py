@@ -13,7 +13,6 @@ class TestTaskAttributes:
     def setup_class(cls):
         cls.task = tasks.Task(
             None,
-            None,
             **load_mock("v1/tasks/jXhOhdm5OOSkGhJw.json"),
         )
 

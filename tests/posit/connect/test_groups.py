@@ -1,3 +1,4 @@
+from unittest import mock
 from unittest.mock import Mock
 
 import pytest
@@ -19,10 +20,8 @@ class TestGroupAttributes:
     @classmethod
     def setup_class(cls):
         guid = "6f300623-1e0c-48e6-a473-ddf630c0c0c3"
-        config = Config(api_key="12345", url="https://connect.example.com/")
-        session = requests.Session()
         fake_item = load_mock(f"v1/groups/{guid}.json")
-        cls.item = Group(config, session, **fake_item)
+        cls.item = Group(mock.Mock(), **fake_item)
 
     def test_guid(self):
         assert self.item.guid == "6f300623-1e0c-48e6-a473-ddf630c0c0c3"

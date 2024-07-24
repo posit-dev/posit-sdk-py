@@ -1,23 +1,22 @@
-import requests
-
 from . import urls
 
-from .config import Config
+from .context import Context
 from .users import User
 
 
-def get(config: Config, session: requests.Session) -> User:
-    """
-    Gets the current user.
+def get(ctx: Context) -> User:
+    """Get the current user.
 
-    Args:
-        config (Config): The configuration object containing the URL.
-        session (requests.Session): The session object used for making HTTP requests.
+    Get the user information from Connect for the user assumed via the provided API key.
+
+    Parameters
+    ----------
+    ctx : Context
 
     Returns
     -------
-        User: The current user.
+    User
     """
-    url = urls.append(config.url, "v1/user")
-    response = session.get(url)
-    return User(config, session, **response.json())
+    url = urls.append(ctx.url, "v1/user")
+    response = ctx.session.get(url)
+    return User(ctx, **response.json())

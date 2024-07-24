@@ -15,6 +15,7 @@ from .metrics import Metrics
 from .tasks import Tasks
 from .users import User, Users
 from .groups import Groups
+from .context import Context
 
 
 class Client:
@@ -155,12 +156,12 @@ class Client:
             if "url" in kwargs and isinstance(kwargs["url"], str):
                 url = kwargs["url"]
 
-        self.config = Config(api_key=api_key, url=url)
+        cfg = Config(api_key=api_key, url=url)
         session = Session()
-        session.auth = Auth(config=self.config)
+        session.auth = Auth(config=cfg)
         session.hooks["response"].append(hooks.check_for_deprecation_header)
         session.hooks["response"].append(hooks.handle_errors)
-        self.session = session
+        self.ctx = Context(api_key=cfg.api_key, session=session, url=cfg.url)
 
     @property
     def version(self) -> str:
@@ -184,7 +185,7 @@ class Client:
         User
             The currently authenticated user.
         """
-        return me.get(self.config, self.session)
+        return me.get(self.ctx)
 
     @property
     def oauth(self) -> OAuthIntegration:
@@ -196,7 +197,7 @@ class Client:
         OAuthIntegration
             The OAuth integration instance.
         """
-        return OAuthIntegration(config=self.config, session=self.session)
+        return OAuthIntegration(self.ctx)
 
     @property
     def groups(self) -> Groups:
@@ -207,7 +208,7 @@ class Client:
         Groups
             The groups resource interface.
         """
-        return Groups(self.config, self.session)
+        return Groups(self.ctx)
 
     @property
     def tasks(self) -> Tasks:
@@ -219,7 +220,7 @@ class Client:
         tasks.Tasks
             The tasks resource instance.
         """
-        return Tasks(self.config, self.session)
+        return Tasks(self.ctx)
 
     @property
     def users(self) -> Users:
@@ -231,7 +232,7 @@ class Client:
         Users
             The users resource instance.
         """
-        return Users(config=self.config, session=self.session)
+        return Users(self.ctx)
 
     @property
     def content(self) -> Content:
@@ -243,7 +244,7 @@ class Client:
         Content
             The content resource instance.
         """
-        return Content(config=self.config, session=self.session)
+        return Content(self.ctx)
 
     @property
     def metrics(self) -> Metrics:
@@ -271,12 +272,12 @@ class Client:
         >>> len(events)
         24
         """
-        return Metrics(self.config, self.session)
+        return Metrics(self.ctx)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
-        if hasattr(self, "session") and self.session is not None:
-            self.session.close()
+        if hasattr(self, "ctx") and self.ctx is not None:
+            self.ctx.session.close()
 
     def __enter__(self):
         """Enter method for using the client as a context manager."""
@@ -295,8 +296,8 @@ class Client:
         exc_tb : traceback
             The traceback for the exception raised (if any).
         """
-        if hasattr(self, "session") and self.session is not None:
-            self.session.close()
+        if hasattr(self, "ctx") and self.ctx is not None:
+            self.ctx.session.close()
 
     def request(self, method: str, path: str, **kwargs) -> Response:
         """
@@ -318,8 +319,8 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = urls.append(self.config.url, path)
-        return self.session.request(method, url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.request(method, url, **kwargs)
 
     def get(self, path: str, **kwargs) -> Response:
         """
@@ -339,8 +340,8 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = urls.append(self.config.url, path)
-        return self.session.get(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.get(url, **kwargs)
 
     def post(self, path: str, **kwargs) -> Response:
         """
@@ -360,8 +361,8 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = urls.append(self.config.url, path)
-        return self.session.post(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.post(url, **kwargs)
 
     def put(self, path: str, **kwargs) -> Response:
         """
@@ -381,8 +382,8 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = urls.append(self.config.url, path)
-        return self.session.put(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.put(url, **kwargs)
 
     def patch(self, path: str, **kwargs) -> Response:
         """
@@ -402,8 +403,8 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = urls.append(self.config.url, path)
-        return self.session.patch(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.patch(url, **kwargs)
 
     def delete(self, path: str, **kwargs) -> Response:
         """
@@ -423,5 +424,5 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = urls.append(self.config.url, path)
-        return self.session.delete(url, **kwargs)
+        url = urls.append(self.ctx.url, path)
+        return self.ctx.session.delete(url, **kwargs)

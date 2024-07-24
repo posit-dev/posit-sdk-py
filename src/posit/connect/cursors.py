@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, make_dataclass
 from typing import Generator, List
 
-import requests
+from .context import Context
 
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
@@ -16,10 +16,8 @@ class CursorPage:
 
 
 class CursorPaginator:
-    def __init__(
-        self, session: requests.Session, url: str, params: dict = {}
-    ) -> None:
-        self.session = session
+    def __init__(self, ctx: Context, url: str, params: dict = {}) -> None:
+        self.ctx = ctx
         self.url = url
         self.params = params
 
@@ -72,5 +70,5 @@ class CursorPaginator:
             "next": next,
             "limit": _MAX_PAGE_SIZE,
         }
-        response = self.session.get(self.url, params=params)
+        response = self.ctx.session.get(self.url, params=params)
         return CursorPage(**response.json())

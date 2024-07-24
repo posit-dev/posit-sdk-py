@@ -20,7 +20,6 @@ class TestUsageEventFromVisitEvent:
     def setup_class(cls):
         visit_event = visits.VisitEvent(
             None,
-            None,
             **load_mock("v1/instrumentation/content/visits?limit=500.json")[
                 "results"
             ][0],
@@ -63,7 +62,6 @@ class TestUsageEventFromVisitEvent:
 class TestUsageEventFromShinyUsageEvent:
     def setup_class(cls):
         visit_event = shiny_usage.ShinyUsageEvent(
-            None,
             None,
             **load_mock("v1/instrumentation/shiny/usage?limit=500.json")[
                 "results"

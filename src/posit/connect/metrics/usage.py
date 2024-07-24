@@ -27,8 +27,7 @@ class UsageEvent(resources.Resource):
     @staticmethod
     def from_visit_event(event: visits.VisitEvent) -> UsageEvent:
         return UsageEvent(
-            event.config,
-            event.session,
+            event.ctx,
             content_guid=event.content_guid,
             user_guid=event.user_guid,
             variant_key=event.variant_key,
@@ -45,8 +44,7 @@ class UsageEvent(resources.Resource):
         event: shiny_usage.ShinyUsageEvent,
     ) -> UsageEvent:
         return UsageEvent(
-            event.config,
-            event.session,
+            event.ctx,
             content_guid=event.content_guid,
             user_guid=event.user_guid,
             variant_key=None,
@@ -57,9 +55,6 @@ class UsageEvent(resources.Resource):
             data_version=event.data_version,
             path=None,
         )
-
-    def __init__(self, config: resources.Config, session: Session, **kwargs):
-        super().__init__(config, session, **kwargs)
 
     @property
     def content_guid(self) -> str:
@@ -204,7 +199,7 @@ class Usage(resources.Resources):
         events = []
         finders = (visits.Visits, shiny_usage.ShinyUsage)
         for finder in finders:
-            instance = finder(self.config, self.session)
+            instance = finder(self.ctx)
             events.extend(
                 [
                     UsageEvent.from_event(event)
@@ -259,7 +254,7 @@ class Usage(resources.Resources):
         """
         finders = (visits.Visits, shiny_usage.ShinyUsage)
         for finder in finders:
-            instance = finder(self.config, self.session)
+            instance = finder(self.ctx)
             event = instance.find_one(*args, **kwargs)  # type: ignore[attr-defined]
             if event:
                 return UsageEvent.from_event(event)

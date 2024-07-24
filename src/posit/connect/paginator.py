@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from typing import Generator, List
 
-import requests
-
+from .context import Context
 
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
@@ -39,10 +38,8 @@ class Paginator:
         url (str): The URL of the paginated API endpoint.
     """
 
-    def __init__(
-        self, session: requests.Session, url: str, params: dict = {}
-    ) -> None:
-        self.session = session
+    def __init__(self, ctx: Context, url: str, params: dict = {}) -> None:
+        self.ctx = ctx
         self.url = url
         self.params = params
 
@@ -103,5 +100,5 @@ class Paginator:
             "page_number": page_number,
             "page_size": _MAX_PAGE_SIZE,
         }
-        response = self.session.get(self.url, params=params)
+        response = self.ctx.session.get(self.url, params=params)
         return Page(**response.json())

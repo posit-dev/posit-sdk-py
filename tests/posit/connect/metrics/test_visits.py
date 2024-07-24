@@ -4,6 +4,7 @@ import requests
 from responses import matchers
 
 from posit.connect import Client, config
+from posit.connect.context import Context
 from posit.connect.metrics import visits
 
 from ..api import load_mock  # type: ignore
@@ -12,7 +13,6 @@ from ..api import load_mock  # type: ignore
 class TestVisitAttributes:
     def setup_class(cls):
         cls.visit = visits.VisitEvent(
-            None,
             None,
             **load_mock("v1/instrumentation/content/visits?limit=500.json")[
                 "results"
@@ -79,11 +79,14 @@ class TestVisitsFind:
         )
 
         # setup
-        c = config.Config("12345", "https://connect.example")
-        session = requests.Session()
+        ctx = Context(
+            api_key="12345",
+            session=requests.Session(),
+            url="https://connect.example/__api__",
+        )
 
         # invoke
-        events = visits.Visits(c, session).find()
+        events = visits.Visits(ctx).find()
 
         # assert
         assert mock_get[0].call_count == 1
@@ -124,11 +127,14 @@ class TestVisitsFindOne:
         )
 
         # setup
-        c = config.Config("12345", "https://connect.example")
-        session = requests.Session()
+        ctx = Context(
+            api_key="12345",
+            session=requests.Session(),
+            url="https://connect.example/__api__",
+        )
 
         # invoke
-        event = visits.Visits(c, session).find_one()
+        event = visits.Visits(ctx).find_one()
 
         # assert
         assert mock_get[0].call_count == 1
