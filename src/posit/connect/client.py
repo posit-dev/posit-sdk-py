@@ -6,6 +6,8 @@ from typing import overload
 
 from requests import Response, Session
 
+from posit.connect.resources import ResourceParameters
+
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -155,12 +157,13 @@ class Client:
             if "url" in kwargs and isinstance(kwargs["url"], str):
                 url = kwargs["url"]
 
-        self.config = Config(api_key=api_key, url=url)
+        self.cfg = Config(api_key=api_key, url=url)
         session = Session()
-        session.auth = Auth(config=self.config)
+        session.auth = Auth(config=self.cfg)
         session.hooks["response"].append(hooks.check_for_deprecation_header)
         session.hooks["response"].append(hooks.handle_errors)
         self.session = session
+        self.resource_params = ResourceParameters(session, self.cfg.url)
 
     @property
     def version(self) -> str:
@@ -184,7 +187,7 @@ class Client:
         User
             The currently authenticated user.
         """
-        return me.get(self.config, self.session)
+        return me.get(self.resource_params)
 
     @property
     def oauth(self) -> OAuthIntegration:
@@ -196,7 +199,7 @@ class Client:
         OAuthIntegration
             The OAuth integration instance.
         """
-        return OAuthIntegration(config=self.config, session=self.session)
+        return OAuthIntegration(self.cfg, self.session)
 
     @property
     def groups(self) -> Groups:
@@ -207,7 +210,7 @@ class Client:
         Groups
             The groups resource interface.
         """
-        return Groups(self.config, self.session)
+        return Groups(self.resource_params)
 
     @property
     def tasks(self) -> Tasks:
@@ -219,7 +222,7 @@ class Client:
         tasks.Tasks
             The tasks resource instance.
         """
-        return Tasks(self.config, self.session)
+        return Tasks(self.resource_params)
 
     @property
     def users(self) -> Users:
@@ -231,7 +234,7 @@ class Client:
         Users
             The users resource instance.
         """
-        return Users(config=self.config, session=self.session)
+        return Users(self.resource_params)
 
     @property
     def content(self) -> Content:
@@ -243,7 +246,7 @@ class Client:
         Content
             The content resource instance.
         """
-        return Content(config=self.config, session=self.session)
+        return Content(self.resource_params)
 
     @property
     def metrics(self) -> Metrics:
@@ -271,7 +274,7 @@ class Client:
         >>> len(events)
         24
         """
-        return Metrics(self.config, self.session)
+        return Metrics(self.resource_params)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
@@ -318,7 +321,7 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = self.config.url + path
+        url = self.cfg.url + path
         return self.session.request(method, url, **kwargs)
 
     def get(self, path: str, **kwargs) -> Response:
@@ -339,7 +342,7 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = self.config.url + path
+        url = self.cfg.url + path
         return self.session.get(url, **kwargs)
 
     def post(self, path: str, **kwargs) -> Response:
@@ -360,7 +363,7 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = self.config.url + path
+        url = self.cfg.url + path
         return self.session.post(url, **kwargs)
 
     def put(self, path: str, **kwargs) -> Response:
@@ -381,7 +384,7 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = self.config.url + path
+        url = self.cfg.url + path
         return self.session.put(url, **kwargs)
 
     def patch(self, path: str, **kwargs) -> Response:
@@ -402,7 +405,7 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = self.config.url + path
+        url = self.cfg.url + path
         return self.session.patch(url, **kwargs)
 
     def delete(self, path: str, **kwargs) -> Response:
@@ -423,5 +426,5 @@ class Client:
         Response
             A [](`requests.Response`) object.
         """
-        url = self.config.url + path
+        url = self.cfg.url + path
         return self.session.delete(url, **kwargs)

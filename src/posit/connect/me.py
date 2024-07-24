@@ -1,10 +1,9 @@
-import requests
+from posit.connect.resources import ResourceParameters
 
-from .config import Config
 from .users import User
 
 
-def get(config: Config, session: requests.Session) -> User:
+def get(params: ResourceParameters) -> User:
     """
     Gets the current user.
 
@@ -16,6 +15,6 @@ def get(config: Config, session: requests.Session) -> User:
     -------
         User: The current user.
     """
-    url = config.url + "v1/user"
-    response = session.get(url)
-    return User(config, session, **response.json())
+    url = params.url + "v1/user"
+    response = params.session.get(url)
+    return User(params, **response.json())

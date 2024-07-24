@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from typing import List, overload
 
-import requests
-
 from . import me
-from .config import Config
 from .content import Content
 from .paginator import Paginator
-from .resources import Resource, Resources
+from .resources import Resource, ResourceParameters, Resources
 
 
 class User(Resource):
@@ -37,7 +34,7 @@ class User(Resource):
 
     @property
     def content(self) -> Content:
-        return Content(self.config, self.session, owner_guid=self.guid)
+        return Content(self.params, owner_guid=self.guid)
 
     @property
     def guid(self) -> str:
@@ -96,12 +93,12 @@ class User(Resource):
         -------
             None
         """
-        _me = me.get(self.config, self.session)
+        _me = me.get(self.params)
         if _me.guid == self.guid and not force:
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior."
             )
-        url = self.config.url + f"v1/users/{self.guid}/lock"
+        url = self.url + f"v1/users/{self.guid}/lock"
         body = {"locked": True}
         self.session.post(url, json=body)
         super().update(locked=True)
@@ -114,7 +111,7 @@ class User(Resource):
         -------
             None
         """
-        url = self.config.url + f"v1/users/{self.guid}/lock"
+        url = self.url + f"v1/users/{self.guid}/lock"
         body = {"locked": False}
         self.session.post(url, json=body)
         super().update(locked=False)
@@ -172,7 +169,7 @@ class User(Resource):
             None
         """
         body = dict(*args, **kwargs)
-        url = self.config.url + f"v1/users/{self.guid}"
+        url = self.url + f"v1/users/{self.guid}"
         response = self.session.put(url, json=body)
         super().update(**response.json())
 
@@ -180,10 +177,8 @@ class User(Resource):
 class Users(Resources):
     """Users resource."""
 
-    def __init__(self, config: Config, session: requests.Session) -> None:
-        self.url = config.url + "v1/users"
-        self.config = config
-        self.session = session
+    def __init__(self, params: ResourceParameters) -> None:
+        super().__init__(params)
 
     @overload
     def find(
@@ -197,13 +192,13 @@ class Users(Resources):
     def find(self, *args, **kwargs) -> List[User]: ...
 
     def find(self, *args, **kwargs):
+        url = self.params.url + "v1/users"
         params = dict(*args, **kwargs)
-        paginator = Paginator(self.session, self.url, params=params)
+        paginator = Paginator(self.session, url, params=params)
         results = paginator.fetch_results()
         return [
             User(
-                config=self.config,
-                session=self.session,
+                self.params,
                 **user,
             )
             for user in results
@@ -221,14 +216,14 @@ class Users(Resources):
     def find_one(self, *args, **kwargs) -> User | None: ...
 
     def find_one(self, *args, **kwargs) -> User | None:
+        url = self.params.url + "v1/users"
         params = dict(*args, **kwargs)
-        paginator = Paginator(self.session, self.url, params=params)
+        paginator = Paginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (
             User(
-                config=self.config,
-                session=self.session,
+                self.params,
                 **result,
             )
             for result in results
@@ -236,17 +231,15 @@ class Users(Resources):
         return next(users, None)
 
     def get(self, id: str) -> User:
-        url = self.config.url + f"v1/users/{id}"
+        url = self.url + f"v1/users/{id}"
         response = self.session.get(url)
         return User(
-            config=self.config,
-            session=self.session,
+            self.params,
             **response.json(),
         )
 
     def count(self) -> int:
-        response: requests.Response = self.session.get(
-            self.url, params={"page_size": 1}
-        )
+        url = self.params.url + "v1/users"
+        response = self.session.get(url, params={"page_size": 1})
         result: dict = response.json()
         return result["total"]

@@ -1,7 +1,9 @@
+from unittest import mock
+
 import requests
 import responses
-from posit.connect import config
 from posit.connect.metrics import visits
+from posit.connect.resources import ResourceParameters
 from responses import matchers
 
 from ..api import load_mock  # type: ignore
@@ -10,8 +12,7 @@ from ..api import load_mock  # type: ignore
 class TestVisitAttributes:
     def setup_class(cls):
         cls.visit = visits.VisitEvent(
-            None,
-            None,
+            mock.Mock(),
             **load_mock("v1/instrumentation/content/visits?limit=500.json")[
                 "results"
             ][0],
@@ -77,11 +78,12 @@ class TestVisitsFind:
         )
 
         # setup
-        c = config.Config("12345", "https://connect.example")
-        session = requests.Session()
+        params = ResourceParameters(
+            requests.Session(), "https://connect.example/__api__"
+        )
 
         # invoke
-        events = visits.Visits(c, session).find()
+        events = visits.Visits(params).find()
 
         # assert
         assert mock_get[0].call_count == 1
@@ -122,11 +124,12 @@ class TestVisitsFindOne:
         )
 
         # setup
-        c = config.Config("12345", "https://connect.example")
-        session = requests.Session()
+        params = ResourceParameters(
+            requests.Session(), "https://connect.example/__api__"
+        )
 
         # invoke
-        event = visits.Visits(c, session).find_one()
+        event = visits.Visits(params).find_one()
 
         # assert
         assert mock_get[0].call_count == 1

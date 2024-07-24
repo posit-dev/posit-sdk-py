@@ -2,11 +2,9 @@ import io
 from unittest import mock
 
 import pytest
-import requests
 import responses
 from posit.connect import Client
 from posit.connect.bundles import Bundle
-from posit.connect.config import Config
 from responses import matchers
 
 from .api import get_path, load_mock  # type: ignore
@@ -14,11 +12,8 @@ from .api import get_path, load_mock  # type: ignore
 
 class TestBundleProperties:
     def setup_class(cls):
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
         cls.bundle = Bundle(
-            config,
-            session,
+            mock.Mock(),
             **load_mock(
                 f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"
             ),
