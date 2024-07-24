@@ -156,12 +156,12 @@ class Client:
             if "url" in kwargs and isinstance(kwargs["url"], str):
                 url = kwargs["url"]
 
-        cfg = Config(api_key=api_key, url=url)
+        self.cfg = Config(api_key=api_key, url=url)
         session = Session()
-        session.auth = Auth(config=cfg)
+        session.auth = Auth(config=self.cfg)
         session.hooks["response"].append(hooks.check_for_deprecation_header)
         session.hooks["response"].append(hooks.handle_errors)
-        self.ctx = Context(api_key=cfg.api_key, session=session, url=cfg.url)
+        self.ctx = Context(session=session, url=self.cfg.url)
 
     @property
     def version(self) -> str:
@@ -197,7 +197,7 @@ class Client:
         OAuthIntegration
             The OAuth integration instance.
         """
-        return OAuthIntegration(self.ctx)
+        return OAuthIntegration(self.ctx, self.cfg.api_key)
 
     @property
     def groups(self) -> Groups:

@@ -29,7 +29,6 @@ class TestPermissionDelete:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )
@@ -79,7 +78,6 @@ class TestPermissionUpdate:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )
@@ -128,7 +126,6 @@ class TestPermissionUpdate:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )
@@ -159,7 +156,6 @@ class TestPermissionsCount:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )
@@ -205,7 +201,6 @@ class TestPermissionsCreate:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )
@@ -239,7 +234,6 @@ class TestPermissionsFind:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )
@@ -269,7 +263,6 @@ class TestPermissionsFindOne:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )
@@ -300,7 +293,6 @@ class TestPermissionsGet:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )

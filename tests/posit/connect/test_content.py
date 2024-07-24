@@ -227,7 +227,6 @@ class TestContentItemDelete:
 
         # setup
         ctx = Context(
-            api_key="12345",
             session=requests.Session(),
             url="https://connect.example/__api__",
         )
