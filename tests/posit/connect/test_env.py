@@ -47,6 +47,102 @@ def test__delitem__():
 
 
 @responses.activate
+def test__getitem__():
+    # data
+    guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+    # behavior
+    responses.get(
+        f"https://connect.example.com/__api__/v1/content/{guid}",
+        json=load_mock(f"v1/content/{guid}.json"),
+    )
+
+    responses.patch(
+        f"https://connect.example.com/__api__/v1/content/{guid}/environment",
+        json=[],
+        match=[
+            matchers.json_params_matcher(
+                [
+                    {
+                        "name": "TEST",
+                        "value": None,
+                    }
+                ]
+            )
+        ],
+    )
+
+    # setup
+    c = Client("https://connect.example.com", "12345")
+    content = c.content.get(guid)
+
+    # invoke
+    with pytest.raises(NotImplementedError):
+        content.environment_variables["TEST"]
+
+
+@responses.activate
+def test__iter__():
+    # data
+    guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+    # behavior
+    mock_get_content = responses.get(
+        f"https://connect.example.com/__api__/v1/content/{guid}",
+        json=load_mock(f"v1/content/{guid}.json"),
+    )
+
+    mock_get_environment = responses.get(
+        f"https://connect.example.com/__api__/v1/content/{guid}/environment",
+        json=["TEST"],
+    )
+
+    # setup
+    c = Client("https://connect.example.com", "12345")
+    content = c.content.get(guid)
+
+    # invoke
+    iterator = iter(content.environment_variables)
+
+    # assert
+    assert next(iterator) == "TEST"
+    with pytest.raises(StopIteration):
+        next(iterator)
+
+    assert mock_get_content.call_count == 1
+    assert mock_get_environment.call_count == 1
+
+
+@responses.activate
+def test__len__():
+    # data
+    guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+    # behavior
+    mock_get_content = responses.get(
+        f"https://connect.example.com/__api__/v1/content/{guid}",
+        json=load_mock(f"v1/content/{guid}.json"),
+    )
+
+    mock_get_environment = responses.get(
+        f"https://connect.example.com/__api__/v1/content/{guid}/environment",
+        json=["TEST"],
+    )
+
+    # setup
+    c = Client("https://connect.example.com", "12345")
+    content = c.content.get(guid)
+
+    # invoke
+    length = len(content.environment_variables)
+
+    # assert
+    assert length == 1
+    assert mock_get_content.call_count == 1
+    assert mock_get_environment.call_count == 1
+
+
+@responses.activate
 def test__setitem__():
     # data
     guid = "f2f37341-e21d-3d80-c698-a935ad614066"
@@ -218,6 +314,31 @@ def test_find():
     assert mock_get_environment.call_count == 1
 
 
+@responses.activate
+def test_items():
+    # data
+    guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+    # behavior
+    mock_get_content = responses.get(
+        f"https://connect.example.com/__api__/v1/content/{guid}",
+        json=load_mock(f"v1/content/{guid}.json"),
+    )
+
+    mock_get_environment = responses.get(
+        f"https://connect.example.com/__api__/v1/content/{guid}/environment",
+        json=["TEST"],
+    )
+
+    # setup
+    c = Client("https://connect.example.com", "12345")
+    content = c.content.get(guid)
+
+    # invoke
+    with pytest.raises(NotImplementedError):
+        content.environment_variables.items()
+
+
 class TestUpdate:
     @responses.activate
     def test(self):
@@ -257,7 +378,7 @@ class TestUpdate:
         assert mock_patch.call_count == 1
 
     @responses.activate
-    def test_other_is_mutable_mapping(self):
+    def test_other_is_mapping(self):
         # data
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
 
@@ -288,6 +409,50 @@ class TestUpdate:
 
         # invoke
         content.environment_variables.update({"TEST": "TEST"})
+
+        # assert
+        assert mock_get.call_count == 1
+        assert mock_patch.call_count == 1
+
+    @responses.activate
+    def test_other_hasattr_keys(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # behavior
+        mock_get = responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+
+        mock_patch = responses.patch(
+            f"https://connect.example.com/__api__/v1/content/{guid}/environment",
+            json=load_mock(f"v1/content/{guid}.json"),
+            match=[
+                matchers.json_params_matcher(
+                    [
+                        {
+                            "name": "TEST",
+                            "value": "TEST",
+                        }
+                    ]
+                )
+            ],
+        )
+
+        # setup
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get(guid)
+
+        class Test:
+            def __getitem__(self, key):
+                return "TEST"
+
+            def keys(self):
+                return ["TEST"]
+
+        # invoke
+        content.environment_variables.update(Test())
 
         # assert
         assert mock_get.call_count == 1
@@ -380,7 +545,7 @@ class TestUpdate:
         content = c.content.get(guid)
 
         # invoke
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             content.environment_variables.update("TEST")
 
     @responses.activate

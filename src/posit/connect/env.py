@@ -1,14 +1,6 @@
 from __future__ import annotations
 
-from typing import (
-    Any,
-    Dict,
-    List,
-    Iterable,
-    MutableMapping,
-    Optional,
-    overload,
-)
+from typing import Any, Iterator, List, Mapping, MutableMapping, Optional
 
 from requests import Session
 
@@ -17,14 +9,40 @@ from .config import Config
 from .resources import Resources
 
 
-class EnvVars(Resources):
+class EnvVars(Resources, MutableMapping[str, Optional[str]]):
     def __init__(
         self, config: Config, session: Session, content_guid: str
     ) -> None:
         super().__init__(config, session)
         self.content_guid = content_guid
 
-    def __setitem__(self, key: str, value: str, /) -> None:
+    def __delitem__(self, key: str, /) -> None:
+        """Delete the environment variable.
+
+        Parameters
+        ----------
+        key : str
+            The name of the environment variable to delete.
+
+        Examples
+        --------
+        >>> vars = EnvVars(config, session, content_guid)
+        >>> del vars["DATABASE_URL"]
+        """
+        self.update({key: None})
+
+    def __getitem__(self, key: Any) -> Any:
+        raise NotImplementedError(
+            "Since environment variables may contain sensitive information, the values are not accessible outside of Connect."
+        )
+
+    def __iter__(self) -> Iterator:
+        return iter(self.find())
+
+    def __len__(self):
+        return len(self.find())
+
+    def __setitem__(self, key: str, value: Optional[str], /) -> None:
         """Set environment variable.
 
         Set the environment variable for content.
@@ -44,21 +62,6 @@ class EnvVars(Resources):
         ... )
         """
         self.update({key: value})
-
-    def __delitem__(self, key: str, /) -> None:
-        """Delete the environment variable.
-
-        Parameters
-        ----------
-        key : str
-            The name of the environment variable to delete.
-
-        Examples
-        --------
-        >>> vars = EnvVars(config, session, content_guid)
-        >>> del vars["DATABASE_URL"]
-        """
-        self.update({key: None})
 
     def clear(self) -> None:
         """Remove all environment variables.
@@ -130,20 +133,12 @@ class EnvVars(Resources):
         response = self.session.get(url)
         return response.json()
 
-    @overload
-    def update(
-        self, other: MutableMapping[str, Optional[str]], /, **kwargs: str
-    ) -> None: ...
+    def items(self):
+        raise NotImplementedError(
+            "Since environment variables may contain sensitive information, the values are not accessible outside of Connect."
+        )
 
-    @overload
-    def update(
-        self, other: Iterable[tuple[str, Optional[str]]], /, **kwargs: str
-    ) -> None: ...
-
-    @overload
-    def update(self, /, **kwargs: str) -> None: ...
-
-    def update(self, other=None, /, **kwargs: str) -> None:
+    def update(self, other=(), /, **kwargs: Optional[str]):
         """
         Update environment variables.
 
@@ -193,26 +188,19 @@ class EnvVars(Resources):
         ...     ]
         ... )
         """
-        d: Dict[str, str] = {}
-        if other is not None:
-            if isinstance(other, MutableMapping):
-                d.update(other)
-            elif isinstance(other, Iterable) and not isinstance(
-                other, (str, bytes)
-            ):
-                try:
-                    d.update(other)
-                except (TypeError, ValueError):
-                    raise TypeError(
-                        f"update expected a {MutableMapping} or {Iterable}, got {type(other)}"
-                    )
-            else:
-                raise TypeError(
-                    f"update expected a {MutableMapping} or {Iterable}, got {type(other)}"
-                )
+        d = dict()
+        if isinstance(other, Mapping):
+            for key in other:
+                d[key] = other[key]
+        elif hasattr(other, "keys"):
+            for key in other.keys():
+                d[key] = other[key]
+        else:
+            for key, value in other:
+                d[key] = value
 
-        if kwargs:
-            d.update(kwargs)
+        for key, value in kwargs.items():
+            d[key] = value
 
         body = [{"name": key, "value": value} for key, value in d.items()]
         path = f"v1/content/{self.content_guid}/environment"
