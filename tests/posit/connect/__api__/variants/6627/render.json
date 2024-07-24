@@ -1,0 +1,12 @@
+{
+    "id": "jXhOhdm5OOSkGhJw",
+    "output": [
+      "Building static content...",
+      "Launching static content..."
+    ],
+    "finished": true,
+    "code": 1,
+    "error": "Unable to render: Rendering exited abnormally: exit status 1",
+    "last": 2,
+    "result": null
+  }

@@ -1,12 +1,13 @@
+import warnings
+
+import pytest
 import requests
 import responses
-
-from responses import matchers
-
 from posit.connect.client import Client
 from posit.connect.config import Config
 from posit.connect.content import ContentItem, ContentItemOwner
 from posit.connect.permissions import Permissions
+from responses import matchers
 
 from .api import load_mock  # type: ignore
 
@@ -524,3 +525,169 @@ class TestContentsCount:
         con = Client(api_key="12345", url="https://connect.example/")
         count = con.content.count()
         assert count == 3
+
+
+class TestRender:
+    @responses.activate
+    def test(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # behavior
+        get_content = responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+
+        patch_content = responses.patch(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+
+        get_variants = responses.get(
+            f"https://connect.example.com/__api__/applications/{guid}/variants",
+            json=load_mock(f"applications/{guid}/variants.json"),
+        )
+
+        post_render = responses.post(
+            "https://connect.example.com/__api__/variants/6627/render",
+            json=load_mock("variants/6627/render.json"),
+        )
+
+        # setup
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get(guid)
+
+        # invoke
+        task = content.render()
+
+        # assert
+        assert task is not None
+        assert get_content.call_count == 1
+        assert patch_content.call_count == 1
+        assert get_variants.call_count == 1
+        assert post_render.call_count == 1
+
+    @responses.activate
+    def test_app_mode_is_other(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fixture_content = load_mock(f"v1/content/{guid}.json")
+        fixture_content.update(app_mode="other")
+
+        # behavior
+        responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=fixture_content,
+        )
+
+        responses.patch(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=fixture_content,
+        )
+
+        # setup
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get(guid)
+
+        # invoke
+        with pytest.raises(ValueError):
+            content.render()
+
+    @responses.activate
+    def test_missing_default(self):
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock(
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+            ),
+        )
+
+        responses.patch(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock(
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
+            ),
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/applications/f2f37341-e21d-3d80-c698-a935ad614066/variants",
+            json=[],
+        )
+
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
+        with pytest.raises(RuntimeError):
+            content.render()
+
+
+class TestRestart:
+    @responses.activate
+    def test(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fixture_content = load_mock(f"v1/content/{guid}.json")
+        fixture_content.update(app_mode="api")
+
+        # behavior
+        mock_get_content = mock_get = responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=fixture_content,
+        )
+
+        mock_patch_content = responses.patch(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=fixture_content,
+        )
+
+        mock_patch_environment = responses.patch(
+            f"https://connect.example.com/__api__/v1/content/{guid}/environment",
+        )
+
+        mock_get_content_page = responses.get(
+            f"https://connect.example.com/content/{guid}",
+        )
+
+        # setup
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get(guid)
+
+        # invoke
+        task = content.restart()
+
+        # assert
+        assert task is None
+        assert mock_get_content.call_count == 1
+        assert mock_patch_content.call_count == 1
+        assert mock_patch_environment.call_count == 2
+        assert mock_get_content_page.call_count == 1
+
+    @responses.activate
+    def test_app_mode_is_other(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fixture_content = load_mock(f"v1/content/{guid}.json")
+        fixture_content.update(app_mode="other")
+
+        # behavior
+        mock_get_content = mock_get = responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=fixture_content,
+        )
+
+        mock_patch_content = responses.patch(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=fixture_content,
+        )
+
+        # setup
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get(guid)
+
+        # invoke
+        with pytest.raises(ValueError):
+            content.restart()
+
+        # assert
+        assert mock_get_content.call_count == 1
+        assert mock_patch_content.call_count == 1

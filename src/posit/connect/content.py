@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-from typing import TYPE_CHECKING, List, Optional, overload
-
+import secrets
+from posixpath import dirname
+from typing import List, Optional, overload
 
 from requests import Session
 
 from . import tasks, urls
-
-from .config import Config
 from .bundles import Bundles
+from .config import Config
+from .env import EnvVars
 from .permissions import Permissions
-from .resources import Resources, Resource
+from .resources import Resource, Resources
+from .tasks import Task
+from .variants import Variants
 
 
 class ContentItemOwner(Resource):
@@ -137,11 +139,194 @@ class ContentItem(Resource):
         Tags associated with the content item.
     """
 
+    # CRUD Methods
+
+    def delete(self) -> None:
+        """Delete the content item."""
+        path = f"v1/content/{self.guid}"
+        url = urls.append(self.config.url, path)
+        self.session.delete(url)
+
+    def deploy(self) -> tasks.Task:
+        """Deploy the content.
+
+        Spawns an asynchronous task, which activates the latest bundle.
+
+        Returns
+        -------
+        tasks.Task
+            The task for the deployment.
+
+        Examples
+        --------
+        >>> task = content.deploy()
+        >>> task.wait_for()
+        None
+        """
+        path = f"v1/content/{self.guid}/deploy"
+        url = urls.append(self.config.url, path)
+        response = self.session.post(url, json={"bundle_id": None})
+        result = response.json()
+        ts = tasks.Tasks(self.config, self.session)
+        return ts.get(result["task_id"])
+
+    def render(self) -> Task:
+        """Render the content.
+
+        Submit a render request to the server for the content. After submission, the server executes an asynchronous process to render the content. This is useful when content is dependent on external information, such as a dataset.
+
+        See Also
+        --------
+        restart
+
+        Examples
+        --------
+        >>> render()
+        """
+        self.update()
+
+        if self.app_mode in {
+            "rmd-static",
+            "jupyter-static",
+            "quarto-static",
+        }:
+            variants = self._variants.find()
+            variants = [variant for variant in variants if variant.is_default]
+            if len(variants) != 1:
+                raise RuntimeError(
+                    f"Found {len(variants)} default variants. Expected 1. Without a single default variant, the content cannot be refreshed. This is indicative of a corrupted state."
+                )
+            variant = variants[0]
+            return variant.render()
+        else:
+            raise ValueError(
+                f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
+            )
+
+    def restart(self) -> None:
+        """Mark for restart.
+
+        Sends a restart request to the server for the content. Once submitted, the server performs an asynchronous process to restart the content. This is particularly useful when the content relies on external information loaded into application memory, such as datasets. Additionally, restarting can help clear memory leaks or reduce excessive memory usage that might build up over time.
+
+        See Also
+        --------
+        render
+
+        Examples
+        --------
+        >>> restart()
+        """
+        self.update()
+
+        if self.app_mode in {
+            "api",
+            "jupyter-voila",
+            "python-api",
+            "python-bokeh",
+            "python-dash",
+            "python-fastapi",
+            "python-shiny",
+            "python-streamlit",
+            "quarto-shiny",
+            "rmd-shiny",
+            "shiny",
+            "tensorflow-saved-model",
+        }:
+            random_hash = secrets.token_hex(32)
+            key = f"_CONNECT_RESTART_TMP_{random_hash}"
+            self.environment_variables.create(key, random_hash)
+            self.environment_variables.delete(key)
+            # GET via the base Connect URL to force create a new worker thread.
+            url = urls.append(dirname(self.config.url), f"content/{self.guid}")
+            self.session.get(url)
+            return None
+        else:
+            raise ValueError(
+                f"Restart not supported for this application mode: {self.app_mode}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
+            )
+
+    @overload
+    def update(
+        self,
+        name: str = ...,
+        title: Optional[str] = ...,
+        description: str = ...,
+        access_type: str = ...,
+        owner_guid: Optional[str] = ...,
+        connection_timeout: Optional[int] = ...,
+        read_timeout: Optional[int] = ...,
+        init_timeout: Optional[int] = ...,
+        idle_timeout: Optional[int] = ...,
+        max_processes: Optional[int] = ...,
+        min_processes: Optional[int] = ...,
+        max_conns_per_process: Optional[int] = ...,
+        load_factor: Optional[float] = ...,
+        cpu_request: Optional[float] = ...,
+        cpu_limit: Optional[float] = ...,
+        memory_request: Optional[int] = ...,
+        memory_limit: Optional[int] = ...,
+        amd_gpu_limit: Optional[int] = ...,
+        nvidia_gpu_limit: Optional[int] = ...,
+        run_as: Optional[str] = ...,
+        run_as_current_user: Optional[bool] = ...,
+        default_image_name: Optional[str] = ...,
+        default_r_environment_management: Optional[bool] = ...,
+        default_py_environment_management: Optional[bool] = ...,
+        service_account_name: Optional[str] = ...,
+    ) -> None:
+        """Update the content item.
+
+        Parameters
+        ----------
+        name : str, optional
+        title : Optional[str], optional
+        description : str, optional
+        access_type : str, optional
+        owner_guid : Optional[str], optional
+        connection_timeout : Optional[int], optional
+        read_timeout : Optional[int], optional
+        init_timeout : Optional[int], optional
+        idle_timeout : Optional[int], optional
+        max_processes : Optional[int], optional
+        min_processes : Optional[int], optional
+        max_conns_per_process : Optional[int], optional
+        load_factor : Optional[float], optional
+        cpu_request : Optional[float], optional
+        cpu_limit : Optional[float], optional
+        memory_request : Optional[int], optional
+        memory_limit : Optional[int], optional
+        amd_gpu_limit : Optional[int], optional
+        nvidia_gpu_limit : Optional[int], optional
+        run_as : Optional[str], optional
+        run_as_current_user : Optional[bool], optional
+        default_image_name : Optional[str], optional
+        default_r_environment_management : Optional[bool], optional
+        default_py_environment_management : Optional[bool], optional
+        service_account_name : Optional[str], optional
+        """
+        ...
+
+    @overload
+    def update(self, *args, **kwargs) -> None:
+        """Update the content item."""
+        ...
+
+    def update(self, *args, **kwargs) -> None:
+        """Update the content item."""
+        body = dict(*args, **kwargs)
+        url = urls.append(self.config.url, f"v1/content/{self.guid}")
+        response = self.session.patch(url, json=body)
+        super().update(**response.json())
+
     # Relationships
 
     @property
     def bundles(self) -> Bundles:
         return Bundles(self.config, self.session, self.guid)
+
+    @property
+    def environment_variables(self) -> EnvVars:
+        return EnvVars(self.config, self.session, self.guid)
 
     @property
     def permissions(self) -> Permissions:
@@ -159,6 +344,10 @@ class ContentItem(Resource):
                 self.owner_guid
             )
         return ContentItemOwner(self.config, self.session, **self["owner"])
+
+    @property
+    def _variants(self) -> Variants:
+        return Variants(self.config, self.session, self.guid)
 
     # Properties
 
@@ -337,110 +526,6 @@ class ContentItem(Resource):
     @property
     def tags(self) -> List[dict]:
         return self.get("tags", [])
-
-    # CRUD Methods
-
-    def delete(self) -> None:
-        """Delete the content item."""
-        path = f"v1/content/{self.guid}"
-        url = urls.append(self.config.url, path)
-        self.session.delete(url)
-
-    def deploy(self) -> tasks.Task:
-        """Deploy the content.
-
-        Spawns an asynchronous task, which activates the latest bundle.
-
-        Returns
-        -------
-        tasks.Task
-            The task for the deployment.
-
-        Examples
-        --------
-        >>> task = content.deploy()
-        >>> task.wait_for()
-        None
-        """
-        path = f"v1/content/{self.guid}/deploy"
-        url = urls.append(self.config.url, path)
-        response = self.session.post(url, json={"bundle_id": None})
-        result = response.json()
-        ts = tasks.Tasks(self.config, self.session)
-        return ts.get(result["task_id"])
-
-    @overload
-    def update(
-        self,
-        name: str = ...,
-        title: Optional[str] = ...,
-        description: str = ...,
-        access_type: str = ...,
-        owner_guid: Optional[str] = ...,
-        connection_timeout: Optional[int] = ...,
-        read_timeout: Optional[int] = ...,
-        init_timeout: Optional[int] = ...,
-        idle_timeout: Optional[int] = ...,
-        max_processes: Optional[int] = ...,
-        min_processes: Optional[int] = ...,
-        max_conns_per_process: Optional[int] = ...,
-        load_factor: Optional[float] = ...,
-        cpu_request: Optional[float] = ...,
-        cpu_limit: Optional[float] = ...,
-        memory_request: Optional[int] = ...,
-        memory_limit: Optional[int] = ...,
-        amd_gpu_limit: Optional[int] = ...,
-        nvidia_gpu_limit: Optional[int] = ...,
-        run_as: Optional[str] = ...,
-        run_as_current_user: Optional[bool] = ...,
-        default_image_name: Optional[str] = ...,
-        default_r_environment_management: Optional[bool] = ...,
-        default_py_environment_management: Optional[bool] = ...,
-        service_account_name: Optional[str] = ...,
-    ) -> None:
-        """Update the content item.
-
-        Parameters
-        ----------
-        name : str, optional
-        title : Optional[str], optional
-        description : str, optional
-        access_type : str, optional
-        owner_guid : Optional[str], optional
-        connection_timeout : Optional[int], optional
-        read_timeout : Optional[int], optional
-        init_timeout : Optional[int], optional
-        idle_timeout : Optional[int], optional
-        max_processes : Optional[int], optional
-        min_processes : Optional[int], optional
-        max_conns_per_process : Optional[int], optional
-        load_factor : Optional[float], optional
-        cpu_request : Optional[float], optional
-        cpu_limit : Optional[float], optional
-        memory_request : Optional[int], optional
-        memory_limit : Optional[int], optional
-        amd_gpu_limit : Optional[int], optional
-        nvidia_gpu_limit : Optional[int], optional
-        run_as : Optional[str], optional
-        run_as_current_user : Optional[bool], optional
-        default_image_name : Optional[str], optional
-        default_r_environment_management : Optional[bool], optional
-        default_py_environment_management : Optional[bool], optional
-        service_account_name : Optional[str], optional
-        """
-        ...
-
-    @overload
-    def update(self, *args, **kwargs) -> None:
-        """Update the content item."""
-        ...
-
-    def update(self, *args, **kwargs) -> None:
-        """Update the content item."""
-        body = dict(*args, **kwargs)
-        url = urls.append(self.config.url, f"v1/content/{self.guid}")
-        response = self.session.patch(url, json=body)
-        super().update(**response.json())
 
 
 class Content(Resources):
