@@ -50,7 +50,7 @@ class TestContent:
         content = self.client.content.create(name="example-flask-minimal")
         # create bundle
         path = Path(
-            "../../../resources/bundles/example-flask-minimal/bundle.tar.gz"
+            "../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz"
         )
         path = (Path(__file__).parent / path).resolve()
         bundle = content.bundles.create(str(path))
@@ -71,7 +71,7 @@ class TestContent:
         content = self.client.content.create(name="example-quarto-minimal")
         # create bundle
         path = Path(
-            "../../../resources/bundles/example-quarto-minimal/bundle.tar.gz"
+            "../../../resources/connect/bundles/example-quarto-minimal/bundle.tar.gz"
         )
         path = (Path(__file__).parent / path).resolve()
         bundle = content.bundles.create(str(path))
