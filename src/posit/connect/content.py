@@ -200,7 +200,7 @@ class ContentItem(Resource):
             return variant.render()
         else:
             raise ValueError(
-                f"Restart not supported for this application mode. Found {self.app_mode}"
+                f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
             )
 
     def restart(self) -> None:
@@ -242,7 +242,7 @@ class ContentItem(Resource):
             return None
         else:
             raise ValueError(
-                f"Restart not supported for this application mode. Found {self.app_mode}"
+                f"Restart not supported for this application mode: {self.app_mode}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
             )
 
     @overload
