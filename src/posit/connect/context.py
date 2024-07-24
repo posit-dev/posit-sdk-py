@@ -1,12 +1,10 @@
-from typing import Final
+from dataclasses import dataclass
 
 import requests
 
 
+@dataclass(frozen=True)
 class Context:
-    def __init__(
-        self, *, api_key: str, session: requests.Session, url: str
-    ) -> None:
-        self.api_key: Final[str] = api_key
-        self.session: Final[requests.Session] = session
-        self.url: Final[str] = url
+    api_key: str
+    session: requests.Session
+    url: str
