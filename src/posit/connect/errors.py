@@ -1,3 +1,7 @@
+import json
+from typing import Any
+
+
 class ClientError(Exception):
     def __init__(
         self,
@@ -5,11 +9,13 @@ class ClientError(Exception):
         error_message: str,
         http_status: int,
         http_message: str,
+        payload: Any = None,
     ):
-        self.error_code = error_code
-        self.error_message = error_message
-        self.http_status = http_status
-        self.http_message = http_message
-        super().__init__(
-            f"{error_message} (Error Code: {error_code}, HTTP Status: {http_status} {http_message})"
-        )
+        message = {
+            "error_code": error_code,
+            "error_message": error_message,
+            "http_status": http_status,
+            "http_message": http_message,
+            "payload": payload,
+        }
+        super().__init__(json.dumps(message))
