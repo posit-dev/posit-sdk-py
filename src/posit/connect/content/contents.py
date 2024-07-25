@@ -10,8 +10,10 @@ from ..resources import Resources
 from .content import Content
 
 
-class Contents(Resources):
-    """Contents resource.
+class ContentResources(Resources):
+    """Content resources.
+
+    A resource for many pieces of content.
 
     Parameters
     ----------

@@ -10,7 +10,7 @@ from . import hooks, me, urls
 from .auth import Auth
 from .config import Config
 from .oauth import OAuthIntegration
-from .content import Contents
+from .content import ContentResources
 from .metrics import Metrics
 from .tasks import Tasks
 from .users import User, Users
@@ -234,7 +234,7 @@ class Client:
         return Users(config=self.config, session=self.session)
 
     @property
-    def content(self) -> Contents:
+    def content(self) -> ContentResources:
         """
         The content resource interface.
 
@@ -243,7 +243,7 @@ class Client:
         Content
             The content resource instance.
         """
-        return Contents(config=self.config, session=self.session)
+        return ContentResources(config=self.config, session=self.session)
 
     @property
     def metrics(self) -> Metrics:
