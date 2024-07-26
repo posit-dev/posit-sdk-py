@@ -56,4 +56,4 @@ class Config:
         self, api_key: Optional[str] = None, url: Optional[str] = None
     ) -> None:
         self.api_key = api_key or _get_api_key()
-        self.url = urls.create(url or _get_url())
+        self.url = urls.Url(url or _get_url())

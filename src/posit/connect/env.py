@@ -71,7 +71,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         >>> clear()
         """
         path = f"v1/content/{self.content_guid}/environment"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         self.session.put(url, json=[])
 
     def create(self, key: str, value: str, /) -> None:
@@ -129,7 +129,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         ['DATABASE_URL']
         """
         path = f"v1/content/{self.content_guid}/environment"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.get(url)
         return response.json()
 
@@ -204,5 +204,5 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
 
         body = [{"name": key, "value": value} for key, value in d.items()]
         path = f"v1/content/{self.content_guid}/environment"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         self.session.patch(url, json=body)

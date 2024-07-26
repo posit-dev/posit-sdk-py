@@ -39,7 +39,7 @@ class Group(Resource):
     def delete(self) -> None:
         """Delete the group."""
         path = f"v1/groups/{self.guid}"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         self.session.delete(url)
 
 
@@ -90,7 +90,7 @@ class Groups(Resources):
         ...
         body = dict(*args, **kwargs)
         path = "v1/groups"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.post(url, json=body)
         return Group(self.config, self.session, **response.json())
 
@@ -117,7 +117,7 @@ class Groups(Resources):
         """
         params = dict(*args, **kwargs)
         path = "v1/groups"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         paginator = Paginator(self.session, url, params=params)
         results = paginator.fetch_results()
         return [
@@ -152,7 +152,7 @@ class Groups(Resources):
         """
         params = dict(*args, **kwargs)
         path = "v1/groups"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         paginator = Paginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
@@ -177,7 +177,7 @@ class Groups(Resources):
         -------
         Group
         """
-        url = urls.append(self.config.url, f"v1/groups/{guid}")
+        url = self.config.url + f"v1/groups/{guid}"
         response = self.session.get(url)
         return Group(
             config=self.config,
@@ -193,7 +193,7 @@ class Groups(Resources):
         int
         """
         path = "v1/groups"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response: requests.Response = self.session.get(
             url, params={"page_size": 1}
         )

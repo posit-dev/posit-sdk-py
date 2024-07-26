@@ -144,7 +144,7 @@ class ContentItem(Resource):
     def delete(self) -> None:
         """Delete the content item."""
         path = f"v1/content/{self.guid}"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         self.session.delete(url)
 
     def deploy(self) -> tasks.Task:
@@ -164,7 +164,7 @@ class ContentItem(Resource):
         None
         """
         path = f"v1/content/{self.guid}/deploy"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.post(url, json={"bundle_id": None})
         result = response.json()
         ts = tasks.Tasks(self.config, self.session)
@@ -237,7 +237,7 @@ class ContentItem(Resource):
             self.environment_variables.create(key, random_hash)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = urls.append(dirname(self.config.url), f"content/{self.guid}")
+            url = dirname(self.config.url) + f"/content/{self.guid}"
             self.session.get(url)
             return None
         else:
@@ -314,7 +314,7 @@ class ContentItem(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update the content item."""
         body = dict(*args, **kwargs)
-        url = urls.append(self.config.url, f"v1/content/{self.guid}")
+        url = self.config.url + f"v1/content/{self.guid}"
         response = self.session.patch(url, json=body)
         super().update(**response.json())
 
@@ -548,7 +548,7 @@ class Content(Resources):
         *,
         owner_guid: str | None = None,
     ) -> None:
-        self.url = urls.append(config.url, "v1/content")
+        self.url = config.url + "v1/content"
         self.config = config
         self.session = session
         self.owner_guid = owner_guid
@@ -656,7 +656,7 @@ class Content(Resources):
         """
         body = dict(*args, **kwargs)
         path = "v1/content"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.post(url, json=body)
         return ContentItem(self.config, self.session, **response.json())
 
@@ -798,6 +798,6 @@ class Content(Resources):
         -------
         ContentItem
         """
-        url = urls.append(self.url, guid)
+        url = self.url + guid
         response = self.session.get(url)
         return ContentItem(self.config, self.session, **response.json())

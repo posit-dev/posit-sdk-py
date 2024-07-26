@@ -109,7 +109,7 @@ class ShinyUsage(Resources):
         params = rename_params(params)
 
         path = "/v1/instrumentation/shiny/usage"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         paginator = CursorPaginator(self.session, url, params=params)
         results = paginator.fetch_results()
         return [
@@ -168,7 +168,7 @@ class ShinyUsage(Resources):
         params = dict(*args, **kwargs)
         params = rename_params(params)
         path = "/v1/instrumentation/shiny/usage"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         paginator = CursorPaginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)

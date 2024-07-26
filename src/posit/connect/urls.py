@@ -4,10 +4,25 @@ import posixpath
 
 from urllib.parse import urlsplit, urlunsplit
 
-Url = str
+
+class Url(str):
+    def __new__(cls, value):
+        if not isinstance(value, str):
+            raise ValueError("Value must be a string")
+        return super(Url, cls).__new__(cls, create(value))
+
+    def __init__(self, value):
+        # Call the parent class's __init__ method
+        super(Url, self).__init__()
+
+    def __add__(self, path: str):
+        return self.append(path)
+
+    def append(self, path: str) -> Url:
+        return Url(append(self, path))
 
 
-def create(url: str) -> Url:
+def create(url: str) -> str:
     """Create a Url.
 
     Asserts that the Url is a proper Posit Connect endpoint. The path '__api__' is appended to the Url if it isn't already present.
@@ -50,13 +65,13 @@ def create(url: str) -> Url:
         )
 
     url = url.rstrip("/")
-    if not url.endswith("__api__"):
+    if "/__api__" not in url:
         url = append(url, "__api__")
 
     return url
 
 
-def append(url: Url, path: str) -> Url:
+def append(url: str, path: str) -> str:
     """Append a path to a Url.
 
     Parameters
@@ -74,7 +89,7 @@ def append(url: Url, path: str) -> Url:
     Examples
     --------
     >>> url = urls.create("http://example.com/__api__")
-    >>> urls.append(url, "path")
+    >>> url + "path"
     http://example.com/__api__/path
     """
     # Removes leading '/' from path to avoid double slashes.
