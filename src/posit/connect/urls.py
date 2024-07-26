@@ -5,48 +5,24 @@ from urllib.parse import urlsplit, urlunsplit
 
 
 class Url(str):
-    """URL representation for Connect.
+    def __new__(cls, value):
+        if not isinstance(value, str):
+            raise ValueError("Value must be a string")
+        return super(Url, cls).__new__(cls, create(value))
 
-    An opinionated URL representation of a Connect URL. Maintains various
-    conventions:
-        - It begins with a scheme.
-        - It is absolute.
-        - It contains '__api__'.
-
-    Supports Python builtin __add__ for append.
-
-    Methods
-    -------
-    append(path: str)
-        Append a path to the URL.
-
-    Examples
-    --------
-    >>> url = Url("http://connect.example.com/")
-    http://connect.example.com/__api__
-    >>> url + "endpoint"
-    http://connect.example.com/__api__/endpoint
-
-    Append works with string-like objects (e.g., objects that support casting to string)
-    >>> url = Url("http://connect.example.com/__api__/endpoint")
-    http://connect.example.com/__api__/endpoint
-    >>> url + 1
-    http://connect.example.com/__api__/endpoint/1
-    """
-
-    def __new__(cls, value: str):
-        url = _create(value)
-        return super(Url, cls).__new__(cls, url)
+    def __init__(self, value):
+        # Call the parent class's __init__ method
+        super(Url, self).__init__()
 
     def __add__(self, path: str):
         return self.append(path)
 
     def append(self, path: str) -> Url:
-        return Url(_append(self, path))
+        return Url(append(self, path))
 
 
-def _create(url: str) -> str:
-    """Create a URL.
+def create(url: str) -> str:
+    """Create a Url.
 
     Asserts that the URL is a proper Posit Connect endpoint. The path '__api__' is appended to the URL if it is missing.
 
@@ -87,12 +63,12 @@ def _create(url: str) -> str:
 
     url = url.rstrip("/")
     if "/__api__" not in url:
-        url = _append(url, "__api__")
+        url = append(url, "__api__")
 
     return url
 
 
-def _append(url: str, path) -> str:
+def append(url: str, path: str) -> str:
     """Append a path to a Url.
 
     Parameters
@@ -109,8 +85,8 @@ def _append(url: str, path) -> str:
 
     Examples
     --------
-    >>> url = _create("http://example.com/__api__")
-    >>> _append(url, "path")
+    >>> url = urls.create("http://example.com/__api__")
+    >>> url + "path"
     http://example.com/__api__/path
     """
     path = str(path).strip("/")
