@@ -5,8 +5,8 @@ pandas
 pre-commit
 pyjson5
 pytest
-rsconnect
 responses
+rsconnect-python
 ruff
 setuptools
 setuptools-scm

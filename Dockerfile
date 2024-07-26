@@ -4,14 +4,11 @@ RUN apt-get update && apt-get install -y make
 
 WORKDIR /sdk
 
-COPY requirements.txt requirements-dev.txt vars.mk Makefile ./
+COPY Makefile pyproject.toml requirements.txt requirements-dev.txt vars.mk ./
 
-RUN make deps
+RUN --mount=type=cache,mode=0755,target=/root/.cache/pip make deps
 
-COPY .git ./.git
-COPY src ./src
-COPY pyproject.toml ./
+COPY .git .git
+COPY src src
 
-RUN make build
-
-RUN make install
+RUN --mount=type=cache,mode=0755,target=/root/.cache/pip make dev
