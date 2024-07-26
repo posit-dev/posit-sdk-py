@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 from packaging import version
-
 from posit import connect
 
 from . import CONNECT_VERSION

@@ -4,11 +4,10 @@ from unittest import mock
 import pytest
 import requests
 import responses
-from responses import matchers
-
 from posit.connect import Client
 from posit.connect.bundles import Bundle
 from posit.connect.config import Config
+from responses import matchers
 
 from .api import get_path, load_mock  # type: ignore
 

@@ -7,9 +7,8 @@ import streamlit as st
 from databricks import sql
 from databricks.sdk.core import ApiClient, Config
 from databricks.sdk.service.iam import CurrentUserAPI
-from streamlit.web.server.websocket_headers import _get_websocket_headers
-
 from posit.connect.external.databricks import viewer_credentials_provider
+from streamlit.web.server.websocket_headers import _get_websocket_headers
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"

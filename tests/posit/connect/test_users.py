@@ -3,10 +3,9 @@ from unittest.mock import Mock
 import pytest
 import requests
 import responses
-from responses import matchers
-
 from posit.connect.client import Client
 from posit.connect.users import User
+from responses import matchers
 
 from .api import load_mock  # type: ignore
 
