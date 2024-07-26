@@ -304,10 +304,10 @@ def test_find():
     content = c.content.get(guid)
 
     # invoke
-    vars = content.environment_variables.find()
+    envvars = content.environment_variables.find()
 
     # assert
-    assert vars == ["TEST"]
+    assert envvars == ["TEST"]
     assert mock_get_content.call_count == 1
     assert mock_get_environment.call_count == 1
 

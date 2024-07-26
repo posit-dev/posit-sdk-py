@@ -45,17 +45,17 @@ class CursorPaginator:
         ------
         Generator[Page, None, None]
         """
-        next = None
+        next_page = None
         while True:
-            page = self.fetch_page(next)
+            page = self.fetch_page(next_page)
             yield page
             cursors: dict = page.paging.get("cursors", {})
-            next = cursors.get("next")
-            if not next:
+            next_page = cursors.get("next")
+            if not next_page:
                 # stop if a next page is not defined
                 return
 
-    def fetch_page(self, next: str | None = None) -> CursorPage:
+    def fetch_page(self, next_page: str | None = None) -> CursorPage:
         """Fetch a page.
 
         Parameters
@@ -69,7 +69,7 @@ class CursorPaginator:
         """
         params = {
             **self.params,
-            "next": next,
+            "next": next_page,
             "limit": _MAX_PAGE_SIZE,
         }
         response = self.session.get(self.url, params=params)

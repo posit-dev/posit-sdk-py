@@ -235,7 +235,7 @@ class Bundles(resources.Resources):
         super().__init__(params)
         self.content_guid = content_guid
 
-    def create(self, input: io.BufferedReader | bytes | str) -> Bundle:
+    def create(self, archive: io.BufferedReader | bytes | str) -> Bundle:
         """
         Create a bundle.
 
@@ -243,8 +243,8 @@ class Bundles(resources.Resources):
 
         Parameters
         ----------
-        input : io.BufferedReader, bytes, or str
-            Input archive for bundle creation. A 'str' type assumes a relative or absolute filepath.
+        archive : io.BufferedReader, bytes, or str
+            Archive for bundle creation. A 'str' type assumes a relative or absolute filepath.
 
         Returns
         -------
@@ -273,14 +273,14 @@ class Bundles(resources.Resources):
         >>> bundle.create("bundle.tar.gz")
         None
         """
-        if isinstance(input, (io.BufferedReader, bytes)):
-            data = input
-        elif isinstance(input, str):
-            with open(input, "rb") as file:
+        if isinstance(archive, (io.BufferedReader, bytes)):
+            data = archive
+        elif isinstance(archive, str):
+            with open(archive, "rb") as file:
                 data = file.read()
         else:
             raise TypeError(
-                f"create() expected argument type 'io.BufferedReader', 'bytes', or 'str', but got '{type(input).__name__}'"
+                f"create() expected argument type 'io.BufferedReader', 'bytes', or 'str', but got '{type(archive).__name__}'"
             )
 
         path = f"v1/content/{self.content_guid}/bundles"
@@ -314,12 +314,12 @@ class Bundles(resources.Resources):
         bundles = self.find()
         return next(iter(bundles), None)
 
-    def get(self, id: str) -> Bundle:
+    def get(self, uid: str) -> Bundle:
         """Get a bundle.
 
         Parameters
         ----------
-        id : str
+        uid : str
             Identifier of the bundle to retrieve.
 
         Returns
@@ -327,7 +327,7 @@ class Bundles(resources.Resources):
         Bundle
             The bundle with the specified ID.
         """
-        path = f"v1/content/{self.content_guid}/bundles/{id}"
+        path = f"v1/content/{self.content_guid}/bundles/{uid}"
         url = self.url + path
         response = self.session.get(url)
         result = response.json()
