@@ -1,12 +1,12 @@
 """User resources."""
 
 from __future__ import annotations
+
 from typing import List, overload
 
 import requests
 
-from . import me, urls
-
+from . import me
 from .config import Config
 from .content import Content
 from .paginator import Paginator

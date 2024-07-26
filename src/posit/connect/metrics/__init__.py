@@ -1,8 +1,6 @@
 """Metric resources."""
 
 from .. import resources
-
-from . import usage
 from .usage import Usage
 
 

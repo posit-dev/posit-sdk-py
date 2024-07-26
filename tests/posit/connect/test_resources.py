@@ -1,12 +1,8 @@
-from unittest.mock import Mock
-import pytest
 import warnings
+from typing import Optional
+from unittest.mock import Mock
 
-from typing import Any, List, Optional
-
-from requests.sessions import Session as Session
-
-from posit.connect.resources import Resource, Resources
+from posit.connect.resources import Resource
 
 config = Mock()
 session = Mock()

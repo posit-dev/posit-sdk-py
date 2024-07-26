@@ -4,7 +4,6 @@ from typing import Any, Iterator, List, Mapping, MutableMapping, Optional
 
 from requests import Session
 
-from . import urls
 from .config import Config
 from .resources import Resources
 

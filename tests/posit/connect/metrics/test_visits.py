@@ -1,9 +1,8 @@
-import responses
 import requests
-
+import responses
 from responses import matchers
 
-from posit.connect import Client, config
+from posit.connect import config
 from posit.connect.metrics import visits
 
 from ..api import load_mock  # type: ignore

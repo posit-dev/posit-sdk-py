@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import io
-import requests
 from typing import List
-from . import config, resources, tasks, urls
+
+import requests
+
+from . import config, resources, tasks
 
 
 class BundleMetadata(resources.Resource):

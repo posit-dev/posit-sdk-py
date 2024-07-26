@@ -1,10 +1,9 @@
 import io
+from unittest.mock import Mock, patch
 
 import pytest
 import responses
-
 from requests import HTTPError, Response
-from unittest.mock import Mock, patch
 
 from posit.connect import Client
 from posit.connect.errors import ClientError

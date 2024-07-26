@@ -1,7 +1,5 @@
 import requests
 
-from . import urls
-
 from .config import Config
 from .users import User
 

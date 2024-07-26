@@ -6,8 +6,6 @@ from typing import List, overload
 
 from requests.sessions import Session as Session
 
-from . import urls
-
 from .config import Config
 from .resources import Resource, Resources
 

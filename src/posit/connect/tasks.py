@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import List, overload
 
-from . import resources, urls
+from . import resources
 
 
 class Task(resources.Resource):

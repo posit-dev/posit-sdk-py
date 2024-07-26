@@ -1,7 +1,7 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
 import responses
-
-from unittest.mock import MagicMock, patch
 
 from posit.connect import Client
 

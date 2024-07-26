@@ -1,6 +1,6 @@
-import pyjson5 as json
-
 from pathlib import Path
+
+import pyjson5 as json
 
 
 def load_mock(path: str) -> dict:

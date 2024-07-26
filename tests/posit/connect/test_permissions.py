@@ -1,11 +1,8 @@
 import random
 import uuid
 
-from unittest.mock import Mock
-
 import requests
 import responses
-
 from responses import matchers
 
 from posit.connect.config import Config
