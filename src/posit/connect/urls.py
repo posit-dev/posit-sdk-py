@@ -6,9 +6,54 @@ from urllib.parse import urlsplit, urlunsplit
 
 
 class Url(str):
-    def __new__(cls, value):
-        if not isinstance(value, str):
-            raise ValueError("Value must be a string")
+    """URL representation for Connect.
+
+    An opinionated URL representation of a Connect URL. Maintains various
+    conventions:
+        - It begins with a scheme.
+        - It is absolute.
+        - It contains '__api__'.
+
+    Supports Python builtin __add__ for append.
+
+    Methods
+    -------
+    append(path: str)
+        Append a path to the URL.
+
+    Examples
+    --------
+    >>> url = Url("http://connect.example.com/)
+    http://connect.example.com/__api__
+    >>> url + "endpoint"
+    http://connect.example.com/__api__/endpoint
+
+    Append works with string-like objects (e.g., objects that support casting to string)
+    >>> url = Url("http://connect.example.com/__api__/endpoint)
+    http://connect.example.com/__api__/endpoint
+    >>> url + 1
+    http://connect.example.com/__api__/endpoint/1
+    """
+
+    def __new__(cls, value: str):
+        """New.
+
+        Parameters
+        ----------
+        value : str
+            Any URL.
+
+        Returns
+        -------
+        Url
+
+        Raises
+        ------
+        ValueError
+            `value` is missing a scheme.
+        ValueError
+            `value` is missing a network location (i.e., a domain name).
+        """
         return super(Url, cls).__new__(cls, _create(value))
 
     def __init__(self, value):
@@ -22,19 +67,19 @@ class Url(str):
 
 
 def _create(url: str) -> str:
-    """Create a Url.
+    """Create a URL.
 
-    Asserts that the Url is a proper Posit Connect endpoint. The path '__api__' is appended to the Url if it isn't already present.
+    Asserts that the URL is a proper Posit Connect endpoint. The path '__api__' is appended to the URL if it is missing.
 
     Parameters
     ----------
     url : str
-        The original Url.
+        The original URL.
 
     Returns
     -------
     Url
-        The validated and formatted Url.
+        The validated and formatted URL.
 
     Raises
     ------
@@ -45,22 +90,22 @@ def _create(url: str) -> str:
 
     Examples
     --------
-    >>> urls.create("http://example.com")
+    >>> _create("http://example.com")
     http://example.com/__api__
 
-    >>> urls.create("http://example.com/__api__")
+    >>> _create("http://example.com/__api__")
     http://example.com/__api__
 
     """
     split = urlsplit(url, allow_fragments=False)
     if not split.scheme:
         raise ValueError(
-            f"url must specify a scheme (e.g., http://example.com/__api__): {url}"
+            f"URL must specify a scheme (e.g., http://example.com/__api__): {url}"
         )
 
     if not split.netloc:
         raise ValueError(
-            f"url must be absolute (e.g., http://example.com/__api__): {url}"
+            f"URL must be absolute (e.g., http://example.com/__api__): {url}"
         )
 
     url = url.rstrip("/")
@@ -70,15 +115,15 @@ def _create(url: str) -> str:
     return url
 
 
-def _append(url: str, path: str) -> str:
+def _append(url: str, path) -> str:
     """Append a path to a Url.
 
     Parameters
     ----------
-    url : Url
-        A valid Url.
+    url : str
+        A valid URL.
     path : str
-        A valid Url path.
+        A valid path.
 
     Returns
     -------
@@ -87,10 +132,11 @@ def _append(url: str, path: str) -> str:
 
     Examples
     --------
-    >>> url = urls.create("http://example.com/__api__")
-    >>> url + "path"
+    >>> url = _create("http://example.com/__api__")
+    >>> _append(url, "path")
     http://example.com/__api__/path
     """
+    path = str(path)
     # Removes leading '/' from path to avoid double slashes.
     path = path.lstrip("/")
     # Removes trailing '/' from path to avoid double slashes.
