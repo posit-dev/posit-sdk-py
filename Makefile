@@ -43,6 +43,8 @@ fix:
 
 fmt:
 	$(PYTHON) -m ruff format .
+	$(PYTHON) -m autoflake --remove-all-unused-imports --in-place --recursive .
+	$(PYTHON) -m isort .
 
 install:
 	$(PIP) install dist/*.whl

@@ -1,5 +1,7 @@
+autoflake
 build
 coverage
+isort
 mypy
 pandas
 pre-commit
