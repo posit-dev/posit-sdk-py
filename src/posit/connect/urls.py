@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import posixpath
-
 from urllib.parse import urlsplit, urlunsplit
 
 
@@ -23,41 +22,21 @@ class Url(str):
 
     Examples
     --------
-    >>> url = Url("http://connect.example.com/)
+    >>> url = Url("http://connect.example.com/")
     http://connect.example.com/__api__
     >>> url + "endpoint"
     http://connect.example.com/__api__/endpoint
 
     Append works with string-like objects (e.g., objects that support casting to string)
-    >>> url = Url("http://connect.example.com/__api__/endpoint)
+    >>> url = Url("http://connect.example.com/__api__/endpoint")
     http://connect.example.com/__api__/endpoint
     >>> url + 1
     http://connect.example.com/__api__/endpoint/1
     """
 
     def __new__(cls, value: str):
-        """New.
-
-        Parameters
-        ----------
-        value : str
-            Any URL.
-
-        Returns
-        -------
-        Url
-
-        Raises
-        ------
-        ValueError
-            `value` is missing a scheme.
-        ValueError
-            `value` is missing a network location (i.e., a domain name).
-        """
-        return super(Url, cls).__new__(cls, _create(value))
-
-    def __init__(self, value):
-        super(Url, self).__init__()
+        url = _create(value)
+        return super(Url, cls).__new__(cls, url)
 
     def __add__(self, path: str):
         return self.append(path)
@@ -95,14 +74,12 @@ def _create(url: str) -> str:
 
     >>> _create("http://example.com/__api__")
     http://example.com/__api__
-
     """
     split = urlsplit(url, allow_fragments=False)
     if not split.scheme:
         raise ValueError(
             f"URL must specify a scheme (e.g., http://example.com/__api__): {url}"
         )
-
     if not split.netloc:
         raise ValueError(
             f"URL must be absolute (e.g., http://example.com/__api__): {url}"
@@ -136,14 +113,9 @@ def _append(url: str, path) -> str:
     >>> _append(url, "path")
     http://example.com/__api__/path
     """
-    path = str(path)
-    # Removes leading '/' from path to avoid double slashes.
-    path = path.lstrip("/")
-    # Removes trailing '/' from path to avoid double slashes.
-    path = path.rstrip("/")
-    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlsplit
+    path = str(path).strip("/")
     split = urlsplit(url, allow_fragments=False)
-    # Append the path to unmodified Url path.
-    path = posixpath.join(split.path, path)
-    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlunsplit
-    return urlunsplit((split.scheme, split.netloc, path, split.query, None))
+    new_path = posixpath.join(split.path, path)
+    return urlunsplit(
+        (split.scheme, split.netloc, new_path, split.query, None)
+    )
