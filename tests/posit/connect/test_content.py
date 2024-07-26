@@ -5,7 +5,7 @@ import requests
 import responses
 from posit.connect.client import Client
 from posit.connect.config import Config
-from posit.connect.content import ContentItem, ContentItemOwner
+from posit.connect.content import Content, ContentOwner
 from posit.connect.permissions import Permissions
 from responses import matchers
 
@@ -19,7 +19,7 @@ class TestContentOwnerAttributes:
         config = Config(api_key="12345", url="https://connect.example/")
         session = requests.Session()
         fake_item = load_mock(f"v1/users/{guid}.json")
-        cls.item = ContentItemOwner(config, session, **fake_item)
+        cls.item = ContentOwner(config, session, **fake_item)
 
     def test_guid(self):
         assert self.item.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
@@ -41,7 +41,7 @@ class TestContentItemAttributes:
         config = Config(api_key="12345", url="https://connect.example/")
         session = requests.Session()
         fake_item = load_mock(f"v1/content/{guid}.json")
-        cls.item = ContentItem(config, session, **fake_item)
+        cls.item = Content(config, session, **fake_item)
 
     def test_id(self):
         assert self.item.id == "8274"
@@ -231,7 +231,7 @@ class TestContentItemDelete:
         config = Config(api_key="12345", url="https://connect.example/")
         session = requests.Session()
         fake_item = load_mock(f"v1/content/{guid}.json")
-        item = ContentItem(config, session, **fake_item)
+        item = Content(config, session, **fake_item)
 
         # invoke
         item.delete()
