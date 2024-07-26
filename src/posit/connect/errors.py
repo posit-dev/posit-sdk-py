@@ -11,11 +11,19 @@ class ClientError(Exception):
         http_message: str,
         payload: Any = None,
     ):
-        message = {
-            "error_code": error_code,
-            "error_message": error_message,
-            "http_status": http_status,
-            "http_message": http_message,
-            "payload": payload,
-        }
-        super().__init__(json.dumps(message))
+        self.error_code = error_code
+        self.error_message = error_message
+        self.http_status = http_status
+        self.http_message = http_message
+        self.payload = payload
+        super().__init__(
+            json.dumps(
+                {
+                    "error_code": error_code,
+                    "error_message": error_message,
+                    "http_status": http_status,
+                    "http_message": http_message,
+                    "payload": payload,
+                }
+            )
+        )
