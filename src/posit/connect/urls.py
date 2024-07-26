@@ -9,20 +9,19 @@ class Url(str):
     def __new__(cls, value):
         if not isinstance(value, str):
             raise ValueError("Value must be a string")
-        return super(Url, cls).__new__(cls, create(value))
+        return super(Url, cls).__new__(cls, _create(value))
 
     def __init__(self, value):
-        # Call the parent class's __init__ method
         super(Url, self).__init__()
 
     def __add__(self, path: str):
         return self.append(path)
 
     def append(self, path: str) -> Url:
-        return Url(append(self, path))
+        return Url(_append(self, path))
 
 
-def create(url: str) -> str:
+def _create(url: str) -> str:
     """Create a Url.
 
     Asserts that the Url is a proper Posit Connect endpoint. The path '__api__' is appended to the Url if it isn't already present.
@@ -66,12 +65,12 @@ def create(url: str) -> str:
 
     url = url.rstrip("/")
     if "/__api__" not in url:
-        url = append(url, "__api__")
+        url = _append(url, "__api__")
 
     return url
 
 
-def append(url: str, path: str) -> str:
+def _append(url: str, path: str) -> str:
     """Append a path to a Url.
 
     Parameters
