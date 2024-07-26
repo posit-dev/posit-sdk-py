@@ -39,7 +39,6 @@ docs:
 	$(MAKE) -C ./docs
 
 fmt:
-	$(PYTHON) -m autoflake --remove-all-unused-imports --in-place --recursive .
 	$(PYTHON) -m ruff check --fix
 	$(PYTHON) -m ruff format .
 
