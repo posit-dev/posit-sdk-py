@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
+from typing import overload
+
 from requests import Response, Session
-from typing import Optional, overload
 
-from . import hooks, me, urls
-
+from . import hooks, me
 from .auth import Auth
 from .config import Config
-from .oauth import OAuthIntegration
 from .content import Content
+from .groups import Groups
 from .metrics import Metrics
+from .oauth import OAuthIntegration
 from .tasks import Tasks
 from .users import User, Users
-from .groups import Groups
 
 
 class Client:

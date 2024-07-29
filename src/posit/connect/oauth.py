@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from requests import Session
 from typing import Optional, TypedDict
 
-from . import urls
+from requests import Session
+
 from .config import Config
 
 

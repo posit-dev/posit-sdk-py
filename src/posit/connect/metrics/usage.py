@@ -6,9 +6,8 @@ from typing import List, overload
 
 from requests.sessions import Session as Session
 
-from . import shiny_usage, visits
-
 from .. import resources
+from . import shiny_usage, visits
 
 
 class UsageEvent(resources.Resource):

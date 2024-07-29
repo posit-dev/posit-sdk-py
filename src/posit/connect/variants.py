@@ -1,7 +1,7 @@
 from typing import List
+
 from requests import Session
 
-from . import urls
 from .config import Config
 from .resources import Resource, Resources
 from .tasks import Task

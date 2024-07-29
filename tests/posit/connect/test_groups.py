@@ -1,11 +1,7 @@
 from unittest.mock import Mock
 
-import pytest
 import requests
-import responses
 
-
-from posit.connect.client import Client
 from posit.connect.config import Config
 from posit.connect.groups import Group
 

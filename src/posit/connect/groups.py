@@ -1,11 +1,10 @@
 """Group resources."""
 
 from __future__ import annotations
+
 from typing import List, overload
 
 import requests
-
-from . import me, urls
 
 from .config import Config
 from .paginator import Paginator

@@ -8,7 +8,7 @@ from typing import List, Optional, overload
 
 from requests import Session
 
-from . import tasks, urls
+from . import tasks
 from .bundles import Bundles
 from .config import Config
 from .env import EnvVars

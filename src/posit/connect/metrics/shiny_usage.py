@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import List, overload
 
-from .. import urls
-
 from ..cursors import CursorPaginator
 from ..resources import Resource, Resources
 

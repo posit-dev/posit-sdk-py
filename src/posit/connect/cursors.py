@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, make_dataclass
+from dataclasses import dataclass
 from typing import Generator, List
 
 import requests

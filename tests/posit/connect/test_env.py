@@ -1,6 +1,5 @@
 import pytest
 import responses
-
 from responses import matchers
 
 from posit.connect import Client

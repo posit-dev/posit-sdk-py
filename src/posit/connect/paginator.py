@@ -3,7 +3,6 @@ from typing import Generator, List
 
 import requests
 
-
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
 

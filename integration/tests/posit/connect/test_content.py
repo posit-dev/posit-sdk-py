@@ -1,7 +1,7 @@
 from pathlib import Path
-from packaging import version
 
 import pytest
+from packaging import version
 
 from posit import connect
 

@@ -1,17 +1,16 @@
 import io
+from unittest import mock
 
 import pytest
 import requests
 import responses
-
 from responses import matchers
-from unittest import mock
 
 from posit.connect import Client
-from posit.connect.config import Config
 from posit.connect.bundles import Bundle
+from posit.connect.config import Config
 
-from .api import load_mock, get_path  # type: ignore
+from .api import get_path, load_mock  # type: ignore
 
 
 class TestBundleProperties:

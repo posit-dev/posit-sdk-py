@@ -1,6 +1,6 @@
 import warnings
-
 from http.client import responses
+
 from requests import JSONDecodeError, Response
 
 from .errors import ClientError

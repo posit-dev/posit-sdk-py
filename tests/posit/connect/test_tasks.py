@@ -1,6 +1,4 @@
-import requests
 import responses
-
 from responses import matchers
 
 from posit import connect
