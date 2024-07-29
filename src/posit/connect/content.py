@@ -183,11 +183,7 @@ class ContentItem(Resource):
         """
         self.update()
 
-        if self.app_mode in {
-            "rmd-static",
-            "jupyter-static",
-            "quarto-static",
-        }:
+        if self.is_rendered:
             variants = self._variants.find()
             variants = [variant for variant in variants if variant.is_default]
             if len(variants) != 1:
@@ -216,20 +212,7 @@ class ContentItem(Resource):
         """
         self.update()
 
-        if self.app_mode in {
-            "api",
-            "jupyter-voila",
-            "python-api",
-            "python-bokeh",
-            "python-dash",
-            "python-fastapi",
-            "python-shiny",
-            "python-streamlit",
-            "quarto-shiny",
-            "rmd-shiny",
-            "shiny",
-            "tensorflow-saved-model",
-        }:
+        if self.is_interactive:
             random_hash = secrets.token_hex(32)
             key = f"_CONNECT_RESTART_TMP_{random_hash}"
             self.environment_variables.create(key, random_hash)
@@ -522,6 +505,31 @@ class ContentItem(Resource):
     @property
     def tags(self) -> List[dict]:
         return self.get("tags", [])
+
+    @property
+    def is_interactive(self) -> bool:
+        return self.app_mode in {
+            "api",
+            "jupyter-voila",
+            "python-api",
+            "python-bokeh",
+            "python-dash",
+            "python-fastapi",
+            "python-shiny",
+            "python-streamlit",
+            "quarto-shiny",
+            "rmd-shiny",
+            "shiny",
+            "tensorflow-saved-model",
+        }
+
+    @property
+    def is_rendered(self) -> bool:
+        return self.app_mode in {
+            "rmd-static",
+            "jupyter-static",
+            "quarto-static",
+        }
 
 
 class Content(Resources):
