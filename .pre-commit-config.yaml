@@ -7,10 +7,6 @@ repos:
         name: format
         entry: bash -c "make fmt"
         language: system
-      - id: fix
-        name: fix
-        entry: bash -c "make fix"
-        language: system
       - id: lint
         name: lint
         entry: bash -c "make lint"

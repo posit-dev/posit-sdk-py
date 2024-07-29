@@ -22,7 +22,7 @@ Before contributing to the `posit-sdk`, ensure that the following prerequisites 
 1. Create a new branch for your feature or bug fix.
 1. Run `make` to run the default development workflow.
 1. Make your changes and test them thoroughly using `make test`
-1. Run `make fmt`, `make lint`, and `make fix` to verify adherence to the project style guide.
+1. Run `make fmt` and `make lint` to verify adherence to the project style guide.
 1. Commit your changes and push them to your forked repository.
 1. Submit a pull request to the main repository.
 

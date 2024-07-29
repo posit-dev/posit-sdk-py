@@ -8,7 +8,6 @@ from dash import Dash, Input, Output, dash_table, html
 from databricks import sql
 from databricks.sdk.core import ApiClient, Config
 from databricks.sdk.service.iam import CurrentUserAPI
-
 from posit.connect.external.databricks import viewer_credentials_provider
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")

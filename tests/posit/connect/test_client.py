@@ -2,7 +2,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import responses
-
 from posit.connect import Client
 
 from .api import load_mock  # type: ignore

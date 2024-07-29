@@ -4,7 +4,6 @@ import os
 
 from databricks import sql
 from flask import Flask, request
-
 from posit.connect.external.databricks import viewer_credentials_provider
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")

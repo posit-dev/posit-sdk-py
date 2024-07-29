@@ -3,10 +3,9 @@ import uuid
 
 import requests
 import responses
-from responses import matchers
-
 from posit.connect.config import Config
 from posit.connect.permissions import Permission, Permissions
+from responses import matchers
 
 from .api import load_mock  # type: ignore
 

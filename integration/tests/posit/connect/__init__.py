@@ -1,5 +1,4 @@
 from packaging import version
-
 from posit import connect
 
 client = connect.Client()

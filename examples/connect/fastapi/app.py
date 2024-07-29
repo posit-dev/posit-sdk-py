@@ -6,7 +6,6 @@ from typing import Annotated
 from databricks import sql
 from fastapi import FastAPI, Header
 from fastapi.responses import JSONResponse
-
 from posit.connect.external.databricks import viewer_credentials_provider
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")

@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 import pytest
-
 from posit.connect.config import Config, _get_api_key, _get_url
 
 

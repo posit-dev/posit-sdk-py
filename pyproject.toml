@@ -44,7 +44,7 @@ docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
-select = ["D"]
+select = ["D", "F401", "I"]
 ignore = [
     # NumPy style docstring convention with noted exceptions.
     # https://docs.astral.sh/ruff/faq/#does-ruff-support-numpy-or-google-style-docstrings

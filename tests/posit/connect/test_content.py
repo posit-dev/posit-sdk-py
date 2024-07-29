@@ -1,12 +1,11 @@
 import pytest
 import requests
 import responses
-from responses import matchers
-
 from posit.connect.client import Client
 from posit.connect.config import Config
 from posit.connect.content import ContentItem, ContentItemOwner
 from posit.connect.permissions import Permissions
+from responses import matchers
 
 from .api import load_mock  # type: ignore
 

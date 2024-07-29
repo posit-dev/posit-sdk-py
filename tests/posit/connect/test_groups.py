@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 
 import requests
-
 from posit.connect.config import Config
 from posit.connect.groups import Group
 

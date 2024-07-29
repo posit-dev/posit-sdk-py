@@ -1,9 +1,8 @@
 import requests
 import responses
-from responses import matchers
-
 from posit.connect import config
 from posit.connect.metrics import shiny_usage
+from responses import matchers
 
 from ..api import load_mock  # type: ignore
 

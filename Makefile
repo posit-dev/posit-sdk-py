@@ -38,10 +38,8 @@ dev:
 docs:
 	$(MAKE) -C ./docs
 
-fix:
-	$(PYTHON) -m ruff check --fix
-
 fmt:
+	$(PYTHON) -m ruff check --fix
 	$(PYTHON) -m ruff format .
 
 install:
