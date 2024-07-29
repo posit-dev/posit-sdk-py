@@ -18,7 +18,7 @@ class Variant(Resource):
 
     def render(self) -> Task:
         path = f"variants/{self.id}/render"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.post(url)
         return Task(self.config, self.session, **response.json())
 
@@ -32,7 +32,7 @@ class Variants(Resources):
 
     def find(self) -> List[Variant]:
         path = f"applications/{self.content_guid}/variants"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.get(url)
         results = response.json() or []
         return [

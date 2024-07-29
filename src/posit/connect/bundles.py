@@ -142,7 +142,7 @@ class Bundle(resources.Resource):
     def delete(self) -> None:
         """Delete the bundle."""
         path = f"v1/content/{self.content_guid}/bundles/{self.id}"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         self.session.delete(url)
 
     def deploy(self) -> tasks.Task:
@@ -162,7 +162,7 @@ class Bundle(resources.Resource):
         None
         """
         path = f"v1/content/{self.content_guid}/deploy"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.post(url, json={"bundle_id": self.id})
         result = response.json()
         ts = tasks.Tasks(self.config, self.session)
@@ -200,7 +200,7 @@ class Bundle(resources.Resource):
             )
 
         path = f"v1/content/{self.content_guid}/bundles/{self.id}/download"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.get(url, stream=True)
         if isinstance(output, io.BufferedWriter):
             for chunk in response.iter_content():
@@ -287,7 +287,7 @@ class Bundles(resources.Resources):
             )
 
         path = f"v1/content/{self.content_guid}/bundles"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.post(url, data=data)
         result = response.json()
         return Bundle(self.config, self.session, **result)
@@ -301,7 +301,7 @@ class Bundles(resources.Resources):
             List of all found bundles.
         """
         path = f"v1/content/{self.content_guid}/bundles"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.get(url)
         results = response.json()
         return [
@@ -333,7 +333,7 @@ class Bundles(resources.Resources):
             The bundle with the specified ID.
         """
         path = f"v1/content/{self.content_guid}/bundles/{id}"
-        url = urls.append(self.config.url, path)
+        url = self.config.url + path
         response = self.session.get(url)
         result = response.json()
         return Bundle(self.config, self.session, **result)

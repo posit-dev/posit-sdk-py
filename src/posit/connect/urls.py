@@ -1,26 +1,64 @@
 from __future__ import annotations
 
 import posixpath
-
 from urllib.parse import urlsplit, urlunsplit
 
-Url = str
+
+class Url(str):
+    """URL representation for Connect.
+
+    An opinionated URL representation of a Connect URL. Maintains various
+    conventions:
+        - It begins with a scheme.
+        - It is absolute.
+        - It contains '__api__'.
+
+    Supports Python builtin __add__ for append.
+
+    Methods
+    -------
+    append(path: str)
+        Append a path to the URL.
+
+    Examples
+    --------
+    >>> url = Url("http://connect.example.com/")
+    http://connect.example.com/__api__
+    >>> url + "endpoint"
+    http://connect.example.com/__api__/endpoint
+
+    Append works with string-like objects (e.g., objects that support casting to string)
+    >>> url = Url("http://connect.example.com/__api__/endpoint")
+    http://connect.example.com/__api__/endpoint
+    >>> url + 1
+    http://connect.example.com/__api__/endpoint/1
+    """
+
+    def __new__(cls, value: str):
+        url = _create(value)
+        return super(Url, cls).__new__(cls, url)
+
+    def __add__(self, path: str):
+        return self.append(path)
+
+    def append(self, path: str) -> Url:
+        return Url(_append(self, path))
 
 
-def create(url: str) -> Url:
-    """Create a Url.
+def _create(url: str) -> str:
+    """Create a URL.
 
-    Asserts that the Url is a proper Posit Connect endpoint. The path '__api__' is appended to the Url if it isn't already present.
+    Asserts that the URL is a proper Posit Connect endpoint. The path '__api__' is appended to the URL if it is missing.
 
     Parameters
     ----------
     url : str
-        The original Url.
+        The original URL.
 
     Returns
     -------
     Url
-        The validated and formatted Url.
+        The validated and formatted URL.
 
     Raises
     ------
@@ -31,40 +69,38 @@ def create(url: str) -> Url:
 
     Examples
     --------
-    >>> urls.create("http://example.com")
+    >>> _create("http://example.com")
     http://example.com/__api__
 
-    >>> urls.create("http://example.com/__api__")
+    >>> _create("http://example.com/__api__")
     http://example.com/__api__
-
     """
     split = urlsplit(url, allow_fragments=False)
     if not split.scheme:
         raise ValueError(
-            f"url must specify a scheme (e.g., http://example.com/__api__): {url}"
+            f"URL must specify a scheme (e.g., http://example.com/__api__): {url}"
         )
-
     if not split.netloc:
         raise ValueError(
-            f"url must be absolute (e.g., http://example.com/__api__): {url}"
+            f"URL must be absolute (e.g., http://example.com/__api__): {url}"
         )
 
     url = url.rstrip("/")
-    if not url.endswith("__api__"):
-        url = append(url, "__api__")
+    if "/__api__" not in url:
+        url = _append(url, "__api__")
 
     return url
 
 
-def append(url: Url, path: str) -> Url:
+def _append(url: str, path) -> str:
     """Append a path to a Url.
 
     Parameters
     ----------
-    url : Url
-        A valid Url.
+    url : str
+        A valid URL.
     path : str
-        A valid Url path.
+        A valid path.
 
     Returns
     -------
@@ -73,17 +109,13 @@ def append(url: Url, path: str) -> Url:
 
     Examples
     --------
-    >>> url = urls.create("http://example.com/__api__")
-    >>> urls.append(url, "path")
+    >>> url = _create("http://example.com/__api__")
+    >>> _append(url, "path")
     http://example.com/__api__/path
     """
-    # Removes leading '/' from path to avoid double slashes.
-    path = path.lstrip("/")
-    # Removes trailing '/' from path to avoid double slashes.
-    path = path.rstrip("/")
-    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlsplit
+    path = str(path).strip("/")
     split = urlsplit(url, allow_fragments=False)
-    # Append the path to unmodified Url path.
-    path = posixpath.join(split.path, path)
-    # See https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlunsplit
-    return urlunsplit((split.scheme, split.netloc, path, split.query, None))
+    new_path = posixpath.join(split.path, path)
+    return urlunsplit(
+        (split.scheme, split.netloc, new_path, split.query, None)
+    )

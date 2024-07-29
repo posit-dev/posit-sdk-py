@@ -101,7 +101,7 @@ class User(Resource):
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior."
             )
-        url = urls.append(self.config.url, f"v1/users/{self.guid}/lock")
+        url = self.config.url + f"v1/users/{self.guid}/lock"
         body = {"locked": True}
         self.session.post(url, json=body)
         super().update(locked=True)
@@ -114,7 +114,7 @@ class User(Resource):
         -------
             None
         """
-        url = urls.append(self.config.url, f"v1/users/{self.guid}/lock")
+        url = self.config.url + f"v1/users/{self.guid}/lock"
         body = {"locked": False}
         self.session.post(url, json=body)
         super().update(locked=False)
@@ -172,7 +172,7 @@ class User(Resource):
             None
         """
         body = dict(*args, **kwargs)
-        url = urls.append(self.config.url, f"v1/users/{self.guid}")
+        url = self.config.url + f"v1/users/{self.guid}"
         response = self.session.put(url, json=body)
         super().update(**response.json())
 
@@ -181,7 +181,7 @@ class Users(Resources):
     """Users resource."""
 
     def __init__(self, config: Config, session: requests.Session) -> None:
-        self.url = urls.append(config.url, "v1/users")
+        self.url = config.url + "v1/users"
         self.config = config
         self.session = session
 
@@ -236,7 +236,7 @@ class Users(Resources):
         return next(users, None)
 
     def get(self, id: str) -> User:
-        url = urls.append(self.config.url, f"v1/users/{id}")
+        url = self.config.url + f"v1/users/{id}"
         response = self.session.get(url)
         return User(
             config=self.config,
