@@ -5,9 +5,7 @@ from __future__ import annotations
 import io
 from typing import List
 
-import requests
-
-from . import config, resources, tasks
+from . import resources, tasks
 
 
 class BundleMetadata(resources.Resource):
@@ -137,14 +135,12 @@ class Bundle(resources.Resource):
 
     @property
     def metadata(self) -> BundleMetadata:
-        return BundleMetadata(
-            self.config, self.session, **self.get("metadata", {})
-        )
+        return BundleMetadata(self.params, **self.get("metadata", {}))
 
     def delete(self) -> None:
         """Delete the bundle."""
         path = f"v1/content/{self.content_guid}/bundles/{self.id}"
-        url = self.config.url + path
+        url = self.url + path
         self.session.delete(url)
 
     def deploy(self) -> tasks.Task:
@@ -164,10 +160,10 @@ class Bundle(resources.Resource):
         None
         """
         path = f"v1/content/{self.content_guid}/deploy"
-        url = self.config.url + path
+        url = self.url + path
         response = self.session.post(url, json={"bundle_id": self.id})
         result = response.json()
-        ts = tasks.Tasks(self.config, self.session)
+        ts = tasks.Tasks(self.params)
         return ts.get(result["task_id"])
 
     def download(self, output: io.BufferedWriter | str) -> None:
@@ -202,7 +198,7 @@ class Bundle(resources.Resource):
             )
 
         path = f"v1/content/{self.content_guid}/bundles/{self.id}/download"
-        url = self.config.url + path
+        url = self.url + path
         response = self.session.get(url, stream=True)
         if isinstance(output, io.BufferedWriter):
             for chunk in response.iter_content():
@@ -233,11 +229,10 @@ class Bundles(resources.Resources):
 
     def __init__(
         self,
-        config: config.Config,
-        session: requests.Session,
+        params: resources.ResourceParameters,
         content_guid: str,
     ) -> None:
-        super().__init__(config, session)
+        super().__init__(params)
         self.content_guid = content_guid
 
     def create(self, input: io.BufferedReader | bytes | str) -> Bundle:
@@ -289,10 +284,10 @@ class Bundles(resources.Resources):
             )
 
         path = f"v1/content/{self.content_guid}/bundles"
-        url = self.config.url + path
+        url = self.url + path
         response = self.session.post(url, data=data)
         result = response.json()
-        return Bundle(self.config, self.session, **result)
+        return Bundle(self.params, **result)
 
     def find(self) -> List[Bundle]:
         """Find all bundles.
@@ -303,12 +298,10 @@ class Bundles(resources.Resources):
             List of all found bundles.
         """
         path = f"v1/content/{self.content_guid}/bundles"
-        url = self.config.url + path
+        url = self.url + path
         response = self.session.get(url)
         results = response.json()
-        return [
-            Bundle(self.config, self.session, **result) for result in results
-        ]
+        return [Bundle(self.params, **result) for result in results]
 
     def find_one(self) -> Bundle | None:
         """Find a bundle.
@@ -335,7 +328,7 @@ class Bundles(resources.Resources):
             The bundle with the specified ID.
         """
         path = f"v1/content/{self.content_guid}/bundles/{id}"
-        url = self.config.url + path
+        url = self.url + path
         response = self.session.get(url)
         result = response.json()
-        return Bundle(self.config, self.session, **result)
+        return Bundle(self.params, **result)

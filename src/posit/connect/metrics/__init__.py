@@ -15,4 +15,4 @@ class Metrics(resources.Resources):
 
     @property
     def usage(self) -> Usage:
-        return Usage(self.config, self.session)
+        return Usage(self.params)

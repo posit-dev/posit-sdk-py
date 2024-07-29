@@ -2,17 +2,12 @@ from __future__ import annotations
 
 from typing import Any, Iterator, List, Mapping, MutableMapping, Optional
 
-from requests import Session
-
-from .config import Config
-from .resources import Resources
+from .resources import ResourceParameters, Resources
 
 
 class EnvVars(Resources, MutableMapping[str, Optional[str]]):
-    def __init__(
-        self, config: Config, session: Session, content_guid: str
-    ) -> None:
-        super().__init__(config, session)
+    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
+        super().__init__(params)
         self.content_guid = content_guid
 
     def __delitem__(self, key: str, /) -> None:
@@ -25,7 +20,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
 
         Examples
         --------
-        >>> vars = EnvVars(config, session, content_guid)
+        >>> vars = EnvVars(params, content_guid)
         >>> del vars["DATABASE_URL"]
         """
         self.update({key: None})
@@ -55,7 +50,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
 
         Examples
         --------
-        >>> vars = EnvVars(config, session, content_guid)
+        >>> vars = EnvVars(params, content_guid)
         >>> vars["DATABASE_URL"] = (
         ...     "postgres://user:password@localhost:5432/database"
         ... )
@@ -70,7 +65,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         >>> clear()
         """
         path = f"v1/content/{self.content_guid}/environment"
-        url = self.config.url + path
+        url = self.url + path
         self.session.put(url, json=[])
 
     def create(self, key: str, value: str, /) -> None:
@@ -128,7 +123,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         ['DATABASE_URL']
         """
         path = f"v1/content/{self.content_guid}/environment"
-        url = self.config.url + path
+        url = self.url + path
         response = self.session.get(url)
         return response.json()
 
@@ -203,5 +198,5 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
 
         body = [{"name": key, "value": value} for key, value in d.items()]
         path = f"v1/content/{self.content_guid}/environment"
-        url = self.config.url + path
+        url = self.url + path
         self.session.patch(url, json=body)

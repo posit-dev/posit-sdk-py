@@ -6,7 +6,6 @@ from typing import List, overload
 
 import requests
 
-from .config import Config
 from .paginator import Paginator
 from .resources import Resource, Resources
 
@@ -38,16 +37,12 @@ class Group(Resource):
     def delete(self) -> None:
         """Delete the group."""
         path = f"v1/groups/{self.guid}"
-        url = self.config.url + path
+        url = self.url + path
         self.session.delete(url)
 
 
 class Groups(Resources):
     """Groups resource."""
-
-    def __init__(self, config: Config, session: requests.Session) -> None:
-        self.config = config
-        self.session = session
 
     @overload
     def create(self, name: str, unique_id: str | None) -> Group:
@@ -89,9 +84,9 @@ class Groups(Resources):
         ...
         body = dict(*args, **kwargs)
         path = "v1/groups"
-        url = self.config.url + path
+        url = self.url + path
         response = self.session.post(url, json=body)
-        return Group(self.config, self.session, **response.json())
+        return Group(self.params, **response.json())
 
     @overload
     def find(
@@ -116,13 +111,12 @@ class Groups(Resources):
         """
         params = dict(*args, **kwargs)
         path = "v1/groups"
-        url = self.config.url + path
+        url = self.url + path
         paginator = Paginator(self.session, url, params=params)
         results = paginator.fetch_results()
         return [
             Group(
-                config=self.config,
-                session=self.session,
+                self.params,
                 **result,
             )
             for result in results
@@ -151,14 +145,13 @@ class Groups(Resources):
         """
         params = dict(*args, **kwargs)
         path = "v1/groups"
-        url = self.config.url + path
+        url = self.url + path
         paginator = Paginator(self.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         groups = (
             Group(
-                config=self.config,
-                session=self.session,
+                self.params,
                 **result,
             )
             for result in results
@@ -176,11 +169,10 @@ class Groups(Resources):
         -------
         Group
         """
-        url = self.config.url + f"v1/groups/{guid}"
+        url = self.url + f"v1/groups/{guid}"
         response = self.session.get(url)
         return Group(
-            config=self.config,
-            session=self.session,
+            self.params,
             **response.json(),
         )
 
@@ -192,7 +184,7 @@ class Groups(Resources):
         int
         """
         path = "v1/groups"
-        url = self.config.url + path
+        url = self.url + path
         response: requests.Response = self.session.get(
             url, params={"page_size": 1}
         )

@@ -1,3 +1,5 @@
+from unittest import mock
+
 import responses
 from posit import connect
 from posit.connect import tasks
@@ -9,8 +11,7 @@ from .api import load_mock  # type: ignore
 class TestTaskAttributes:
     def setup_class(cls):
         cls.task = tasks.Task(
-            None,
-            None,
+            mock.Mock(),
             **load_mock("v1/tasks/jXhOhdm5OOSkGhJw.json"),
         )
 

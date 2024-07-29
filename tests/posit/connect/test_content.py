@@ -1,8 +1,8 @@
+from unittest import mock
+
 import pytest
-import requests
 import responses
 from posit.connect.client import Client
-from posit.connect.config import Config
 from posit.connect.content import ContentItem, ContentItemOwner
 from posit.connect.permissions import Permissions
 from responses import matchers
@@ -14,10 +14,8 @@ class TestContentOwnerAttributes:
     @classmethod
     def setup_class(cls):
         guid = "20a79ce3-6e87-4522-9faf-be24228800a4"
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
         fake_item = load_mock(f"v1/users/{guid}.json")
-        cls.item = ContentItemOwner(config, session, **fake_item)
+        cls.item = ContentItemOwner(mock.Mock(), **fake_item)
 
     def test_guid(self):
         assert self.item.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
@@ -36,10 +34,8 @@ class TestContentItemAttributes:
     @classmethod
     def setup_class(cls):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
         fake_item = load_mock(f"v1/content/{guid}.json")
-        cls.item = ContentItem(config, session, **fake_item)
+        cls.item = ContentItem(mock.Mock(), **fake_item)
 
     def test_id(self):
         assert self.item.id == "8274"
@@ -221,18 +217,21 @@ class TestContentItemDelete:
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
 
         # behavior
+        mock_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+
         mock_delete = responses.delete(
             f"https://connect.example/__api__/v1/content/{guid}"
         )
 
         # setup
-        config = Config(api_key="12345", url="https://connect.example/")
-        session = requests.Session()
-        fake_item = load_mock(f"v1/content/{guid}.json")
-        item = ContentItem(config, session, **fake_item)
+        c = Client("https://connect.example", "12345")
+        content = c.content.get(guid)
 
         # invoke
-        item.delete()
+        content.delete()
 
         # assert
         assert mock_delete.call_count == 1
