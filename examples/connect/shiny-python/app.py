@@ -16,7 +16,7 @@ SQL_HTTP_PATH = os.getenv("DATABRICKS_PATH")
 app_ui = ui.page_fluid(ui.output_text("text"), ui.output_data_frame("result"))
 
 
-def server(input: Inputs, output: Outputs, session: Session):
+def server(i: Inputs, o: Outputs, session: Session):
     """
     Shiny for Python example application that shows user information and
     the first few rows from a table hosted in Databricks.

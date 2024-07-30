@@ -44,7 +44,32 @@ docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
-select = ["D", "F401", "I"]
+select = [
+    # flake8-builtins
+    # https://docs.astral.sh/ruff/rules/#flake8-builtins-a
+    #
+    # Check for builtin shadowing (i.e., naming a variable 'for', which is a builtin.)
+    "A",
+
+    # pydocstyle
+    # https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    # https://docs.astral.sh/ruff/faq/#does-ruff-support-numpy-or-google-style-docstrings
+    #
+    # Check docstring formatting. Many of these rules are intentionally ignored below.
+    "D",
+
+    # pyflakes - unused-import
+    # https://docs.astral.sh/ruff/rules/unused-import/
+    #
+    # Check for unused imports.
+    "F401",
+
+    # isort
+    # https://docs.astral.sh/ruff/rules/#isort-i
+    #
+    # Sort imports.
+    "I"
+]
 ignore = [
     # NumPy style docstring convention with noted exceptions.
     # https://docs.astral.sh/ruff/faq/#does-ruff-support-numpy-or-google-style-docstrings
@@ -67,7 +92,7 @@ ignore = [
     'D415',
     'D416',
     'D417',
-    'D418', # The Python Language Server can accomdate documentation for individual methods.
+    'D418', # The Python Language Server can accomodate documentation for individual methods.
             # TODO(#135) resarch D418 and determine if we should continue ignoring it.
 ]
 

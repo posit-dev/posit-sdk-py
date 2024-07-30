@@ -7,19 +7,19 @@ from posit.connect import Client
 from .api import load_mock  # type: ignore
 
 
-@pytest.fixture
+@pytest.fixture()
 def MockAuth():
     with patch("posit.connect.client.Auth") as mock:
         yield mock
 
 
-@pytest.fixture
+@pytest.fixture()
 def MockConfig():
     with patch("posit.connect.client.Config") as mock:
         yield mock
 
 
-@pytest.fixture
+@pytest.fixture()
 def MockSession():
     with patch("posit.connect.client.Session") as mock:
         yield mock

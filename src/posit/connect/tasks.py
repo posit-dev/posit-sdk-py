@@ -144,12 +144,12 @@ class Task(resources.Resource):
 
 class Tasks(resources.Resources):
     @overload
-    def get(self, id: str, first: int, wait: int) -> Task:
+    def get(self, uid: str, first: int, wait: int) -> Task:
         """Get a task.
 
         Parameters
         ----------
-        id : str
+        uid : str
             Task identifier.
         first : int, default 0
             Line to start output on.
@@ -163,12 +163,12 @@ class Tasks(resources.Resources):
         ...
 
     @overload
-    def get(self, id: str, *args, **kwargs) -> Task:
+    def get(self, uid: str, *args, **kwargs) -> Task:
         """Get a task.
 
         Parameters
         ----------
-        id : str
+        uid : str
             Task identifier.
 
         Returns
@@ -177,12 +177,12 @@ class Tasks(resources.Resources):
         """
         ...
 
-    def get(self, id: str, *args, **kwargs) -> Task:
+    def get(self, uid: str, *args, **kwargs) -> Task:
         """Get a task.
 
         Parameters
         ----------
-        id : str
+        uid : str
             Task identifier.
 
         Returns
@@ -190,7 +190,7 @@ class Tasks(resources.Resources):
         Task
         """
         params = dict(*args, **kwargs)
-        path = f"v1/tasks/{id}"
+        path = f"v1/tasks/{uid}"
         url = self.url + path
         response = self.session.get(url, params=params)
         result = response.json()

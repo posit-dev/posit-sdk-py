@@ -230,8 +230,8 @@ class Users(Resources):
         )
         return next(users, None)
 
-    def get(self, id: str) -> User:
-        url = self.url + f"v1/users/{id}"
+    def get(self, uid: str) -> User:
+        url = self.url + f"v1/users/{uid}"
         response = self.session.get(url)
         return User(
             self.params,

@@ -149,19 +149,19 @@ class Permissions(Resources):
         permissions = self.find(*args, **kwargs)
         return next(iter(permissions), None)
 
-    def get(self, id: str) -> Permission:
+    def get(self, uid: str) -> Permission:
         """Get a permission.
 
         Parameters
         ----------
-        id : str
+        uid : str
             The permission id.
 
         Returns
         -------
         Permission
         """
-        path = f"v1/content/{self.content_guid}/permissions/{id}"
+        path = f"v1/content/{self.content_guid}/permissions/{uid}"
         url = self.url + path
         response = self.session.get(url)
         return Permission(self.params, **response.json())

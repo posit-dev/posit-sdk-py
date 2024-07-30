@@ -43,23 +43,23 @@ class TestTaskAttributes:
 class TestTaskUpdate:
     @responses.activate
     def test(self):
-        id = "jXhOhdm5OOSkGhJw"
+        uid = "jXhOhdm5OOSkGhJw"
 
         # behavior
         mock_tasks_get = [0] * 2
         mock_tasks_get[0] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{id}",
-            json={**load_mock(f"v1/tasks/{id}.json"), "finished": False},
+            f"https://connect.example/__api__/v1/tasks/{uid}",
+            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": False},
         )
 
         mock_tasks_get[1] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{id}",
-            json={**load_mock(f"v1/tasks/{id}.json"), "finished": True},
+            f"https://connect.example/__api__/v1/tasks/{uid}",
+            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": True},
         )
 
         # setup
         c = connect.Client("https://connect.example", "12345")
-        task = c.tasks.get(id)
+        task = c.tasks.get(uid)
         assert not task.is_finished
 
         # invoke
@@ -72,25 +72,25 @@ class TestTaskUpdate:
 
     @responses.activate
     def test_with_params(self):
-        id = "jXhOhdm5OOSkGhJw"
+        uid = "jXhOhdm5OOSkGhJw"
         params = {"first": 10, "wait": 10}
 
         # behavior
         mock_tasks_get = [0] * 2
         mock_tasks_get[0] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{id}",
-            json={**load_mock(f"v1/tasks/{id}.json"), "finished": False},
+            f"https://connect.example/__api__/v1/tasks/{uid}",
+            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": False},
         )
 
         mock_tasks_get[1] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{id}",
-            json={**load_mock(f"v1/tasks/{id}.json"), "finished": True},
+            f"https://connect.example/__api__/v1/tasks/{uid}",
+            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": True},
             match=[matchers.query_param_matcher(params)],
         )
 
         # setup
         c = connect.Client("https://connect.example", "12345")
-        task = c.tasks.get(id)
+        task = c.tasks.get(uid)
         assert not task.is_finished
 
         # invoke
@@ -105,23 +105,23 @@ class TestTaskUpdate:
 class TestTaskWaitFor:
     @responses.activate
     def test(self):
-        id = "jXhOhdm5OOSkGhJw"
+        uid = "jXhOhdm5OOSkGhJw"
 
         # behavior
         mock_tasks_get = [0] * 2
         mock_tasks_get[0] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{id}",
-            json={**load_mock(f"v1/tasks/{id}.json"), "finished": False},
+            f"https://connect.example/__api__/v1/tasks/{uid}",
+            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": False},
         )
 
         mock_tasks_get[1] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{id}",
-            json={**load_mock(f"v1/tasks/{id}.json"), "finished": True},
+            f"https://connect.example/__api__/v1/tasks/{uid}",
+            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": True},
         )
 
         # setup
         c = connect.Client("https://connect.example", "12345")
-        task = c.tasks.get(id)
+        task = c.tasks.get(uid)
         assert not task.is_finished
 
         # invoke
@@ -136,20 +136,20 @@ class TestTaskWaitFor:
 class TestTasksGet:
     @responses.activate
     def test(self):
-        id = "jXhOhdm5OOSkGhJw"
+        uid = "jXhOhdm5OOSkGhJw"
 
         # behavior
         mock_tasks_get = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{id}",
-            json={**load_mock(f"v1/tasks/{id}.json"), "finished": False},
+            f"https://connect.example/__api__/v1/tasks/{uid}",
+            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": False},
         )
 
         # setup
         c = connect.Client("https://connect.example", "12345")
 
         # invoke
-        task = c.tasks.get(id)
+        task = c.tasks.get(uid)
 
         # assert
-        assert task.id == id
+        assert task.id == uid
         assert mock_tasks_get.call_count == 1
