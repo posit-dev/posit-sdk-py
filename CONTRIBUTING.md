@@ -18,13 +18,12 @@ Before contributing to the `posit-sdk`, ensure that the following prerequisites 
 > [!WARNING]
 > Executing `make` will utilize `pip` to install third-party packages in your activated Python environment. Please review the [`Makefile`](./Makefile) to verify behavior before executing any commands.
 
-1. Fork the repository and clone it to your local machine.
-1. Create a new branch for your feature or bug fix.
-1. Run `make` to run the default development workflow.
-1. Make your changes and test them thoroughly using `make test`
-1. Run `make fmt` and `make lint` to verify adherence to the project style guide.
-1. Commit your changes and push them to your forked repository.
-1. Submit a pull request to the main repository.
+1. Fork the repository and open it in your development environment.
+2. Run `make` to run the default development workflow.
+3. Make your changes and test them thoroughly using `make test`
+4. Run `make fmt` and `make lint` to verify adherence to the project style guide.
+5. Commit your changes and push them to your forked repository.
+6. Submit a pull request to the main repository.
 
 ## Tooling
 
@@ -32,13 +31,15 @@ Use the default make target to execute the full build pipeline. For details on s
 
 ## Style Guide
 
-We use [Ruff](https://docs.astral.sh/ruff/) for linting and code formatting. All proposed changes must successfully pass the `make lint` rules prior to merging.
+We use [Ruff](https://docs.astral.sh/ruff/) for linting and code formatting. Run `make deps` to install it.
 
-Utilize `make fmt lint fix` to format and lint your changes.
+All proposed changes must successfully pass the `make lint` rules prior to merging.
+
+Utilize `make fmt lint` to format and lint your changes.
 
 ### (Optional) pre-commit
 
-This project is configured for [pre-commit](https://pre-commit.com). Once enabled, a `git commit` hook is created, which invokes `make fmt lint fix`.
+This project is configured for [pre-commit](https://pre-commit.com). Once enabled, a `git commit` hook is created, which invokes `make fmt lint`.
 
 To enable pre-commit on your machine, run `pre-commit install`.
 

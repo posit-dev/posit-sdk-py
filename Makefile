@@ -2,7 +2,7 @@ include vars.mk
 
 .DEFAULT_GOAL := all
 
-.PHONY: build clean cov default deps dev docs fmt fix install it lint test uninstall version
+.PHONY: build clean cov default deps dev docs fmt fix install it lint test uninstall version help
 
 all: deps dev test lint build
 
@@ -60,3 +60,22 @@ uninstall:
 
 version:
 	@$(PYTHON) -m setuptools_scm
+
+help:
+	@echo "Makefile Targets"
+	@echo "  all        	Run deps, dev, test, lint, and build"
+	@echo "  build      	Build the project"
+	@echo "  clean      	Clean up project artifacts"
+	@echo "  cov        	Generate a coverage report"
+	@echo "  cov-html   	Generate an HTML coverage report and open it"
+	@echo "  cov-xml    	Generate an XML coverage report"
+	@echo "  deps       	Install dependencies"
+	@echo "  dev        	Install the project in editable mode"
+	@echo "  docs       	Build the documentation"
+	@echo "  fmt        	Format the code"
+	@echo "  install    	Install the built project"
+	@echo "  it         	Run integration tests"
+	@echo "  lint       	Lint the code"
+	@echo "  test       	Run unit tests with coverage"
+	@echo "  uninstall  	Uninstall the project"
+	@echo "  version    	Display the project version"
