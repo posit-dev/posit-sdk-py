@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import posixpath
-import secrets
+import time
 from posixpath import dirname
 from typing import List, Optional, overload
 
@@ -213,9 +213,9 @@ class ContentItem(Resource):
         self.update()
 
         if self.is_interactive:
-            random_hash = secrets.token_hex(32)
-            key = f"_CONNECT_RESTART_TMP_{random_hash}"
-            self.environment_variables.create(key, random_hash)
+            unix_epoch_in_seconds = str(int(time.time()))
+            key = f"_CONNECT_RESTART_TMP_{unix_epoch_in_seconds}"
+            self.environment_variables.create(key, unix_epoch_in_seconds)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
             url = posixpath.join(dirname(self.url), f"content/{self.guid}")
