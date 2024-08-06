@@ -19,6 +19,7 @@ class CredentialsStrategy(abc.ABC):
     https://github.com/databricks/databricks-sql-python/blob/v3.3.0/src/databricks/sql/auth/authenticators.py#L19-L33
     https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/credentials_provider.py#L44-L54
     """
+
     @abc.abstractmethod
     def auth_type(self) -> str:
         raise NotImplementedError

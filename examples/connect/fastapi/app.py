@@ -9,7 +9,6 @@ from fastapi import FastAPI, Header
 from fastapi.responses import JSONResponse
 from posit.connect.external.databricks import PositCredentialsStrategy
 
-
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
 SQL_HTTP_PATH = os.getenv("DATABRICKS_PATH")
