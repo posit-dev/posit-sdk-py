@@ -1,4 +1,4 @@
-databricks-sql-connector==3.0.1
-databricks-sdk==0.20.0
+databricks-sql-connector==3.3.0
+databricks-sdk==0.29.0
 shiny==0.7.1
-git+https://github.com/posit-dev/posit-sdk-py.git
+posit-sdk>=0.4.0

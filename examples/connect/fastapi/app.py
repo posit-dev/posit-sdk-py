@@ -4,9 +4,10 @@ import os
 from typing import Annotated
 
 from databricks import sql
+from databricks.sdk.core import Config, databricks_cli
 from fastapi import FastAPI, Header
 from fastapi.responses import JSONResponse
-from posit.connect.external.databricks import viewer_credentials_provider
+from posit.connect.external.databricks import PositCredentialsStrategy
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
@@ -26,9 +27,14 @@ async def get_fares(
     """
     global rows
 
-    credentials_provider = viewer_credentials_provider(
-        user_session_token=posit_connect_user_session_token
-    )
+    posit_strategy = PositCredentialsStrategy(
+        local_strategy=databricks_cli,
+        user_session_token=posit_connect_user_session_token)
+    cfg = Config(
+        host=DATABRICKS_HOST_URL,
+        # uses Posit's custom credential_strategy if running on Connect,
+        # otherwise falls back to the strategy defined by local_strategy
+        credentials_strategy=posit_strategy)
 
     if rows is None:
         query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"
@@ -36,8 +42,8 @@ async def get_fares(
         with sql.connect(
             server_hostname=DATABRICKS_HOST,
             http_path=SQL_HTTP_PATH,
-            auth_type="databricks-oauth",
-            credentials_provider=credentials_provider,
+            # https://github.com/databricks/databricks-sql-python/issues/148#issuecomment-2271561365
+            credentials_provider=posit_strategy.sql_credentials_provider(cfg)
         ) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query)

@@ -6,9 +6,9 @@ import flask
 import pandas as pd
 from dash import Dash, Input, Output, dash_table, html
 from databricks import sql
-from databricks.sdk.core import ApiClient, Config
+from databricks.sdk.core import ApiClient, Config, databricks_cli
 from databricks.sdk.service.iam import CurrentUserAPI
-from posit.connect.external.databricks import viewer_credentials_provider
+from posit.connect.external.databricks import PositCredentialsStrategy
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
@@ -38,14 +38,16 @@ def update_page(_):
     session_token = flask.request.headers.get(
         "Posit-Connect-User-Session-Token"
     )
-    credentials_provider = viewer_credentials_provider(
-        user_session_token=session_token
-    )
+    posit_strategy = PositCredentialsStrategy(
+        local_strategy=databricks_cli,
+        user_session_token=session_token)
+    cfg = Config(
+        host=DATABRICKS_HOST_URL,
+        # uses Posit's custom credential_strategy if running on Connect,
+        # otherwise falls back to the strategy defined by local_strategy
+        credentials_strategy=posit_strategy)
 
     def get_greeting():
-        cfg = Config(
-            host=DATABRICKS_HOST_URL, credentials_provider=credentials_provider
-        )
         databricks_user_info = CurrentUserAPI(ApiClient(cfg)).me()
         return f"Hello, {databricks_user_info.display_name}!"
 
@@ -58,8 +60,8 @@ def update_page(_):
             with sql.connect(
                 server_hostname=DATABRICKS_HOST,
                 http_path=SQL_HTTP_PATH,
-                auth_type="databricks-oauth",
-                credentials_provider=credentials_provider,
+                # https://github.com/databricks/databricks-sql-python/issues/148#issuecomment-2271561365
+                credentials_provider=posit_strategy.sql_credentials_provider(cfg)
             ) as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(query)
