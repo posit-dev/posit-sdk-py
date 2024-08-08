@@ -94,6 +94,7 @@ class Visits(Resources):
     @overload
     def find(
         self,
+        *,
         content_guid: str = ...,
         min_data_version: int = ...,
         start: str = ...,
@@ -119,7 +120,7 @@ class Visits(Resources):
         ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[VisitEvent]:
+    def find(self, **kwargs) -> List[VisitEvent]:
         """Find visits.
 
         Returns
@@ -128,15 +129,14 @@ class Visits(Resources):
         """
         ...
 
-    def find(self, *args, **kwargs) -> List[VisitEvent]:
+    def find(self, **kwargs) -> List[VisitEvent]:
         """Find visits.
 
         Returns
         -------
         List[Visit]
         """
-        params = dict(*args, **kwargs)
-        params = rename_params(params)
+        params = rename_params(kwargs)
 
         path = "/v1/instrumentation/content/visits"
         url = self.url + path
@@ -153,6 +153,7 @@ class Visits(Resources):
     @overload
     def find_one(
         self,
+        *,
         content_guid: str = ...,
         min_data_version: int = ...,
         start: str = ...,
@@ -178,7 +179,7 @@ class Visits(Resources):
         ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> VisitEvent | None:
+    def find_one(self, **kwargs) -> VisitEvent | None:
         """Find a visit.
 
         Returns
@@ -187,15 +188,14 @@ class Visits(Resources):
         """
         ...
 
-    def find_one(self, *args, **kwargs) -> VisitEvent | None:
+    def find_one(self, **kwargs) -> VisitEvent | None:
         """Find a visit.
 
         Returns
         -------
         Visit | None
         """
-        params = dict(*args, **kwargs)
-        params = rename_params(params)
+        params = rename_params(kwargs)
         path = "/v1/instrumentation/content/visits"
         url = self.url + path
         paginator = CursorPaginator(self.session, url, params=params)

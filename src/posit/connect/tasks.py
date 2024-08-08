@@ -82,7 +82,7 @@ class Task(resources.Resource):
     # CRUD Methods
 
     @overload
-    def update(self, first: int, wait: int, **kwargs) -> None:
+    def update(self, *args, first: int, wait: int, **kwargs) -> None:
         """Update the task.
 
         Parameters
@@ -126,7 +126,7 @@ class Task(resources.Resource):
         params = dict(*args, **kwargs)
         path = f"v1/tasks/{self.id}"
         url = self.url + path
-        response = self.session.get(url, params=params)
+        response = self.session.get(url, params=kwargs)
         result = response.json()
         super().update(**result)
 
@@ -144,7 +144,7 @@ class Task(resources.Resource):
 
 class Tasks(resources.Resources):
     @overload
-    def get(self, uid: str, first: int, wait: int) -> Task:
+    def get(self, *, uid: str, first: int, wait: int) -> Task:
         """Get a task.
 
         Parameters
@@ -163,7 +163,7 @@ class Tasks(resources.Resources):
         ...
 
     @overload
-    def get(self, uid: str, *args, **kwargs) -> Task:
+    def get(self, uid: str, **kwargs) -> Task:
         """Get a task.
 
         Parameters
@@ -177,7 +177,7 @@ class Tasks(resources.Resources):
         """
         ...
 
-    def get(self, uid: str, *args, **kwargs) -> Task:
+    def get(self, uid: str, **kwargs) -> Task:
         """Get a task.
 
         Parameters
@@ -189,9 +189,8 @@ class Tasks(resources.Resources):
         -------
         Task
         """
-        params = dict(*args, **kwargs)
         path = f"v1/tasks/{uid}"
         url = self.url + path
-        response = self.session.get(url, params=params)
+        response = self.session.get(url, params=kwargs)
         result = response.json()
         return Task(self.params, **result)

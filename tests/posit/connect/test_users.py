@@ -472,5 +472,5 @@ class TestUsersFind:
         # validate input params are propagated to the query params
         con = Client(api_key="12345", url="https://connect.example/")
         not_dict_like = "string"
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             con.users.find(not_dict_like)

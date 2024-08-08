@@ -229,6 +229,7 @@ class ContentItem(Resource):
     @overload
     def update(
         self,
+        *args,
         name: str = ...,
         title: Optional[str] = ...,
         description: str = ...,
@@ -254,6 +255,7 @@ class ContentItem(Resource):
         default_r_environment_management: Optional[bool] = ...,
         default_py_environment_management: Optional[bool] = ...,
         service_account_name: Optional[str] = ...,
+        **kwargs,
     ) -> None:
         """Update the content item.
 
@@ -578,6 +580,7 @@ class Content(Resources):
     @overload
     def create(
         self,
+        *,
         name: str = ...,
         title: Optional[str] = ...,
         description: str = ...,
@@ -639,7 +642,7 @@ class Content(Resources):
         ...
 
     @overload
-    def create(self, *args, **kwargs) -> ContentItem:
+    def create(self, **kwargs) -> ContentItem:
         """Create a content item.
 
         Returns
@@ -648,17 +651,16 @@ class Content(Resources):
         """
         ...
 
-    def create(self, *args, **kwargs) -> ContentItem:
+    def create(self, **kwargs) -> ContentItem:
         """Create a content item.
 
         Returns
         -------
         ContentItem
         """
-        body = dict(*args, **kwargs)
         path = "v1/content"
         url = self.url + path
-        response = self.session.post(url, json=body)
+        response = self.session.post(url, json=kwargs)
         return ContentItem(self.params, **response.json())
 
     @overload
