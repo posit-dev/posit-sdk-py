@@ -154,6 +154,7 @@ class Usage(resources.Resources):
     @overload
     def find(
         self,
+        *,
         content_guid: str = ...,
         min_data_version: int = ...,
         start: str = ...,
@@ -179,7 +180,7 @@ class Usage(resources.Resources):
         ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[UsageEvent]:
+    def find(self, **kwargs) -> List[UsageEvent]:
         """Find view events.
 
         Returns
@@ -188,7 +189,7 @@ class Usage(resources.Resources):
         """
         ...
 
-    def find(self, *args, **kwargs) -> List[UsageEvent]:
+    def find(self, **kwargs) -> List[UsageEvent]:
         """Find view events.
 
         Returns
@@ -202,7 +203,7 @@ class Usage(resources.Resources):
             events.extend(
                 [
                     UsageEvent.from_event(event)
-                    for event in instance.find(*args, **kwargs)  # type: ignore[attr-defined]
+                    for event in instance.find(**kwargs)  # type: ignore[attr-defined]
                 ]
             )
         return events
@@ -210,6 +211,7 @@ class Usage(resources.Resources):
     @overload
     def find_one(
         self,
+        *,
         content_guid: str = ...,
         min_data_version: int = ...,
         start: str = ...,
@@ -235,7 +237,7 @@ class Usage(resources.Resources):
         ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> UsageEvent | None:
+    def find_one(self, **kwargs) -> UsageEvent | None:
         """Find a view event.
 
         Returns
@@ -244,7 +246,7 @@ class Usage(resources.Resources):
         """
         ...
 
-    def find_one(self, *args, **kwargs) -> UsageEvent | None:
+    def find_one(self, **kwargs) -> UsageEvent | None:
         """Find a view event.
 
         Returns
@@ -254,7 +256,7 @@ class Usage(resources.Resources):
         finders = (visits.Visits, shiny_usage.ShinyUsage)
         for finder in finders:
             instance = finder(self.params)
-            event = instance.find_one(*args, **kwargs)  # type: ignore[attr-defined]
+            event = instance.find_one(**kwargs)  # type: ignore[attr-defined]
             if event:
                 return UsageEvent.from_event(event)
         return None

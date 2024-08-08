@@ -119,11 +119,13 @@ class User(Resource):
     @overload
     def update(
         self,
+        *args,
         email: str = ...,
         username: str = ...,
         first_name: str = ...,
         last_name: str = ...,
         user_role: str = ...,
+        **kwargs,
     ) -> None:
         """
         Update the user.
@@ -189,12 +191,11 @@ class Users(Resources):
     ) -> List[User]: ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[User]: ...
+    def find(self, **kwargs) -> List[User]: ...
 
-    def find(self, *args, **kwargs):
+    def find(self, **kwargs):
         url = self.params.url + "v1/users"
-        params = dict(*args, **kwargs)
-        paginator = Paginator(self.session, url, params=params)
+        paginator = Paginator(self.session, url, params=kwargs)
         results = paginator.fetch_results()
         return [
             User(
@@ -207,18 +208,18 @@ class Users(Resources):
     @overload
     def find_one(
         self,
+        *,
         prefix: str = ...,
         user_role: str = ...,
         account_status: str = ...,
     ) -> User | None: ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> User | None: ...
+    def find_one(self, **kwargs) -> User | None: ...
 
-    def find_one(self, *args, **kwargs) -> User | None:
+    def find_one(self, **kwargs) -> User | None:
         url = self.params.url + "v1/users"
-        params = dict(*args, **kwargs)
-        paginator = Paginator(self.session, url, params=params)
+        paginator = Paginator(self.session, url, params=kwargs)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (
