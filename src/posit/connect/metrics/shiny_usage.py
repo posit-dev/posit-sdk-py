@@ -62,6 +62,7 @@ class ShinyUsage(Resources):
     @overload
     def find(
         self,
+        *,
         content_guid: str = ...,
         min_data_version: int = ...,
         start: str = ...,
@@ -87,7 +88,7 @@ class ShinyUsage(Resources):
         ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[ShinyUsageEvent]:
+    def find(self, **kwargs) -> List[ShinyUsageEvent]:
         """Find usage.
 
         Returns
@@ -96,15 +97,14 @@ class ShinyUsage(Resources):
         """
         ...
 
-    def find(self, *args, **kwargs) -> List[ShinyUsageEvent]:
+    def find(self, **kwargs) -> List[ShinyUsageEvent]:
         """Find usage.
 
         Returns
         -------
         List[ShinyUsageEvent]
         """
-        params = dict(*args, **kwargs)
-        params = rename_params(params)
+        params = rename_params(kwargs)
 
         path = "/v1/instrumentation/shiny/usage"
         url = self.url + path
@@ -121,6 +121,7 @@ class ShinyUsage(Resources):
     @overload
     def find_one(
         self,
+        *,
         content_guid: str = ...,
         min_data_version: int = ...,
         start: str = ...,
@@ -146,7 +147,7 @@ class ShinyUsage(Resources):
         ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> ShinyUsageEvent | None:
+    def find_one(self, **kwargs) -> ShinyUsageEvent | None:
         """Find a usage event.
 
         Returns
@@ -155,15 +156,14 @@ class ShinyUsage(Resources):
         """
         ...
 
-    def find_one(self, *args, **kwargs) -> ShinyUsageEvent | None:
+    def find_one(self, **kwargs) -> ShinyUsageEvent | None:
         """Find a usage event.
 
         Returns
         -------
         ShinyUsageEvent | None
         """
-        params = dict(*args, **kwargs)
-        params = rename_params(params)
+        params = rename_params(kwargs)
         path = "/v1/instrumentation/shiny/usage"
         url = self.url + path
         paginator = CursorPaginator(self.session, url, params=params)
