@@ -16,6 +16,7 @@ jobs:
           cache: 'pip'
       - run: make deps
       - run: make lint
+      - run: make fmt
 
   test:
     runs-on: ubuntu-latest
