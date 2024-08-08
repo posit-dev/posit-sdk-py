@@ -14,6 +14,5 @@ class Auth(AuthBase):
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
         """Add authorization header to the request."""
-
         r.headers["Authorization"] = f"Key {self._config.api_key}"
         return r
