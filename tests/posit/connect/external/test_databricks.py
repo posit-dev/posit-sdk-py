@@ -13,9 +13,11 @@ from posit.connect.external.databricks import (
 class mock_strategy:
     def auth_type(self) -> str:
         return "local"
+
     def __call__(self) -> CredentialsProvider:
-        def inner() -> Dict[str,str]:
+        def inner() -> Dict[str, str]:
             return {"Authorization": "Bearer static-pat-token"}
+
         return inner
 
 
@@ -45,7 +47,9 @@ class TestPositCredentialsHelpers:
         register_mocks()
 
         client = Client(api_key="12345", url="https://connect.example/")
-        cp = PositCredentialsProvider(posit_oauth=client.oauth, user_session_token="cit")
+        cp = PositCredentialsProvider(
+            posit_oauth=client.oauth, user_session_token="cit"
+        )
         assert cp() == {"Authorization": f"Bearer dynamic-viewer-access-token"}
 
     @responses.activate
@@ -54,9 +58,11 @@ class TestPositCredentialsHelpers:
         register_mocks()
 
         client = Client(api_key="12345", url="https://connect.example/")
-        cs = PositCredentialsStrategy(local_strategy=mock_strategy(),
-                                      user_session_token="cit",
-                                      client=client)
+        cs = PositCredentialsStrategy(
+            local_strategy=mock_strategy(),
+            user_session_token="cit",
+            client=client,
+        )
         cp = cs()
         assert cs.auth_type() == "posit-oauth-integration"
         assert cp() == {"Authorization": "Bearer dynamic-viewer-access-token"}
@@ -64,9 +70,11 @@ class TestPositCredentialsHelpers:
     def test_posit_credentials_strategy_fallback(self):
         # local_strategy is used when the content is running locally
         client = Client(api_key="12345", url="https://connect.example/")
-        cs = PositCredentialsStrategy(local_strategy=mock_strategy(),
-                                      user_session_token="cit",
-                                      client=client)
+        cs = PositCredentialsStrategy(
+            local_strategy=mock_strategy(),
+            user_session_token="cit",
+            client=client,
+        )
         cp = cs()
         assert cs.auth_type() == "local"
         assert cp() == {"Authorization": "Bearer static-pat-token"}

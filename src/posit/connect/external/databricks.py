@@ -13,6 +13,7 @@ https://github.com/databricks/databricks-sdk-py#interface-stability
 # The Databricks SDK CredentialsProvider == Databricks SQL HeaderFactory
 CredentialsProvider = Callable[[], Dict[str, str]]
 
+
 class CredentialsStrategy(abc.ABC):
     """Maintain compatibility with the Databricks SQL/SDK client libraries.
 
@@ -52,11 +53,11 @@ class PositCredentialsProvider:
 
 
 class PositCredentialsStrategy(CredentialsStrategy):
-
-    def __init__(self,
+    def __init__(
+        self,
         local_strategy: CredentialsStrategy,
         user_session_token: Optional[str] = None,
-        client: Optional[Client] = None
+        client: Optional[Client] = None,
     ):
         self.user_session_token = user_session_token
         self.local_strategy = local_strategy
