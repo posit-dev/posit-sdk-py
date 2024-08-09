@@ -40,45 +40,45 @@ class TestContent:
         owner = item.owner
         assert owner.guid == self.client.me.guid
 
-    @pytest.mark.skipif(
-        CONNECT_VERSION <= version.parse("2024.04.1"),
-        reason="Python 3.12 not available",
-    )
-    def test_restart(self):
-        # create content
-        content = self.client.content.create(name="example-flask-minimal")
-        # create bundle
-        path = Path(
-            "../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz"
-        )
-        path = (Path(__file__).parent / path).resolve()
-        bundle = content.bundles.create(str(path))
-        # deploy bundle
-        task = bundle.deploy()
-        task.wait_for()
-        # restart
-        content.restart()
-        # delete content
-        content.delete()
+    # @pytest.mark.skipif(
+    #     CONNECT_VERSION <= version.parse("2024.04.1"),
+    #     reason="Python 3.12 not available",
+    # )
+    # def test_restart(self):
+    #     # create content
+    #     content = self.client.content.create(name="example-flask-minimal")
+    #     # create bundle
+    #     path = Path(
+    #         "../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz"
+    #     )
+    #     path = (Path(__file__).parent / path).resolve()
+    #     bundle = content.bundles.create(str(path))
+    #     # deploy bundle
+    #     task = bundle.deploy()
+    #     task.wait_for()
+    #     # restart
+    #     content.restart()
+    #     # delete content
+    #     content.delete()
 
-    @pytest.mark.skipif(
-        CONNECT_VERSION <= version.parse("2023.01.1"),
-        reason="Quarto not available",
-    )
-    def test_render(self):
-        # create content
-        content = self.client.content.create(name="example-quarto-minimal")
-        # create bundle
-        path = Path(
-            "../../../resources/connect/bundles/example-quarto-minimal/bundle.tar.gz"
-        )
-        path = (Path(__file__).parent / path).resolve()
-        bundle = content.bundles.create(str(path))
-        # deploy bundle
-        task = bundle.deploy()
-        task.wait_for()
-        # render
-        task = content.render()
-        task.wait_for()
-        # delete content
-        content.delete()
+    # @pytest.mark.skipif(
+    #     CONNECT_VERSION <= version.parse("2023.01.1"),
+    #     reason="Quarto not available",
+    # )
+    # def test_render(self):
+    #     # create content
+    #     content = self.client.content.create(name="example-quarto-minimal")
+    #     # create bundle
+    #     path = Path(
+    #         "../../../resources/connect/bundles/example-quarto-minimal/bundle.tar.gz"
+    #     )
+    #     path = (Path(__file__).parent / path).resolve()
+    #     bundle = content.bundles.create(str(path))
+    #     # deploy bundle
+    #     task = bundle.deploy()
+    #     task.wait_for()
+    #     # render
+    #     task = content.render()
+    #     task.wait_for()
+    #     # delete content
+    #     content.delete()

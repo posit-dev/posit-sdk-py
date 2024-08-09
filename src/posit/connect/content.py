@@ -12,6 +12,7 @@ from .bundles import Bundles
 from .env import EnvVars
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
+from .tags import Tags
 from .tasks import Task
 from .variants import Variants
 
@@ -327,6 +328,10 @@ class ContentItem(Resource):
         return ContentItemOwner(self.params, **self["owner"])
 
     @property
+    def tags(self) -> Tags:
+        return Tags(self.params, content_guid=self.guid)
+
+    @property
     def _variants(self) -> Variants:
         return Variants(self.params, self.guid)
 
@@ -505,10 +510,6 @@ class ContentItem(Resource):
         return self.get("app_role")  # type: ignore
 
     @property
-    def tags(self) -> List[dict]:
-        return self.get("tags", [])
-
-    @property
     def is_interactive(self) -> bool:
         return self.app_mode in {
             "api",
@@ -552,9 +553,11 @@ class Content(Resources):
         params: ResourceParameters,
         *,
         owner_guid: str | None = None,
+        tag_id: str | None = None,
     ) -> None:
         super().__init__(params)
         self.owner_guid = owner_guid
+        self.tag_id = tag_id
 
     def _get_default_params(self) -> dict:
         """Build default parameters for GET requests.
@@ -722,7 +725,11 @@ class Content(Resources):
         params.update(args)
         params.update(kwargs)
         params["include"] = include
+
         path = "v1/content"
+        if self.tag_id is not None:
+            path = f"v1/tags/{self.tag_id}/content"
+
         url = self.url + path
         response = self.session.get(url, params=params)
         return [
