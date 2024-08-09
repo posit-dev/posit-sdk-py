@@ -45,7 +45,7 @@ class Groups(Resources):
     """Groups resource."""
 
     @overload
-    def create(self, name: str, unique_id: str | None) -> Group:
+    def create(self, *, name: str, unique_id: str | None) -> Group:
         """Create a group.
 
         Parameters
@@ -60,7 +60,7 @@ class Groups(Resources):
         ...
 
     @overload
-    def create(self, *args, **kwargs) -> Group:
+    def create(self, **kwargs) -> Group:
         """Create a group.
 
         Returns
@@ -69,7 +69,7 @@ class Groups(Resources):
         """
         ...
 
-    def create(self, *args, **kwargs) -> Group:
+    def create(self, **kwargs) -> Group:
         """Create a group.
 
         Parameters
@@ -82,22 +82,22 @@ class Groups(Resources):
         Group
         """
         ...
-        body = dict(*args, **kwargs)
         path = "v1/groups"
         url = self.url + path
-        response = self.session.post(url, json=body)
+        response = self.session.post(url, json=kwargs)
         return Group(self.params, **response.json())
 
     @overload
     def find(
         self,
+        *,
         prefix: str = ...,
     ) -> List[Group]: ...
 
     @overload
-    def find(self, *args, **kwargs) -> List[Group]: ...
+    def find(self, **kwargs) -> List[Group]: ...
 
-    def find(self, *args, **kwargs):
+    def find(self, **kwargs):
         """Find groups.
 
         Parameters
@@ -109,10 +109,9 @@ class Groups(Resources):
         -------
         List[Group]
         """
-        params = dict(*args, **kwargs)
         path = "v1/groups"
         url = self.url + path
-        paginator = Paginator(self.session, url, params=params)
+        paginator = Paginator(self.session, url, params=kwargs)
         results = paginator.fetch_results()
         return [
             Group(
@@ -125,13 +124,14 @@ class Groups(Resources):
     @overload
     def find_one(
         self,
+        *,
         prefix: str = ...,
     ) -> Group | None: ...
 
     @overload
-    def find_one(self, *args, **kwargs) -> Group | None: ...
+    def find_one(self, **kwargs) -> Group | None: ...
 
-    def find_one(self, *args, **kwargs) -> Group | None:
+    def find_one(self, **kwargs) -> Group | None:
         """Find one group.
 
         Parameters
@@ -143,10 +143,10 @@ class Groups(Resources):
         -------
         Group | None
         """
-        params = dict(*args, **kwargs)
+        dict
         path = "v1/groups"
         url = self.url + path
-        paginator = Paginator(self.session, url, params=params)
+        paginator = Paginator(self.session, url, params=kwargs)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         groups = (

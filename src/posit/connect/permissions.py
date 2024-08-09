@@ -37,7 +37,7 @@ class Permission(Resource):
         self.session.delete(url)
 
     @overload
-    def update(self, role: str) -> None:
+    def update(self, *args, role: str, **kwargs) -> None:
         """Update the permission.
 
         Parameters
@@ -59,7 +59,8 @@ class Permission(Resource):
             "principal_type": self.principal_type,
             "role": self.role,
         }
-        body.update(*args, **kwargs)
+        body.update(dict(*args))
+        body.update(**kwargs)
         path = f"v1/content/{self.content_guid}/permissions/{self.id}"
         url = self.url + path
         response = self.session.put(
@@ -85,7 +86,7 @@ class Permissions(Resources):
 
     @overload
     def create(
-        self, principal_guid: str, principal_type: str, role: str
+        self, *, principal_guid: str, principal_type: str, role: str
     ) -> Permission:
         """Create a permission.
 
@@ -102,7 +103,7 @@ class Permissions(Resources):
         ...
 
     @overload
-    def create(self, *args, **kwargs) -> Permission:
+    def create(self, **kwargs) -> Permission:
         """Create a permission.
 
         Returns
@@ -111,7 +112,7 @@ class Permissions(Resources):
         """
         ...
 
-    def create(self, *args, **kwargs) -> Permission:
+    def create(self, **kwargs) -> Permission:
         """Create a permission.
 
         Returns
@@ -119,34 +120,32 @@ class Permissions(Resources):
         Permission
         """
         ...
-        body = dict(*args, **kwargs)
         path = f"v1/content/{self.content_guid}/permissions"
         url = self.url + path
-        response = self.session.post(url, json=body)
+        response = self.session.post(url, json=kwargs)
         return Permission(self.params, **response.json())
 
-    def find(self, *args, **kwargs) -> List[Permission]:
+    def find(self, **kwargs) -> List[Permission]:
         """Find permissions.
 
         Returns
         -------
         List[Permission]
         """
-        body = dict(*args, **kwargs)
         path = f"v1/content/{self.content_guid}/permissions"
         url = self.url + path
-        response = self.session.get(url, json=body)
+        response = self.session.get(url, json=kwargs)
         results = response.json()
         return [Permission(self.params, **result) for result in results]
 
-    def find_one(self, *args, **kwargs) -> Permission | None:
+    def find_one(self, **kwargs) -> Permission | None:
         """Find a permission.
 
         Returns
         -------
         Permission | None
         """
-        permissions = self.find(*args, **kwargs)
+        permissions = self.find(**kwargs)
         return next(iter(permissions), None)
 
     def get(self, uid: str) -> Permission:
