@@ -143,7 +143,6 @@ class Groups(Resources):
         -------
         Group | None
         """
-        dict
         path = "v1/groups"
         url = self.url + path
         paginator = Paginator(self.session, url, params=kwargs)

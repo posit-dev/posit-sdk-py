@@ -104,11 +104,6 @@ class Client:
         """
         ...
 
-    @overload
-    def __init__(self, *args, **kwargs) -> None:
-        """Initialize a Client instance."""
-        ...
-
     def __init__(self, *args, **kwargs) -> None:
         """Initialize a Client instance.
 
