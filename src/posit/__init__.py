@@ -2,4 +2,6 @@
 
 from . import connect  # noqa
 
-__all__ = "connect"
+__all__ = [
+    "connect"
+]

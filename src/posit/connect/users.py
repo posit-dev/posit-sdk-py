@@ -185,6 +185,7 @@ class Users(Resources):
     @overload
     def find(
         self,
+        *,
         prefix: str = ...,
         user_role: str = ...,
         account_status: str = ...,
@@ -193,7 +194,7 @@ class Users(Resources):
     @overload
     def find(self, **kwargs) -> List[User]: ...
 
-    def find(self, **kwargs):
+    def find(self, **kwargs) -> List[User]:
         url = self.params.url + "v1/users"
         paginator = Paginator(self.session, url, params=kwargs)
         results = paginator.fetch_results()

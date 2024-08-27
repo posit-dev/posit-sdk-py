@@ -35,6 +35,9 @@ class Resource(ABC, dict):
     def __setattr__(self, name: str, value: Any) -> None:
         raise AttributeError("cannot set attributes: use update() instead")
 
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+
 
 class Resources(ABC):
     def __init__(self, params: ResourceParameters) -> None:
