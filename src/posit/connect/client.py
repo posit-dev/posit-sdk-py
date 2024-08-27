@@ -6,8 +6,6 @@ from typing import overload
 
 from requests import Response, Session
 
-from posit.connect.resources import ResourceParameters
-
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -15,6 +13,8 @@ from .content import Content
 from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuthIntegration
+from .resources import ResourceParameters
+from .tags import Tags
 from .tasks import Tasks
 from .users import User, Users
 
@@ -211,6 +211,16 @@ class Client:
             The groups resource interface.
         """
         return Groups(self.resource_params)
+
+    @property
+    def tags(self) -> Tags:
+        """The tags resource interface.
+
+        Returns
+        -------
+        Tags
+        """
+        return Tags(self.resource_params)
 
     @property
     def tasks(self) -> Tasks:
