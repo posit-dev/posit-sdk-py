@@ -1,4 +1,5 @@
 import pytest
+
 from posit.connect.errors import ClientError
 
 
