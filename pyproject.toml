@@ -10,7 +10,7 @@ requires-python = ">=3.8"
 license = { file = "LICENSE" }
 keywords = ["posit", "sdk"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -25,9 +25,6 @@ dependencies = ["requests>=2.31.0,<3"]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
-[tool.mypy]
-exclude = "integration/resources/*"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib"]
@@ -37,7 +34,6 @@ version_file = "src/posit/_version.py"
 
 [tool.ruff]
 line-length = 79
-exclude = ["integration/resources/*"]
 
 [tool.ruff.format]
 docstring-code-format = true
