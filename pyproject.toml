@@ -10,7 +10,7 @@ requires-python = ">=3.8"
 license = { file = "LICENSE" }
 keywords = ["posit", "sdk"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
