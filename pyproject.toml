@@ -25,9 +25,6 @@ dependencies = ["requests>=2.31.0,<3"]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
-[tool.mypy]
-exclude = "integration/resources/*"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib"]
@@ -37,7 +34,6 @@ version_file = "src/posit/_version.py"
 
 [tool.ruff]
 line-length = 79
-exclude = ["integration/resources/*"]
 
 [tool.ruff.format]
 docstring-code-format = true

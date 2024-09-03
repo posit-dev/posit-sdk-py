@@ -49,11 +49,11 @@ it:
 	$(MAKE) -C ./integration
 
 lint:
-	$(PYTHON) -m mypy --install-types --non-interactive .
-	$(PYTHON) -m ruff check
+	$(PYTHON) -m mypy --install-types --non-interactive **/*.py
+	$(PYTHON) -m ruff check **/*.py
 
 test:
-	$(PYTHON) -m coverage run --source=src --omit=_version.py -m pytest tests
+	$(PYTHON) -m coverage run --source=src -m pytest tests
 
 uninstall:
 	$(PIP) uninstall $(NAME)
