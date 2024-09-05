@@ -49,7 +49,7 @@ class TestPositCredentialsHelpers:
 
         client = Client(api_key="12345", url="https://connect.example/")
         cp = PositCredentialsProvider(
-            posit_oauth=client.oauth, user_session_token="cit"
+            client=client, user_session_token="cit"
         )
         assert cp() == {"Authorization": f"Bearer dynamic-viewer-access-token"}
 

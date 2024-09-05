@@ -3,7 +3,6 @@ import os
 from typing import Callable, Dict, Optional
 
 from ..client import Client
-from ..oauth import OAuthIntegration
 
 """
 NOTE: These APIs are provided as a convenience and are subject to breaking changes:
@@ -41,13 +40,13 @@ def _is_local() -> bool:
 
 
 class PositCredentialsProvider:
-    def __init__(self, posit_oauth: OAuthIntegration, user_session_token: str):
-        self.posit_oauth = posit_oauth
-        self.user_session_token = user_session_token
+    def __init__(self, client: Client, user_session_token: str):
+        self._client = client
+        self._user_session_token = user_session_token
 
     def __call__(self) -> Dict[str, str]:
-        access_token = self.posit_oauth.get_credentials(
-            self.user_session_token
+        access_token = self._client.oauth.get_credentials(
+            self._user_session_token
         )["access_token"]
         return {"Authorization": f"Bearer {access_token}"}
 
@@ -56,12 +55,12 @@ class PositCredentialsStrategy(CredentialsStrategy):
     def __init__(
         self,
         local_strategy: CredentialsStrategy,
-        user_session_token: Optional[str] = None,
         client: Optional[Client] = None,
+        user_session_token: Optional[str] = None,
     ):
-        self.user_session_token = user_session_token
-        self.local_strategy = local_strategy
-        self.client = client
+        self._local_strategy = local_strategy
+        self._client = client
+        self._user_session_token = user_session_token
 
     def sql_credentials_provider(self, *args, **kwargs):
         """The sql connector attempts to call the credentials provider w/o any args.
@@ -90,25 +89,25 @@ class PositCredentialsStrategy(CredentialsStrategy):
         https://github.com/databricks/databricks-sql-python/blob/v3.3.0/src/databricks/sql/client.py#L214-L219
         """
         if _is_local():
-            return self.local_strategy.auth_type()
+            return self._local_strategy.auth_type()
         else:
             return "posit-oauth-integration"
 
     def __call__(self, *args, **kwargs) -> CredentialsProvider:
         # If the content is not running on Connect then fall back to local_strategy
         if _is_local():
-            return self.local_strategy(*args, **kwargs)
+            return self._local_strategy(*args, **kwargs)
 
         # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.
         # user_session_token is required to impersonate the viewer.
-        if self.user_session_token is None:
+        if self._user_session_token is None:
             raise ValueError(
                 "The user-session-token is required for viewer authentication."
             )
 
-        if self.client is None:
-            self.client = Client()
+        if self._client is None:
+            self._client = Client()
 
         return PositCredentialsProvider(
-            self.client.oauth, self.user_session_token
+            self._client, self._user_session_token
         )

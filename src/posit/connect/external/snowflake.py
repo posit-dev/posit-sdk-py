@@ -1,0 +1,44 @@
+from typing import Optional
+
+from . import _is_local
+from ..client import Client
+
+"""
+NOTE: The APIs in this module are provided as a convenience and are subject to breaking changes.
+"""
+
+class PositAuthenticator:
+    def __init__(
+        self,
+        local_authenticator: Optional[str] = None,
+        client: Optional[Client] = None,
+        user_session_token: Optional[str] = None,
+    ):
+        self._local_authenticator = local_authenticator
+        self._client = client
+        self._user_session_token = user_session_token
+
+    def authenticator(self) -> Optional[str]:
+        if _is_local():
+            return self._local_authenticator
+        return "oauth"
+
+    def token(self) -> Optional[str]:
+        if _is_local():
+            return None
+
+        # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.
+        # user_session_token is required to impersonate the viewer.
+        if self._user_session_token is None:
+            raise ValueError(
+                "The user-session-token is required for viewer authentication."
+            )
+
+        if self._client is None:
+            self._client = Client()
+
+        access_token = self._client.oauth.get_credentials(
+            self._user_session_token
+        )["access_token"]
+        return access_token
+
