@@ -10,31 +10,11 @@ from .resources import Resource, ResourceParameters, Resources
 
 
 class Permission(Resource):
-    @property
-    def id(self) -> str:
-        return self.get("id")  # type: ignore
-
-    @property
-    def content_guid(self) -> str:
-        return self.get("content_guid")  # type: ignore
-
-    @property
-    def principal_guid(self) -> str:
-        return self.get("principal_guid")  # type: ignore
-
-    @property
-    def principal_type(self) -> str:
-        return self.get("principal_type")  # type: ignore
-
-    @property
-    def role(self) -> str:
-        return self.get("role")  # type: ignore
-
     def delete(self) -> None:
         """Delete the permission."""
         path = f"v1/content/{self.content_guid}/permissions/{self.id}"
-        url = self.url + path
-        self.session.delete(url)
+        url = self.params.url + path
+        self.params.session.delete(url)
 
     @overload
     def update(self, *args, role: str, **kwargs) -> None:
@@ -62,8 +42,8 @@ class Permission(Resource):
         body.update(dict(*args))
         body.update(**kwargs)
         path = f"v1/content/{self.content_guid}/permissions/{self.id}"
-        url = self.url + path
-        response = self.session.put(
+        url = self.params.url + path
+        response = self.params.session.put(
             url,
             json=body,
         )
@@ -121,9 +101,9 @@ class Permissions(Resources):
         """
         ...
         path = f"v1/content/{self.content_guid}/permissions"
-        url = self.url + path
-        response = self.session.post(url, json=kwargs)
-        return Permission(self.params, **response.json())
+        url = self.params.url + path
+        response = self.params.session.post(url, json=kwargs)
+        return Permission(params=self.params, **response.json())
 
     def find(self, **kwargs) -> List[Permission]:
         """Find permissions.
@@ -133,8 +113,8 @@ class Permissions(Resources):
         List[Permission]
         """
         path = f"v1/content/{self.content_guid}/permissions"
-        url = self.url + path
-        response = self.session.get(url, json=kwargs)
+        url = self.params.url + path
+        response = self.params.session.get(url, json=kwargs)
         results = response.json()
         return [Permission(self.params, **result) for result in results]
 
@@ -161,6 +141,6 @@ class Permissions(Resources):
         Permission
         """
         path = f"v1/content/{self.content_guid}/permissions/{uid}"
-        url = self.url + path
-        response = self.session.get(url)
+        url = self.params.url + path
+        response = self.params.session.get(url)
         return Permission(self.params, **response.json())
