@@ -4,6 +4,8 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+env:
+  UV_SYSTEM_PYTHON: true
 jobs:
   preview:
     runs-on: ubuntu-latest
