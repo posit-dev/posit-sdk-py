@@ -6,6 +6,7 @@ from typing import overload
 
 from requests import Response, Session
 
+from posit.connect.oauth.oauth import OAuth
 from posit.connect.resources import ResourceParameters
 
 from . import hooks, me
@@ -14,7 +15,6 @@ from .config import Config
 from .content import Content
 from .groups import Groups
 from .metrics import Metrics
-from .oauth import OAuthIntegration
 from .tasks import Tasks
 from .users import User, Users
 
@@ -185,18 +185,6 @@ class Client:
         return me.get(self.resource_params)
 
     @property
-    def oauth(self) -> OAuthIntegration:
-        """
-        An OAuthIntegration.
-
-        Returns
-        -------
-        OAuthIntegration
-            The OAuth integration instance.
-        """
-        return OAuthIntegration(self.cfg, self.session)
-
-    @property
     def groups(self) -> Groups:
         """The groups resource interface.
 
@@ -270,6 +258,18 @@ class Client:
         24
         """
         return Metrics(self.resource_params)
+
+    @property
+    def oauth(self) -> OAuth:
+        """
+        The OAuth API interface.
+
+        Returns
+        -------
+        OAuth
+            The oauth API instance.
+        """
+        return OAuth(self.resource_params, self.cfg.api_key)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""

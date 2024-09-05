@@ -3,7 +3,7 @@ import os
 from typing import Callable, Dict, Optional
 
 from ..client import Client
-from ..oauth import OAuthIntegration
+from ..oauth.oauth import OAuth  
 
 """
 NOTE: These APIs are provided as a convenience and are subject to breaking changes:
@@ -41,7 +41,7 @@ def _is_local() -> bool:
 
 
 class PositCredentialsProvider:
-    def __init__(self, posit_oauth: OAuthIntegration, user_session_token: str):
+    def __init__(self, posit_oauth: OAuth, user_session_token: str):
         self.posit_oauth = posit_oauth
         self.user_session_token = user_session_token
 
