@@ -18,7 +18,7 @@ ENV ?= dev
 
 IMAGE_TAG ?= $(NAME):latest
 
-NAME := posit-sdk-py
+NAME := posit-sdk
 
 ifeq ($(ENV), prod)
     NETLIFY_ARGS := --prod
@@ -28,17 +28,8 @@ endif
 
 NETLIFY_SITE_ID ?= 5cea1f56-7935-4387-975a-18a7905d15ee
 
-ifneq ($(shell command -v uv 2>/dev/null),)
-PYTHON := python
-else
-PYTHON := python3
-endif
-
-ifneq ($(shell command -v uv 2>/dev/null),)
-PIP := uv pip
-else
-PIP := pip3
-endif
+PYTHON := $(shell command -v python3 2>/dev/null || command -v python)
+PIP = uv pip
 
 SHELL := /bin/bash
 
