@@ -1,9 +1,11 @@
+"""OAuth session resources."""
+
 from typing import List, overload
 
-from .. import resources
+from ..resources import Resource, Resources
 
 
-class Session(resources.Resource):
+class Session(Resource):
     """OAuth session resource.
 
     Attributes
@@ -62,7 +64,7 @@ class Session(resources.Resource):
         self.session.delete(url)
 
 
-class Sessions(resources.Resources):
+class Sessions(Resources):
     @overload
     def find(
         self,

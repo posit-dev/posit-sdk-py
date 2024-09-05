@@ -3,7 +3,7 @@ import os
 from typing import Callable, Dict, Optional
 
 from ..client import Client
-from ..oauth.oauth import OAuth
+from ..oauth import OAuth
 
 """
 NOTE: These APIs are provided as a convenience and are subject to breaking changes:

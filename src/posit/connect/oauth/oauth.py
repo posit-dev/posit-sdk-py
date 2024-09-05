@@ -2,15 +2,13 @@ from __future__ import annotations
 
 from typing import Optional, TypedDict
 
-from .. import resources
+from ..resources import ResourceParameters, Resources
 from .integrations import Integrations
 from .sessions import Sessions
 
 
-class OAuth(resources.Resources):
-    def __init__(
-        self, params: resources.ResourceParameters, api_key: str
-    ) -> None:
+class OAuth(Resources):
+    def __init__(self, params: ResourceParameters, api_key: str) -> None:
         super().__init__(params)
         self.api_key = api_key
 

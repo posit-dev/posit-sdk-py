@@ -6,7 +6,6 @@ from typing import overload
 
 from requests import Response, Session
 
-from posit.connect.oauth.oauth import OAuth
 from posit.connect.resources import ResourceParameters
 
 from . import hooks, me
@@ -15,6 +14,7 @@ from .config import Config
 from .content import Content
 from .groups import Groups
 from .metrics import Metrics
+from .oauth import OAuth
 from .tasks import Tasks
 from .users import User, Users
 
@@ -41,6 +41,8 @@ class Client:
         Connect user resource.
     metrics: Metrics
         Metrics resource.
+    oauth: OAuth
+        OAuth resource.
     tasks: Tasks
         Tasks resource.
     users: Users
