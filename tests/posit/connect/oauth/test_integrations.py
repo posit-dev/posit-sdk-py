@@ -1,14 +1,13 @@
-
-from re import template
 from unittest import mock
-
-from posit.connect.client import Client
-from posit.connect.oauth.integrations import Integration
 
 import responses
 from responses import matchers
 
+from posit.connect.client import Client
+from posit.connect.oauth.integrations import Integration
+
 from ..api import load_mock
+
 
 class TestIntegrationAttributes:
     @classmethod
@@ -34,17 +33,27 @@ class TestIntegrationAttributes:
 
     def test_config(self):
         assert self.item.config["auth_mode"] == "Confidential"
-        assert self.item.config["authorization_uri"] == "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/auth"
+        assert (
+            self.item.config["authorization_uri"]
+            == "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/auth"
+        )
         assert self.item.config["client_id"] == "rsconnect-oidc"
         assert self.item.config["scopes"] == "email"
-        assert self.item.config["token_endpoint_auth_method"] == "client_secret_basic"
-        assert self.item.config["token_uri"] == "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/token" 
+        assert (
+            self.item.config["token_endpoint_auth_method"]
+            == "client_secret_basic"
+        )
+        assert (
+            self.item.config["token_uri"]
+            == "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/token"
+        )
 
     def test_created_time(self):
         assert self.item.created_time == "2024-07-16T19:28:05Z"
 
     def test_updated_time(self):
         assert self.item.updated_time == "2024-07-17T19:28:05Z"
+
 
 class TestIntegrationDelete:
     @responses.activate
@@ -54,7 +63,7 @@ class TestIntegrationDelete:
         # behavior
         responses.get(
             f"https://connect.example/__api__/v1/oauth/integrations/{guid}",
-            json=load_mock(f"v1/oauth/integrations/{guid}.json")
+            json=load_mock(f"v1/oauth/integrations/{guid}.json"),
         )
 
         mock_delete = responses.delete(
@@ -71,6 +80,7 @@ class TestIntegrationDelete:
         # assert
         assert mock_delete.call_count == 1
 
+
 class TestIntegrationUpdate:
     @responses.activate
     def test(self):
@@ -78,7 +88,7 @@ class TestIntegrationUpdate:
         guid = "22644575-a27b-4118-ad06-e24459b05126"
         responses.get(
             f"https://connect.example/__api__/v1/oauth/integrations/{guid}",
-            json=load_mock(f"v1/oauth/integrations/{guid}.json")
+            json=load_mock(f"v1/oauth/integrations/{guid}.json"),
         )
 
         c = Client("https://connect.example", "12345")
@@ -86,11 +96,11 @@ class TestIntegrationUpdate:
         assert integration.guid == guid
 
         new_name = "New Name"
-       
+
         fake_integration = load_mock(f"v1/oauth/integrations/{guid}.json")
         fake_integration.update(name=new_name)
         assert fake_integration["name"] == new_name
-        
+
         mock_update = responses.patch(
             f"https://connect.example/__api__/v1/oauth/integrations/{guid}",
             json=fake_integration,
@@ -120,13 +130,13 @@ class TestIntegrationsCreate:
                         "template": fake_integration["template"],
                         "config": fake_integration["config"],
                     }
-                )      
+                )
             ],
         )
 
         # setup
         c = Client("https://connect.example", "12345")
-        
+
         # invoke
         integration = c.oauth.integrations.create(
             name=fake_integration["name"],
@@ -149,11 +159,11 @@ class TestIntegrationsFind:
         # behavior
         mock_get = responses.get(
             "https://connect.example/__api__/v1/oauth/integrations",
-            json=load_mock("v1/oauth/integrations.json")
+            json=load_mock("v1/oauth/integrations.json"),
         )
 
         # setup
-        client =  Client("https://connect.example", "12345")
+        client = Client("https://connect.example", "12345")
 
         # invoke
         integrations = client.oauth.integrations.find()
@@ -164,6 +174,7 @@ class TestIntegrationsFind:
         assert integrations[0].id == "3"
         assert integrations[1].id == "4"
 
+
 class TestIntegrationsGet:
     @responses.activate
     def test(self):
@@ -172,7 +183,7 @@ class TestIntegrationsGet:
         # behavior
         mock_get = responses.get(
             f"https://connect.example/__api__/v1/oauth/integrations/{guid}",
-            json=load_mock(f"v1/oauth/integrations/{guid}.json")
+            json=load_mock(f"v1/oauth/integrations/{guid}.json"),
         )
 
         # setup

@@ -1,9 +1,11 @@
-from .. import resources
 from typing import List, overload
+
+from .. import resources
+
 
 class Session(resources.Resource):
     """OAuth session resource.
-    
+
     Attributes
     ----------
     id : str
@@ -21,72 +23,69 @@ class Session(resources.Resource):
     updated_time : str
         The timestamp (RFC3339) indicating when this OAuth session was last updated.
     """
-    
+
     # Properties
-    
+
     @property
     def id(self) -> str:
-        return self.get("id") # type: ignore
-    
+        return self.get("id")  # type: ignore
+
     @property
     def guid(self) -> str:
-        return self.get("guid") # type: ignore
-    
+        return self.get("guid")  # type: ignore
+
     @property
     def user_guid(self) -> str:
-        return self.get("user_guid") # type: ignore
-    
+        return self.get("user_guid")  # type: ignore
+
     @property
     def oauth_integration_guid(self) -> str:
-        return self.get("oauth_integration_guid") # type: ignore
-    
+        return self.get("oauth_integration_guid")  # type: ignore
+
     @property
     def has_refresh_token(self) -> bool:
-        return self.get("has_refresh_token") # type: ignore
-    
+        return self.get("has_refresh_token")  # type: ignore
+
     @property
     def created_time(self) -> str:
-        return self.get("created_time") # type: ignore
-    
+        return self.get("created_time")  # type: ignore
+
     @property
     def updated_time(self) -> str:
-        return self.get("updated_time") # type: ignore
+        return self.get("updated_time")  # type: ignore
 
     # CRUD Methods
-    
+
     def delete(self) -> None:
         path = f"v1/oauth/sessions/{self.guid}"
         url = self.url + path
         self.session.delete(url)
 
+
 class Sessions(resources.Resources):
-    
     @overload
     def find(
         self,
         *,
         all: bool = False,
-    ) -> List[Session]:
-        ...
-    
-    @overload 
-    def find(self, **kwargs) -> List[Session]: ...
+    ) -> List[Session]: ...
 
+    @overload
+    def find(self, **kwargs) -> List[Session]: ...
 
     def find(self, **kwargs) -> List[Session]:
         url = self.params.url + "v1/oauth/sessions"
         response = self.session.get(url, params=kwargs)
         results = response.json()
         return [Session(self.params, **result) for result in results]
-    
-    
-    def get(self, guid: str) -> Session: 
+
+    def get(self, guid: str) -> Session:
         """Get an OAuth session.
-        
+
         Parameters
         ----------
         guid: str
-        
+
         Returns
         -------
         Session
@@ -95,5 +94,3 @@ class Sessions(resources.Resources):
         url = self.url + path
         response = self.session.get(url)
         return Session(self.params, **response.json())
-        
-        

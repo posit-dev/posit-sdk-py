@@ -1,9 +1,11 @@
-from ..resources import Resource, Resources 
-from typing import Optional, overload, List
+from typing import List, Optional, overload
+
+from ..resources import Resource, Resources
+
 
 class Integration(Resource):
     """OAuth integration resource.
-    
+
     Attributes
     ----------
     id : str
@@ -24,26 +26,25 @@ class Integration(Resource):
         The timestamp (RFC3339) indicating when this OAuth integration was last updated.
     """
 
-   
     # CRUD Methods
-    
+
     def delete(self) -> None:
         """Delete the OAuth integration."""
         path = f"v1/oauth/integrations/{self.guid}"
         url = self.url + path
         self.session.delete(url)
-        
-    
+
     @overload
-    def update(self,
-               *args,
-               name: str = ...,
-               description: str = ...,
-               config: dict = ...,
-               **kwargs,
+    def update(
+        self,
+        *args,
+        name: str = ...,
+        description: str = ...,
+        config: dict = ...,
+        **kwargs,
     ) -> None:
         """Update the OAuth integration.
-        
+
         Parameters
         ----------
         name: str, optional
@@ -52,12 +53,10 @@ class Integration(Resource):
         """
         ...
 
-
     @overload
     def update(self, *args, **kwargs) -> None:
         """Update the OAuth integration."""
         ...
-
 
     def update(self, *args, **kwargs) -> None:
         """Update the OAuth integration."""
@@ -66,9 +65,9 @@ class Integration(Resource):
         response = self.session.patch(url, json=body)
         super().update(**response.json())
         ...
-        
+
     # Properties
-    
+
     @property
     def id(self) -> str:
         return self.get("id")  # type: ignore
@@ -80,38 +79,40 @@ class Integration(Resource):
     @property
     def name(self) -> str:
         return self.get("name")  # type: ignore
-    
+
     @property
     def description(self) -> Optional[str]:
-        return self.get("description") # type: ignore
-    
+        return self.get("description")  # type: ignore
+
     @property
     def template(self) -> str:
-        return self.get("template") # type: ignore
-    
+        return self.get("template")  # type: ignore
+
     @property
     def config(self) -> dict:
-        return self.get("config") # type: ignore
-    
+        return self.get("config")  # type: ignore
+
     @property
     def created_time(self) -> str:
-        return self.get("created_time") # type: ignore
-    
+        return self.get("created_time")  # type: ignore
+
     @property
     def updated_time(self) -> str:
-        return self.get("updated_time") # type: ignore
-    
+        return self.get("updated_time")  # type: ignore
+
+
 class Integrations(Resources):
-    """Integrations resource.
-    """
+    """Integrations resource."""
 
     @overload
-    def create(self,
-               *,
-               name: str,
-               description: Optional[str],
-               template: str,
-               config: dict) -> Integration:
+    def create(
+        self,
+        *,
+        name: str,
+        description: Optional[str],
+        template: str,
+        config: dict,
+    ) -> Integration:
         """Create an OAuth integration.
 
         Parameters
@@ -120,7 +121,7 @@ class Integrations(Resources):
         description : Optional[str]
         template : str
         config : dict
-        
+
         Returns
         -------
         Integration
@@ -157,16 +158,16 @@ class Integrations(Resources):
         response = self.session.post(url, json=kwargs)
         return Integration(self.params, **response.json())
 
-       
     def find(self) -> List[Integration]:
         """Find OAuth integrations.
+
         Returns
         -------
         List[Integration]
         """
         path = "v1/oauth/integrations"
         url = self.url + path
-        
+
         response = self.session.get(url)
         return [
             Integration(
@@ -176,14 +177,13 @@ class Integrations(Resources):
             for result in response.json()
         ]
 
-
     def get(self, guid: str) -> Integration:
         """Get an OAuth integration.
-        
+
         Parameters
         ----------
         guid: str
-        
+
         Returns
         -------
         Integration
