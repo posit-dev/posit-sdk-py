@@ -1,5 +1,7 @@
 FROM python:3
 
+ENV UV_SYSTEM_PYTHON=true
+
 RUN apt-get update && apt-get install -y make
 
 WORKDIR /sdk
