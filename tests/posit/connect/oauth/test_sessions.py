@@ -59,13 +59,14 @@ class TestSessionDelete:
         # invoke
         session.delete()
 
+        # assert
         assert mock_delete.call_count == 1
         
 
 class TestSessionsFind: 
     @responses.activate
     def test(self):
-        #behavior
+        # behavior
         mock_get = responses.get(
             "https://connect.example/__api__/v1/oauth/sessions",
             json=load_mock("v1/oauth/sessions.json"),
