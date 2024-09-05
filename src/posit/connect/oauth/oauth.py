@@ -25,18 +25,11 @@ class OAuth(Resources):
     ) -> Credentials:
         url = self.params.url + "v1/oauth/integrations/credentials"
 
-        # craft a basic credential exchange request where the self.config.api_key owner
-        # is requesting their own credentials
+        # craft a credential exchange request
         data = dict()
         data["grant_type"] = "urn:ietf:params:oauth:grant-type:token-exchange"
-        data["subject_token_type"] = "urn:posit:connect:api-key"
-        data["subject_token"] = self.api_key
-
-        # if this content is running on Connect, then it is allowed to request
-        # the content viewer's credentials
-        if user_session_token:
-            data["subject_token_type"] = "urn:posit:connect:user-session-token"
-            data["subject_token"] = user_session_token
+        data["subject_token_type"] = "urn:posit:connect:user-session-token"
+        data["subject_token"] = user_session_token
 
         response = self.session.post(url, data=data)
         return Credentials(**response.json())
