@@ -11,34 +11,11 @@ from .resources import Resource, Resources
 
 
 class Group(Resource):
-    """Group resource.
-
-    Attributes
-    ----------
-    guid : str
-    name: str
-    owner_guid: str
-    """
-
-    @property
-    def guid(self) -> str:
-        return self.get("guid")  # type: ignore
-
-    @property
-    def name(self) -> str:
-        return self.get("name")  # type: ignore
-
-    @property
-    def owner_guid(self) -> str:
-        return self.get("owner_guid")  # type: ignore
-
-    # CRUD Methods
-
     def delete(self) -> None:
         """Delete the group."""
         path = f"v1/groups/{self.guid}"
-        url = self.url + path
-        self.session.delete(url)
+        url = self.params.url + path
+        self.params.session.delete(url)
 
 
 class Groups(Resources):
@@ -83,8 +60,8 @@ class Groups(Resources):
         """
         ...
         path = "v1/groups"
-        url = self.url + path
-        response = self.session.post(url, json=kwargs)
+        url = self.params.url + path
+        response = self.params.session.post(url, json=kwargs)
         return Group(self.params, **response.json())
 
     @overload
@@ -110,8 +87,8 @@ class Groups(Resources):
         List[Group]
         """
         path = "v1/groups"
-        url = self.url + path
-        paginator = Paginator(self.session, url, params=kwargs)
+        url = self.params.url + path
+        paginator = Paginator(self.params.session, url, params=kwargs)
         results = paginator.fetch_results()
         return [
             Group(
@@ -144,8 +121,8 @@ class Groups(Resources):
         Group | None
         """
         path = "v1/groups"
-        url = self.url + path
-        paginator = Paginator(self.session, url, params=kwargs)
+        url = self.params.url + path
+        paginator = Paginator(self.params.session, url, params=kwargs)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         groups = (
@@ -168,8 +145,8 @@ class Groups(Resources):
         -------
         Group
         """
-        url = self.url + f"v1/groups/{guid}"
-        response = self.session.get(url)
+        url = self.params.url + f"v1/groups/{guid}"
+        response = self.params.session.get(url)
         return Group(
             self.params,
             **response.json(),
@@ -183,8 +160,8 @@ class Groups(Resources):
         int
         """
         path = "v1/groups"
-        url = self.url + path
-        response: requests.Response = self.session.get(
+        url = self.params.url + path
+        response: requests.Response = self.params.session.get(
             url, params={"page_size": 1}
         )
         result: dict = response.json()

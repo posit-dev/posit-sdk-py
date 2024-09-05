@@ -180,7 +180,7 @@ class TestContentItemAttributes:
         assert isinstance(self.item.permissions, Permissions)
 
     def test_tags(self):
-        assert self.item.tags == []
+        assert self.item.tags is None
 
 
 class TestContentItemGetContentOwner:
