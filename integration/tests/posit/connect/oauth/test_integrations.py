@@ -1,6 +1,15 @@
+import pytest
+from packaging import version
+
 from posit import connect
 
+from .. import CONNECT_VERSION
 
+
+@pytest.mark.skipif(
+    CONNECT_VERSION <= version.parse("2024.06.0"),
+    reason="OAuth Integrations not supported.",
+)
 class TestIntegrations:
     @classmethod
     def setup_class(cls):
