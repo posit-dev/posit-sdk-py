@@ -49,7 +49,7 @@ it:
 	$(MAKE) -C ./integration
 
 lint:
-	$(PYTHON) -m mypy --install-types --non-interactive **/*.py
+	$(PYTHON) -m mypy --install-types --non-interactive .
 	$(PYTHON) -m ruff check **/*.py
 
 test:
