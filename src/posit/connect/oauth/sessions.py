@@ -1,6 +1,6 @@
 """OAuth session resources."""
 
-from typing import List, overload
+from typing import List, Optional, overload
 
 from ..resources import Resource, Resources
 
@@ -69,11 +69,11 @@ class Sessions(Resources):
     def find(
         self,
         *,
-        all: bool = False,
+        all: Optional[bool] = ...,
     ) -> List[Session]: ...
 
-    @overload
-    def find(self, **kwargs) -> List[Session]: ...
+    # @overload
+    # def find(self, **kwargs) -> List[Session]: ...
 
     def find(self, **kwargs) -> List[Session]:
         url = self.params.url + "v1/oauth/sessions"

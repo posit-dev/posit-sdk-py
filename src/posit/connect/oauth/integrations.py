@@ -1,3 +1,5 @@
+"""OAuth integration resources."""
+
 from typing import List, Optional, overload
 
 from ..resources import Resource, Resources
@@ -64,7 +66,6 @@ class Integration(Resource):
         url = self.url + f"v1/oauth/integrations/{self.guid}"
         response = self.session.patch(url, json=body)
         super().update(**response.json())
-        ...
 
     # Properties
 
