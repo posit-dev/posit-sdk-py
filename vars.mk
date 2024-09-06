@@ -40,6 +40,8 @@ else
 PIP := pip3
 endif
 
+SHELL := /bin/bash
+
 QUARTO ?= quarto
 
 QUARTODOC ?= quartodoc
