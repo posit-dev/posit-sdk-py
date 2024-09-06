@@ -29,7 +29,8 @@ class OAuth(Resources):
         data = dict()
         data["grant_type"] = "urn:ietf:params:oauth:grant-type:token-exchange"
         data["subject_token_type"] = "urn:posit:connect:user-session-token"
-        data["subject_token"] = user_session_token
+        if user_session_token:
+            data["subject_token"] = user_session_token
 
         response = self.session.post(url, data=data)
         return Credentials(**response.json())

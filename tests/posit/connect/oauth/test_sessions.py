@@ -6,7 +6,7 @@ from responses import matchers
 from posit.connect.client import Client
 from posit.connect.oauth.sessions import Session
 
-from ..api import load_mock
+from ..api import load_mock  # type: ignore
 
 
 class TestOAuthSessionAttributes:

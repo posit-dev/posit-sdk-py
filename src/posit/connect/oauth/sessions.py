@@ -72,8 +72,8 @@ class Sessions(Resources):
         all: Optional[bool] = ...,
     ) -> List[Session]: ...
 
-    # @overload
-    # def find(self, **kwargs) -> List[Session]: ...
+    @overload
+    def find(self, **kwargs) -> List[Session]: ...
 
     def find(self, **kwargs) -> List[Session]:
         url = self.params.url + "v1/oauth/sessions"
