@@ -19,7 +19,7 @@ class Bundle(resources.Resource):
 
     def delete(self) -> None:
         """Delete the bundle."""
-        path = f"v1/content/{self.content_guid}/bundles/{self.id}"
+        path = f"v1/content/{self['content_guid']}/bundles/{self['id']}"
         url = self.params.url + path
         self.params.session.delete(url)
 
@@ -39,9 +39,11 @@ class Bundle(resources.Resource):
         >>> task.wait_for()
         None
         """
-        path = f"v1/content/{self.content_guid}/deploy"
+        path = f"v1/content/{self['content_guid']}/deploy"
         url = self.params.url + path
-        response = self.params.session.post(url, json={"bundle_id": self.id})
+        response = self.params.session.post(
+            url, json={"bundle_id": self["id"]}
+        )
         result = response.json()
         ts = tasks.Tasks(self.params)
         return ts.get(result["task_id"])
@@ -77,7 +79,9 @@ class Bundle(resources.Resource):
                 f"download() expected argument type 'io.BufferedWriter` or 'str', but got '{type(output).__name__}'"
             )
 
-        path = f"v1/content/{self.content_guid}/bundles/{self.id}/download"
+        path = (
+            f"v1/content/{self['content_guid']}/bundles/{self['id']}/download"
+        )
         url = self.params.url + path
         response = self.params.session.get(url, stream=True)
         if isinstance(output, io.BufferedWriter):

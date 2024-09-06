@@ -12,7 +12,7 @@ from .resources import Resource, ResourceParameters, Resources
 class Permission(Resource):
     def delete(self) -> None:
         """Delete the permission."""
-        path = f"v1/content/{self.content_guid}/permissions/{self.id}"
+        path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
         url = self.params.url + path
         self.params.session.delete(url)
 
@@ -35,13 +35,13 @@ class Permission(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update the permission."""
         body = {
-            "principal_guid": self.principal_guid,
-            "principal_type": self.principal_type,
-            "role": self.role,
+            "principal_guid": self.get("principal_guid"),
+            "principal_type": self.get("principal_type"),
+            "role": self.get("role"),
         }
         body.update(dict(*args))
         body.update(**kwargs)
-        path = f"v1/content/{self.content_guid}/permissions/{self.id}"
+        path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
         url = self.params.url + path
         response = self.params.session.put(
             url,

@@ -16,17 +16,8 @@ class TestTaskAttributes:
             **load_mock("v1/tasks/jXhOhdm5OOSkGhJw.json"),
         )
 
-    def test_id(self):
-        assert self.task.id == "jXhOhdm5OOSkGhJw"
-
     def test_is_finished(self):
         assert self.task.is_finished
-
-    def test_output(self):
-        assert self.task.output == [
-            "Building static content...",
-            "Launching static content...",
-        ]
 
     def test_error_code(self):
         assert self.task.error_code == 1
@@ -36,9 +27,6 @@ class TestTaskAttributes:
             self.task.error_message
             == "Unable to render: Rendering exited abnormally: exit status 1"
         )
-
-    def test_result(self):
-        assert self.task.result is None
 
 
 class TestTaskUpdate:
@@ -152,5 +140,5 @@ class TestTasksGet:
         task = c.tasks.get(uid)
 
         # assert
-        assert task.id == uid
+        assert task["id"] == uid
         assert mock_tasks_get.call_count == 1

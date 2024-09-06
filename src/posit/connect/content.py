@@ -29,7 +29,7 @@ class ContentItem(Resource):
 
     def delete(self) -> None:
         """Delete the content item."""
-        path = f"v1/content/{self.guid}"
+        path = f"v1/content/{self['guid']}"
         url = self.params.url + path
         self.params.session.delete(url)
 
@@ -49,7 +49,7 @@ class ContentItem(Resource):
         >>> task.wait_for()
         None
         """
-        path = f"v1/content/{self.guid}/deploy"
+        path = f"v1/content/{self['guid']}/deploy"
         url = self.params.url + path
         response = self.params.session.post(url, json={"bundle_id": None})
         result = response.json()
@@ -73,7 +73,9 @@ class ContentItem(Resource):
 
         if self.is_rendered:
             variants = self._variants.find()
-            variants = [variant for variant in variants if variant.is_default]
+            variants = [
+                variant for variant in variants if variant["is_default"]
+            ]
             if len(variants) != 1:
                 raise RuntimeError(
                     f"Found {len(variants)} default variants. Expected 1. Without a single default variant, the content cannot be refreshed. This is indicative of a corrupted state."
@@ -82,7 +84,7 @@ class ContentItem(Resource):
             return variant.render()
         else:
             raise ValueError(
-                f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
+                f"Render not supported for this application mode: {{self['app_mode']}}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
             )
 
     def restart(self) -> None:
@@ -107,13 +109,13 @@ class ContentItem(Resource):
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
             url = posixpath.join(
-                dirname(self.params.url), f"content/{self.guid}"
+                dirname(self.params.url), f"content/{self['guid']}"
             )
             self.params.session.get(url)
             return None
         else:
             raise ValueError(
-                f"Restart not supported for this application mode: {self.app_mode}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
+                f"Restart not supported for this application mode: {self['app_mode']}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
             )
 
     @overload
@@ -187,7 +189,7 @@ class ContentItem(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update the content item."""
         body = dict(*args, **kwargs)
-        url = self.params.url + f"v1/content/{self.guid}"
+        url = self.params.url + f"v1/content/{self['guid']}"
         response = self.params.session.patch(url, json=body)
         super().update(**response.json())
 
@@ -195,15 +197,15 @@ class ContentItem(Resource):
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.params, self.guid)
+        return Bundles(self.params, self["guid"])
 
     @property
     def environment_variables(self) -> EnvVars:
-        return EnvVars(self.params, self.guid)
+        return EnvVars(self.params, self["guid"])
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.params, self.guid)
+        return Permissions(self.params, self["guid"])
 
     @property
     def owner(self) -> dict:
@@ -213,16 +215,16 @@ class ContentItem(Resource):
             # If it's not included, we can retrieve the information by `owner_guid`
             from .users import Users
 
-            self["owner"] = Users(self.params).get(self.owner_guid)
+            self["owner"] = Users(self.params).get(self["owner_guid"])
         return self["owner"]
 
     @property
     def _variants(self) -> Variants:
-        return Variants(self.params, self.guid)
+        return Variants(self.params, self["guid"])
 
     @property
     def is_interactive(self) -> bool:
-        return self.app_mode in {
+        return self["app_mode"] in {
             "api",
             "jupyter-voila",
             "python-api",
@@ -239,7 +241,7 @@ class ContentItem(Resource):
 
     @property
     def is_rendered(self) -> bool:
-        return self.app_mode in {
+        return self["app_mode"] in {
             "rmd-static",
             "jupyter-static",
             "quarto-static",

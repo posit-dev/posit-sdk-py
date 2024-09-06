@@ -13,7 +13,7 @@ from .resources import Resource, Resources
 class Group(Resource):
     def delete(self) -> None:
         """Delete the group."""
-        path = f"v1/groups/{self.guid}"
+        path = f"v1/groups/{self['guid']}"
         url = self.params.url + path
         self.params.session.delete(url)
 

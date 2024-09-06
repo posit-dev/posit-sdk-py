@@ -14,7 +14,7 @@ class TestGroups:
         assert self.client.groups.count() == 1
 
     def test_get(self):
-        assert self.client.groups.get(self.item.guid)
+        assert self.client.groups.get(self.item["guid"])
 
     def test_find(self):
         assert self.client.groups.find() == [self.item]

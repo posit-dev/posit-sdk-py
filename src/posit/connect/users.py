@@ -13,7 +13,7 @@ from .resources import Resource, ResourceParameters, Resources
 class User(Resource):
     @property
     def content(self) -> Content:
-        return Content(self.params, owner_guid=self.guid)
+        return Content(self.params, owner_guid=self["guid"])
 
     def lock(self, *, force: bool = False):
         """
@@ -29,11 +29,11 @@ class User(Resource):
             None
         """
         _me = me.get(self.params)
-        if _me.guid == self.guid and not force:
+        if _me["guid"] == self["guid"] and not force:
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior."
             )
-        url = self.params.url + f"v1/users/{self.guid}/lock"
+        url = self.params.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": True}
         self.params.session.post(url, json=body)
         super().update(locked=True)
@@ -46,7 +46,7 @@ class User(Resource):
         -------
             None
         """
-        url = self.params.url + f"v1/users/{self.guid}/lock"
+        url = self.params.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": False}
         self.params.session.post(url, json=body)
         super().update(locked=False)
@@ -106,7 +106,7 @@ class User(Resource):
             None
         """
         body = dict(*args, **kwargs)
-        url = self.params.url + f"v1/users/{self.guid}"
+        url = self.params.url + f"v1/users/{self['guid']}"
         response = self.params.session.put(url, json=body)
         super().update(**response.json())
 

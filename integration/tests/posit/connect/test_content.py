@@ -23,7 +23,7 @@ class TestContent:
         assert self.client.content.count() == 1
 
     def test_get(self):
-        assert self.client.content.get(self.content.guid) == self.content
+        assert self.client.content.get(self.content["guid"]) == self.content
 
     def test_find(self):
         assert self.client.content.find()
@@ -34,12 +34,12 @@ class TestContent:
     def test_content_item_owner(self):
         item = self.client.content.find_one(include=None)
         owner = item.owner
-        assert owner.guid == self.client.me.guid
+        assert owner["guid"] == self.client.me["guid"]
 
     def test_content_item_owner_from_include(self):
         item = self.client.content.find_one(include="owner")
         owner = item.owner
-        assert owner.guid == self.client.me.guid
+        assert owner["guid"] == self.client.me["guid"]
 
     @pytest.mark.skipif(
         CONNECT_VERSION <= version.parse("2024.04.1"),
