@@ -39,8 +39,8 @@ class TestPositAuthenticator:
             user_session_token="cit",
             client=client,
         )
-        assert auth.authenticator() == "oauth"
-        assert auth.token() == "dynamic-viewer-access-token"
+        assert auth.authenticator == "oauth"
+        assert auth.token == "dynamic-viewer-access-token"
 
     def test_posit_authenticator_fallback(self):
         # local_authenticator is used when the content is running locally
@@ -50,5 +50,5 @@ class TestPositAuthenticator:
             user_session_token="cit",
             client=client,
         )
-        assert auth.authenticator() == "SNOWFLAKE"
-        assert auth.token() == None
+        assert auth.authenticator == "SNOWFLAKE"
+        assert auth.token == None

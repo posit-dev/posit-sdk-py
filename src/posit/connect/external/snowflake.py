@@ -1,6 +1,6 @@
 from typing import Optional
 
-from . import _is_local
+from .external import is_local
 from ..client import Client
 
 """
@@ -18,13 +18,15 @@ class PositAuthenticator:
         self._client = client
         self._user_session_token = user_session_token
 
+    @property
     def authenticator(self) -> Optional[str]:
-        if _is_local():
+        if is_local():
             return self._local_authenticator
         return "oauth"
 
+    @property
     def token(self) -> Optional[str]:
-        if _is_local():
+        if is_local():
             return None
 
         # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.

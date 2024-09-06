@@ -1,7 +1,7 @@
 import abc
-import os
 from typing import Callable, Dict, Optional
 
+from .external import is_local
 from ..client import Client
 
 """
@@ -27,16 +27,6 @@ class CredentialsStrategy(abc.ABC):
     @abc.abstractmethod
     def __call__(self, *args, **kwargs) -> CredentialsProvider:
         raise NotImplementedError
-
-
-def _is_local() -> bool:
-    """Returns true if called from a piece of content running on a Connect server.
-
-    The connect server will always set the environment variable `RSTUDIO_PRODUCT=CONNECT`.
-    We can use this environment variable to determine if the content is running locally
-    or on a Connect server.
-    """
-    return not os.getenv("RSTUDIO_PRODUCT") == "CONNECT"
 
 
 class PositCredentialsProvider:
@@ -88,14 +78,14 @@ class PositCredentialsStrategy(CredentialsStrategy):
         NOTE: The databricks-sql client does not use auth_type to set the user-agent.
         https://github.com/databricks/databricks-sql-python/blob/v3.3.0/src/databricks/sql/client.py#L214-L219
         """
-        if _is_local():
+        if is_local():
             return self._local_strategy.auth_type()
         else:
             return "posit-oauth-integration"
 
     def __call__(self, *args, **kwargs) -> CredentialsProvider:
         # If the content is not running on Connect then fall back to local_strategy
-        if _is_local():
+        if is_local():
             return self._local_strategy(*args, **kwargs)
 
         # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.

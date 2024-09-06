@@ -30,8 +30,8 @@ con = snowflake.connector.connect(
     warehouse=WAREHOUSE,
     database=DATABASE,
     schema=SCHEMA,
-    authenticator=auth.authenticator(),
-    token=auth.token(),
+    authenticator=auth.authenticator,
+    token=auth.token,
 )
 
 snowflake_user = con.cursor().execute("SELECT CURRENT_USER()").fetchone()
