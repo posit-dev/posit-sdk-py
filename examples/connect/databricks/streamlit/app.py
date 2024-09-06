@@ -7,7 +7,6 @@ import streamlit as st
 from databricks import sql
 from databricks.sdk.core import ApiClient, Config, databricks_cli
 from databricks.sdk.service.iam import CurrentUserAPI
-
 from posit.connect.external.databricks import PositCredentialsStrategy
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")

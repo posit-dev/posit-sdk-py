@@ -1,8 +1,7 @@
 import pytest
 import responses
-from responses import matchers
-
 from posit.connect import Client
+from responses import matchers
 
 from .api import load_mock  # type: ignore
 

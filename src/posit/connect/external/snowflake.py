@@ -1,11 +1,12 @@
 from typing import Optional
 
-from .external import is_local
 from ..client import Client
+from .external import is_local
 
 """
 NOTE: The APIs in this module are provided as a convenience and are subject to breaking changes.
 """
+
 
 class PositAuthenticator:
     def __init__(
@@ -43,4 +44,3 @@ class PositAuthenticator:
             self._user_session_token
         )["access_token"]
         return access_token
-

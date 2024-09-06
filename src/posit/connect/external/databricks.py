@@ -1,8 +1,8 @@
 import abc
 from typing import Callable, Dict, Optional
 
-from .external import is_local
 from ..client import Client
+from .external import is_local
 
 """
 NOTE: These APIs are provided as a convenience and are subject to breaking changes:
@@ -98,6 +98,4 @@ class PositCredentialsStrategy(CredentialsStrategy):
         if self._client is None:
             self._client = Client()
 
-        return PositCredentialsProvider(
-            self._client, self._user_session_token
-        )
+        return PositCredentialsProvider(self._client, self._user_session_token)

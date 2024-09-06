@@ -7,7 +7,6 @@ from databricks import sql
 from databricks.sdk.core import Config, databricks_cli
 from fastapi import FastAPI, Header
 from fastapi.responses import JSONResponse
-
 from posit.connect.external.databricks import PositCredentialsStrategy
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")

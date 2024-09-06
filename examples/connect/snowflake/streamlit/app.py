@@ -3,9 +3,8 @@
 import os
 
 import pandas as pd
-import streamlit as st
 import snowflake.connector
-
+import streamlit as st
 from posit.connect.external.snowflake import PositAuthenticator
 
 ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
@@ -21,8 +20,8 @@ TABLE = os.getenv("SNOWFLAKE_TABLE", "lineitem")
 
 session_token = st.context.headers.get("Posit-Connect-User-Session-Token")
 auth = PositAuthenticator(
-    local_authenticator="EXTERNALBROWSER",
-    user_session_token=session_token)
+    local_authenticator="EXTERNALBROWSER", user_session_token=session_token
+)
 
 con = snowflake.connector.connect(
     user=USER,

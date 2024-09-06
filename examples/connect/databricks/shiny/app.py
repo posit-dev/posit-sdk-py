@@ -6,9 +6,8 @@ import pandas as pd
 from databricks import sql
 from databricks.sdk.core import ApiClient, Config, databricks_cli
 from databricks.sdk.service.iam import CurrentUserAPI
-from shiny import App, Inputs, Outputs, Session, render, ui
-
 from posit.connect.external.databricks import PositCredentialsStrategy
+from shiny import App, Inputs, Outputs, Session, render, ui
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"

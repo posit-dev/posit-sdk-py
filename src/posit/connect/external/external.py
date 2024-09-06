@@ -1,5 +1,6 @@
 import os
 
+
 def is_local() -> bool:
     """Returns true if called from a piece of content running on a Connect server.
 
