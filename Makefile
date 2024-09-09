@@ -39,11 +39,8 @@ docs:
 	$(MAKE) -C ./docs
 
 ensure-uv:
-	@if ! command -v $(UV) >/dev/null 2>&1; then \
-		if ! command -v pip >/dev/null 2>&1; then \
-			$(PYTHON) -m ensurepip; \
-		fi; \
-		$(PYTHON) -m pip install uv; \
+	@if ! command -v $(UV) >/dev/null; then \
+		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install uv; \
 	fi
 
 fmt:
@@ -71,19 +68,20 @@ version:
 
 help:
 	@echo "Makefile Targets"
-	@echo "  all        	Run deps, dev, test, lint, and build"
-	@echo "  build      	Build the project"
-	@echo "  clean      	Clean up project artifacts"
-	@echo "  cov        	Generate a coverage report"
-	@echo "  cov-html   	Generate an HTML coverage report and open it"
-	@echo "  cov-xml    	Generate an XML coverage report"
-	@echo "  deps       	Install dependencies"
-	@echo "  dev        	Install the project in editable mode"
-	@echo "  docs       	Build the documentation"
-	@echo "  fmt        	Format the code"
-	@echo "  install    	Install the built project"
-	@echo "  it         	Run integration tests"
-	@echo "  lint       	Lint the code"
-	@echo "  test       	Run unit tests with coverage"
-	@echo "  uninstall  	Uninstall the project"
-	@echo "  version    	Display the project version"
+	@echo "  all            Run deps, dev, test, lint, and build"
+	@echo "  build          Build the project"
+	@echo "  clean          Clean up project artifacts"
+	@echo "  cov            Generate a coverage report"
+	@echo "  cov-html       Generate an HTML coverage report and open it"
+	@echo "  cov-xml        Generate an XML coverage report"
+	@echo "  deps           Install dependencies"
+	@echo "  dev            Install the project in editable mode"
+	@echo "  docs           Build the documentation"
+	@echo "  ensure-uv      Ensure 'uv' is installed"
+	@echo "  fmt            Format the code"
+	@echo "  install        Install the built project"
+	@echo "  it             Run integration tests"
+	@echo "  lint           Lint the code"
+	@echo "  test           Run unit tests with coverage"
+	@echo "  uninstall      Uninstall the project"
+	@echo "  version        Display the project version"
