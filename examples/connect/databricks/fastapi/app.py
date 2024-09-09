@@ -1,32 +1,35 @@
 # -*- coding: utf-8 -*-
 # mypy: ignore-errors
 import os
+from typing import Annotated
 
-import pandas as pd
 from databricks import sql
-from databricks.sdk.core import ApiClient, Config, databricks_cli
-from databricks.sdk.service.iam import CurrentUserAPI
-from shiny import App, Inputs, Outputs, Session, render, ui
-
+from databricks.sdk.core import Config, databricks_cli
+from fastapi import FastAPI, Header
+from fastapi.responses import JSONResponse
 from posit.connect.external.databricks import PositCredentialsStrategy
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
 SQL_HTTP_PATH = os.getenv("DATABRICKS_PATH")
 
-app_ui = ui.page_fluid(ui.output_text("text"), ui.output_data_frame("result"))
+rows = None
+app = FastAPI()
 
 
-def server(i: Inputs, o: Outputs, session: Session):
+@app.get("/fares")
+async def get_fares(
+    posit_connect_user_session_token: Annotated[str | None, Header()] = None,
+) -> JSONResponse:
     """
-    Shiny for Python example application that shows user information and
-    the first few rows from a table hosted in Databricks.
+    FastAPI example API that returns the first few rows from
+    a table hosted in Databricks.
     """
-    session_token = session.http_conn.headers.get(
-        "Posit-Connect-User-Session-Token"
-    )
+    global rows
+
     posit_strategy = PositCredentialsStrategy(
-        local_strategy=databricks_cli, user_session_token=session_token
+        local_strategy=databricks_cli,
+        user_session_token=posit_connect_user_session_token,
     )
     cfg = Config(
         host=DATABRICKS_HOST_URL,
@@ -35,8 +38,7 @@ def server(i: Inputs, o: Outputs, session: Session):
         credentials_strategy=posit_strategy,
     )
 
-    @render.data_frame
-    def result():
+    if rows is None:
         query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"
 
         with sql.connect(
@@ -48,15 +50,5 @@ def server(i: Inputs, o: Outputs, session: Session):
             with connection.cursor() as cursor:
                 cursor.execute(query)
                 rows = cursor.fetchall()
-                df = pd.DataFrame(
-                    rows, columns=[col[0] for col in cursor.description]
-                )
-                return df
 
-    @render.text
-    def text():
-        databricks_user_info = CurrentUserAPI(ApiClient(cfg)).me()
-        return f"Hello, {databricks_user_info.display_name}!"
-
-
-app = App(app_ui, server)
+    return [row.asDict() for row in rows]

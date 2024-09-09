@@ -3,10 +3,9 @@ from unittest import mock
 
 import pytest
 import responses
-from responses import matchers
-
 from posit.connect import Client
 from posit.connect.bundles import Bundle
+from responses import matchers
 
 from .api import get_path, load_mock  # type: ignore
 
