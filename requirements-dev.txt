@@ -10,3 +10,4 @@ rsconnect-python
 ruff
 setuptools
 setuptools-scm
+uv

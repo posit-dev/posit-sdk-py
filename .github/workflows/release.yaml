@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - "v*.*.*"
+env:
+  UV_SYSTEM_PYTHON: true
 jobs:
   default:
     runs-on: ubuntu-latest

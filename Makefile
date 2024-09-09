@@ -2,21 +2,21 @@ include vars.mk
 
 .DEFAULT_GOAL := all
 
-.PHONY: build clean cov default deps dev docs fmt fix install it lint test uninstall version help
+.PHONY: build clean cov default deps dev docs ensure-uv fmt fix install it lint test uninstall version help
 
 all: deps dev test lint build
 
 build:
-	$(PYTHON) -m build
+	$(UV) build
 
 clean:
 	$(MAKE) -C ./docs $@
 	$(MAKE) -C ./integration $@
 	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
+	find src -name "_version.py" -exec rm -rf {} +
 	find . -name "*.egg-info" -exec rm -rf {} +
 	find . -name "*.pyc" -exec rm -f {} +
 	find . -name "__pycache__" -exec rm -rf {} +
-	find . -name "_version.py" -exec rm -rf {} +
 	find . -type d -empty -delete
 
 cov:
@@ -29,21 +29,29 @@ cov-html:
 cov-xml:
 	$(PYTHON) -m coverage xml
 
-deps:
-	$(PIP) install --upgrade pip setuptools wheel -r requirements.txt -r requirements-dev.txt
+deps: ensure-uv
+	$(UV) pip install --upgrade pip setuptools wheel -r requirements.txt -r requirements-dev.txt
 
-dev:
-	$(PIP) install -e .
+dev: ensure-uv
+	$(UV) pip install -e .
 
 docs:
 	$(MAKE) -C ./docs
+
+ensure-uv:
+	@if ! command -v $(UV) >/dev/null 2>&1; then \
+		if ! command -v pip >/dev/null 2>&1; then \
+			$(PYTHON) -m ensurepip; \
+		fi; \
+		$(PYTHON) -m pip install uv; \
+	fi
 
 fmt:
 	$(PYTHON) -m ruff check --fix
 	$(PYTHON) -m ruff format .
 
-install:
-	$(PIP) install dist/*.whl
+install: ensure-uv
+	$(UV) pip install dist/*.whl
 
 it:
 	$(MAKE) -C ./integration
@@ -55,8 +63,8 @@ lint:
 test:
 	$(PYTHON) -m coverage run --source=src -m pytest tests
 
-uninstall:
-	$(PIP) uninstall $(NAME)
+uninstall: ensure-uv
+	$(UV) pip uninstall $(NAME)
 
 version:
 	@$(PYTHON) -m setuptools_scm
