@@ -28,7 +28,7 @@ clean:
 	find . -type d -empty -delete
 
 deps:
-	$(PIP) install --upgrade pip -r requirements-site.txt
+	$(UV) pip install --upgrade pip -r requirements-site.txt
 	$(QUARTO) add --no-prompt posit-dev/product-doc-theme@v4.0.2
 	$(QUARTO) add --no-prompt machow/quartodoc
 
