@@ -1,0 +1,36 @@
+[
+    {
+        "id": "3",
+        "guid": "22644575-a27b-4118-ad06-e24459b05126",
+        "created_time": "2024-07-16T19:28:05Z",
+        "updated_time": "2024-07-17T19:28:05Z",
+        "name": "keycloak integration",
+        "description": "integration description",
+        "template": "custom",
+        "config": {
+            "auth_mode": "Confidential",
+            "authorization_uri": "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/auth",
+            "client_id": "rsconnect-oidc",
+            "scopes": "email",
+            "token_endpoint_auth_method": "client_secret_basic",
+            "token_uri": "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/token"
+        }
+    },
+    {
+        "id": "4",
+        "guid": "967f0ad3-3e3b-4491-8539-1a193b35a415",
+        "created_time": "2024-07-18T20:35:11Z",
+        "updated_time": "2024-07-19T20:35:11Z",
+        "name": "keycloak-post",
+        "description": "another integration description",
+        "template": "custom",
+        "config": {
+            "auth_mode": "Confidential",
+            "authorization_uri": "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/auth",
+            "client_id": "rsconnect-oidc",
+            "scopes": "email",
+            "token_endpoint_auth_method": "client_secret_post",
+            "token_uri": "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/token"
+        }
+    }
+]

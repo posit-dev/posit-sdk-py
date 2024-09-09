@@ -27,7 +27,7 @@ Before contributing to the `posit-sdk`, ensure that the following prerequisites 
 
 ## Tooling
 
-Use the default make target to execute the full build pipeline. For details on specific targets, refer to the [Makefile](./Makefile).
+Use the default make target to execute the full build pipeline. For details on specific targets, run `make help`, or review the [Makefile](./Makefile) itself.
 
 ## Style Guide
 
