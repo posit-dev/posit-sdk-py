@@ -36,4 +36,4 @@ QUARTODOC ?= quartodoc
 
 SHELL := /bin/bash
 
-UV := uv
+UV := $(shell command -v uv || echo "$(PYTHON) -m uv")
