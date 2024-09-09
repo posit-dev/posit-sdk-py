@@ -48,9 +48,7 @@ class TestPositCredentialsHelpers:
         register_mocks()
 
         client = Client(api_key="12345", url="https://connect.example/")
-        cp = PositCredentialsProvider(
-            posit_oauth=client.oauth, user_session_token="cit"
-        )
+        cp = PositCredentialsProvider(client=client, user_session_token="cit")
         assert cp() == {"Authorization": f"Bearer dynamic-viewer-access-token"}
 
     @responses.activate
