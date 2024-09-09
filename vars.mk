@@ -29,10 +29,11 @@ endif
 NETLIFY_SITE_ID ?= 5cea1f56-7935-4387-975a-18a7905d15ee
 
 PYTHON := $(shell command -v python3 2>/dev/null || command -v python)
-PIP = uv pip
 
 SHELL := /bin/bash
 
 QUARTO ?= quarto
 
 QUARTODOC ?= quartodoc
+
+UV := uv

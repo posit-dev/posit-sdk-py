@@ -7,7 +7,7 @@ include vars.mk
 all: deps dev test lint build
 
 build:
-	$(PYTHON) -m build
+	$(UV) build
 
 clean:
 	$(MAKE) -C ./docs $@
@@ -30,16 +30,16 @@ cov-xml:
 	$(PYTHON) -m coverage xml
 
 deps: ensure-uv
-	$(PIP) install --upgrade pip setuptools wheel -r requirements.txt -r requirements-dev.txt
+	$(UV) pip install --upgrade pip setuptools wheel -r requirements.txt -r requirements-dev.txt
 
 dev: ensure-uv
-	$(PIP) install -e .
+	$(UV) pip install -e .
 
 docs:
 	$(MAKE) -C ./docs
 
 ensure-uv:
-	@if ! command -v uv >/dev/null 2>&1; then \
+	@if ! command -v $(UV) >/dev/null 2>&1; then \
 		if ! command -v pip >/dev/null 2>&1; then \
 			$(PYTHON) -m ensurepip; \
 		fi; \
@@ -51,7 +51,7 @@ fmt:
 	$(PYTHON) -m ruff format .
 
 install: ensure-uv
-	$(PIP) install dist/*.whl
+	$(UV) pip install dist/*.whl
 
 it:
 	$(MAKE) -C ./integration
@@ -64,7 +64,7 @@ test:
 	$(PYTHON) -m coverage run --source=src -m pytest tests
 
 uninstall: ensure-uv
-	$(PIP) uninstall $(NAME)
+	$(UV) pip uninstall $(NAME)
 
 version:
 	@$(PYTHON) -m setuptools_scm
