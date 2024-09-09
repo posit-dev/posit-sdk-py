@@ -39,8 +39,8 @@ docs:
 	$(MAKE) -C ./docs
 
 ensure-uv:
-	@if ! command -v $(UV) >/dev/null 2>&1; then \
-		if ! command -v pip >/dev/null 2>&1; then \
+	@if ! $(UV) >/dev/null 2>&1; then \
+		if ! $(PYTHON) -m pip >/dev/null 2>&1; then \
 			$(PYTHON) -m ensurepip; \
 		fi; \
 		$(PYTHON) -m pip install uv; \
@@ -70,6 +70,7 @@ version:
 	@$(PYTHON) -m setuptools_scm
 
 help:
+	echo "$(UV)"
 	@echo "Makefile Targets"
 	@echo "  all        	Run deps, dev, test, lint, and build"
 	@echo "  build      	Build the project"
