@@ -2,9 +2,10 @@ from unittest import mock
 
 import pytest
 import responses
+from responses import matchers
+
 from posit import connect
 from posit.connect.metrics import shiny_usage, usage, visits
-from responses import matchers
 
 from ..api import load_mock  # type: ignore
 

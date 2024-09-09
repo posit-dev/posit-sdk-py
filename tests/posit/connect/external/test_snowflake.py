@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import responses
+
 from posit.connect import Client
 from posit.connect.external.snowflake import PositAuthenticator
 

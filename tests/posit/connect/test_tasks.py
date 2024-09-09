@@ -1,9 +1,10 @@
 from unittest import mock
 
 import responses
+from responses import matchers
+
 from posit import connect
 from posit.connect import tasks
-from responses import matchers
 
 from .api import load_mock  # type: ignore
 

@@ -3,10 +3,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 import responses
+from requests import HTTPError, Response
+
 from posit.connect import Client
 from posit.connect.errors import ClientError
 from posit.connect.hooks import handle_errors
-from requests import HTTPError, Response
 
 
 def test_success():

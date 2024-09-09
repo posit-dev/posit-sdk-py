@@ -5,6 +5,7 @@ import os
 from databricks import sql
 from databricks.sdk.core import Config, databricks_cli
 from flask import Flask, request
+
 from posit.connect.external.databricks import PositCredentialsStrategy
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")

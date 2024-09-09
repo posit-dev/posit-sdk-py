@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import snowflake.connector
 import streamlit as st
+
 from posit.connect.external.snowflake import PositAuthenticator
 
 ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
