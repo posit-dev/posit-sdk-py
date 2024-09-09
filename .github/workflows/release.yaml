@@ -20,16 +20,8 @@ jobs:
         check-latest: true
         cache: 'pip'
     - uses: actions/setup-node@v4
-    - uses: quarto-dev/quarto-actions/setup@v2
     - run: make deps
     - run: make build
     - run: make install
-    - run: make docs
     - id: release
       uses: pypa/gh-action-pypi-publish@release/v1
-    - id: site
-      working-directory: docs
-      env:
-        ENV: prod
-        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      run: make deploy
