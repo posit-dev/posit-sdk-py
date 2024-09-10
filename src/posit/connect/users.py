@@ -11,74 +11,9 @@ from .resources import Resource, ResourceParameters, Resources
 
 
 class User(Resource):
-    """User resource.
-
-    Attributes
-    ----------
-    content: Content
-        A content resource scoped to this user.
-    guid : str
-    email : str
-    username : str
-    first_name : str
-    last_name : str
-    user_role : str
-    created_time : str
-    updated_time : str
-    active_time : str
-    confirmed : bool
-        Whether the user has confirmed their email address.
-    locked : bool
-        Whether the user is locked.
-    """
-
     @property
     def content(self) -> Content:
         return Content(self.params, owner_guid=self.guid)
-
-    @property
-    def guid(self) -> str:
-        return self.get("guid")  # type: ignore
-
-    @property
-    def email(self) -> str:
-        return self.get("email")  # type: ignore
-
-    @property
-    def username(self) -> str:
-        return self.get("username")  # type: ignore
-
-    @property
-    def first_name(self) -> str:
-        return self.get("first_name")  # type: ignore
-
-    @property
-    def last_name(self) -> str:
-        return self.get("last_name")  # type: ignore
-
-    @property
-    def user_role(self) -> str:
-        return self.get("user_role")  # type: ignore
-
-    @property
-    def created_time(self) -> str:
-        return self.get("created_time")  # type: ignore
-
-    @property
-    def updated_time(self) -> str:
-        return self.get("updated_time")  # type: ignore
-
-    @property
-    def active_time(self) -> str:
-        return self.get("active_time")  # type: ignore
-
-    @property
-    def confirmed(self) -> bool:
-        return self.get("confirmed")  # type: ignore
-
-    @property
-    def locked(self) -> bool:
-        return self.get("locked")  # type: ignore
 
     def lock(self, *, force: bool = False):
         """
@@ -98,9 +33,9 @@ class User(Resource):
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior."
             )
-        url = self.url + f"v1/users/{self.guid}/lock"
+        url = self.params.url + f"v1/users/{self.guid}/lock"
         body = {"locked": True}
-        self.session.post(url, json=body)
+        self.params.session.post(url, json=body)
         super().update(locked=True)
 
     def unlock(self):
@@ -111,9 +46,9 @@ class User(Resource):
         -------
             None
         """
-        url = self.url + f"v1/users/{self.guid}/lock"
+        url = self.params.url + f"v1/users/{self.guid}/lock"
         body = {"locked": False}
-        self.session.post(url, json=body)
+        self.params.session.post(url, json=body)
         super().update(locked=False)
 
     @overload
@@ -171,8 +106,8 @@ class User(Resource):
             None
         """
         body = dict(*args, **kwargs)
-        url = self.url + f"v1/users/{self.guid}"
-        response = self.session.put(url, json=body)
+        url = self.params.url + f"v1/users/{self.guid}"
+        response = self.params.session.put(url, json=body)
         super().update(**response.json())
 
 
@@ -196,7 +131,7 @@ class Users(Resources):
 
     def find(self, **kwargs) -> List[User]:
         url = self.params.url + "v1/users"
-        paginator = Paginator(self.session, url, params=kwargs)
+        paginator = Paginator(self.params.session, url, params=kwargs)
         results = paginator.fetch_results()
         return [
             User(
@@ -220,7 +155,7 @@ class Users(Resources):
 
     def find_one(self, **kwargs) -> User | None:
         url = self.params.url + "v1/users"
-        paginator = Paginator(self.session, url, params=kwargs)
+        paginator = Paginator(self.params.session, url, params=kwargs)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (
@@ -233,8 +168,8 @@ class Users(Resources):
         return next(users, None)
 
     def get(self, uid: str) -> User:
-        url = self.url + f"v1/users/{uid}"
-        response = self.session.get(url)
+        url = self.params.url + f"v1/users/{uid}"
+        response = self.params.session.get(url)
         return User(
             self.params,
             **response.json(),
@@ -242,6 +177,6 @@ class Users(Resources):
 
     def count(self) -> int:
         url = self.params.url + "v1/users"
-        response = self.session.get(url, params={"page_size": 1})
+        response = self.params.session.get(url, params={"page_size": 1})
         result: dict = response.json()
         return result["total"]
