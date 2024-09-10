@@ -9,7 +9,7 @@ on:
 jobs:
   add:
     name: Add Issue
-    runs-on: ubuntu-lates
+    runs-on: ubuntu-latest
     permissions:
       issues: write
     steps:
