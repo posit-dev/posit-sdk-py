@@ -61,7 +61,7 @@ test:
 	$(PYTHON) -m coverage run --source=src -m pytest tests
 
 uninstall: ensure-uv
-	$(UV) pip uninstall $(NAME)
+	$(UV) pip uninstall $(PROJECT_NAME)
 
 version:
 	@$(PYTHON) -m setuptools_scm

@@ -1,5 +1,13 @@
 include ../vars.mk
 
+# Docker settings
+DOCKER_COMPOSE ?= docker compose
+DOCKER_CONNECT_IMAGE ?= rstudio/rstudio-connect
+DOCKER_PROJECT_IMAGE_TAG ?= $(PROJECT_NAME):latest
+
+# Connect settings
+CONNECT_BOOTSTRAP_SECRETKEY ?= $(shell head -c 32 /dev/random | base64)
+
 .DEFAULT_GOAL := all
 
 .PHONY: $(CONNECT_VERSIONS) \
@@ -57,13 +65,13 @@ latest:
 # Run test suite against preview Connect version.
 preview:
 	$(MAKE) \
-	CONNECT_IMAGE=rstudio/rstudio-connect-preview \
-	CONNECT_IMAGE_TAG=dev-jammy-daily \
+	DOCKER_CONNECT_IMAGE=rstudio/rstudio-connect-preview \
+	DOCKER_CONNECT_IMAGE_TAG=dev-jammy-daily \
 	down-preview up-preview
 
 # Build Dockerfile
 build:
-	docker build -t $(IMAGE_TAG) ..
+	docker build -t $(DOCKER_PROJECT_IMAGE_TAG) ..
 
 # Tear down resources.
 #
@@ -74,15 +82,15 @@ build:
 #   make down
 #   make down-2024.05.0
 down: $(CONNECT_VERSIONS:%=down-%)
-down-%: CONNECT_IMAGE_TAG=jammy-$*
+down-%: DOCKER_CONNECT_IMAGE_TAG=jammy-$*
 down-%: CONNECT_VERSION=$*
 down-%:
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
-	CONNECT_IMAGE=$(CONNECT_IMAGE) \
-	CONNECT_IMAGE_TAG=$(CONNECT_IMAGE_TAG) \
+	DOCKER_CONNECT_IMAGE=$(DOCKER_CONNECT_IMAGE) \
+	DOCKER_CONNECT_IMAGE_TAG=$(DOCKER_CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
-	IMAGE_TAG=$(IMAGE_TAG) \
-	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) down -v
+	DOCKER_PROJECT_IMAGE_TAG=$(DOCKER_PROJECT_IMAGE_TAG) \
+	$(DOCKER_COMPOSE) -p $(PROJECT_NAME)-$(subst .,-,$(CONNECT_VERSION)) down -v
 
 # Create, start, and run Docker Compose.
 #
@@ -92,14 +100,14 @@ down-%:
 #   make up-2024.05.0
 up: $(CONNECT_VERSIONS:%=up-%)
 up-%: CONNECT_VERSION=$*
-up-%: CONNECT_IMAGE_TAG=jammy-$*
+up-%: DOCKER_CONNECT_IMAGE_TAG=jammy-$*
 up-%: build
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
-	CONNECT_IMAGE=$(CONNECT_IMAGE) \
-	CONNECT_IMAGE_TAG=$(CONNECT_IMAGE_TAG) \
+	DOCKER_CONNECT_IMAGE=$(DOCKER_CONNECT_IMAGE) \
+	DOCKER_CONNECT_IMAGE_TAG=$(DOCKER_CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
-	IMAGE_TAG=$(IMAGE_TAG) \
-	$(DOCKER_COMPOSE) -p $(NAME)-$(subst .,-,$(CONNECT_VERSION)) up -V --abort-on-container-exit --no-build
+	DOCKER_PROJECT_IMAGE_TAG=$(DOCKER_PROJECT_IMAGE_TAG) \
+	$(DOCKER_COMPOSE) -p $(PROJECT_NAME)-$(subst .,-,$(CONNECT_VERSION)) up -V --abort-on-container-exit --no-build
 
 # Show help message.
 help:

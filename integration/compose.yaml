@@ -1,6 +1,6 @@
 services:
   tests:
-    image: ${IMAGE_TAG}
+    image: ${DOCKER_PROJECT_IMAGE_TAG}
     # Run integration test suite.
     #
     # Target is relative to the ./integration directory, not the project root
@@ -20,7 +20,7 @@ services:
     networks:
       - test
   connect:
-    image: ${CONNECT_IMAGE}:${CONNECT_IMAGE_TAG}
+    image: ${DOCKER_CONNECT_IMAGE}:${DOCKER_CONNECT_IMAGE_TAG}
     environment:
       - CONNECT_BOOTSTRAP_ENABLED=true
       - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}
