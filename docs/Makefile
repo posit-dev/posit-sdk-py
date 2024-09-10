@@ -1,6 +1,7 @@
 include ../vars.mk
 
-VERSION := $(shell $(MAKE) -C ../ -s version)
+VERSION ?= $(shell $(MAKE) -C ../ -s version)
+CURRENT_YEAR ?= $(shell date +%Y)
 
 .DEFAULT_GOAL := all
 

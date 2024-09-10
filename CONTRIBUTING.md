@@ -10,20 +10,22 @@ Before contributing to the `posit-sdk`, ensure that the following prerequisites 
 
 - Python >=3.8
 
-> [!TIP]
-> We recommend using virtual environments to maintain a clean and consistent development environment.
+> [!INFO]
+> We require using virtual environments to maintain a clean and consistent development environment.
+> Any Python virtual environment will do.
 
 ## Instructions
 
 > [!WARNING]
-> Executing `make` will utilize `pip` to install third-party packages in your activated Python environment. Please review the [`Makefile`](./Makefile) to verify behavior before executing any commands.
+> Executing `make` will install third-party packages in your Python environment. Please review the [`Makefile`](./Makefile) to verify behavior before executing any commands.
 
 1. Fork the repository and open it in your development environment.
-2. Run `make` to run the default development workflow.
-3. Make your changes and test them thoroughly using `make test`
-4. Run `make fmt` and `make lint` to verify adherence to the project style guide.
-5. Commit your changes and push them to your forked repository.
-6. Submit a pull request to the main repository.
+2. Activate your Python environment (e.g., `source .venv/bin/activate`)
+3. Run `make` to run the default development workflow.
+4. Make your changes and test them thoroughly using `make test`
+5. Run `make fmt` and `make lint` to verify adherence to the project style guide.
+6. Commit your changes and push them to your forked repository.
+7. Submit a pull request to the main repository.
 
 ## Tooling
 
