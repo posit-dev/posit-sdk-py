@@ -5,14 +5,21 @@ on:
     types:
       - opened
       - reopened
-      - labeled
 
 jobs:
   add:
     name: Add Issue
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-lates
+    permissions:
+      issues: write
     steps:
+      - run: gh issue edit "$NUMBER" --add-label "$LABELS"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          LABELS: sdk
       - uses: actions/add-to-project@v1.0.2
         with:
-          project-url: https://github.com/orgs/rstudio/projects/207/views/24
+          project-url: https://github.com/orgs/rstudio/projects/207
           github-token: ${{ secrets.CONNECT_ADD_TO_PROJECT_PAT }}
