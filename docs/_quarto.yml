@@ -5,7 +5,7 @@ execute:
   freeze: auto
 
 website:
-  title: "Posit SDK <small>{{< env VERSION >}}</small>"
+  title: "Posit SDK <small>{{< env PROJECT_VERSION >}}</small>"
   bread-crumbs: true
   favicon: "_extensions/posit-dev/posit-docs/assets/images/favicon.svg"
   navbar:
@@ -31,7 +31,7 @@ website:
     left: |
       Copyright &copy; 2000-{{< env CURRENT_YEAR >}} Posit Software, PBC. All Rights Reserved.
     center: |
-      Posit PRODUCT {{< env VERSION >}}
+      Posit {{< env PROJECT_VERSION >}}
     right:
       - icon: question-circle-fill
         aria-label: 'Link to Posit Support'
