@@ -6,35 +6,13 @@ from ..resources import Resource, Resources
 
 
 class Integration(Resource):
-    """OAuth integration resource.
-
-    Attributes
-    ----------
-    id : str
-        The internal numeric identifier of this OAuth integration.
-    guid : str
-        The unique identifier of this OAuth integration which is used in REST API requests.
-    name : str
-        A descriptive name to identify each OAuth integration.
-    description : Optional[str]
-        A brief text to describe each OAuth integration
-    template : str
-        The template to use to configure this OAuth integration.
-    config : dict
-        The OAuth integration configuration based on the template.
-    created_time : str
-        The timestamp (RFC3339) indicating when this OAuth integration was created.
-    updated_time : str
-        The timestamp (RFC3339) indicating when this OAuth integration was last updated.
-    """
-
-    # CRUD Methods
+    """OAuth integration resource."""
 
     def delete(self) -> None:
         """Delete the OAuth integration."""
-        path = f"v1/oauth/integrations/{self.guid}"
-        url = self.url + path
-        self.session.delete(url)
+        path = f"v1/oauth/integrations/{self['guid']}"
+        url = self.params.url + path
+        self.params.session.delete(url)
 
     @overload
     def update(
@@ -63,43 +41,9 @@ class Integration(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update the OAuth integration."""
         body = dict(*args, **kwargs)
-        url = self.url + f"v1/oauth/integrations/{self.guid}"
-        response = self.session.patch(url, json=body)
+        url = self.params.url + f"v1/oauth/integrations/{self['guid']}"
+        response = self.params.session.patch(url, json=body)
         super().update(**response.json())
-
-    # Properties
-
-    @property
-    def id(self) -> str:
-        return self.get("id")  # type: ignore
-
-    @property
-    def guid(self) -> str:
-        return self.get("guid")  # type: ignore
-
-    @property
-    def name(self) -> str:
-        return self.get("name")  # type: ignore
-
-    @property
-    def description(self) -> Optional[str]:
-        return self.get("description")  # type: ignore
-
-    @property
-    def template(self) -> str:
-        return self.get("template")  # type: ignore
-
-    @property
-    def config(self) -> dict:
-        return self.get("config")  # type: ignore
-
-    @property
-    def created_time(self) -> str:
-        return self.get("created_time")  # type: ignore
-
-    @property
-    def updated_time(self) -> str:
-        return self.get("updated_time")  # type: ignore
 
 
 class Integrations(Resources):
@@ -155,8 +99,8 @@ class Integrations(Resources):
         """
         ...
         path = "v1/oauth/integrations"
-        url = self.url + path
-        response = self.session.post(url, json=kwargs)
+        url = self.params.url + path
+        response = self.params.session.post(url, json=kwargs)
         return Integration(self.params, **response.json())
 
     def find(self) -> List[Integration]:
@@ -167,9 +111,9 @@ class Integrations(Resources):
         List[Integration]
         """
         path = "v1/oauth/integrations"
-        url = self.url + path
+        url = self.params.url + path
 
-        response = self.session.get(url)
+        response = self.params.session.get(url)
         return [
             Integration(
                 self.params,
@@ -190,6 +134,6 @@ class Integrations(Resources):
         Integration
         """
         path = f"v1/oauth/integrations/{guid}"
-        url = self.url + path
-        response = self.session.get(url)
+        url = self.params.url + path
+        response = self.params.session.get(url)
         return Integration(self.params, **response.json())

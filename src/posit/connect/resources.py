@@ -43,5 +43,3 @@ class Resource(dict):
 class Resources:
     def __init__(self, params: ResourceParameters) -> None:
         self.params = params
-        self.session = params.session
-        self.url = params.url

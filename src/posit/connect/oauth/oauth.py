@@ -32,7 +32,7 @@ class OAuth(Resources):
         if user_session_token:
             data["subject_token"] = user_session_token
 
-        response = self.session.post(url, data=data)
+        response = self.params.session.post(url, data=data)
         return Credentials(**response.json())
 
 
