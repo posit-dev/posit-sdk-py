@@ -45,7 +45,7 @@ ensure-uv:
 
 fmt:
 	$(PYTHON) -m ruff check --fix
-	$(PYTHON) -m ruff format .
+	$(PYTHON) -m ruff format
 
 install: ensure-uv
 	$(UV) pip install dist/*.whl
@@ -55,7 +55,7 @@ it:
 
 lint:
 	$(PYTHON) -m mypy --install-types --non-interactive .
-	$(PYTHON) -m ruff check **/*.py
+	$(PYTHON) -m ruff check
 
 test:
 	$(PYTHON) -m coverage run --source=src -m pytest tests
