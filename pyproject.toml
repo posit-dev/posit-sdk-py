@@ -36,6 +36,7 @@ addopts = ["--import-mode=importlib"]
 version_file = "src/posit/_version.py"
 
 [tool.ruff]
+extend-exclude = ["integration/resources"]
 line-length = 79
 
 [tool.ruff.format]
