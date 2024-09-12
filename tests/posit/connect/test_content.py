@@ -5,7 +5,11 @@ import responses
 from responses import matchers
 
 from posit.connect.client import Client
-from posit.connect.content import ContentItem, ContentItemOwner
+from posit.connect.content import (
+    ContentItem,
+    ContentItemOAuth,
+    ContentItemOwner,
+)
 from posit.connect.oauth.associations import ContentItemAssociations
 from posit.connect.permissions import Permissions
 
@@ -179,23 +183,30 @@ class TestContentItemAttributes:
 
     def test_permissions(self):
         assert isinstance(self.item.permissions, Permissions)
-    
+
+    def test_oauth(self):
+        assert isinstance(self.item.oauth, ContentItemOAuth)
+
     def test_oauth_associations(self):
-        assert isinstance(self.item.oauth_associations, ContentItemAssociations)
+        assert isinstance(
+            self.item.oauth.associations, ContentItemAssociations
+        )
 
     def test_tags(self):
         assert self.item.tags is None
 
-class TestContentItemOAuthAssociationsError:
+
+class TestContentItemOAuthError:
     def test(self):
-        fake_item =  load_mock(
+        fake_item = load_mock(
             "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
         )
         del fake_item["guid"]
         content_item = ContentItem(mock.Mock(), **fake_item)
 
         with pytest.raises(ValueError):
-            content_item.oauth_associations
+            content_item.oauth
+
 
 class TestContentItemGetContentOwner:
     @responses.activate

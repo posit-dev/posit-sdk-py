@@ -7,7 +7,7 @@ import time
 from posixpath import dirname
 from typing import Any, List, Optional, overload
 
-from posit.connect.oauth.associations import ContentItemAssociations  
+from posit.connect.oauth.associations import ContentItemAssociations
 
 from . import tasks
 from .bundles import Bundles
@@ -16,6 +16,18 @@ from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
 from .tasks import Task
 from .variants import Variants
+
+
+class ContentItemOAuth(Resource):
+    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
+        super().__init__(params)
+        self.content_guid = content_guid
+
+    @property
+    def associations(self) -> ContentItemAssociations:
+        return ContentItemAssociations(
+            self.params, content_guid=self.content_guid
+        )
 
 
 class ContentItemOwner(Resource):
@@ -30,11 +42,10 @@ class ContentItem(Resource):
         return v
 
     @property
-    def oauth_associations(self) -> ContentItemAssociations:
-        if self.guid is None:
-            raise ValueError("ContentItem must have a guid to have associations")
-        return ContentItemAssociations(self.params, content_guid=self.guid)
-
+    def oauth(self) -> ContentItemOAuth:
+        if "guid" not in self:
+            raise ValueError("ContentItemOAuth requires content guid")
+        return ContentItemOAuth(self.params, content_guid=self["guid"])
 
     def delete(self) -> None:
         """Delete the content item."""

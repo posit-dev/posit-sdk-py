@@ -58,8 +58,8 @@ class TestAssociations:
         # deploy bundle
         task = bundle.deploy()
         task.wait_for()
- 
-        cls.content.oauth_associations.update(cls.integration.guid)
+
+        cls.content.oauth.associations.update(cls.integration["guid"])
 
     @classmethod
     def teardown_class(cls):
@@ -73,26 +73,36 @@ class TestAssociations:
     def test_find_by_integration(self):
         associations = self.integration.associations.find()
         assert len(associations) == 1
-        assert associations[0].oauth_integration_guid == self.integration.guid
+        assert (
+            associations[0]["oauth_integration_guid"]
+            == self.integration["guid"]
+        )
 
         no_associations = self.another_integration.associations.find()
         assert len(no_associations) == 0
 
     def test_find_update_by_content(self):
-        associations = self.content.oauth_associations.find()
+        associations = self.content.oauth.associations.find()
         assert len(associations) == 1
-        assert associations[0].app_guid == self.content.guid
-        assert associations[0].oauth_integration_guid == self.integration.guid
+        assert associations[0]["app_guid"] == self.content["guid"]
+        assert (
+            associations[0]["oauth_integration_guid"]
+            == self.integration["guid"]
+        )
 
         # update content association to another_integration
-        self.content.oauth_associations.update(self.another_integration.guid)
-        updated_associations = self.content.oauth_associations.find()
+        self.content.oauth.associations.update(
+            self.another_integration["guid"]
+        )
+        updated_associations = self.content.oauth.associations.find()
         assert len(updated_associations) == 1
-        assert updated_associations[0].app_guid == self.content.guid
-        assert updated_associations[0].oauth_integration_guid == self.another_integration.guid
+        assert updated_associations[0]["app_guid"] == self.content["guid"]
+        assert (
+            updated_associations[0]["oauth_integration_guid"]
+            == self.another_integration.guid
+        )
 
         # unset content association
-        self.content.oauth_associations.update(None)
-        no_associations = self.content.oauth_associations.find()
+        self.content.oauth.associations.update(None)
+        no_associations = self.content.oauth.associations.find()
         assert len(no_associations) == 0
-        

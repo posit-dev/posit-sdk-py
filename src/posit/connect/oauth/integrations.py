@@ -12,9 +12,13 @@ class Integration(Resource):
 
     @property
     def associations(self) -> IntegrationAssociations:
-        if self.guid is None:
-            raise ValueError("Integration must have a guid to have associations")
-        return IntegrationAssociations(self.params, integration_guid=self.guid)
+        if "guid" not in self:
+            raise ValueError(
+                "IntegrationAssociations requires integration guid"
+            )
+        return IntegrationAssociations(
+            self.params, integration_guid=self["guid"]
+        )
 
     def delete(self) -> None:
         """Delete the OAuth integration."""
