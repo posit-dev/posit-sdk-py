@@ -2,11 +2,19 @@
 
 from typing import List, Optional, overload
 
+from posit.connect.oauth.associations import IntegrationAssociations
+
 from ..resources import Resource, Resources
 
 
 class Integration(Resource):
     """OAuth integration resource."""
+
+    @property
+    def associations(self) -> IntegrationAssociations:
+        return IntegrationAssociations(
+            self.params, integration_guid=self["guid"]
+        )
 
     def delete(self) -> None:
         """Delete the OAuth integration."""

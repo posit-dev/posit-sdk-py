@@ -5,7 +5,12 @@ import responses
 from responses import matchers
 
 from posit.connect.client import Client
-from posit.connect.content import ContentItem, ContentItemOwner
+from posit.connect.content import (
+    ContentItem,
+    ContentItemOAuth,
+    ContentItemOwner,
+)
+from posit.connect.oauth.associations import ContentItemAssociations
 from posit.connect.permissions import Permissions
 
 from .api import load_mock  # type: ignore
@@ -178,6 +183,14 @@ class TestContentItemAttributes:
 
     def test_permissions(self):
         assert isinstance(self.item.permissions, Permissions)
+
+    def test_oauth(self):
+        assert isinstance(self.item.oauth, ContentItemOAuth)
+
+    def test_oauth_associations(self):
+        assert isinstance(
+            self.item.oauth.associations, ContentItemAssociations
+        )
 
     def test_tags(self):
         assert self.item.tags is None

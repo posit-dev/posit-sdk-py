@@ -6,8 +6,6 @@ from typing import overload
 
 from requests import Response, Session
 
-from posit.connect.resources import ResourceParameters
-
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -15,6 +13,7 @@ from .content import Content
 from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
+from .resources import ResourceParameters
 from .tasks import Tasks
 from .users import User, Users
 

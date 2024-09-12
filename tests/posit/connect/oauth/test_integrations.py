@@ -4,6 +4,7 @@ import responses
 from responses import matchers
 
 from posit.connect.client import Client
+from posit.connect.oauth.associations import IntegrationAssociations
 from posit.connect.oauth.integrations import Integration
 
 from ..api import load_mock  # type: ignore
@@ -53,6 +54,9 @@ class TestIntegrationAttributes:
 
     def test_updated_time(self):
         assert self.item.updated_time == "2024-07-17T19:28:05Z"
+
+    def test_associations(self):
+        assert isinstance(self.item.associations, IntegrationAssociations)
 
 
 class TestIntegrationDelete:

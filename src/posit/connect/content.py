@@ -7,6 +7,8 @@ import time
 from posixpath import dirname
 from typing import Any, List, Optional, overload
 
+from posit.connect.oauth.associations import ContentItemAssociations
+
 from . import tasks
 from .bundles import Bundles
 from .env import EnvVars
@@ -14,6 +16,18 @@ from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
 from .tasks import Task
 from .variants import Variants
+
+
+class ContentItemOAuth(Resource):
+    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
+        super().__init__(params)
+        self.content_guid = content_guid
+
+    @property
+    def associations(self) -> ContentItemAssociations:
+        return ContentItemAssociations(
+            self.params, content_guid=self.content_guid
+        )
 
 
 class ContentItemOwner(Resource):
@@ -26,6 +40,10 @@ class ContentItem(Resource):
         if key == "owner" and isinstance(v, dict):
             return ContentItemOwner(params=self.params, **v)
         return v
+
+    @property
+    def oauth(self) -> ContentItemOAuth:
+        return ContentItemOAuth(self.params, content_guid=self["guid"])
 
     def delete(self) -> None:
         """Delete the content item."""

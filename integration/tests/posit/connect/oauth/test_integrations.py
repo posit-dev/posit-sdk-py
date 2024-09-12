@@ -51,7 +51,7 @@ class TestIntegrations:
         assert len(cls.client.oauth.integrations.find()) == 0
 
     def test_get(self):
-        result = self.client.oauth.integrations.get(self.integration.guid)
+        result = self.client.oauth.integrations.get(self.integration["guid"])
         assert result == self.integration
 
     def test_find(self):
@@ -78,7 +78,7 @@ class TestIntegrations:
             },
         )
 
-        created = self.client.oauth.integrations.get(integration.guid)
+        created = self.client.oauth.integrations.get(integration["guid"])
         assert created == integration
 
         all_integrations = self.client.oauth.integrations.find()
@@ -87,7 +87,7 @@ class TestIntegrations:
         # update the new integration
 
         created.update(name="updated integration name")
-        updated = self.client.oauth.integrations.get(integration.guid)
+        updated = self.client.oauth.integrations.get(integration["guid"])
         assert updated.name == "updated integration name"
 
         # delete the new integration
