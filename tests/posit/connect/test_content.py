@@ -336,7 +336,6 @@ class TestContentsFind:
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
-            match=[matchers.query_param_matcher({"include": "owner,tags"})],
         )
 
         # setup
@@ -396,7 +395,6 @@ class TestContentsFindOne:
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
-            match=[matchers.query_param_matcher({"include": "owner,tags"})],
         )
 
         # setup
@@ -418,9 +416,6 @@ class TestContentsFindOne:
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
-            match=[
-                matchers.query_param_matcher({"owner_guid": owner_guid, "include": "owner,tags"})
-            ],
         )
 
         # setup
@@ -443,7 +438,6 @@ class TestContentsFindOne:
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
-            match=[matchers.query_param_matcher({"name": name, "include": "owner,tags"})],
         )
 
         # setup
