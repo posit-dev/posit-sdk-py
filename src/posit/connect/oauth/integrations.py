@@ -12,10 +12,6 @@ class Integration(Resource):
 
     @property
     def associations(self) -> IntegrationAssociations:
-        if "guid" not in self:
-            raise ValueError(
-                "IntegrationAssociations requires integration guid"
-            )
         return IntegrationAssociations(
             self.params, integration_guid=self["guid"]
         )

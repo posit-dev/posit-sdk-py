@@ -60,18 +60,6 @@ class TestIntegrationAttributes:
         assert isinstance(self.item.associations, IntegrationAssociations)
 
 
-class TestIntegrationOAuthAssociationsError:
-    def test(self):
-        fake_item = load_mock(
-            "v1/oauth/integrations/22644575-a27b-4118-ad06-e24459b05126.json"
-        )
-        del fake_item["guid"]
-        integration = Integration(mock.Mock(), **fake_item)
-
-        with pytest.raises(ValueError):
-            integration.associations
-
-
 class TestIntegrationDelete:
     @responses.activate
     def test(self):

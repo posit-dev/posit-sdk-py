@@ -196,18 +196,6 @@ class TestContentItemAttributes:
         assert self.item.tags is None
 
 
-class TestContentItemOAuthError:
-    def test(self):
-        fake_item = load_mock(
-            "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
-        )
-        del fake_item["guid"]
-        content_item = ContentItem(mock.Mock(), **fake_item)
-
-        with pytest.raises(ValueError):
-            content_item.oauth
-
-
 class TestContentItemGetContentOwner:
     @responses.activate
     def test_owner(self):

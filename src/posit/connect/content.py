@@ -43,8 +43,6 @@ class ContentItem(Resource):
 
     @property
     def oauth(self) -> ContentItemOAuth:
-        if "guid" not in self:
-            raise ValueError("ContentItemOAuth requires content guid")
         return ContentItemOAuth(self.params, content_guid=self["guid"])
 
     def delete(self) -> None:
