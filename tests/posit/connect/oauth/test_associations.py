@@ -107,7 +107,7 @@ class TestContentAssociationsFind:
 
 class TestContentAssociationsUpdate:
     @responses.activate
-    def test_single(self):
+    def test(self):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
 
         # behavior
@@ -132,3 +132,32 @@ class TestContentAssociationsUpdate:
         # assert
         assert mock_put.call_count == 1
         assert mock_get_content.call_count == 1
+
+
+class TestContentAssociationsDelete:
+    @responses.activate
+    def test(self):
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # behavior
+        mock_get_content = responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+
+        mock_put = responses.put(
+            f"https://connect.example/__api__/v1/content/{guid}/oauth/integrations/associations",
+            json=[],
+        )
+
+        # setup
+        c = Client("https://connect.example", "12345")
+
+        # invoke
+        c.content.get(guid).oauth.associations.delete()
+
+        # assert
+        assert mock_put.call_count == 1
+        assert mock_get_content.call_count == 1
+
+
