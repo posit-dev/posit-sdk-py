@@ -159,5 +159,3 @@ class TestContentAssociationsDelete:
         # assert
         assert mock_put.call_count == 1
         assert mock_get_content.call_count == 1
-
-
