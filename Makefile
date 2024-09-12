@@ -54,7 +54,7 @@ it:
 	$(MAKE) -C ./integration
 
 lint:
-	$(PYTHON) -m mypy --install-types --non-interactive .
+	$(PYTHON) -m pyright
 	$(PYTHON) -m ruff check
 
 test:

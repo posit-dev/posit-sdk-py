@@ -28,6 +28,9 @@ Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 [tool.mypy]
 exclude = "integration/resources"
 
+[tool.pyright]
+include = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib"]
