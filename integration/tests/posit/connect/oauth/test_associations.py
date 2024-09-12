@@ -103,6 +103,6 @@ class TestAssociations:
         )
 
         # unset content association
-        self.content.oauth.associations.update(None)
+        self.content.oauth.associations.delete()
         no_associations = self.content.oauth.associations.find()
         assert len(no_associations) == 0

@@ -1,5 +1,6 @@
 """OAuth association resources."""
 
+from os import walk
 from typing import List
 
 from ..resources import Resource, ResourceParameters, Resources
@@ -65,12 +66,19 @@ class ContentItemAssociations(Resources):
             for result in response.json()
         ]
 
-    def update(self, integration_guid: None | str) -> None:
+    def delete(self) -> None:
+        """Delete integration associations."""
+        data = []
+
+        path = (
+            f"v1/content/{self.content_guid}/oauth/integrations/associations"
+        )
+        url = self.params.url + path
+        self.params.session.put(url, json=data)
+    
+    def update(self, integration_guid: str) -> None:
         """Set integration associations."""
-        if integration_guid is None:
-            data = []
-        else:
-            data = [{"oauth_integration_guid": integration_guid}]
+        data = [{"oauth_integration_guid": integration_guid}]
 
         path = (
             f"v1/content/{self.content_guid}/oauth/integrations/associations"
