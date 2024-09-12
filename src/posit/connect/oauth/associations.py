@@ -1,6 +1,5 @@
 """OAuth association resources."""
 
-from os import walk
 from typing import List
 
 from ..resources import Resource, ResourceParameters, Resources
@@ -75,7 +74,7 @@ class ContentItemAssociations(Resources):
         )
         url = self.params.url + path
         self.params.session.put(url, json=data)
-    
+
     def update(self, integration_guid: str) -> None:
         """Set integration associations."""
         data = [{"oauth_integration_guid": integration_guid}]
