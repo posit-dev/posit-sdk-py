@@ -25,8 +25,8 @@ dependencies = ["requests>=2.31.0,<3"]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
-[tool.mypy]
-exclude = "integration/resources"
+[tool.pyright]
+include = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

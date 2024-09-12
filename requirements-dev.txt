@@ -1,9 +1,9 @@
 build
 coverage
-mypy
 pandas
 pre-commit
 pyjson5
+pyright
 pytest
 responses
 rsconnect-python

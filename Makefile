@@ -12,7 +12,7 @@ build:
 clean:
 	$(MAKE) -C ./docs $@
 	$(MAKE) -C ./integration $@
-	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
+	rm -rf .coverage .pytest_cache .ruff_cache *.egg-info build coverage.xml dist htmlcov coverage.xml
 	find src -name "_version.py" -exec rm -rf {} +
 	find . -name "*.egg-info" -exec rm -rf {} +
 	find . -name "*.pyc" -exec rm -f {} +
@@ -54,7 +54,7 @@ it:
 	$(MAKE) -C ./integration
 
 lint:
-	$(PYTHON) -m mypy --install-types --non-interactive .
+	$(PYTHON) -m pyright
 	$(PYTHON) -m ruff check
 
 test:

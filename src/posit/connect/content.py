@@ -195,15 +195,15 @@ class ContentItem(Resource):
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.params, self.guid)
+        return Bundles(self.params, self["guid"])
 
     @property
     def environment_variables(self) -> EnvVars:
-        return EnvVars(self.params, self.guid)
+        return EnvVars(self.params, self["guid"])
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.params, self.guid)
+        return Permissions(self.params, self["guid"])
 
     @property
     def owner(self) -> dict:
@@ -213,12 +213,12 @@ class ContentItem(Resource):
             # If it's not included, we can retrieve the information by `owner_guid`
             from .users import Users
 
-            self["owner"] = Users(self.params).get(self.owner_guid)
+            self["owner"] = Users(self.params).get(self["owner_guid"])
         return self["owner"]
 
     @property
     def _variants(self) -> Variants:
-        return Variants(self.params, self.guid)
+        return Variants(self.params, self["guid"])
 
     @property
     def is_interactive(self) -> bool:
