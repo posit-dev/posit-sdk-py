@@ -73,10 +73,7 @@ class TestAssociations:
     def test_find_by_integration(self):
         associations = self.integration.associations.find()
         assert len(associations) == 1
-        assert (
-            associations[0]["oauth_integration_guid"]
-            == self.integration["guid"]
-        )
+        assert associations[0]["oauth_integration_guid"] == self.integration["guid"]
 
         no_associations = self.another_integration.associations.find()
         assert len(no_associations) == 0
@@ -85,15 +82,10 @@ class TestAssociations:
         associations = self.content.oauth.associations.find()
         assert len(associations) == 1
         assert associations[0]["app_guid"] == self.content["guid"]
-        assert (
-            associations[0]["oauth_integration_guid"]
-            == self.integration["guid"]
-        )
+        assert associations[0]["oauth_integration_guid"] == self.integration["guid"]
 
         # update content association to another_integration
-        self.content.oauth.associations.update(
-            self.another_integration["guid"]
-        )
+        self.content.oauth.associations.update(self.another_integration["guid"])
         updated_associations = self.content.oauth.associations.find()
         assert len(updated_associations) == 1
         assert updated_associations[0]["app_guid"] == self.content["guid"]

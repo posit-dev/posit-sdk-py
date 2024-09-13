@@ -28,9 +28,7 @@ class TestPermissionDelete:
         params = ResourceParameters(
             requests.Session(), Url("https://connect.example/__api__")
         )
-        fake_permission = load_mock(
-            f"v1/content/{content_guid}/permissions/{uid}.json"
-        )
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
         permission = Permission(params, **fake_permission)
 
         # invoke
@@ -97,9 +95,7 @@ class TestPermissionUpdate:
 
         uid = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = load_mock(
-            f"v1/content/{content_guid}/permissions/{uid}.json"
-        )
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
         fake_permission.update(role=new_role)
 
         # define api behavior
@@ -138,9 +134,7 @@ class TestPermissionsCount:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(
-            f"v1/content/{content_guid}/permissions.json"
-        )
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
@@ -214,9 +208,7 @@ class TestPermissionsFind:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(
-            f"v1/content/{content_guid}/permissions.json"
-        )
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
@@ -242,9 +234,7 @@ class TestPermissionsFindOne:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(
-            f"v1/content/{content_guid}/permissions.json"
-        )
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
@@ -271,9 +261,7 @@ class TestPermissionsGet:
         # data
         uid = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = load_mock(
-            f"v1/content/{content_guid}/permissions/{uid}.json"
-        )
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
 
         # behavior
         responses.get(

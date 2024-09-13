@@ -40,10 +40,7 @@ class TestIntegrationAttributes:
         )
         assert self.item.config["client_id"] == "rsconnect-oidc"
         assert self.item.config["scopes"] == "email"
-        assert (
-            self.item.config["token_endpoint_auth_method"]
-            == "client_secret_basic"
-        )
+        assert self.item.config["token_endpoint_auth_method"] == "client_secret_basic"
         assert (
             self.item.config["token_uri"]
             == "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/token"

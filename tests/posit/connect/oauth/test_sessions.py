@@ -27,8 +27,7 @@ class TestOAuthSessionAttributes:
 
     def test_oauth_integration_guid(self):
         assert (
-            self.item.oauth_integration_guid
-            == "967f0ad3-3e3b-4491-8539-1a193b35a415"
+            self.item.oauth_integration_guid == "967f0ad3-3e3b-4491-8539-1a193b35a415"
         )
 
     def test_has_refresh_token(self):

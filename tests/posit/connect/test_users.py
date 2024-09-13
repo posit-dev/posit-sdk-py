@@ -103,9 +103,7 @@ class TestUserContent:
         # behavior
         mock_get_user = responses.get(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
 
         mock_get_content = responses.get(
@@ -139,9 +137,7 @@ class TestUserLock:
     def test_lock(self):
         responses.get(
             "https://connect.example/__api__/v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
-            json=load_mock(
-                "v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6.json"
-            ),
+            json=load_mock("v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6.json"),
         )
         c = Client(api_key="12345", url="https://connect.example/")
         user = c.users.get("a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6")
@@ -149,9 +145,7 @@ class TestUserLock:
 
         responses.get(
             "https://connect.example/__api__/v1/user",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
         responses.post(
             "https://connect.example/__api__/v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6/lock",
@@ -164,9 +158,7 @@ class TestUserLock:
     def test_lock_self_true(self):
         responses.get(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
         c = Client(api_key="12345", url="https://connect.example/")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
@@ -174,9 +166,7 @@ class TestUserLock:
 
         responses.get(
             "https://connect.example/__api__/v1/user",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
         responses.post(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
@@ -189,9 +179,7 @@ class TestUserLock:
     def test_lock_self_false(self):
         responses.get(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
         c = Client(api_key="12345", url="https://connect.example/")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
@@ -199,9 +187,7 @@ class TestUserLock:
 
         responses.get(
             "https://connect.example/__api__/v1/user",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
         responses.post(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
@@ -217,9 +203,7 @@ class TestUserUnlock:
     def test_unlock(self):
         responses.get(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
         c = Client(api_key="12345", url="https://connect.example/")
         user = c.users.get("20a79ce3-6e87-4522-9faf-be24228800a4")
@@ -238,9 +222,7 @@ class TestUsers:
     def test_users_get(self):
         responses.get(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
@@ -269,17 +251,11 @@ class TestUsers:
     def test_user_update(self):
         responses.get(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
         patch_request = responses.put(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            match=[
-                responses.matchers.json_params_matcher(
-                    {"first_name": "Carlitos"}
-                )
-            ],
+            match=[responses.matchers.json_params_matcher({"first_name": "Carlitos"})],
             json={"first_name": "Carlitos"},
         )
 
@@ -298,9 +274,7 @@ class TestUsers:
     def test_user_update_server_error(self):
         responses.get(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(
-                "v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
         responses.put(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",

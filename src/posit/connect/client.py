@@ -140,11 +140,7 @@ class Client:
         url = None
         if len(args) == 1 and isinstance(args[0], str):
             url = args[0]
-        elif (
-            len(args) == 2
-            and isinstance(args[0], str)
-            and isinstance(args[1], str)
-        ):
+        elif len(args) == 2 and isinstance(args[0], str) and isinstance(args[1], str):
             url = args[0]
             api_key = args[1]
         else:
