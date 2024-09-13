@@ -5,7 +5,7 @@ from __future__ import annotations
 import posixpath
 import time
 from posixpath import dirname
-from typing import Any, List, Optional, overload
+from typing import Any, List, Literal, Optional, overload
 
 from posit.connect.oauth.associations import ContentItemAssociations
 
@@ -133,76 +133,108 @@ class ContentItem(Resource):
     @overload
     def update(
         self,
-        *args,
-        name: str = ...,
-        title: Optional[str] = ...,
-        description: str = ...,
-        access_type: str = ...,
-        owner_guid: Optional[str] = ...,
-        connection_timeout: Optional[int] = ...,
-        read_timeout: Optional[int] = ...,
-        init_timeout: Optional[int] = ...,
-        idle_timeout: Optional[int] = ...,
-        max_processes: Optional[int] = ...,
-        min_processes: Optional[int] = ...,
-        max_conns_per_process: Optional[int] = ...,
-        load_factor: Optional[float] = ...,
-        cpu_request: Optional[float] = ...,
-        cpu_limit: Optional[float] = ...,
-        memory_request: Optional[int] = ...,
-        memory_limit: Optional[int] = ...,
-        amd_gpu_limit: Optional[int] = ...,
-        nvidia_gpu_limit: Optional[int] = ...,
-        run_as: Optional[str] = ...,
-        run_as_current_user: Optional[bool] = ...,
-        default_image_name: Optional[str] = ...,
-        default_r_environment_management: Optional[bool] = ...,
-        default_py_environment_management: Optional[bool] = ...,
-        service_account_name: Optional[str] = ...,
-        **kwargs,
+        *,
+        # Required argument
+        name: str,
+        # Content Metadata
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        access_type: Literal["all", "acl", "logged_in"] = "acl",
+        owner_guid: Optional[str] = None,
+        # Timeout Settings
+        connection_timeout: Optional[int] = None,
+        read_timeout: Optional[int] = None,
+        init_timeout: Optional[int] = None,
+        idle_timeout: Optional[int] = None,
+        # Process and Resource Limits
+        max_processes: Optional[int] = None,
+        min_processes: Optional[int] = None,
+        max_conns_per_process: Optional[int] = None,
+        load_factor: Optional[float] = None,
+        cpu_request: Optional[float] = None,
+        cpu_limit: Optional[float] = None,
+        memory_request: Optional[int] = None,
+        memory_limit: Optional[int] = None,
+        amd_gpu_limit: Optional[int] = None,
+        nvidia_gpu_limit: Optional[int] = None,
+        # Execution Settings
+        run_as: Optional[str] = None,
+        run_as_current_user: Optional[bool] = False,
+        default_image_name: Optional[str] = None,
+        default_r_environment_management: Optional[bool] = None,
+        default_py_environment_management: Optional[bool] = None,
+        service_account_name: Optional[str] = None,
     ) -> None:
         """Update the content item.
 
         Parameters
         ----------
-        name : str, optional
-        title : Optional[str], optional
+        name : str
+            URL-friendly identifier. Allows alphanumeric characters, hyphens ("-"), and underscores ("_").
+        title : str, optional
+            Content title. Default is None.
         description : str, optional
-        access_type : str, optional
-        owner_guid : Optional[str], optional
-        connection_timeout : Optional[int], optional
-        read_timeout : Optional[int], optional
-        init_timeout : Optional[int], optional
-        idle_timeout : Optional[int], optional
-        max_processes : Optional[int], optional
-        min_processes : Optional[int], optional
-        max_conns_per_process : Optional[int], optional
-        load_factor : Optional[float], optional
-        cpu_request : Optional[float], optional
-        cpu_limit : Optional[float], optional
-        memory_request : Optional[int], optional
-        memory_limit : Optional[int], optional
-        amd_gpu_limit : Optional[int], optional
-        nvidia_gpu_limit : Optional[int], optional
-        run_as : Optional[str], optional
-        run_as_current_user : Optional[bool], optional
-        default_image_name : Optional[str], optional
-        default_r_environment_management : Optional[bool], optional
-        default_py_environment_management : Optional[bool], optional
-        service_account_name : Optional[str], optional
+            Content description. Default is None.
+        access_type : Literal['all', 'acl', 'logged_in'], optional
+            How content manages viewers. Default is 'acl'. Options: 'all', 'logged_in', 'acl'.
+        owner_guid : str, optional
+            The unique identifier of the user who owns this content item. Default is None.
+        connection_timeout : int, optional
+            Max seconds without data exchange. Default is None. Falls back to server setting 'Scheduler.ConnectionTimeout'.
+        read_timeout : int, optional
+            Max seconds without data received. Default is None. Falls back to server setting 'Scheduler.ReadTimeout'.
+        init_timeout : int, optional
+            Max startup time for interactive apps. Default is None. Falls back to server setting 'Scheduler.InitTimeout'.
+        idle_timeout : int, optional
+            Max idle time before process termination. Default is None. Falls back to server setting 'Scheduler.IdleTimeout'.
+        max_processes : int, optional
+            Max concurrent processes allowed. Default is None. Falls back to server setting 'Scheduler.MaxProcesses'.
+        min_processes : int, optional
+            Min concurrent processes required. Default is None. Falls back to server setting 'Scheduler.MinProcesses'.
+        max_conns_per_process : int, optional
+            Max client connections per process. Default is None. Falls back to server setting 'Scheduler.MaxConnsPerProcess'.
+        load_factor : float, optional
+            Aggressiveness in spawning new processes (0.0 - 1.0). Default is None. Falls back to server setting 'Scheduler.LoadFactor'.
+        cpu_request : float, optional
+            Min CPU units required (1 unit = 1 core). Default is None. Falls back to server setting 'Scheduler.CPURequest'.
+        cpu_limit : float, optional
+            Max CPU units allowed. Default is None. Falls back to server setting 'Scheduler.CPULimit'.
+        memory_request : int, optional
+            Min memory (bytes) required. Default is None. Falls back to server setting 'Scheduler.MemoryRequest'.
+        memory_limit : int, optional
+            Max memory (bytes) allowed. Default is None. Falls back to server setting 'Scheduler.MemoryLimit'.
+        amd_gpu_limit : int, optional
+            Number of AMD GPUs allocated. Default is None. Falls back to server setting 'Scheduler.AMDGPULimit'.
+        nvidia_gpu_limit : int, optional
+            Number of NVIDIA GPUs allocated. Default is None. Falls back to server setting 'Scheduler.NvidiaGPULimit'.
+        run_as : str, optional
+            UNIX user to execute the content. Default is None. Falls back to server setting 'Applications.RunAs'.
+        run_as_current_user : bool, optional
+            Run process as the visiting user (for app content). Default is False.
+        default_image_name : str, optional
+            Default image for execution if not defined in the bundle. Default is None.
+        default_r_environment_management : bool, optional
+            Manage R environment for the content. Default is None.
+        default_py_environment_management : bool, optional
+            Manage Python environment for the content. Default is None.
+        service_account_name : str, optional
+            Kubernetes service account name for running content. Default is None.
+
+        Returns
+        -------
+        None
         """
         ...
 
     @overload
-    def update(self, *args, **kwargs) -> None:
-        """Update the content item."""
+    def update(self, **attributes: Any) -> None:
+        """Update the content."""
         ...
 
-    def update(self, *args, **kwargs) -> None:
-        """Update the content item."""
-        body = dict(*args, **kwargs)
-        url = self.params.url + f"v1/content/{self.guid}"
-        response = self.params.session.patch(url, json=body)
+    def update(self, **attributes: Any) -> None:
+        """Update the content."""
+        url = self.params.url + f"v1/content/{self['guid']}"
+        response = self.params.session.patch(url, json=attributes)
         super().update(**response.json())
 
     # Relationships
@@ -282,18 +314,6 @@ class Content(Resources):
         super().__init__(params)
         self.owner_guid = owner_guid
 
-    def _get_default_params(self) -> dict:
-        """Build default parameters for GET requests.
-
-        Returns
-        -------
-        dict
-        """
-        params = {}
-        if self.owner_guid:
-            params["owner_guid"] = self.owner_guid
-        return params
-
     def count(self) -> int:
         """Count the number of content items.
 
@@ -307,59 +327,88 @@ class Content(Resources):
     def create(
         self,
         *,
-        name: str = ...,
-        title: Optional[str] = ...,
-        description: str = ...,
-        access_type: str = ...,
-        connection_timeout: Optional[int] = ...,
-        read_timeout: Optional[int] = ...,
-        init_timeout: Optional[int] = ...,
-        idle_timeout: Optional[int] = ...,
-        max_processes: Optional[int] = ...,
-        min_processes: Optional[int] = ...,
-        max_conns_per_process: Optional[int] = ...,
-        load_factor: Optional[float] = ...,
-        cpu_request: Optional[float] = ...,
-        cpu_limit: Optional[float] = ...,
-        memory_request: Optional[int] = ...,
-        memory_limit: Optional[int] = ...,
-        amd_gpu_limit: Optional[int] = ...,
-        nvidia_gpu_limit: Optional[int] = ...,
-        run_as: Optional[str] = ...,
-        run_as_current_user: Optional[bool] = ...,
-        default_image_name: Optional[str] = ...,
-        default_r_environment_management: Optional[bool] = ...,
-        default_py_environment_management: Optional[bool] = ...,
-        service_account_name: Optional[str] = ...,
+        # Required argument
+        name: str,
+        # Content Metadata
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        access_type: Literal["all", "acl", "logged_in"] = "acl",
+        # Timeout Settings
+        connection_timeout: Optional[int] = None,
+        read_timeout: Optional[int] = None,
+        init_timeout: Optional[int] = None,
+        idle_timeout: Optional[int] = None,
+        # Process and Resource Limits
+        max_processes: Optional[int] = None,
+        min_processes: Optional[int] = None,
+        max_conns_per_process: Optional[int] = None,
+        load_factor: Optional[float] = None,
+        cpu_request: Optional[float] = None,
+        cpu_limit: Optional[float] = None,
+        memory_request: Optional[int] = None,
+        memory_limit: Optional[int] = None,
+        amd_gpu_limit: Optional[int] = None,
+        nvidia_gpu_limit: Optional[int] = None,
+        # Execution Settings
+        run_as: Optional[str] = None,
+        run_as_current_user: Optional[bool] = False,
+        default_image_name: Optional[str] = None,
+        default_r_environment_management: Optional[bool] = None,
+        default_py_environment_management: Optional[bool] = None,
+        service_account_name: Optional[str] = None,
     ) -> ContentItem:
-        """Create a content item.
+        """Create content.
 
         Parameters
         ----------
-        name : str, optional
-        title : Optional[str], optional
+        name : str
+            URL-friendly identifier. Allows alphanumeric characters, hyphens ("-"), and underscores ("_").
+        title : str, optional
+            Content title. Default is None.
         description : str, optional
-        access_type : str, optional
-        connection_timeout : Optional[int], optional
-        read_timeout : Optional[int], optional
-        init_timeout : Optional[int], optional
-        idle_timeout : Optional[int], optional
-        max_processes : Optional[int], optional
-        min_processes : Optional[int], optional
-        max_conns_per_process : Optional[int], optional
-        load_factor : Optional[float], optional
-        cpu_request : Optional[float], optional
-        cpu_limit : Optional[float], optional
-        memory_request : Optional[int], optional
-        memory_limit : Optional[int], optional
-        amd_gpu_limit : Optional[int], optional
-        nvidia_gpu_limit : Optional[int], optional
-        run_as : Optional[str], optional
-        run_as_current_user : Optional[bool], optional
-        default_image_name : Optional[str], optional
-        default_r_environment_management : Optional[bool], optional
-        default_py_environment_management : Optional[bool], optional
-        service_account_name : Optional[str], optional
+            Content description. Default is None.
+        access_type : Literal['all', 'acl', 'logged_in', optional
+            How content manages viewers. Default is 'acl'. Options: 'all', 'logged_in', 'acl'.
+        connection_timeout : int, optional
+            Max seconds without data exchange. Default is None. Falls back to server setting 'Scheduler.ConnectionTimeout'.
+        read_timeout : int, optional
+            Max seconds without data received. Default is None. Falls back to server setting 'Scheduler.ReadTimeout'.
+        init_timeout : int, optional
+            Max startup time for interactive apps. Default is None. Falls back to server setting 'Scheduler.InitTimeout'.
+        idle_timeout : int, optional
+            Max idle time before process termination. Default is None. Falls back to server setting 'Scheduler.IdleTimeout'.
+        max_processes : int, optional
+            Max concurrent processes allowed. Default is None. Falls back to server setting 'Scheduler.MaxProcesses'.
+        min_processes : int, optional
+            Min concurrent processes required. Default is None. Falls back to server setting 'Scheduler.MinProcesses'.
+        max_conns_per_process : int, optional
+            Max client connections per process. Default is None. Falls back to server setting 'Scheduler.MaxConnsPerProcess'.
+        load_factor : float, optional
+            Aggressiveness in spawning new processes (0.0 - 1.0). Default is None. Falls back to server setting 'Scheduler.LoadFactor'.
+        cpu_request : float, optional
+            Min CPU units required (1 unit = 1 core). Default is None. Falls back to server setting 'Scheduler.CPURequest'.
+        cpu_limit : float, optional
+            Max CPU units allowed. Default is None. Falls back to server setting 'Scheduler.CPULimit'.
+        memory_request : int, optional
+            Min memory (bytes) required. Default is None. Falls back to server setting 'Scheduler.MemoryRequest'.
+        memory_limit : int, optional
+            Max memory (bytes) allowed. Default is None. Falls back to server setting 'Scheduler.MemoryLimit'.
+        amd_gpu_limit : int, optional
+            Number of AMD GPUs allocated. Default is None. Falls back to server setting 'Scheduler.AMDGPULimit'.
+        nvidia_gpu_limit : int, optional
+            Number of NVIDIA GPUs allocated. Default is None. Falls back to server setting 'Scheduler.NvidiaGPULimit'.
+        run_as : str, optional
+            UNIX user to execute the content. Default is None. Falls back to server setting 'Applications.RunAs'.
+        run_as_current_user : bool, optional
+            Run process as the visiting user (for app content). Default is False.
+        default_image_name : str, optional
+            Default image for execution if not defined in the bundle. Default is None.
+        default_r_environment_management : bool, optional
+            Manage R environment for the content. Default is None.
+        default_py_environment_management : bool, optional
+            Manage Python environment for the content. Default is None.
+        service_account_name : str, optional
+            Kubernetes service account name for running content. Default is None.
 
         Returns
         -------
@@ -368,7 +417,7 @@ class Content(Resources):
         ...
 
     @overload
-    def create(self, **kwargs) -> ContentItem:
+    def create(self, **attributes) -> ContentItem:
         """Create a content item.
 
         Returns
@@ -377,7 +426,7 @@ class Content(Resources):
         """
         ...
 
-    def create(self, **kwargs) -> ContentItem:
+    def create(self, **attributes) -> ContentItem:
         """Create a content item.
 
         Returns
@@ -386,67 +435,97 @@ class Content(Resources):
         """
         path = "v1/content"
         url = self.params.url + path
-        response = self.params.session.post(url, json=kwargs)
+        response = self.params.session.post(url, json=attributes)
         return ContentItem(self.params, **response.json())
 
     @overload
     def find(
         self,
-        owner_guid: str = ...,
-        name: str = ...,
-        include: Optional[str] = "owner,tags",
+        *,
+        name: Optional[str] = None,
+        owner_guid: Optional[str] = None,
+        include: Optional[
+            Literal["owner", "tags", "vanity_url"] | list[Literal["owner", "tags", "vanity_url"]]
+        ] = None,
     ) -> List[ContentItem]:
-        """Find content items.
+        """Find content matching the specified criteria.
+
+        **Applies to Connect versions 2024.06.0 and later.**
 
         Parameters
         ----------
-        owner_guid : str, optional
-            The owner's unique identifier, by default ...
         name : str, optional
-            The simple URL friendly name, by default ...
-        include : Optional[str], optional
-            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+            The content name specified at creation; unique within the owner's account.
+        owner_guid : str, optional
+            The UUID of the content owner.
+        include : str or list of str, optional
+            Additional details to include in the response. Allowed values: 'owner', 'tags', 'vanity_url'.
 
         Returns
         -------
         List[ContentItem]
+            List of matching content items.
+
+        Note
+        ----
+        Specifying both `name` and `owner_guid` returns at most one content item due to uniqueness.
         """
         ...
 
     @overload
-    def find(self, *args, include: Optional[str] = "owner,tags", **kwargs) -> List[ContentItem]:
-        """Find content items.
+    def find(
+        self,
+        *,
+        name: Optional[str] = None,
+        owner_guid: Optional[str] = None,
+        include: Optional[Literal["owner", "tags"] | list[Literal["owner", "tags"]]] = None,
+    ) -> List[ContentItem]:
+        """Find content matching the specified criteria.
+
+        **Applies to Connect versions prior to 2024.06.0.**
 
         Parameters
         ----------
-        include : Optional[str], optional
-            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+        name : str, optional
+            The content name specified at creation; unique within the owner's account.
+        owner_guid : str, optional
+            The UUID of the content owner.
+        include : str or list of str, optional
+            Additional details to include in the response. Allowed values: 'owner', 'tags'.
 
         Returns
         -------
         List[ContentItem]
+            List of matching content items.
+
+        Note
+        ----
+        Specifying both `name` and `owner_guid` returns at most one content item due to uniqueness.
         """
         ...
 
-    def find(self, *args, include: Optional[str] = "owner,tags", **kwargs) -> List[ContentItem]:
-        """Find content items.
+    @overload
+    def find(self, include: Optional[str | list[Any]], **conditions) -> List[ContentItem]: ...
 
-        Parameters
-        ----------
-        include : Optional[str], optional
-            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+    def find(self, include: Optional[str | list[Any]] = None, **conditions) -> List[ContentItem]:
+        """Find content matching the specified conditions.
 
         Returns
         -------
         List[ContentItem]
         """
-        params = self._get_default_params()
-        params.update(args)
-        params.update(kwargs)
-        params["include"] = include
+        if isinstance(include, list):
+            include = ",".join(include)
+
+        if include is not None:
+            conditions["include"] = include
+
+        if self.owner_guid:
+            conditions["owner_guid"] = self.owner_guid
+
         path = "v1/content"
         url = self.params.url + path
-        response = self.params.session.get(url, params=params)
+        response = self.params.session.get(url, params=conditions)
         return [
             ContentItem(
                 self.params,
@@ -458,59 +537,78 @@ class Content(Resources):
     @overload
     def find_one(
         self,
-        owner_guid: str = ...,
-        name: str = ...,
-        include: Optional[str] = "owner,tags",
-    ) -> ContentItem | None:
-        """Find content items.
+        *,
+        name: Optional[str] = None,
+        owner_guid: Optional[str] = None,
+        include: Optional[
+            Literal["owner", "tags", "vanity_url"] | list[Literal["owner", "tags", "vanity_url"]]
+        ] = None,
+    ) -> Optional[ContentItem]:
+        """Find first content result matching the specified conditions.
 
         Parameters
         ----------
-        owner_guid : str, optional
-            The owner's unique identifier, by default ...
         name : str, optional
-            The simple URL friendly name, by default ...
-        include : Optional[str], optional
-            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+            The content name specified at creation; unique within the owner's account.
+        owner_guid : str, optional
+            The UUID of the content owner.
+        include : str or list of str, optional
+            Additional details to include in the response. Allowed values: 'owner', 'tags', 'vanity_url'.
 
         Returns
         -------
-        ContentItem | None
+        Optional[ContentItem]
+            List of matching content items.
+
+        Note
+        ----
+        Specifying both `name` and `owner_guid` returns at most one content item due to uniqueness.
         """
         ...
 
     @overload
     def find_one(
-        self, *args, include: Optional[str] = "owner,tags", **kwargs
-    ) -> ContentItem | None:
-        """Find content items.
+        self,
+        *,
+        name: Optional[str] = None,
+        owner_guid: Optional[str] = None,
+        include: Optional[Literal["owner", "tags"] | list[Literal["owner", "tags"]]] = None,
+    ) -> Optional[ContentItem]:
+        """Find first content result matching the specified conditions.
+
+        **Applies to Connect versions prior to 2024.06.0.**
 
         Parameters
         ----------
-        include : Optional[str], optional
-            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+        name : str, optional
+            The content name specified at creation; unique within the owner's account.
+        owner_guid : str, optional
+            The UUID of the content owner.
+        include : str or list of str, optional
+            Additional details to include in the response. Allowed values: 'owner', 'tags'.
 
         Returns
         -------
-        ContentItem | None
+        Optional[ContentItem]
+            List of matching content items.
+
+        Note
+        ----
+        Specifying both `name` and `owner_guid` returns at most one content item due to uniqueness.
         """
         ...
 
-    def find_one(
-        self, *args, include: Optional[str] = "owner,tags", **kwargs
-    ) -> ContentItem | None:
-        """Find content items.
+    @overload
+    def find_one(self, **conditions) -> Optional[ContentItem]: ...
 
-        Parameters
-        ----------
-        include : Optional[str], optional
-            Comma separated list of details to include in the response, allows 'owner' and 'tags', by default 'owner,tags'
+    def find_one(self, **conditions) -> Optional[ContentItem]:
+        """Find first content result matching the specified conditions.
 
         Returns
         -------
-        ContentItem | None
+        Optional[ContentItem]
         """
-        items = self.find(*args, include=include, **kwargs)
+        items = self.find(**conditions)
         return next(iter(items), None)
 
     def get(self, guid: str) -> ContentItem:
