@@ -444,7 +444,10 @@ class Content(Resources):
         *,
         name: Optional[str] = None,
         owner_guid: Optional[str] = None,
-        include: str | list[Literal["owner", "tags", "vanity_url"]] = [],
+        include: Optional[
+            Literal["owner", "tags", "vanity_url"]
+            | list[Literal["owner", "tags", "vanity_url"]]
+        ] = None,
     ) -> List[ContentItem]:
         """Find content matching the specified criteria.
 
@@ -476,7 +479,9 @@ class Content(Resources):
         *,
         name: Optional[str] = None,
         owner_guid: Optional[str] = None,
-        include: str | list[Literal["owner", "tags"]] = [],
+        include: Optional[
+            Literal["owner", "tags"] | list[Literal["owner", "tags"]]
+        ] = None,
     ) -> List[ContentItem]:
         """Find content matching the specified criteria.
 
@@ -503,20 +508,31 @@ class Content(Resources):
         ...
 
     @overload
-    def find(self, **conditions) -> List[ContentItem]: ...
+    def find(
+        self, include: Optional[str | list[Any]], **conditions
+    ) -> List[ContentItem]: ...
 
-    def find(self, **conditions) -> List[ContentItem]:
+    def find(
+        self, include: Optional[str | list[Any]] = None, **conditions
+    ) -> List[ContentItem]:
         """Find content matching the specified conditions.
 
         Returns
         -------
         List[ContentItem]
         """
+        if isinstance(include, list):
+            include = ",".join(include)
+
+        if include is not None:
+            conditions["include"] = include
+
+        if self.owner_guid:
+            conditions["owner_guid"] = self.owner_guid
+
         path = "v1/content"
         url = self.params.url + path
-        response = self.params.session.get(
-            url, params={"owner_guid": self.owner_guid, **conditions}
-        )
+        response = self.params.session.get(url, params=conditions)
         return [
             ContentItem(
                 self.params,
@@ -531,7 +547,10 @@ class Content(Resources):
         *,
         name: Optional[str] = None,
         owner_guid: Optional[str] = None,
-        include: str | list[Literal["owner", "tags", "vanity_url"]] = [],
+        include: Optional[
+            Literal["owner", "tags", "vanity_url"]
+            | list[Literal["owner", "tags", "vanity_url"]]
+        ] = None,
     ) -> Optional[ContentItem]:
         """Find first content result matching the specified conditions.
 
@@ -561,7 +580,9 @@ class Content(Resources):
         *,
         name: Optional[str] = None,
         owner_guid: Optional[str] = None,
-        include: str | list[Literal["owner", "tags"]] = [],
+        include: Optional[
+            Literal["owner", "tags"] | list[Literal["owner", "tags"]]
+        ] = None,
     ) -> Optional[ContentItem]:
         """Find first content result matching the specified conditions.
 
