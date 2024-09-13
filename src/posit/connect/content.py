@@ -445,8 +445,7 @@ class Content(Resources):
         name: Optional[str] = None,
         owner_guid: Optional[str] = None,
         include: Optional[
-            Literal["owner", "tags", "vanity_url"]
-            | list[Literal["owner", "tags", "vanity_url"]]
+            Literal["owner", "tags", "vanity_url"] | list[Literal["owner", "tags", "vanity_url"]]
         ] = None,
     ) -> List[ContentItem]:
         """Find content matching the specified criteria.
@@ -479,9 +478,7 @@ class Content(Resources):
         *,
         name: Optional[str] = None,
         owner_guid: Optional[str] = None,
-        include: Optional[
-            Literal["owner", "tags"] | list[Literal["owner", "tags"]]
-        ] = None,
+        include: Optional[Literal["owner", "tags"] | list[Literal["owner", "tags"]]] = None,
     ) -> List[ContentItem]:
         """Find content matching the specified criteria.
 
@@ -508,13 +505,9 @@ class Content(Resources):
         ...
 
     @overload
-    def find(
-        self, include: Optional[str | list[Any]], **conditions
-    ) -> List[ContentItem]: ...
+    def find(self, include: Optional[str | list[Any]], **conditions) -> List[ContentItem]: ...
 
-    def find(
-        self, include: Optional[str | list[Any]] = None, **conditions
-    ) -> List[ContentItem]:
+    def find(self, include: Optional[str | list[Any]] = None, **conditions) -> List[ContentItem]:
         """Find content matching the specified conditions.
 
         Returns
@@ -548,8 +541,7 @@ class Content(Resources):
         name: Optional[str] = None,
         owner_guid: Optional[str] = None,
         include: Optional[
-            Literal["owner", "tags", "vanity_url"]
-            | list[Literal["owner", "tags", "vanity_url"]]
+            Literal["owner", "tags", "vanity_url"] | list[Literal["owner", "tags", "vanity_url"]]
         ] = None,
     ) -> Optional[ContentItem]:
         """Find first content result matching the specified conditions.
@@ -580,9 +572,7 @@ class Content(Resources):
         *,
         name: Optional[str] = None,
         owner_guid: Optional[str] = None,
-        include: Optional[
-            Literal["owner", "tags"] | list[Literal["owner", "tags"]]
-        ] = None,
+        include: Optional[Literal["owner", "tags"] | list[Literal["owner", "tags"]]] = None,
     ) -> Optional[ContentItem]:
         """Find first content result matching the specified conditions.
 
