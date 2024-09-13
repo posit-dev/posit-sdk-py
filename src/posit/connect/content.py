@@ -25,9 +25,7 @@ class ContentItemOAuth(Resource):
 
     @property
     def associations(self) -> ContentItemAssociations:
-        return ContentItemAssociations(
-            self.params, content_guid=self.content_guid
-        )
+        return ContentItemAssociations(self.params, content_guid=self.content_guid)
 
 
 class ContentItemOwner(Resource):
@@ -124,9 +122,7 @@ class ContentItem(Resource):
             self.environment_variables.create(key, unix_epoch_in_seconds)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = posixpath.join(
-                dirname(self.params.url), f"content/{self.guid}"
-            )
+            url = posixpath.join(dirname(self.params.url), f"content/{self.guid}")
             self.params.session.get(url)
             return None
         else:

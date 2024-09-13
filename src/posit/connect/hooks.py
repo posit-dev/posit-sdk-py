@@ -24,9 +24,7 @@ def handle_errors(response: Response, *args, **kwargs) -> Response:
     return response
 
 
-def check_for_deprecation_header(
-    response: Response, *args, **kwargs
-) -> Response:
+def check_for_deprecation_header(response: Response, *args, **kwargs) -> Response:
     """
     Check for deprecation warnings from the server.
 

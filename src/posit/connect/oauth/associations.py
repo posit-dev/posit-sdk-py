@@ -12,9 +12,7 @@ class Association(Resource):
 class IntegrationAssociations(Resources):
     """IntegrationAssociations resource."""
 
-    def __init__(
-        self, params: ResourceParameters, integration_guid: str
-    ) -> None:
+    def __init__(self, params: ResourceParameters, integration_guid: str) -> None:
         super().__init__(params)
         self.integration_guid = integration_guid
 
@@ -52,9 +50,7 @@ class ContentItemAssociations(Resources):
         -------
         List[Association]
         """
-        path = (
-            f"v1/content/{self.content_guid}/oauth/integrations/associations"
-        )
+        path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         url = self.params.url + path
         response = self.params.session.get(url)
         return [
@@ -69,9 +65,7 @@ class ContentItemAssociations(Resources):
         """Delete integration associations."""
         data = []
 
-        path = (
-            f"v1/content/{self.content_guid}/oauth/integrations/associations"
-        )
+        path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         url = self.params.url + path
         self.params.session.put(url, json=data)
 
@@ -79,8 +73,6 @@ class ContentItemAssociations(Resources):
         """Set integration associations."""
         data = [{"oauth_integration_guid": integration_guid}]
 
-        path = (
-            f"v1/content/{self.content_guid}/oauth/integrations/associations"
-        )
+        path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         url = self.params.url + path
         self.params.session.put(url, json=data)

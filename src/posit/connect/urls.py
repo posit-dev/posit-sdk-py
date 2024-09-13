@@ -116,6 +116,4 @@ def _append(url: str, path) -> str:
     path = str(path).strip("/")
     split = urlsplit(url, allow_fragments=False)
     new_path = posixpath.join(split.path, path)
-    return urlunsplit(
-        (split.scheme, split.netloc, new_path, split.query, None)
-    )
+    return urlunsplit((split.scheme, split.netloc, new_path, split.query, None))

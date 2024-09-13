@@ -24,6 +24,4 @@ class TestOAuthIntegrations:
             },
         )
         con = Client(api_key="12345", url="https://connect.example/")
-        assert (
-            con.oauth.get_credentials("cit")["access_token"] == "viewer-token"
-        )
+        assert con.oauth.get_credentials("cit")["access_token"] == "viewer-token"

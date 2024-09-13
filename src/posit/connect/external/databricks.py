@@ -35,14 +35,10 @@ class PositCredentialsProvider:
         self._user_session_token = user_session_token
 
     def __call__(self) -> Dict[str, str]:
-        credentials = self._client.oauth.get_credentials(
-            self._user_session_token
-        )
+        credentials = self._client.oauth.get_credentials(self._user_session_token)
         access_token = credentials.get("access_token")
         if access_token is None:
-            raise ValueError(
-                "Missing value for field 'access_token' in credentials."
-            )
+            raise ValueError("Missing value for field 'access_token' in credentials.")
         return {"Authorization": f"Bearer {access_token}"}
 
 

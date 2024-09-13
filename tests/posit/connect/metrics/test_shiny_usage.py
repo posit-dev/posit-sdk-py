@@ -14,15 +14,11 @@ class TestShinyUsageEventAttributes:
     def setup_class(cls):
         cls.event = shiny_usage.ShinyUsageEvent(
             mock.Mock(),
-            **load_mock("v1/instrumentation/shiny/usage?limit=500.json")[
-                "results"
-            ][0],
+            **load_mock("v1/instrumentation/shiny/usage?limit=500.json")["results"][0],
         )
 
     def test_content_guid(self):
-        assert (
-            self.event.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
-        )
+        assert self.event.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
 
     def test_user_guid(self):
         assert self.event.user_guid == "08e3a41d-1f8e-47f2-8855-f05ea3b0d4b2"

@@ -12,9 +12,7 @@ class Integration(Resource):
 
     @property
     def associations(self) -> IntegrationAssociations:
-        return IntegrationAssociations(
-            self.params, integration_guid=self["guid"]
-        )
+        return IntegrationAssociations(self.params, integration_guid=self["guid"])
 
     def delete(self) -> None:
         """Delete the OAuth integration."""

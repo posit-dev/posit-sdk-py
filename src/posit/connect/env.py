@@ -51,9 +51,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         Examples
         --------
         >>> vars = EnvVars(params, content_guid)
-        >>> vars["DATABASE_URL"] = (
-        ...     "postgres://user:password@localhost:5432/database"
-        ... )
+        >>> vars["DATABASE_URL"] = "postgres://user:password@localhost:5432/database"
         """
         self.update({key: value})
 
@@ -153,9 +151,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         Examples
         --------
         Update using keyword arguments:
-        >>> update(
-        ...     DATABASE_URL="postgres://user:password@localhost:5432/database"
-        ... )
+        >>> update(DATABASE_URL="postgres://user:password@localhost:5432/database")
 
         Update using multiple keyword arguments:
         >>> update(

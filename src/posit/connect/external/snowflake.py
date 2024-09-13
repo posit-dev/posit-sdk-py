@@ -40,7 +40,5 @@ class PositAuthenticator:
         if self._client is None:
             self._client = Client()
 
-        credentials = self._client.oauth.get_credentials(
-            self._user_session_token
-        )
+        credentials = self._client.oauth.get_credentials(self._user_session_token)
         return credentials.get("access_token")

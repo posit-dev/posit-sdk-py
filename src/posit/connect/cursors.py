@@ -16,9 +16,7 @@ class CursorPage:
 
 
 class CursorPaginator:
-    def __init__(
-        self, session: requests.Session, url: str, params: dict = {}
-    ) -> None:
+    def __init__(self, session: requests.Session, url: str, params: dict = {}) -> None:
         self.session = session
         self.url = url
         self.params = params
