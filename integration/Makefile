@@ -8,7 +8,7 @@ DOCKER_PROJECT_IMAGE_TAG ?= $(PROJECT_NAME):latest
 # Connect settings
 CONNECT_BOOTSTRAP_SECRETKEY ?= $(shell head -c 32 /dev/random | base64)
 
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := latest
 
 .PHONY: $(CONNECT_VERSIONS) \
 		all \
