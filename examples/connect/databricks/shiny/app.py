@@ -22,9 +22,7 @@ def server(i: Inputs, o: Outputs, session: Session):
     Shiny for Python example application that shows user information and
     the first few rows from a table hosted in Databricks.
     """
-    session_token = session.http_conn.headers.get(
-        "Posit-Connect-User-Session-Token"
-    )
+    session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
     posit_strategy = PositCredentialsStrategy(
         local_strategy=databricks_cli, user_session_token=session_token
     )
@@ -48,9 +46,7 @@ def server(i: Inputs, o: Outputs, session: Session):
             with connection.cursor() as cursor:
                 cursor.execute(query)
                 rows = cursor.fetchall()
-                df = pd.DataFrame(
-                    rows, columns=[col[0] for col in cursor.description]
-                )
+                df = pd.DataFrame(rows, columns=[col[0] for col in cursor.description])
                 return df
 
     @render.text

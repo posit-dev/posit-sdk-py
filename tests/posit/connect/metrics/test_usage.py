@@ -20,22 +20,15 @@ class TestUsageEventFromVisitEvent:
     def setup_class(cls):
         visit_event = visits.VisitEvent(
             mock.Mock(),
-            **load_mock("v1/instrumentation/content/visits?limit=500.json")[
-                "results"
-            ][0],
+            **load_mock("v1/instrumentation/content/visits?limit=500.json")["results"][0],
         )
         cls.view_event = usage.UsageEvent.from_visit_event(visit_event)
 
     def test_content_guid(self):
-        assert (
-            self.view_event.content_guid
-            == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
-        )
+        assert self.view_event.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
 
     def test_user_guid(self):
-        assert (
-            self.view_event.user_guid == "08e3a41d-1f8e-47f2-8855-f05ea3b0d4b2"
-        )
+        assert self.view_event.user_guid == "08e3a41d-1f8e-47f2-8855-f05ea3b0d4b2"
 
     def test_variant_key(self):
         assert self.view_event.variant_key == "HidI2Kwq"
@@ -63,22 +56,15 @@ class TestUsageEventFromShinyUsageEvent:
     def setup_class(cls):
         visit_event = shiny_usage.ShinyUsageEvent(
             mock.Mock(),
-            **load_mock("v1/instrumentation/shiny/usage?limit=500.json")[
-                "results"
-            ][0],
+            **load_mock("v1/instrumentation/shiny/usage?limit=500.json")["results"][0],
         )
         cls.view_event = usage.UsageEvent.from_shiny_usage_event(visit_event)
 
     def test_content_guid(self):
-        assert (
-            self.view_event.content_guid
-            == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
-        )
+        assert self.view_event.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
 
     def test_user_guid(self):
-        assert (
-            self.view_event.user_guid == "08e3a41d-1f8e-47f2-8855-f05ea3b0d4b2"
-        )
+        assert self.view_event.user_guid == "08e3a41d-1f8e-47f2-8855-f05ea3b0d4b2"
 
     def test_variant_key(self):
         assert self.view_event.variant_key is None
@@ -122,9 +108,7 @@ class TestUsageFind:
 
         mock_get[1] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock(
-                "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -149,9 +133,7 @@ class TestUsageFind:
 
         mock_get[3] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock(
-                "v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -196,9 +178,7 @@ class TestUsageFindOne:
 
         mock_get[1] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock(
-                "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -223,9 +203,7 @@ class TestUsageFindOne:
 
         mock_get[3] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock(
-                "v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -248,9 +226,7 @@ class TestUsageFindOne:
         assert mock_get[2].call_count == 0
         assert mock_get[3].call_count == 0
         assert view_event
-        assert (
-            view_event.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
-        )
+        assert view_event.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
 
     @responses.activate
     def test_none(self):
@@ -260,16 +236,12 @@ class TestUsageFindOne:
         # return an empty result set to push through the iterator
         mock_get[0] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock(
-                "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
         )
 
         mock_get[1] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock(
-                "v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
         )
 
         # setup

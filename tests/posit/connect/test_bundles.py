@@ -15,18 +15,14 @@ class TestBundleProperties:
     def setup_class(cls):
         cls.bundle = Bundle(
             mock.Mock(),
-            **load_mock(
-                f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"
-            ),
+            **load_mock(f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"),
         )
 
     def test_id(self):
         assert self.bundle.id == "101"
 
     def test_content_guid(self):
-        assert (
-            self.bundle.content_guid == "f2f37341-e21d-3d80-c698-a935ad614066"
-        )
+        assert self.bundle.content_guid == "f2f37341-e21d-3d80-c698-a935ad614066"
 
     def test_created_time(self):
         assert self.bundle.created_time == "2006-01-02T15:04:05Z07:00"
@@ -71,16 +67,10 @@ class TestBundleProperties:
         assert self.bundle.metadata.source_commit == "string"
 
     def test_metadata_archive_md5(self):
-        assert (
-            self.bundle.metadata.archive_md5
-            == "37324238a80595c453c706b22adb83d3"
-        )
+        assert self.bundle.metadata.archive_md5 == "37324238a80595c453c706b22adb83d3"
 
     def test_metadata_archive_sha1(self):
-        assert (
-            self.bundle.metadata.archive_sha1
-            == "a2f7d13d87657df599aeeabdb70194d508cfa92f"
-        )
+        assert self.bundle.metadata.archive_sha1 == "a2f7d13d87657df599aeeabdb70194d508cfa92f"
 
 
 class TestBundleDelete:
@@ -97,9 +87,7 @@ class TestBundleDelete:
 
         mock_bundle_get = responses.get(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(
-                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
-            ),
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
         mock_bundle_delete = responses.delete(
@@ -134,9 +122,7 @@ class TestBundleDeploy:
 
         mock_bundle_get = responses.get(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(
-                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
-            ),
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
         mock_bundle_deploy = responses.post(
@@ -171,9 +157,7 @@ class TestBundleDownload:
     def test_output_as_str(self, mock_file: mock.MagicMock):
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
-        path = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
-        )
+        path = get_path(f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz")
 
         # behavior
         mock_content_get = responses.get(
@@ -183,9 +167,7 @@ class TestBundleDownload:
 
         mock_bundle_get = responses.get(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(
-                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
-            ),
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
         mock_bundle_download = responses.get(
@@ -210,9 +192,7 @@ class TestBundleDownload:
     def test_output_as_io(self):
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
-        path = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
-        )
+        path = get_path(f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz")
 
         # behavior
         mock_content_get = responses.get(
@@ -222,9 +202,7 @@ class TestBundleDownload:
 
         mock_bundle_get = responses.get(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(
-                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
-            ),
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
         mock_bundle_download = responses.get(
@@ -252,9 +230,7 @@ class TestBundleDownload:
     def test_invalid_arguments(self):
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
-        path = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
-        )
+        path = get_path(f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz")
 
         # behavior
         mock_content_get = responses.get(
@@ -264,9 +240,7 @@ class TestBundleDownload:
 
         mock_bundle_get = responses.get(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(
-                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
-            ),
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
         mock_bundle_download = responses.get(
@@ -304,9 +278,7 @@ class TestBundlesCreate:
 
         mock_bundle_post = responses.post(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles",
-            json=load_mock(
-                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
-            ),
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
         # setup
@@ -338,9 +310,7 @@ class TestBundlesCreate:
 
         mock_bundle_post = responses.post(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles",
-            json=load_mock(
-                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
-            ),
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
         # setup
@@ -446,9 +416,7 @@ class TestBundlesGet:
 
         mock_bundle_get = responses.get(
             f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(
-                f"v1/content/{content_guid}/bundles/{bundle_id}.json"
-            ),
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
         # setup

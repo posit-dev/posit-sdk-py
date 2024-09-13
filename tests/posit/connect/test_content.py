@@ -188,9 +188,7 @@ class TestContentItemAttributes:
         assert isinstance(self.item.oauth, ContentItemOAuth)
 
     def test_oauth_associations(self):
-        assert isinstance(
-            self.item.oauth.associations, ContentItemAssociations
-        )
+        assert isinstance(self.item.oauth.associations, ContentItemAssociations)
 
     def test_tags(self):
         assert self.item.tags is None
@@ -199,9 +197,7 @@ class TestContentItemAttributes:
 class TestContentItemGetContentOwner:
     @responses.activate
     def test_owner(self):
-        mock_content = load_mock(
-            "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
-        )
+        mock_content = load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json")
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
             json=mock_content,
@@ -209,9 +205,7 @@ class TestContentItemGetContentOwner:
 
         mock_user_get = responses.get(
             f"https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(
-                f"v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"
-            ),
+            json=load_mock(f"v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
 
         c = Client("https://connect.example", "12345")
@@ -236,9 +230,7 @@ class TestContentItemDelete:
             json=load_mock(f"v1/content/{guid}.json"),
         )
 
-        mock_delete = responses.delete(
-            f"https://connect.example/__api__/v1/content/{guid}"
-        )
+        mock_delete = responses.delete(f"https://connect.example/__api__/v1/content/{guid}")
 
         # setup
         c = Client("https://connect.example", "12345")
@@ -324,11 +316,7 @@ class TestContentCreate:
         responses.post(
             f"https://connect.example/__api__/v1/content",
             json=load_mock(f"v1/content/{guid}.json"),
-            match=[
-                matchers.json_params_matcher(
-                    {"name": fake_content_item["name"]}
-                )
-            ],
+            match=[matchers.json_params_matcher({"name": fake_content_item["name"]})],
         )
 
         # setup
@@ -431,9 +419,7 @@ class TestContentsFindOne:
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
             match=[
-                matchers.query_param_matcher(
-                    {"owner_guid": owner_guid, "include": "owner,tags"}
-                )
+                matchers.query_param_matcher({"owner_guid": owner_guid, "include": "owner,tags"})
             ],
         )
 
@@ -457,11 +443,7 @@ class TestContentsFindOne:
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {"name": name, "include": "owner,tags"}
-                )
-            ],
+            match=[matchers.query_param_matcher({"name": name, "include": "owner,tags"})],
         )
 
         # setup
@@ -517,9 +499,7 @@ class TestContentsGet:
     def test(self):
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
-            json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
-            ),
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
         )
         con = Client("https://connect.example", "12345")
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
@@ -609,16 +589,12 @@ class TestRender:
     def test_missing_default(self):
         responses.get(
             "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
-            json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
-            ),
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
         )
 
         responses.patch(
             "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
-            json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"
-            ),
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
         )
 
         responses.get(

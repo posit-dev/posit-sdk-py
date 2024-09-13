@@ -33,14 +33,10 @@ class PositAuthenticator:
         # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.
         # user_session_token is required to impersonate the viewer.
         if self._user_session_token is None:
-            raise ValueError(
-                "The user-session-token is required for viewer authentication."
-            )
+            raise ValueError("The user-session-token is required for viewer authentication.")
 
         if self._client is None:
             self._client = Client()
 
-        credentials = self._client.oauth.get_credentials(
-            self._user_session_token
-        )
+        credentials = self._client.oauth.get_credentials(self._user_session_token)
         return credentials.get("access_token")

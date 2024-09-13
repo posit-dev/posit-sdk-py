@@ -25,12 +25,8 @@ class TestPermissionDelete:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
-        fake_permission = load_mock(
-            f"v1/content/{content_guid}/permissions/{uid}.json"
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
         permission = Permission(params, **fake_permission)
 
         # invoke
@@ -73,9 +69,7 @@ class TestPermissionUpdate:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permission = Permission(
             params,
             id=uid,
@@ -97,9 +91,7 @@ class TestPermissionUpdate:
 
         uid = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = load_mock(
-            f"v1/content/{content_guid}/permissions/{uid}.json"
-        )
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
         fake_permission.update(role=new_role)
 
         # define api behavior
@@ -120,12 +112,8 @@ class TestPermissionUpdate:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
-        permission = Permission(
-            params, id=uid, content_guid=content_guid, role=old_role
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        permission = Permission(params, id=uid, content_guid=content_guid, role=old_role)
 
         # assert role change with respect to api response
         assert permission.role == old_role
@@ -138,9 +126,7 @@ class TestPermissionsCount:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(
-            f"v1/content/{content_guid}/permissions.json"
-        )
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
@@ -149,9 +135,7 @@ class TestPermissionsCount:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke
@@ -193,9 +177,7 @@ class TestPermissionsCreate:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke
@@ -214,9 +196,7 @@ class TestPermissionsFind:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(
-            f"v1/content/{content_guid}/permissions.json"
-        )
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
@@ -225,9 +205,7 @@ class TestPermissionsFind:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke
@@ -242,9 +220,7 @@ class TestPermissionsFindOne:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(
-            f"v1/content/{content_guid}/permissions.json"
-        )
+        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
@@ -253,9 +229,7 @@ class TestPermissionsFindOne:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke
@@ -271,9 +245,7 @@ class TestPermissionsGet:
         # data
         uid = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = load_mock(
-            f"v1/content/{content_guid}/permissions/{uid}.json"
-        )
+        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
 
         # behavior
         responses.get(
@@ -282,9 +254,7 @@ class TestPermissionsGet:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke

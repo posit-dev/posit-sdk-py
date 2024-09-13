@@ -12,9 +12,7 @@ class TestAssociationAttributes:
     @classmethod
     def setup_class(cls):
         guid = "22644575-a27b-4118-ad06-e24459b05126"
-        fake_items = load_mock(
-            f"v1/oauth/integrations/{guid}/associations.json"
-        )
+        fake_items = load_mock(f"v1/oauth/integrations/{guid}/associations.json")
 
         assert len(fake_items) == 1
         fake_item = fake_items[0]
@@ -25,19 +23,13 @@ class TestAssociationAttributes:
         assert self.item["app_guid"] == "f2f37341-e21d-3d80-c698-a935ad614066"
 
     def test_oauth_integration_guid(self):
-        assert (
-            self.item["oauth_integration_guid"]
-            == "22644575-a27b-4118-ad06-e24459b05126"
-        )
+        assert self.item["oauth_integration_guid"] == "22644575-a27b-4118-ad06-e24459b05126"
 
     def test_oauth_integration_name(self):
         assert self.item["oauth_integration_name"] == "keycloak integration"
 
     def test_oauth_integration_description(self):
-        assert (
-            self.item["oauth_integration_description"]
-            == "integration description"
-        )
+        assert self.item["oauth_integration_description"] == "integration description"
 
     def test_oauth_integration_template(self):
         assert self.item["oauth_integration_template"] == "custom"
@@ -86,9 +78,7 @@ class TestContentAssociationsFind:
         )
         mock_get_association = responses.get(
             f"https://connect.example/__api__/v1/content/{guid}/oauth/integrations/associations",
-            json=load_mock(
-                f"v1/content/{guid}/oauth/integrations/associations.json"
-            ),
+            json=load_mock(f"v1/content/{guid}/oauth/integrations/associations.json"),
         )
 
         # setup

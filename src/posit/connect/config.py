@@ -21,9 +21,7 @@ def _get_api_key() -> str:
     """
     value = os.environ.get("CONNECT_API_KEY")
     if not value:
-        raise ValueError(
-            "Invalid value for 'CONNECT_API_KEY': Must be a non-empty string."
-        )
+        raise ValueError("Invalid value for 'CONNECT_API_KEY': Must be a non-empty string.")
     return value
 
 
@@ -42,17 +40,13 @@ def _get_url() -> str:
     """
     value = os.environ.get("CONNECT_SERVER")
     if not value:
-        raise ValueError(
-            "Invalid value for 'CONNECT_SERVER': Must be a non-empty string."
-        )
+        raise ValueError("Invalid value for 'CONNECT_SERVER': Must be a non-empty string.")
     return value
 
 
 class Config:
     """Configuration object."""
 
-    def __init__(
-        self, api_key: Optional[str] = None, url: Optional[str] = None
-    ) -> None:
+    def __init__(self, api_key: Optional[str] = None, url: Optional[str] = None) -> None:
         self.api_key = api_key or _get_api_key()
         self.url = urls.Url(url or _get_url())

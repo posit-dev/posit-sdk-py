@@ -36,9 +36,7 @@ def update_page(_):
     Dash example application that shows user information and
     the first few rows from a table hosted in Databricks.
     """
-    session_token = flask.request.headers.get(
-        "Posit-Connect-User-Session-Token"
-    )
+    session_token = flask.request.headers.get("Posit-Connect-User-Session-Token")
     posit_strategy = PositCredentialsStrategy(
         local_strategy=databricks_cli, user_session_token=session_token
     )
@@ -63,16 +61,12 @@ def update_page(_):
                 server_hostname=DATABRICKS_HOST,
                 http_path=SQL_HTTP_PATH,
                 # https://github.com/databricks/databricks-sql-python/issues/148#issuecomment-2271561365
-                credentials_provider=posit_strategy.sql_credentials_provider(
-                    cfg
-                ),
+                credentials_provider=posit_strategy.sql_credentials_provider(cfg),
             ) as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(query)
                     rows = cursor.fetchall()
-                    df = pd.DataFrame(
-                        rows, columns=[col[0] for col in cursor.description]
-                    )
+                    df = pd.DataFrame(rows, columns=[col[0] for col in cursor.description])
 
         table = dash_table.DataTable(
             id="table",

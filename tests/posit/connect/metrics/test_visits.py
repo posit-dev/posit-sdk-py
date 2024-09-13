@@ -14,15 +14,11 @@ class TestVisitAttributes:
     def setup_class(cls):
         cls.visit = visits.VisitEvent(
             mock.Mock(),
-            **load_mock("v1/instrumentation/content/visits?limit=500.json")[
-                "results"
-            ][0],
+            **load_mock("v1/instrumentation/content/visits?limit=500.json")["results"][0],
         )
 
     def test_content_guid(self):
-        assert (
-            self.visit.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
-        )
+        assert self.visit.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
 
     def test_user_guid(self):
         assert self.visit.user_guid == "08e3a41d-1f8e-47f2-8855-f05ea3b0d4b2"
@@ -65,9 +61,7 @@ class TestVisitsFind:
 
         mock_get[1] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock(
-                "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -79,9 +73,7 @@ class TestVisitsFind:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), "https://connect.example/__api__"
-        )
+        params = ResourceParameters(requests.Session(), "https://connect.example/__api__")
 
         # invoke
         events = visits.Visits(params).find()
@@ -111,9 +103,7 @@ class TestVisitsFindOne:
 
         mock_get[1] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock(
-                "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -125,9 +115,7 @@ class TestVisitsFindOne:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), "https://connect.example/__api__"
-        )
+        params = ResourceParameters(requests.Session(), "https://connect.example/__api__")
 
         # invoke
         event = visits.Visits(params).find_one()

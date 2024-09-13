@@ -20,9 +20,7 @@ class OAuth(Resources):
     def sessions(self):
         return Sessions(self.params)
 
-    def get_credentials(
-        self, user_session_token: Optional[str] = None
-    ) -> Credentials:
+    def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
         url = self.params.url + "v1/oauth/integrations/credentials"
 
         # craft a credential exchange request
