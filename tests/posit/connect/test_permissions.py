@@ -25,9 +25,7 @@ class TestPermissionDelete:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
         permission = Permission(params, **fake_permission)
 
@@ -71,9 +69,7 @@ class TestPermissionUpdate:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permission = Permission(
             params,
             id=uid,
@@ -116,12 +112,8 @@ class TestPermissionUpdate:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
-        permission = Permission(
-            params, id=uid, content_guid=content_guid, role=old_role
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        permission = Permission(params, id=uid, content_guid=content_guid, role=old_role)
 
         # assert role change with respect to api response
         assert permission.role == old_role
@@ -143,9 +135,7 @@ class TestPermissionsCount:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke
@@ -187,9 +177,7 @@ class TestPermissionsCreate:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke
@@ -217,9 +205,7 @@ class TestPermissionsFind:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke
@@ -243,9 +229,7 @@ class TestPermissionsFindOne:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke
@@ -270,9 +254,7 @@ class TestPermissionsGet:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), Url("https://connect.example/__api__")
-        )
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
         permissions = Permissions(params, content_guid=content_guid)
 
         # invoke

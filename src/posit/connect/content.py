@@ -414,9 +414,7 @@ class Content(Resources):
         ...
 
     @overload
-    def find(
-        self, *args, include: Optional[str] = "owner,tags", **kwargs
-    ) -> List[ContentItem]:
+    def find(self, *args, include: Optional[str] = "owner,tags", **kwargs) -> List[ContentItem]:
         """Find content items.
 
         Parameters
@@ -430,9 +428,7 @@ class Content(Resources):
         """
         ...
 
-    def find(
-        self, *args, include: Optional[str] = "owner,tags", **kwargs
-    ) -> List[ContentItem]:
+    def find(self, *args, include: Optional[str] = "owner,tags", **kwargs) -> List[ContentItem]:
         """Find content items.
 
         Parameters

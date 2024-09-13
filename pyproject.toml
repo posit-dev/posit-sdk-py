@@ -37,6 +37,7 @@ version_file = "src/posit/_version.py"
 
 [tool.ruff]
 extend-exclude = ["integration/resources"]
+line-length = 99
 
 [tool.ruff.format]
 docstring-code-format = true

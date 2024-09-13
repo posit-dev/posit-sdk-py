@@ -66,9 +66,7 @@ def update_page(_):
                 with connection.cursor() as cursor:
                     cursor.execute(query)
                     rows = cursor.fetchall()
-                    df = pd.DataFrame(
-                        rows, columns=[col[0] for col in cursor.description]
-                    )
+                    df = pd.DataFrame(rows, columns=[col[0] for col in cursor.description])
 
         table = dash_table.DataTable(
             id="table",

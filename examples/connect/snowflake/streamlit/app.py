@@ -20,9 +20,7 @@ SCHEMA = os.getenv("SNOWFLAKE_SCHEMA", "tpch_sf1")
 TABLE = os.getenv("SNOWFLAKE_TABLE", "lineitem")
 
 session_token = st.context.headers.get("Posit-Connect-User-Session-Token")
-auth = PositAuthenticator(
-    local_authenticator="EXTERNALBROWSER", user_session_token=session_token
-)
+auth = PositAuthenticator(local_authenticator="EXTERNALBROWSER", user_session_token=session_token)
 
 con = snowflake.connector.connect(
     user=USER,
