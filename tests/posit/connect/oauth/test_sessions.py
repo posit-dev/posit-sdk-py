@@ -26,9 +26,7 @@ class TestOAuthSessionAttributes:
         assert self.item.user_guid == "217be1f2-6a32-46b9-af78-e3f4b89f2e74"
 
     def test_oauth_integration_guid(self):
-        assert (
-            self.item.oauth_integration_guid == "967f0ad3-3e3b-4491-8539-1a193b35a415"
-        )
+        assert self.item.oauth_integration_guid == "967f0ad3-3e3b-4491-8539-1a193b35a415"
 
     def test_has_refresh_token(self):
         assert self.item.has_refresh_token
@@ -51,9 +49,7 @@ class TestSessionDelete:
             json=load_mock(f"v1/oauth/sessions/{guid}.json"),
         )
 
-        mock_delete = responses.delete(
-            f"https://connect.example/__api__/v1/oauth/sessions/{guid}"
-        )
+        mock_delete = responses.delete(f"https://connect.example/__api__/v1/oauth/sessions/{guid}")
 
         # setup
         c = Client("https://connect.example", "12345")

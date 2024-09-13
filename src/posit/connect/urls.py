@@ -77,13 +77,9 @@ def _create(url: str) -> str:
     """
     split = urlsplit(url, allow_fragments=False)
     if not split.scheme:
-        raise ValueError(
-            f"URL must specify a scheme (e.g., http://example.com/__api__): {url}"
-        )
+        raise ValueError(f"URL must specify a scheme (e.g., http://example.com/__api__): {url}")
     if not split.netloc:
-        raise ValueError(
-            f"URL must be absolute (e.g., http://example.com/__api__): {url}"
-        )
+        raise ValueError(f"URL must be absolute (e.g., http://example.com/__api__): {url}")
 
     url = url.rstrip("/")
     if "/__api__" not in url:

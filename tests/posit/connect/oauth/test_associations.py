@@ -23,10 +23,7 @@ class TestAssociationAttributes:
         assert self.item["app_guid"] == "f2f37341-e21d-3d80-c698-a935ad614066"
 
     def test_oauth_integration_guid(self):
-        assert (
-            self.item["oauth_integration_guid"]
-            == "22644575-a27b-4118-ad06-e24459b05126"
-        )
+        assert self.item["oauth_integration_guid"] == "22644575-a27b-4118-ad06-e24459b05126"
 
     def test_oauth_integration_name(self):
         assert self.item["oauth_integration_name"] == "keycloak integration"

@@ -161,8 +161,6 @@ class Groups(Resources):
         """
         path = "v1/groups"
         url = self.params.url + path
-        response: requests.Response = self.params.session.get(
-            url, params={"page_size": 1}
-        )
+        response: requests.Response = self.params.session.get(url, params={"page_size": 1})
         result: dict = response.json()
         return result["total"]

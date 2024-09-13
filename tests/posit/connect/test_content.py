@@ -230,9 +230,7 @@ class TestContentItemDelete:
             json=load_mock(f"v1/content/{guid}.json"),
         )
 
-        mock_delete = responses.delete(
-            f"https://connect.example/__api__/v1/content/{guid}"
-        )
+        mock_delete = responses.delete(f"https://connect.example/__api__/v1/content/{guid}")
 
         # setup
         c = Client("https://connect.example", "12345")
@@ -421,9 +419,7 @@ class TestContentsFindOne:
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
             match=[
-                matchers.query_param_matcher(
-                    {"owner_guid": owner_guid, "include": "owner,tags"}
-                )
+                matchers.query_param_matcher({"owner_guid": owner_guid, "include": "owner,tags"})
             ],
         )
 
@@ -447,9 +443,7 @@ class TestContentsFindOne:
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
             json=load_mock("v1/content.json"),
-            match=[
-                matchers.query_param_matcher({"name": name, "include": "owner,tags"})
-            ],
+            match=[matchers.query_param_matcher({"name": name, "include": "owner,tags"})],
         )
 
         # setup

@@ -15,9 +15,7 @@ class TestBundleProperties:
     def setup_class(cls):
         cls.bundle = Bundle(
             mock.Mock(),
-            **load_mock(
-                f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"
-            ),
+            **load_mock(f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"),
         )
 
     def test_id(self):
@@ -72,10 +70,7 @@ class TestBundleProperties:
         assert self.bundle.metadata.archive_md5 == "37324238a80595c453c706b22adb83d3"
 
     def test_metadata_archive_sha1(self):
-        assert (
-            self.bundle.metadata.archive_sha1
-            == "a2f7d13d87657df599aeeabdb70194d508cfa92f"
-        )
+        assert self.bundle.metadata.archive_sha1 == "a2f7d13d87657df599aeeabdb70194d508cfa92f"
 
 
 class TestBundleDelete:
@@ -162,9 +157,7 @@ class TestBundleDownload:
     def test_output_as_str(self, mock_file: mock.MagicMock):
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
-        path = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
-        )
+        path = get_path(f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz")
 
         # behavior
         mock_content_get = responses.get(
@@ -199,9 +192,7 @@ class TestBundleDownload:
     def test_output_as_io(self):
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
-        path = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
-        )
+        path = get_path(f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz")
 
         # behavior
         mock_content_get = responses.get(
@@ -239,9 +230,7 @@ class TestBundleDownload:
     def test_invalid_arguments(self):
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
-        path = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
-        )
+        path = get_path(f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz")
 
         # behavior
         mock_content_get = responses.get(

@@ -52,9 +52,7 @@ class TestShinyUsageFind:
 
         mock_get[1] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock(
-                "v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -66,9 +64,7 @@ class TestShinyUsageFind:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), "https://connect.example/__api__"
-        )
+        params = ResourceParameters(requests.Session(), "https://connect.example/__api__")
 
         # invoke
         events = shiny_usage.ShinyUsage(params).find()
@@ -98,9 +94,7 @@ class TestShinyUsageFindOne:
 
         mock_get[1] = responses.get(
             f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock(
-                "v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"
-            ),
+            json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
@@ -112,9 +106,7 @@ class TestShinyUsageFindOne:
         )
 
         # setup
-        params = ResourceParameters(
-            requests.Session(), "https://connect.example/__api__"
-        )
+        params = ResourceParameters(requests.Session(), "https://connect.example/__api__")
 
         # invoke
         event = shiny_usage.ShinyUsage(params).find_one()

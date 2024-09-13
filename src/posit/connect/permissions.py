@@ -65,9 +65,7 @@ class Permissions(Resources):
         return len(self.find())
 
     @overload
-    def create(
-        self, *, principal_guid: str, principal_type: str, role: str
-    ) -> Permission:
+    def create(self, *, principal_guid: str, principal_type: str, role: str) -> Permission:
         """Create a permission.
 
         Parameters
