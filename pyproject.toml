@@ -80,20 +80,11 @@ ignore = [
     'D103', # TODO(#135) implement docstring for public functions
     'D104', # TODO(#135) implement docstring for public package
     'D105', # TODO(#135) implement docstring for magic methods
-    'D107',
-    'D203',
-    'D212',
-    'D213',
     'D100', # TODO(#135) implement docstring for public modules
     'D102', # TODO(#135) implement docstring for public methods
     'D401', # TODO(#135) fix imperative mood warnings
-    'D402',
-    'D413',
-    'D415',
-    'D416',
-    'D417',
-    'D418', # The Python Language Server can accomodate documentation for individual methods.
-            # TODO(#135) resarch D418 and determine if we should continue ignoring it.
+
+    'D418', # D418 contradicts the overload convention used in this project to describe different endpoints across Connect versions.
 ]
 
 [tool.ruff.lint.per-file-ignores]
