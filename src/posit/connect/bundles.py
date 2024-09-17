@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import io
-from typing import List
+from typing import BinaryIO, List
 
 from . import resources, tasks
 
@@ -46,7 +46,7 @@ class Bundle(resources.Resource):
         ts = tasks.Tasks(self.params)
         return ts.get(result["task_id"])
 
-    def download(self, output: io.BufferedWriter | str) -> None:
+    def download(self, output: BinaryIO | str) -> None:
         """Download a bundle.
 
         Download a bundle to a file or memory.
@@ -67,26 +67,19 @@ class Bundle(resources.Resource):
         >>> bundle.download("bundle.tar.gz")
         None
 
-        Write to an io.BufferedWriter.
+        Write to BinaryIO.
         >>> with open('bundle.tar.gz', 'wb') as file:
         >>>     bundle.download(file)
         None
         """
-        if not isinstance(output, (io.BufferedWriter, str)):
-            raise TypeError(
-                f"download() expected argument type 'io.BufferedWriter` or 'str', but got '{type(output).__name__}'"
-            )
+        if isinstance(output, str):
+            output = open(output, "wb")
 
         path = f"v1/content/{self.content_guid}/bundles/{self.id}/download"
         url = self.params.url + path
         response = self.params.session.get(url, stream=True)
-        if isinstance(output, io.BufferedWriter):
-            for chunk in response.iter_content():
-                output.write(chunk)
-        elif isinstance(output, str):
-            with open(output, "wb") as file:
-                for chunk in response.iter_content():
-                    file.write(chunk)
+        for chunk in response.iter_content():
+            output.write(chunk)
 
 
 class Bundles(resources.Resources):
