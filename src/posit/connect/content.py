@@ -534,6 +534,15 @@ class Content(Resources):
             for result in response.json()
         ]
 
+    def find_by(self, **attributes) -> Optional[ContentItem]:
+        results = self.find()
+        results = (
+            result
+            for result in results
+            if all(item in result.items() for item in attributes.items())
+        )
+        return next(results, None)
+
     @overload
     def find_one(
         self,
