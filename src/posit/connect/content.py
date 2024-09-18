@@ -534,7 +534,123 @@ class Content(Resources):
             for result in response.json()
         ]
 
+    @overload
+    def find_by(
+        self,
+        *,
+        # Required
+        name: str,
+        # Content Metadata
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        access_type: Literal["all", "acl", "logged_in"] = "acl",
+        owner_guid: Optional[str] = None,
+        # Timeout Settings
+        connection_timeout: Optional[int] = None,
+        read_timeout: Optional[int] = None,
+        init_timeout: Optional[int] = None,
+        idle_timeout: Optional[int] = None,
+        # Process and Resource Limits
+        max_processes: Optional[int] = None,
+        min_processes: Optional[int] = None,
+        max_conns_per_process: Optional[int] = None,
+        load_factor: Optional[float] = None,
+        cpu_request: Optional[float] = None,
+        cpu_limit: Optional[float] = None,
+        memory_request: Optional[int] = None,
+        memory_limit: Optional[int] = None,
+        amd_gpu_limit: Optional[int] = None,
+        nvidia_gpu_limit: Optional[int] = None,
+        # Execution Settings
+        run_as: Optional[str] = None,
+        run_as_current_user: Optional[bool] = False,
+        default_image_name: Optional[str] = None,
+        default_r_environment_management: Optional[bool] = None,
+        default_py_environment_management: Optional[bool] = None,
+        service_account_name: Optional[str] = None,
+    ) -> Optional[ContentItem]:
+        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
+
+        Parameters
+        ----------
+        name : str, optional
+            URL-friendly identifier. Allows alphanumeric characters, hyphens ("-"), and underscores ("_").
+        title : str, optional
+            Content title. Default is None
+        description : str, optional
+            Content description.
+        access_type : Literal['all', 'acl', 'logged_in'], optional
+            How content manages viewers.
+        owner_guid : str, optional
+            The unique identifier of the user who owns this content item.
+        connection_timeout : int, optional
+            Max seconds without data exchange.
+        read_timeout : int, optional
+            Max seconds without data received.
+        init_timeout : int, optional
+            Max startup time for interactive apps.
+        idle_timeout : int, optional
+            Max idle time before process termination.
+        max_processes : int, optional
+            Max concurrent processes allowed.
+        min_processes : int, optional
+            Min concurrent processes required.
+        max_conns_per_process : int, optional
+            Max client connections per process.
+        load_factor : float, optional
+            Aggressiveness in spawning new processes (0.0 - 1.0).
+        cpu_request : float, optional
+            Min CPU units required (1 unit = 1 core).
+        cpu_limit : float, optional
+            Max CPU units allowed.
+        memory_request : int, optional
+            Min memory (bytes) required.
+        memory_limit : int, optional
+            Max memory (bytes) allowed.
+        amd_gpu_limit : int, optional
+            Number of AMD GPUs allocated.
+        nvidia_gpu_limit : int, optional
+            Number of NVIDIA GPUs allocated.
+        run_as : str, optional
+            UNIX user to execute the content.
+        run_as_current_user : bool, optional
+            Run process as the visiting user (for app content). Default is False.
+        default_image_name : str, optional
+            Default image for execution if not defined in the bundle.
+        default_r_environment_management : bool, optional
+            Manage R environment for the content.
+        default_py_environment_management : bool, optional
+            Manage Python environment for the content.
+        service_account_name : str, optional
+            Kubernetes service account name for running content.
+
+        Returns
+        -------
+        Optional[ContentItem]
+        """
+        ...
+
+    @overload
     def find_by(self, **attributes) -> Optional[ContentItem]:
+        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
+
+        Returns
+        -------
+        Optional[ContentItem]
+        """
+        ...
+
+    def find_by(self, **attributes) -> Optional[ContentItem]:
+        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
+
+        Returns
+        -------
+        Optional[ContentItem]
+
+        Example
+        -------
+        >>> find_by(name="example-content-name")
+        """
         results = self.find()
         results = (
             result

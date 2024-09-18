@@ -29,7 +29,7 @@ class TestContent:
         assert self.client.content.find()
 
     def test_find_by(self):
-        assert self.client.content.find_by(guild=self.content["guid"]) == self.content
+        assert self.client.content.find_by(guid=self.content["guid"]) == self.content
 
     def test_find_one(self):
         assert self.client.content.find_one()
