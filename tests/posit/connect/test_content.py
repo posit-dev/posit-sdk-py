@@ -406,6 +406,45 @@ class TestContentsFind:
         assert mock_get.call_count == 1
 
 
+class TestContentsFindBy:
+    @responses.activate
+    def test(self):
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+        )
+
+        # setup
+        client = Client("https://connect.example", "12345")
+
+        # invoke
+        content = client.content.find_by(name="team-admin-dashboard")
+
+        # assert
+        assert mock_get.call_count == 1
+        assert content
+        assert content.name == "team-admin-dashboard"
+
+    @responses.activate
+    def test_miss(self):
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+        )
+
+        # setup
+        client = Client("https://connect.example", "12345")
+
+        # invoke
+        content = client.content.find_by(name="does-not-exist")
+
+        # assert
+        assert mock_get.call_count == 1
+        assert content is None
+
+
 class TestContentsFindOne:
     @responses.activate
     def test(self):
