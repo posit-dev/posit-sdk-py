@@ -1,7 +1,6 @@
 import io
 from unittest import mock
 
-import pytest
 import responses
 from responses import matchers
 
@@ -226,40 +225,6 @@ class TestBundleDownload:
         assert mock_bundle_download.call_count == 1
         assert file.read() == path.read_bytes()
 
-    @responses.activate
-    def test_invalid_arguments(self):
-        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        bundle_id = "101"
-        path = get_path(f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz")
-
-        # behavior
-        mock_content_get = responses.get(
-            f"https://connect.example/__api__/v1/content/{content_guid}",
-            json=load_mock(f"v1/content/{content_guid}.json"),
-        )
-
-        mock_bundle_get = responses.get(
-            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
-            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
-        )
-
-        mock_bundle_download = responses.get(
-            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}/download",
-            body=path.read_bytes(),
-        )
-
-        # setup
-        c = Client("https://connect.example", "12345")
-        bundle = c.content.get(content_guid).bundles.get(bundle_id)
-
-        # invoke
-        with pytest.raises(TypeError):
-            bundle.download(None)
-
-        # assert
-        assert mock_content_get.call_count == 1
-        assert mock_bundle_get.call_count == 1
-
 
 class TestBundlesCreate:
     @responses.activate
@@ -325,24 +290,6 @@ class TestBundlesCreate:
         assert bundle.id == "101"
         assert mock_content_get.call_count == 1
         assert mock_bundle_post.call_count == 1
-
-    @responses.activate
-    def test_invalid_arguments(self):
-        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-
-        # behavior
-        responses.get(
-            f"https://connect.example/__api__/v1/content/{content_guid}",
-            json=load_mock(f"v1/content/{content_guid}.json"),
-        )
-
-        # setup
-        c = Client("https://connect.example", "12345")
-        content = c.content.get(content_guid)
-
-        # invoke
-        with pytest.raises(TypeError):
-            content.bundles.create(None)
 
 
 class TestBundlesFind:

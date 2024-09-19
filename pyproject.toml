@@ -19,7 +19,13 @@ classifiers = [
     "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = ["requests>=2.31.0,<3"]
+dependencies = [
+    "click",
+    "requests>=2.31.0,<3",
+]
+
+[project.scripts]
+posit = "posit:main"
 
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
