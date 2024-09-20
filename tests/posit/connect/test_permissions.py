@@ -128,9 +128,9 @@ class TestPermissionUpdate:
         )
 
         # assert role change with respect to api response
-        assert permission.role == old_role
+        assert permission["role"] == old_role
         permission.update(role=new_role)
-        assert permission.role == new_role
+        assert permission["role"] == new_role
 
 
 class TestPermissionsCount:

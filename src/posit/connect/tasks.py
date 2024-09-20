@@ -2,22 +2,12 @@
 
 from __future__ import annotations
 
-from typing import List, overload
+from typing import overload
 
 from . import resources
 
 
 class Task(resources.Resource):
-    @property
-    def id(self) -> str:
-        """The task identifier.
-
-        Returns
-        -------
-        str
-        """
-        return self["id"]
-
     @property
     def is_finished(self) -> bool:
         """The task state.
@@ -31,18 +21,6 @@ class Task(resources.Resource):
         bool
         """
         return self.get("finished", False)
-
-    @property
-    def output(self) -> List[str]:
-        """Process output.
-
-        The process output produced by the task.
-
-        Returns
-        -------
-        List[str]
-        """
-        return self["output"]
 
     @property
     def error_code(self) -> int | None:
@@ -68,16 +46,6 @@ class Task(resources.Resource):
             Human readable error message, or None on success or not finished.
         """
         return self.get("error") if self.is_finished else None
-
-    @property
-    def result(self) -> dict | None:
-        """The task result.
-
-        Returns
-        -------
-        dict | None
-        """
-        return self.get("result")
 
     # CRUD Methods
 
@@ -124,9 +92,9 @@ class Task(resources.Resource):
         ]
         """
         params = dict(*args, **kwargs)
-        path = f"v1/tasks/{self.id}"
-        url = self.url + path
-        response = self.session.get(url, params=kwargs)
+        path = f"v1/tasks/{self['id']}"
+        url = self.params.url + path
+        response = self.params.session.get(url, params=kwargs)
         result = response.json()
         super().update(**result)
 
@@ -190,7 +158,7 @@ class Tasks(resources.Resources):
         Task
         """
         path = f"v1/tasks/{uid}"
-        url = self.url + path
-        response = self.session.get(url, params=kwargs)
+        url = self.params.url + path
+        response = self.params.session.get(url, params=kwargs)
         result = response.json()
         return Task(self.params, **result)

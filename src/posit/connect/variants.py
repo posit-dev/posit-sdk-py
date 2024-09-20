@@ -5,18 +5,10 @@ from .tasks import Task
 
 
 class Variant(Resource):
-    @property
-    def id(self) -> str:
-        return self["id"]
-
-    @property
-    def is_default(self) -> bool:
-        return self.get("is_default", False)
-
     def render(self) -> Task:
-        path = f"variants/{self.id}/render"
-        url = self.url + path
-        response = self.session.post(url)
+        path = f"variants/{self['id']}/render"
+        url = self.params.url + path
+        response = self.params.session.post(url)
         return Task(self.params, **response.json())
 
 
@@ -27,7 +19,7 @@ class Variants(Resources):
 
     def find(self) -> List[Variant]:
         path = f"applications/{self.content_guid}/variants"
-        url = self.url + path
-        response = self.session.get(url)
+        url = self.params.url + path
+        response = self.params.session.get(url)
         results = response.json() or []
         return [Variant(self.params, **result) for result in results]

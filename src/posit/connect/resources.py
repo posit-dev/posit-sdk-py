@@ -1,6 +1,4 @@
-from abc import ABC
 from dataclasses import dataclass
-from typing import Any
 
 import requests
 
@@ -22,24 +20,16 @@ class ResourceParameters:
     url: Url
 
 
-class Resource(ABC, dict):
-    def __init__(self, params: ResourceParameters, **kwargs):
+class Resource(dict):
+    def __init__(self, /, params: ResourceParameters, **kwargs):
+        self.params = params
         super().__init__(**kwargs)
-        self.params: ResourceParameters
-        super().__setattr__("params", params)
-        self.session: requests.Session
-        super().__setattr__("session", params.session)
-        self.url: Url
-        super().__setattr__("url", params.url)
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        raise AttributeError("cannot set attributes: use update() instead")
 
     def update(self, *args, **kwargs):
         super().update(*args, **kwargs)
 
 
-class Resources(ABC):
+class Resources:
     def __init__(self, params: ResourceParameters) -> None:
         self.params = params
         self.session = params.session
