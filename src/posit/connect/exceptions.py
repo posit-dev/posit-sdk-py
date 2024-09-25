@@ -2,7 +2,11 @@ import json
 from typing import Any
 
 
-class ClientError(Exception):
+class PositConnectException(RuntimeError):
+    pass
+
+
+class ClientError(PositConnectException):
     def __init__(
         self,
         error_code: int,
@@ -26,4 +30,12 @@ class ClientError(Exception):
                     "payload": payload,
                 }
             )
+        )
+
+
+class VersionUpgradeRequiredException(PositConnectException):
+    def __init__(self, found: str, expected: str, *args) -> None:
+        super().__init__(
+            f"This API is not available in Connect version {found}. Please upgrade to version {expected} or later.",
+            *args,
         )

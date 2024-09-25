@@ -3,7 +3,7 @@ from http.client import responses
 
 from requests import JSONDecodeError, Response
 
-from .errors import ClientError
+from .exceptions import ClientError
 
 
 def handle_errors(response: Response, *args, **kwargs) -> Response:

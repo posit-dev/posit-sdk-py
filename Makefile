@@ -58,7 +58,7 @@ lint:
 	$(PYTHON) -m ruff check
 
 test:
-	$(PYTHON) -m coverage run --source=src -m pytest tests
+	$(PYTHON) -m coverage run --source=src -m pytest -s tests
 
 uninstall: ensure-uv
 	$(UV) pip uninstall $(PROJECT_NAME)

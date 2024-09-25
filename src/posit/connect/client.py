@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import overload
+from typing import Optional, overload
 
 from requests import Response, Session
 
@@ -14,8 +14,10 @@ from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
 from .resources import ResourceParameters
+from .settings import Settings
 from .tasks import Tasks
 from .users import User, Users
+from .version import requires_version
 
 
 class Client:
@@ -158,7 +160,7 @@ class Client:
         self.resource_params = ResourceParameters(session, self.cfg.url)
 
     @property
-    def version(self) -> str:
+    def version(self) -> Optional[str]:
         """
         The server version.
 
@@ -167,7 +169,8 @@ class Client:
         str
             The version of the Posit Connect server.
         """
-        return self.get("server_settings").json()["version"]
+        settings = Settings(self.session, self.cfg.url)
+        return settings.version
 
     @property
     def me(self) -> User:
@@ -257,6 +260,7 @@ class Client:
         return Metrics(self.resource_params)
 
     @property
+    @requires_version("2024.08.0")
     def oauth(self) -> OAuth:
         """
         The OAuth API interface.

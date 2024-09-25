@@ -1,6 +1,6 @@
 import pytest
 
-from posit.connect.errors import ClientError
+from posit.connect.exceptions import ClientError
 
 
 def test():

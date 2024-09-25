@@ -6,7 +6,7 @@ import responses
 from requests import HTTPError, Response
 
 from posit.connect import Client
-from posit.connect.errors import ClientError
+from posit.connect.exceptions import ClientError
 from posit.connect.hooks import handle_errors
 
 
