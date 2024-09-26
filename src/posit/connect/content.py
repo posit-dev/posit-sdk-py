@@ -17,6 +17,56 @@ from .resources import Resource, ResourceParameters, Resources
 from .tasks import Task
 from .variants import Variants
 
+class ContentItemRepository(Resource):
+    def __init__(self, params: ResourceParameters, content_guid: str, **kwargs) -> None:
+        super().__init__(params, **kwargs)
+        self.content_guid = content_guid
+
+    def delete(self) -> None:
+        """Delete the content's repository."""
+        path = f"v1/content/{self.content_guid}/repository"
+        url = self.params.url + path
+        self.params.session.delete(url)
+
+    @overload
+    def update(
+            self,
+            *,
+            repository: Optional[str] = None,
+            branch: Optional[str] = "main",
+            directory: Optional[str] = ".",
+            polling: Optional[bool] = False,
+    ) -> None:
+        """Update the content's repository.
+
+        Parameters
+        ----------
+        repository: str, optional
+            URL for the repository. Default is None.
+        branch: str, optional
+            The tracked Git branch. Default is 'main'.
+        directory: str, optional
+            Directory containing the content. Default is '.'
+        polling: bool, optional
+            Indicates that the Git repository is regularly polled. Default is False.
+            
+
+        Returns
+        -------
+        None
+        """
+        ...
+
+    @overload
+    def update(self, **attributes: Any) -> None:
+        """Update the content's repository."""
+        ...
+
+    def update(self, **attributes: Any) -> None:
+        """Update the content's repository."""
+        url = self.params.url + f"v1/content/{self.content_guid}/repository"
+        response = self.params.session.patch(url, json=attributes) 
+        super().update(**response.json())
 
 class ContentItemOAuth(Resource):
     def __init__(self, params: ResourceParameters, content_guid: str) -> None:
@@ -100,6 +150,16 @@ class ContentItem(Resource):
             raise ValueError(
                 f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
             )
+
+
+    def repository(self) -> ContentItemRepository:
+        """Return the content item's git repository, if one exists"""
+        
+        path = f"v1/content/{self.guid}/repository"
+        url = self.params.url + path
+        response = self.params.session.get(url)
+        return ContentItemRepository(self.params, self['guid'], **response.json()) 
+
 
     def restart(self) -> None:
         """Mark for restart.
