@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import overload
+from typing import Optional, overload
 
 from requests import Response, Session
 
@@ -10,6 +10,7 @@ from . import hooks, me
 from .auth import Auth
 from .config import Config
 from .content import Content
+from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
@@ -18,7 +19,7 @@ from .tasks import Tasks
 from .users import User, Users
 
 
-class Client:
+class Client(ContextManager):
     """
     Client connection for Posit Connect.
 
@@ -156,9 +157,10 @@ class Client:
         session.hooks["response"].append(hooks.handle_errors)
         self.session = session
         self.resource_params = ResourceParameters(session, self.cfg.url)
+        self.ctx = Context(self.session, self.cfg.url)
 
     @property
-    def version(self) -> str:
+    def version(self) -> Optional[str]:
         """
         The server version.
 
@@ -167,7 +169,7 @@ class Client:
         str
             The version of the Posit Connect server.
         """
-        return self.get("server_settings").json()["version"]
+        return self.ctx.version
 
     @property
     def me(self) -> User:
@@ -257,6 +259,7 @@ class Client:
         return Metrics(self.resource_params)
 
     @property
+    @requires(version="2024.08.0")
     def oauth(self) -> OAuth:
         """
         The OAuth API interface.

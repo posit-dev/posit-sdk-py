@@ -53,6 +53,7 @@ class TestSessionDelete:
 
         # setup
         c = Client("https://connect.example", "12345")
+        c.ctx.version = "2024.08.0"
         session = c.oauth.sessions.get(guid)
 
         # invoke
@@ -72,10 +73,11 @@ class TestSessionsFind:
         )
 
         # setup
-        client = Client("https://connect.example", "12345")
+        c = Client("https://connect.example", "12345")
+        c.ctx.version = "2024.08.0"
 
         # invoke
-        sessions = client.oauth.sessions.find()
+        sessions = c.oauth.sessions.find()
 
         # assert
         assert mock_get.call_count == 1
@@ -94,10 +96,11 @@ class TestSessionsFind:
         )
 
         # setup
-        client = Client("https://connect.example", "12345")
+        c = Client("https://connect.example", "12345")
+        c.ctx.version = "2024.08.0"
 
         # invoke
-        client.oauth.sessions.find(all=True)
+        c.oauth.sessions.find(all=True)
 
         # assert
         assert mock_get.call_count == 1
@@ -115,10 +118,11 @@ class TestSessionsGet:
         )
 
         # setup
-        client = Client("https://connect.example", "12345")
+        c = Client("https://connect.example", "12345")
+        c.ctx.version = "2024.08.0"
 
         # invoke
-        session = client.oauth.sessions.get(guid=guid)
+        session = c.oauth.sessions.get(guid=guid)
 
         # assert
         assert mock_get.call_count == 1

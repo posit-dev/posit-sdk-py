@@ -23,5 +23,6 @@ class TestOAuthIntegrations:
                 "token_type": "Bearer",
             },
         )
-        con = Client(api_key="12345", url="https://connect.example/")
-        assert con.oauth.get_credentials("cit")["access_token"] == "viewer-token"
+        c = Client(api_key="12345", url="https://connect.example/")
+        c.ctx.version = "2024.08.0"
+        assert c.oauth.get_credentials("cit")["access_token"] == "viewer-token"
