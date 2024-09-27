@@ -24,5 +24,5 @@ class TestOAuthIntegrations:
             },
         )
         c = Client(api_key="12345", url="https://connect.example/")
-        c.ctx.version = "2024.08.0"
+        c.ctx.version = None
         assert c.oauth.get_credentials("cit")["access_token"] == "viewer-token"
