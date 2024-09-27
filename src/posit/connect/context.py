@@ -1,13 +1,15 @@
 import functools
 from typing import Optional, Protocol
 
+from packaging.version import Version
+
 
 def requires(version: str):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(instance: ContextManager, *args, **kwargs):
             ctx = instance.ctx
-            if ctx.version and ctx.version < version:
+            if ctx.version and Version(ctx.version) < Version(version):
                 raise RuntimeError(
                     f"This API is not available in Connect version {ctx.version}. Please upgrade to version {version} or later.",
                 )
