@@ -17,6 +17,7 @@ from .resources import Resource, ResourceParameters, Resources
 from .tasks import Task
 from .variants import Variants
 
+
 class ContentItemRepository(Resource):
     def __init__(self, params: ResourceParameters, content_guid: str, **kwargs) -> None:
         super().__init__(params, **kwargs)
@@ -83,6 +84,7 @@ class ContentItemOwner(Resource):
 
 
 class ContentItem(Resource):
+    
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
         if key == "owner" and isinstance(v, dict):
@@ -92,6 +94,66 @@ class ContentItem(Resource):
     @property
     def oauth(self) -> ContentItemOAuth:
         return ContentItemOAuth(self.params, content_guid=self["guid"])
+
+    @property
+    def repository(self) -> Optional[ContentItemRepository]:
+        path = f"v1/content/{self.guid}/repository"
+        url = self.params.url + path
+        try: 
+            response = self.params.session.get(url)
+            return ContentItemRepository(self.params, self["guid"], **response.json())
+        except:
+            return None
+
+    @overload
+    def create_repository(
+        self,
+        *,
+        repository: str,
+        branch: Optional[str] = "main",
+        directory: Optional[str] = ".",
+        polling: Optional[bool] = False,
+    ) -> ContentItemRepository:
+        """Create repository.
+
+        Parameters
+        ----------
+        repository : str
+            URL for the respository.
+        branch : str, optional
+            The tracked Git branch. Default is 'main'.
+        directory : str, optional
+            Directory containing the content. Default is '.'.
+        polling : bool, optional
+            Indicates that the Git repository is regularly polled. Default is False.
+        
+        Returns
+        -------
+        ContentItemRepository
+        """
+        ...
+
+    @overload
+    def create_repository(self, **attributes) -> ContentItemRepository:
+        """Create a repository.
+        
+        Returns
+        -------
+        ContentItemRepository
+        """
+        ...
+
+    def create_repository(self, **attributes):
+        """Create a repository.
+        
+        Returns
+        -------
+        ContentItemRepository
+        """
+        path = f"v1/content/{self.guid}/repository"
+        url = self.params.url + path
+        response = self.params.session.put(url, json=attributes)
+        return ContentItemRepository(self.params, **response.json())
 
     def delete(self) -> None:
         """Delete the content item."""
@@ -150,15 +212,6 @@ class ContentItem(Resource):
             raise ValueError(
                 f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
             )
-
-
-    def repository(self) -> ContentItemRepository:
-        """Return the content item's git repository, if one exists"""
-        
-        path = f"v1/content/{self.guid}/repository"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return ContentItemRepository(self.params, self['guid'], **response.json()) 
 
 
     def restart(self) -> None:
