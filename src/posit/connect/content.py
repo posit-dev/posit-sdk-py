@@ -367,7 +367,7 @@ class Content(Resources):
             Content title. Default is None.
         description : str, optional
             Content description. Default is None.
-        access_type : Literal['all', 'acl', 'logged_in', optional
+        access_type : Literal['all', 'acl', 'logged_in'], optional
             How content manages viewers. Default is 'acl'. Options: 'all', 'logged_in', 'acl'.
         connection_timeout : int, optional
             Max seconds without data exchange. Default is None. Falls back to server setting 'Scheduler.ConnectionTimeout'.
