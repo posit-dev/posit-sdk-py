@@ -1,4 +1,6 @@
-from typing import Callable, Optional, Union, overload
+from typing import Callable, List, Optional, Union, overload
+
+from posit.connect.errors import ClientError
 
 from .resources import Resource, ResourceParameters, Resources
 
@@ -21,12 +23,10 @@ class Vanity(Resource):
 
     def destroy(self) -> None:
         """Destroy the vanity resource."""
-        content_guid = self.get("content_guid")
-        if content_guid is None:
-            raise ValueError(
-                "The 'content_guid' is missing. Unable to perform the destroy operation."
-            )
-        endpoint = self.params.url + f"v1/content/{content_guid}/vanity"
+        fuid = self.get("content_guid")
+        if fuid is None:
+            raise ValueError("Missing value for required field: 'content_guid'.")
+        endpoint = self.params.url + f"v1/content/{fuid}/vanity"
         self.params.session.delete(endpoint)
         self._after_destroy()
 
@@ -34,7 +34,7 @@ class Vanity(Resource):
 class Vanities(Resources):
     """Manages a collection of Vanity resources."""
 
-    def all(self) -> list[Vanity]:
+    def all(self) -> List[Vanity]:
         """Retrieve all vanity resources."""
         endpoint = self.params.url + "v1/vanities"
         response = self.params.session.get(endpoint)
@@ -50,21 +50,24 @@ class VanityMixin(Resource):
         self._vanity: Optional[Vanity] = None
 
     @property
-    def vanity(self) -> Vanity:
+    def vanity(self) -> Optional[Vanity]:
         """Retrieve or lazily load the associated vanity resource."""
-        if self._vanity is None:
+        if self._vanity:
+            return self._vanity
+
+        try:
             uid = self.get("guid")
             if uid is None:
-                raise ValueError(
-                    "The 'guid' is missing. Unable to perform the get vanity operation."
-                )
+                raise ValueError("Missing value for required field: 'guid'.")
             endpoint = self.params.url + f"v1/content/{uid}/vanity"
             response = self.params.session.get(endpoint)
             result = response.json()
-            self._vanity = Vanity(
-                self.params, after_destroy=lambda: setattr(self, "_vanity", None), **result
-            )
-        return self._vanity
+            self._vanity = Vanity(self.params, after_destroy=self.reset, **result)
+            return self._vanity
+        except ClientError as e:
+            if e.http_status == 404:
+                return None
+            raise e
 
     @vanity.setter
     def vanity(self, value: Union[str, dict]) -> None:
@@ -99,6 +102,6 @@ class VanityMixin(Resource):
         """Set or update the vanity resource with given attributes."""
         uid = self.get("guid")
         if uid is None:
-            raise ValueError("The 'guid' is missing. Unable to perform the set vanity operation.")
+            raise ValueError("Missing value for required field: 'guid'.")
         endpoint = self.params.url + f"v1/content/{uid}/vanity"
         self.params.session.put(endpoint, json=attributes)

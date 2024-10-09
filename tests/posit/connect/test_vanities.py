@@ -104,25 +104,27 @@ class TestVanityMixin:
         content.vanity = path
 
         assert mock_put.call_count == 1
+        assert content._vanity is None
 
     @responses.activate
     def test_vanity_setter_with_dict(self):
         guid = "8ce6eaca-60af-4c2f-93a0-f5f3cddf5ee5"
         base_url = "http://connect.example/__api__"
         endpoint = f"{base_url}/v1/content/{guid}/vanity"
-        vanity_attrs = {"path": "example", "locked": True}
-        mock_put = responses.put(endpoint, match=[json_params_matcher(vanity_attrs)])
+        attrs = {"path": "example", "locked": True}
+        mock_put = responses.put(endpoint, match=[json_params_matcher(attrs)])
 
         session = requests.Session()
         url = Url(base_url)
         params = ResourceParameters(session, url)
         content = VanityMixin(params, guid=guid)
-        content.vanity = vanity_attrs
+        content.vanity = attrs
 
+        assert content._vanity is None
         assert mock_put.call_count == 1
 
     @responses.activate
-    def test_vanity_deleter_sends_delete_request(self):
+    def test_vanity_deleter(self):
         guid = "8ce6eaca-60af-4c2f-93a0-f5f3cddf5ee5"
         base_url = "http://connect.example/__api__"
         endpoint = f"{base_url}/v1/content/{guid}/vanity"
@@ -135,19 +137,5 @@ class TestVanityMixin:
         content._vanity = Vanity(params, content_guid=guid)
         del content.vanity
 
+        assert content._vanity is None
         assert mock_delete.call_count == 1
-
-    @responses.activate
-    def test_set_vanity(self):
-        guid = "8ce6eaca-60af-4c2f-93a0-f5f3cddf5ee5"
-        base_url = "http://connect.example/__api__"
-        endpoint = f"{base_url}/v1/content/{guid}/vanity"
-        mock_put = responses.put(endpoint)
-
-        session = requests.Session()
-        url = Url(base_url)
-        params = ResourceParameters(session, url)
-        content = VanityMixin(params, guid=guid)
-        content.set_vanity(path="example")
-
-        assert mock_put.call_count == 1
