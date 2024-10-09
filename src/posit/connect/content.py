@@ -7,14 +7,14 @@ import time
 from posixpath import dirname
 from typing import Any, List, Literal, Optional, overload
 
-from posit.connect.oauth.associations import ContentItemAssociations
-
 from . import tasks
 from .bundles import Bundles
 from .env import EnvVars
+from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
 from .tasks import Task
+from .vanity import VanityContentMixin
 from .variants import Variants
 
 

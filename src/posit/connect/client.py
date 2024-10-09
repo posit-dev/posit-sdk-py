@@ -6,6 +6,8 @@ from typing import Optional, overload
 
 from requests import Response, Session
 
+from posit.connect.vanity import Vanities
+
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -270,6 +272,10 @@ class Client(ContextManager):
             The oauth API instance.
         """
         return OAuth(self.resource_params, self.cfg.api_key)
+
+    @property
+    def vanities(self) -> Vanities:
+        return Vanities(self.ctx)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
