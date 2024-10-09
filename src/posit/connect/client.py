@@ -6,8 +6,6 @@ from typing import Optional, overload
 
 from requests import Response, Session
 
-from posit.connect.vanity import Vanities
-
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -19,6 +17,7 @@ from .oauth import OAuth
 from .resources import ResourceParameters
 from .tasks import Tasks
 from .users import User, Users
+from .vanities import Vanities
 
 
 class Client(ContextManager):
@@ -275,7 +274,7 @@ class Client(ContextManager):
 
     @property
     def vanities(self) -> Vanities:
-        return Vanities(self.ctx)
+        return Vanities(self.resource_params)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""

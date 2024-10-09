@@ -14,7 +14,7 @@ from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
 from .tasks import Task
-from .vanity import VanityContentMixin
+from .vanities import VanityMixin
 from .variants import Variants
 
 
@@ -32,7 +32,7 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(Resource):
+class ContentItem(VanityMixin, Resource):
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
         if key == "owner" and isinstance(v, dict):
