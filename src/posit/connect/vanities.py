@@ -44,7 +44,7 @@ class Vanity(Resource):
     """
 
     _fuid: str = "content_guid"
-    """str : the foreign unique identifier field that points to the owner of this vanity, default is 'content_guid'"""
+    """str : the foreign unique identifier field that points to the owner of this vanity, by default 'content_guid'"""
 
     def __init__(
         self,
@@ -224,16 +224,28 @@ class VanityMixin(Resource):
         Parameters
         ----------
         **attributes : dict, optional
-            Arbitrary vanity attributes. All attributes are passed as the request body to POST 'v1/content/:guid/vanity'
+            Arbitrary attributes. All attributes are passed as the request body to POST 'v1/content/:guid/vanity'
 
-            Possible keys may include:
-            - `path` : str
-            - `force` : bool
+        Raises
+        ------
+        ValueError
+            If the unique identifier field is missing or the value is None.
         """
         ...
 
     def set_vanity(self, **attributes) -> None:
-        """Set the vanity."""
+        """Set the vanity.
+
+        Parameters
+        ----------
+        **attributes : dict, optional
+            Arbitrary attributes. All attributes are passed as the request body to POST 'v1/content/:guid/vanity'
+
+        Raises
+        ------
+        ValueError
+            If the unique identifier field is missing or the value is None.
+        """
         v = self.get(self._uid)
         if v is None:
             raise ValueError(f"Missing value for required field: '{self._uid}'.")
