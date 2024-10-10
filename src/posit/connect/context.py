@@ -1,6 +1,7 @@
 import functools
 from typing import Optional, Protocol
 
+import requests
 from packaging.version import Version
 
 
@@ -21,7 +22,7 @@ def requires(version: str):
 
 
 class Context(dict):
-    def __init__(self, session, url):
+    def __init__(self, session: requests.Session, url: str):
         self.session = session
         self.url = url
 
