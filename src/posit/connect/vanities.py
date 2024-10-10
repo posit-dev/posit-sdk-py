@@ -128,10 +128,10 @@ class VanityMixin(Resource):
             return self._vanity
 
         try:
-            uid = self.get("guid")
-            if uid is None:
-                raise ValueError("Missing value for required field: 'guid'.")
-            endpoint = self.params.url + f"v1/content/{uid}/vanity"
+            v = self.get(self._uid)
+            if v is None:
+                raise ValueError(f"Missing value for required field: '{self._uid}'.")
+            endpoint = self.params.url + f"v1/content/{v}/vanity"
             response = self.params.session.get(endpoint)
             result = response.json()
             self._vanity = Vanity(self.params, after_destroy=self.reset_vanity, **result)
