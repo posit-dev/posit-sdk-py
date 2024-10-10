@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "posit-sdk"
 description = "Posit SDK for Python"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { file = "LICENSE" }
 keywords = ["posit", "sdk"]
 classifiers = [
