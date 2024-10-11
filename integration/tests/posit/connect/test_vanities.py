@@ -2,7 +2,6 @@ from posit import connect
 
 
 class TestVanities:
-
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
@@ -51,7 +50,6 @@ class TestVanities:
 
         # Cleanup
         content.delete()
-
 
     def test_destroy(self):
         content = self.client.content.create(name="example")

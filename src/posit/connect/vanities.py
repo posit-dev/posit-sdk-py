@@ -5,8 +5,6 @@ from typing_extensions import NotRequired, Required, Unpack
 from .errors import ClientError
 from .resources import Resource, ResourceParameters, Resources
 
-AfterDestroyCallback = Callable[[], None]
-
 
 class Vanity(Resource):
     """A vanity resource.
@@ -44,17 +42,22 @@ class Vanity(Resource):
     - `/content`
     """
 
-    _fuid: str = "content_guid"
-    """str : the foreign unique identifier field that points to the owner of this vanity, by default 'content_guid'"""
+    AfterDestroyCallback = Callable[[], None]
+
+    class VanityAttributes(TypedDict):
+        """Vanity attributes."""
+
+        path: str
+        content_guid: Required[str]
+        created_time: str
 
     def __init__(
         self,
         /,
         params: ResourceParameters,
         *,
-        content_guid: str,
         after_destroy: Optional[AfterDestroyCallback] = None,
-        **kwargs,
+        **kwargs: Unpack[VanityAttributes],
     ):
         """Initialize a Vanity.
 
@@ -64,9 +67,13 @@ class Vanity(Resource):
         after_destroy : AfterDestroyCallback, optional
             Called after the Vanity is successfully destroyed, by default None
         """
-        super().__init__(params, content_guid=content_guid, **kwargs)
-        self._endpoint = self.params.url + f"v1/content/{content_guid}/vanity"
+        super().__init__(params, **kwargs)
         self._after_destroy = after_destroy
+        self._content_guid = kwargs["content_guid"]
+
+    @property
+    def _endpoint(self):
+        return self.params.url + f"v1/content/{self._content_guid}/vanity"
 
     def destroy(self) -> None:
         """Destroy the vanity.
@@ -120,12 +127,12 @@ class VanityMixin(Resource):
 
     def __init__(self, /, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
         super().__init__(params, **kwargs)
-        self._uid = kwargs['guid']
+        self._content_guid = kwargs["guid"]
         self._vanity: Optional[Vanity] = None
 
     @property
     def _endpoint(self):
-        return self.params.url + f"v1/content/{self._uid}/vanity"
+        return self.params.url + f"v1/content/{self._content_guid}/vanity"
 
     @property
     def vanity(self) -> Optional[Vanity]:
@@ -148,8 +155,12 @@ class VanityMixin(Resource):
 
         Parameters
         ----------
-        value : str or dict
-            The value can be a string or a dictionary. If provided as a string, it represents the vanity path. If provided as a dictionary, it contains key-value pairs with detailed information about the object.
+        value : str or CreateVanityRequest
+            The value can be a str or a CreateVanityRequest. If provided as a string, it is the vanity path.
+
+        See Also
+        --------
+        create_vanity
         """
         if isinstance(value, str):
             self.create_vanity(path=value)
