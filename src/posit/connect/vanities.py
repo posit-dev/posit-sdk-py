@@ -142,6 +142,7 @@ class VanityMixin(Resource):
 
         try:
             self._vanity = self.find_vanity()
+            self._vanity._after_destroy = self.reset_vanity
             return self._vanity["path"]
         except ClientError as e:
             if e.http_status == 404:
@@ -232,4 +233,4 @@ class VanityMixin(Resource):
         """
         response = self.params.session.get(self._endpoint)
         result = response.json()
-        return Vanity(self.params, after_destroy=self.reset_vanity, **result)
+        return Vanity(self.params, **result)

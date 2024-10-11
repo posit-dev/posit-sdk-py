@@ -66,6 +66,7 @@ class TestVanities:
 
         # Delete
         vanity.destroy()
+        content.reset_vanity()
         assert content.vanity is None
 
         # Cleanup
