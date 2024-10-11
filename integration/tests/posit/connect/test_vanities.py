@@ -41,8 +41,7 @@ class TestVanities:
 
         # Get
         vanity = content.vanity
-        assert vanity
-        assert vanity["path"] == "/example/"
+        assert vanity == "/example/"
 
         # Delete
         del content.vanity
@@ -61,7 +60,7 @@ class TestVanities:
         content.vanity = "example"
 
         # Get
-        vanity = content.vanity
+        vanity = content.find_vanity()
         assert vanity
         assert vanity["path"] == "/example/"
 

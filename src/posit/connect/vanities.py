@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, TypedDict, Union
+from typing import Callable, List, Optional, TypedDict
 
 from typing_extensions import NotRequired, Required, Unpack
 
@@ -47,9 +47,9 @@ class Vanity(Resource):
     class VanityAttributes(TypedDict):
         """Vanity attributes."""
 
-        path: str
+        path: Required[str]
         content_guid: Required[str]
-        created_time: str
+        created_time: Required[str]
 
     def __init__(
         self,
@@ -123,7 +123,7 @@ class VanityMixin(Resource):
     class HasGuid(TypedDict):
         """Has a guid."""
 
-        guid: str
+        guid: Required[str]
 
     def __init__(self, /, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
         super().__init__(params, **kwargs)
@@ -135,38 +135,38 @@ class VanityMixin(Resource):
         return self.params.url + f"v1/content/{self._content_guid}/vanity"
 
     @property
-    def vanity(self) -> Optional[Vanity]:
+    def vanity(self) -> Optional[str]:
         """Get the vanity."""
         if self._vanity:
-            return self._vanity
+            return self._vanity["path"]
 
         try:
             self._vanity = self.find_vanity()
-            self._vanity._after_destroy = self.reset_vanity
-            return self._vanity
+            return self._vanity["path"]
         except ClientError as e:
             if e.http_status == 404:
                 return None
             raise e
 
     @vanity.setter
-    def vanity(self, value: Union[str, "CreateVanityRequest"]) -> None:
+    def vanity(self, value: str) -> None:
         """Set the vanity.
 
         Parameters
         ----------
-        value : str or CreateVanityRequest
-            The value can be a str or a CreateVanityRequest. If provided as a string, it is the vanity path.
+        value : str
+            The vanity path.
+
+        Note
+        ----
+        This action requires owner or administrator privileges.
 
         See Also
         --------
         create_vanity
         """
-        if isinstance(value, str):
-            self.create_vanity(path=value)
-        elif isinstance(value, dict):
-            self.create_vanity(**value)
-        self.reset_vanity()
+        self._vanity = self.create_vanity(path=value)
+        self._vanity._after_destroy = self.reset_vanity
 
     @vanity.deleter
     def vanity(self) -> None:
@@ -178,7 +178,7 @@ class VanityMixin(Resource):
 
         Note
         ----
-        This action requires administrator privileges.
+        This action requires owner or administrator privileges.
 
         See Also
         --------
@@ -196,20 +196,15 @@ class VanityMixin(Resource):
         self._vanity = None
 
     class CreateVanityRequest(TypedDict, total=False):
-        """A request schema for creating a vanity.
-
-        Attributes
-        ----------
-        path : str
-            The path for the vanity.
-        force : bool
-            Whether to force the creation of the vanity.
-        """
+        """A request schema for creating a vanity."""
 
         path: Required[str]
-        force: NotRequired[bool]
+        """The vanity path (.e.g, 'my-dashboard')"""
 
-    def create_vanity(self, **kwargs: Unpack[CreateVanityRequest]) -> None:
+        force: NotRequired[bool]
+        """Whether to force creation of the vanity"""
+
+    def create_vanity(self, **kwargs: Unpack[CreateVanityRequest]) -> Vanity:
         """Create a vanity.
 
         Parameters
@@ -217,11 +212,23 @@ class VanityMixin(Resource):
         path : str, required
             The path for the vanity.
         force : bool, not required
-            Whether to force the creation of the vanity, default False
-        """
-        self.params.session.put(self._endpoint, json=kwargs)
+            Whether to force the creation of the vanity. When True, any other vanity with the same path will be deleted.
 
-    def find_vanity(self):
-        response = self.params.session.get(self._endpoint)
+        Warnings
+        --------
+        If setting force=True, the destroy operation performed on the other vanity is irreversible.
+        """
+        response = self.params.session.put(self._endpoint, json=kwargs)
         result = response.json()
         return Vanity(self.params, **result)
+
+    def find_vanity(self) -> Vanity:
+        """Find the vanity.
+
+        Returns
+        -------
+        Vanity
+        """
+        response = self.params.session.get(self._endpoint)
+        result = response.json()
+        return Vanity(self.params, after_destroy=self.reset_vanity, **result)
