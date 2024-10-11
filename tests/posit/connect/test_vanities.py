@@ -109,7 +109,7 @@ class TestVanityMixin:
         url = Url(base_url)
         params = ResourceParameters(session, url)
         content = VanityMixin(params, guid=guid)
-        content._vanity = Vanity(params, content_guid=guid)
+        content._vanity = Vanity(params, path=Mock(), content_guid=guid, created_time=Mock())
         del content.vanity
 
         assert content._vanity is None
