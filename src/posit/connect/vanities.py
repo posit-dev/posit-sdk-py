@@ -125,7 +125,7 @@ class VanityMixin(Resource):
 
         guid: Required[str]
 
-    def __init__(self, /, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
+    def __init__(self, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
         super().__init__(params, **kwargs)
         self._content_guid = kwargs["guid"]
         self._vanity: Optional[Vanity] = None
