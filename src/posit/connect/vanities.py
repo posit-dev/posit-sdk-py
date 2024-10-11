@@ -1,7 +1,8 @@
-from typing import Callable, List, Optional, Union, overload
+from typing import Callable, List, Optional, TypedDict, Union
 
-from posit.connect.errors import ClientError
+from typing_extensions import NotRequired, Required, Unpack
 
+from .errors import ClientError
 from .resources import Resource, ResourceParameters, Resources
 
 AfterDestroyCallback = Callable[[], None]
@@ -51,6 +52,7 @@ class Vanity(Resource):
         /,
         params: ResourceParameters,
         *,
+        content_guid: str,
         after_destroy: Optional[AfterDestroyCallback] = None,
         **kwargs,
     ):
@@ -62,7 +64,8 @@ class Vanity(Resource):
         after_destroy : AfterDestroyCallback, optional
             Called after the Vanity is successfully destroyed, by default None
         """
-        super().__init__(params, **kwargs)
+        super().__init__(params, content_guid=content_guid, **kwargs)
+        self._endpoint = self.params.url + f"v1/content/{content_guid}/vanity"
         self._after_destroy = after_destroy
 
     def destroy(self) -> None:
@@ -81,11 +84,7 @@ class Vanity(Resource):
         ----
         This action requires administrator privileges.
         """
-        fuid = self.get("content_guid")
-        if fuid is None:
-            raise ValueError("Missing value for required field: 'content_guid'.")
-        endpoint = self.params.url + f"v1/content/{fuid}/vanity"
-        self.params.session.delete(endpoint)
+        self.params.session.delete(self._endpoint)
 
         if self._after_destroy:
             self._after_destroy()
@@ -114,27 +113,29 @@ class Vanities(Resources):
 class VanityMixin(Resource):
     """Mixin class to add a vanity attribute to a resource."""
 
-    _uid: str = "guid"
-    """str : the unique identifier field for this resource"""
+    class HasGuid(TypedDict):
+        """Has a guid."""
 
-    def __init__(self, /, params: ResourceParameters, **kwargs):
+        guid: str
+
+    def __init__(self, /, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
         super().__init__(params, **kwargs)
+        self._uid = kwargs['guid']
         self._vanity: Optional[Vanity] = None
 
     @property
+    def _endpoint(self):
+        return self.params.url + f"v1/content/{self._uid}/vanity"
+
+    @property
     def vanity(self) -> Optional[Vanity]:
-        """Retrieve or lazily load the associated vanity resource."""
+        """Get the vanity."""
         if self._vanity:
             return self._vanity
 
         try:
-            v = self.get(self._uid)
-            if v is None:
-                raise ValueError(f"Missing value for required field: '{self._uid}'.")
-            endpoint = self.params.url + f"v1/content/{v}/vanity"
-            response = self.params.session.get(endpoint)
-            result = response.json()
-            self._vanity = Vanity(self.params, after_destroy=self.reset_vanity, **result)
+            self._vanity = self.find_vanity()
+            self._vanity._after_destroy = self.reset_vanity
             return self._vanity
         except ClientError as e:
             if e.http_status == 404:
@@ -142,7 +143,7 @@ class VanityMixin(Resource):
             raise e
 
     @vanity.setter
-    def vanity(self, value: Union[str, dict]) -> None:
+    def vanity(self, value: Union[str, "CreateVanityRequest"]) -> None:
         """Set the vanity.
 
         Parameters
@@ -151,9 +152,9 @@ class VanityMixin(Resource):
             The value can be a string or a dictionary. If provided as a string, it represents the vanity path. If provided as a dictionary, it contains key-value pairs with detailed information about the object.
         """
         if isinstance(value, str):
-            self.set_vanity(path=value)
+            self.create_vanity(path=value)
         elif isinstance(value, dict):
-            self.set_vanity(**value)
+            self.create_vanity(**value)
         self.reset_vanity()
 
     @vanity.deleter
@@ -183,71 +184,33 @@ class VanityMixin(Resource):
         """
         self._vanity = None
 
-    @overload
-    def set_vanity(self, *, path: str) -> None:
-        """Set the vanity.
+    class CreateVanityRequest(TypedDict, total=False):
+        """A request schema for creating a vanity.
 
-        Parameters
+        Attributes
         ----------
         path : str
-            The vanity path.
-
-        Raises
-        ------
-        ValueError
-            If the unique identifier field is missing or the value is None.
-        """
-        ...
-
-    @overload
-    def set_vanity(self, *, path: str, force: bool) -> None:
-        """Set the vanity.
-
-        Parameters
-        ----------
-        path : str
-            The vanity path.
+            The path for the vanity.
         force : bool
-            If `True`, overwrite the ownership of this vanity to this resource, default `False`
-
-        Raises
-        ------
-        ValueError
-            If the unique identifier field is missing or the value is None.
+            Whether to force the creation of the vanity.
         """
-        ...
 
-    @overload
-    def set_vanity(self, **attributes) -> None:
-        """Set the vanity.
+        path: Required[str]
+        force: NotRequired[bool]
+
+    def create_vanity(self, **kwargs: Unpack[CreateVanityRequest]) -> None:
+        """Create a vanity.
 
         Parameters
         ----------
-        **attributes : dict, optional
-            Arbitrary attributes. All attributes are passed as the request body to POST 'v1/content/:guid/vanity'
-
-        Raises
-        ------
-        ValueError
-            If the unique identifier field is missing or the value is None.
+        path : str, required
+            The path for the vanity.
+        force : bool, not required
+            Whether to force the creation of the vanity, default False
         """
-        ...
+        self.params.session.put(self._endpoint, json=kwargs)
 
-    def set_vanity(self, **attributes) -> None:
-        """Set the vanity.
-
-        Parameters
-        ----------
-        **attributes : dict, optional
-            Arbitrary attributes. All attributes are passed as the request body to POST 'v1/content/:guid/vanity'
-
-        Raises
-        ------
-        ValueError
-            If the unique identifier field is missing or the value is None.
-        """
-        v = self.get(self._uid)
-        if v is None:
-            raise ValueError(f"Missing value for required field: '{self._uid}'.")
-        endpoint = self.params.url + f"v1/content/{v}/vanity"
-        self.params.session.put(endpoint, json=attributes)
+    def find_vanity(self):
+        response = self.params.session.get(self._endpoint)
+        result = response.json()
+        return Vanity(self.params, **result)

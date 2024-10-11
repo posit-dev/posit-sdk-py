@@ -1,6 +1,5 @@
 from unittest.mock import Mock
 
-import pytest
 import requests
 import responses
 from responses.matchers import json_params_matcher
@@ -26,16 +25,6 @@ class TestVanityDestroy:
         vanity.destroy()
 
         assert mock_delete.call_count == 1
-
-    def test_destroy_without_content_guid_raises_value_error(self):
-        vanity = Vanity(params=Mock())
-        with pytest.raises(ValueError):
-            vanity.destroy()
-
-    def test_destroy_with_none_content_guid_raises_value_error(self):
-        vanity = Vanity(params=Mock(), content_guid=None)
-        with pytest.raises(ValueError):
-            vanity.destroy()
 
     @responses.activate
     def test_destroy_calls_after_destroy_callback(self):
