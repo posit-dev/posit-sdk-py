@@ -21,7 +21,8 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "requests>=2.31.0,<3",
-    "packaging"
+    "packaging",
+    "typing-extensions"
 ]
 
 [project.urls]

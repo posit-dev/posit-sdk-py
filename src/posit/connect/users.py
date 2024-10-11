@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional, overload
+from typing import List, Literal, TypedDict
+
+from typing_extensions import NotRequired, Required, Unpack
 
 from . import me
 from .content import Content
@@ -71,31 +73,33 @@ class User(Resource):
         self.params.session.post(url, json=body)
         super().update(locked=False)
 
-    @overload
+    class UpdateUser(TypedDict):
+        """Update user request."""
+
+        email: NotRequired[str]
+        username: NotRequired[str]
+        first_name: NotRequired[str]
+        last_name: NotRequired[str]
+        user_role: NotRequired[Literal["administrator", "publisher", "viewer"]]
+
     def update(
         self,
-        *args,
-        email: Optional[str] = None,
-        username: Optional[str] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        user_role: Optional[Literal["administrator", "publisher", "viewer"]] = None,
-        **kwargs,
+        **kwargs: Unpack[UpdateUser],
     ) -> None:
         """
         Update the user's attributes.
 
         Parameters
         ----------
-        email : str, optional
+        email : str, not required
             The new email address for the user. Default is `None`.
-        username : str, optional
+        username : str, not required
             The new username for the user. Default is `None`.
-        first_name : str, optional
+        first_name : str, not required
             The new first name for the user. Default is `None`.
-        last_name : str, optional
+        last_name : str, not required
             The new last name for the user. Default is `None`.
-        user_role : Literal["administrator", "publisher", "viewer"], optional
+        user_role : Literal["administrator", "publisher", "viewer"], not required
             The new role for the user. Options are `'administrator'`, `'publisher'`, `'viewer'`. Default is `None`.
 
         Returns
@@ -112,44 +116,8 @@ class User(Resource):
 
         >>> user.update(first_name="Jane", last_name="Smith")
         """
-        ...
-
-    @overload
-    def update(self, *args, **kwargs) -> None:
-        """
-        Update the user.
-
-        Parameters
-        ----------
-        *args
-            Variable length argument list.
-        **kwargs
-            Arbitrary keyword arguments.
-
-        Returns
-        -------
-        None
-        """
-        ...
-
-    def update(self, *args, **kwargs) -> None:
-        """
-        Update the user.
-
-        Parameters
-        ----------
-        *args
-            Variable length argument list.
-        **kwargs
-            Arbitrary keyword arguments.
-
-        Returns
-        -------
-        None
-        """
-        body = dict(*args, **kwargs)
         url = self.params.url + f"v1/users/{self['guid']}"
-        response = self.params.session.put(url, json=body)
+        response = self.params.session.put(url, json=kwargs)
         super().update(**response.json())
 
 
@@ -159,23 +127,22 @@ class Users(Resources):
     def __init__(self, params: ResourceParameters) -> None:
         super().__init__(params)
 
-    @overload
-    def create(
-        self,
-        *,
-        # Required arguments
-        username: str,
+    class CreateUser(TypedDict):
+        """Create user request."""
+
+        username: Required[str]
         # Authentication Information
-        password: Optional[str] = None,
-        user_must_set_password: bool = False,
+        password: NotRequired[str]
+        user_must_set_password: NotRequired[bool]
         # Profile Information
-        email: Optional[str] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
+        email: NotRequired[str]
+        first_name: NotRequired[str]
+        last_name: NotRequired[str]
         # Role and Permissions
-        user_role: Optional[Literal["administrator", "publisher", "viewer"]] = None,
-        unique_id: Optional[str] = None,
-    ) -> User:
+        user_role: NotRequired[Literal["administrator", "publisher", "viewer"]]
+        unique_id: NotRequired[str]
+
+    def create(self, **attributes: Unpack[CreateUser]) -> User:
         """
         Create a new user with the specified attributes.
 
@@ -183,22 +150,22 @@ class Users(Resources):
 
         Parameters
         ----------
-        username : str
+        username : str, required
             The user's desired username.
-        password : str, optional
-            Applies when server setting 'Authentication.Provider="password"'. Cannot be set when `user_must_set_password` is `True`. Default is `None`.
-        user_must_set_password : bool, optional
+        password : str, not required
+            Applies when server setting 'Authentication.Provider="password"'. Cannot be set when `user_must_set_password` is `True`.
+        user_must_set_password : bool, not required
             If `True`, the user is prompted to set their password on first login. When `False`, the `password` parameter is used. Default is `False`. Applies when server setting 'Authentication.Provider="password"'.
-        email : str, optional
-            The user's email address. Default is `None`.
-        first_name : str, optional
-            The user's first name. Default is `None`.
-        last_name : str, optional
-            The user's last name. Default is `None`.
-        user_role : Literal["administrator", "publisher", "viewer"], optional
-            The user role. Default is `None`. Options are `'administrator'`, `'publisher'`, `'viewer'`. Falls back to server setting 'Authorization.DefaultUserRole'.
-        unique_id : str, optional
-            Default is `None`. Required when server is configured with SAML or OAuth2 (non-Google) authentication. Applies when server setting `ProxyAuth.UniqueIdHeader` is set.
+        email : str, not required
+            The user's email address.
+        first_name : str, not required
+            The user's first name.
+        last_name : str, not required
+            The user's last name.
+        user_role : Literal["administrator", "publisher", "viewer"], not required
+            The user role.  Options are `'administrator'`, `'publisher'`, `'viewer'`. Falls back to server setting 'Authorization.DefaultUserRole'.
+        unique_id : str, maybe required
+            Required when server is configured with SAML or OAuth2 (non-Google) authentication. Applies when server setting `ProxyAuth.UniqueIdHeader` is set.
 
         Returns
         -------
@@ -229,63 +196,30 @@ class Users(Resources):
         ...     user_role="viewer",
         ... )
         """
-        ...
-
-    @overload
-    def create(self, **attributes) -> User:
-        """
-        Create a user with the specified attributes.
-
-        Parameters
-        ----------
-        **attributes
-            Arbitrary keyword arguments representing user attributes.
-
-        Returns
-        -------
-        User
-            The newly created user.
-        """
-        ...
-
-    def create(self, **attributes) -> User:
-        """
-        Create a user.
-
-        Parameters
-        ----------
-        **attributes
-            Arbitrary keyword arguments representing user attributes.
-
-        Returns
-        -------
-        User
-            The newly created user.
-        """
         # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
         url = self.params.url + "v1/users"
         response = self.params.session.post(url, json=attributes)
         return User(self.params, **response.json())
 
-    @overload
-    def find(
-        self,
-        *,
-        prefix: Optional[str] = None,
-        user_role: Optional[Literal["administrator", "publisher", "viewer"] | str] = None,
-        account_status: Optional[Literal["locked", "licensed", "inactive"] | str] = None,
-    ) -> List[User]:
+    class FindUser(TypedDict):
+        """Find user request."""
+
+        prefix: NotRequired[str]
+        user_role: NotRequired[Literal["administrator", "publisher", "viewer"] | str]
+        account_status: NotRequired[Literal["locked", "licensed", "inactive"] | str]
+
+    def find(self, **conditions: Unpack[FindUser]) -> List[User]:
         """
         Find users matching the specified conditions.
 
         Parameters
         ----------
-        prefix : str, optional
-            Filter users by prefix (username, first name, or last name). The filter is case-insensitive. Default is `None`.
-        user_role : Literal["administrator", "publisher", "viewer"], optional
-            Filter by user role. Options are `'administrator'`, `'publisher'`, `'viewer'`. Use `'|'` to represent logical OR (e.g., `'viewer|publisher'`). Default is `None`.
-        account_status : Literal["locked", "licensed", "inactive"], optional
-            Filter by account status. Options are `'locked'`, `'licensed'`, `'inactive'`. Use `'|'` to represent logical OR. For example, `'locked|licensed'` includes users who are either locked or licensed. Default is `None`.
+        prefix : str, not required
+            Filter users by prefix (username, first name, or last name). The filter is case-insensitive.
+        user_role : Literal["administrator", "publisher", "viewer"], not required
+            Filter by user role. Options are `'administrator'`, `'publisher'`, `'viewer'`. Use `'|'` to represent logical OR (e.g., `'viewer|publisher'`).
+        account_status : Literal["locked", "licensed", "inactive"], not required
+            Filter by account status. Options are `'locked'`, `'licensed'`, `'inactive'`. Use `'|'` to represent logical OR. For example, `'locked|licensed'` includes users who are either locked or licensed.
 
         Returns
         -------
@@ -306,39 +240,6 @@ class Users(Resources):
 
         >>> users = client.find(account_status="locked|licensed")
         """
-        ...
-
-    @overload
-    def find(self, **conditions) -> List[User]:
-        """
-        Find users matching the specified conditions.
-
-        Parameters
-        ----------
-        **conditions
-            Arbitrary keyword arguments representing search conditions.
-
-        Returns
-        -------
-        List[User]
-            A list of users matching the specified conditions.
-        """
-        ...
-
-    def find(self, **conditions) -> List[User]:
-        """
-        Find users matching the specified conditions.
-
-        Parameters
-        ----------
-        **conditions
-            Arbitrary keyword arguments representing search conditions.
-
-        Returns
-        -------
-        List[User]
-            A list of users matching the specified conditions.
-        """
         url = self.params.url + "v1/users"
         paginator = Paginator(self.params.session, url, params=conditions)
         results = paginator.fetch_results()
@@ -350,14 +251,7 @@ class Users(Resources):
             for user in results
         ]
 
-    @overload
-    def find_one(
-        self,
-        *,
-        prefix: Optional[str] = None,
-        user_role: Optional[Literal["administrator", "publisher", "viewer"] | str] = None,
-        account_status: Optional[Literal["locked", "licensed", "inactive"] | str] = None,
-    ) -> User | None:
+    def find_one(self, **conditions: Unpack[FindUser]) -> User | None:
         """
         Find a user matching the specified conditions.
 
@@ -388,39 +282,6 @@ class Users(Resources):
         Find a user who is locked or licensed:
 
         >>> user = client.find_one(account_status="locked|licensed")
-        """
-        ...
-
-    @overload
-    def find_one(self, **conditions) -> User | None:
-        """
-        Find a user matching the specified conditions.
-
-        Parameters
-        ----------
-        **conditions
-            Arbitrary keyword arguments representing search conditions.
-
-        Returns
-        -------
-        User or None
-            The first user matching the specified conditions, or `None` if no user is found.
-        """
-        ...
-
-    def find_one(self, **conditions) -> User | None:
-        """
-        Find a user matching the specified conditions.
-
-        Parameters
-        ----------
-        **conditions
-            Arbitrary keyword arguments representing search conditions.
-
-        Returns
-        -------
-        User or None
-            The first user matching the specified conditions, or `None` if no user is found.
         """
         url = self.params.url + "v1/users"
         paginator = Paginator(self.params.session, url, params=conditions)
