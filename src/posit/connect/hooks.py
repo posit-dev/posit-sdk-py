@@ -1,7 +1,9 @@
+import json
 import warnings
 from http.client import responses
 
-from requests import JSONDecodeError, Response
+import requests
+from requests import Response
 
 from .errors import ClientError
 
@@ -14,11 +16,10 @@ def handle_errors(response: Response, *args, **kwargs) -> Response:
             message = data["error"]
             payload = data.get("payload")
             http_status = response.status_code
-            http_status_message = responses[http_status]
+            http_status_message = responses.get(http_status, "Unknown status")
             raise ClientError(error_code, message, http_status, http_status_message, payload)
-        except JSONDecodeError:
-            # No JSON error message from Connect, so just raise
-            response.raise_for_status()
+        finally:
+            response.raise_for_status()  # Raise if no JSON error is available
     return response
 
 

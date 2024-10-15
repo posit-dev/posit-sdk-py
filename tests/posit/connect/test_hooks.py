@@ -23,12 +23,10 @@ def test_client_error():
     with pytest.raises(ClientError):
         handle_errors(response)
 
-
-@patch("posit.connect.hooks.JSONDecodeError")
-def test_client_error_without_payload(JSONDecodeError):
+def test_client_error_without_payload():
     response = Mock()
     response.status_code = 404
-    response.json = Mock(side_effect=JSONDecodeError())
+    response.json = Mock(side_effect=Exception())
     response.raise_for_status = Mock(side_effect=Exception())
     with pytest.raises(Exception):
         handle_errors(response)
