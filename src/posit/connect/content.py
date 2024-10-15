@@ -11,6 +11,7 @@ from . import tasks
 from .bundles import Bundles
 from .env import EnvVars
 from .oauth.associations import ContentItemAssociations
+from .packages import PackagesMixin
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
 from .tasks import Task
@@ -32,7 +33,7 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(VanityMixin, Resource):
+class ContentItem(PackagesMixin, VanityMixin, Resource):
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
         if key == "owner" and isinstance(v, dict):
