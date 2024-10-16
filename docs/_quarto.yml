@@ -104,6 +104,7 @@ quartodoc:
         - connect.permissions
         - connect.tasks
         - connect.users
+        - connect.vanities
     - title: Posit Connect Metrics
       package: posit
       contents:

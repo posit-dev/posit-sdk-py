@@ -17,6 +17,7 @@ from .oauth import OAuth
 from .resources import ResourceParameters
 from .tasks import Tasks
 from .users import User, Users
+from .vanities import Vanities
 
 
 class Client(ContextManager):
@@ -270,6 +271,10 @@ class Client(ContextManager):
             The oauth API instance.
         """
         return OAuth(self.resource_params, self.cfg.api_key)
+
+    @property
+    def vanities(self) -> Vanities:
+        return Vanities(self.resource_params)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
