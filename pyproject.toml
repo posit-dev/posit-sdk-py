@@ -20,7 +20,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "requests>=2.31.0,<3",
+    "requests>=2,<3",
     "packaging",
     "typing-extensions"
 ]
