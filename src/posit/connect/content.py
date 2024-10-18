@@ -10,6 +10,7 @@ from typing import Any, List, Literal, Optional, overload
 from . import tasks
 from .bundles import Bundles
 from .env import EnvVars
+from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
@@ -32,7 +33,7 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(VanityMixin, Resource):
+class ContentItem(JobsMixin, VanityMixin, Resource):
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
         if key == "owner" and isinstance(v, dict):
