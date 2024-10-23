@@ -1,9 +1,12 @@
+import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generic, List, Optional, Sequence, Type, TypeVar
 
 import requests
+
+from posit.connect.context import Context
 
 from .urls import Url
 
@@ -47,29 +50,74 @@ class Resources:
         self.params = params
 
 
-T = TypeVar("T", bound=Resource)
+T = TypeVar("T", bound="Active", covariant=True)
 
 
-class FinderMethods(
-    Generic[T],
-    ABC,
-    Resources,
-):
-    def __init__(self, cls: Type[T], params, endpoint):
-        super().__init__(params)
+class Active(Resource):
+    def __init__(self, ctx: Context, **kwargs):
+        params = ResourceParameters(ctx.session, ctx.url)
+        super().__init__(params, **kwargs)
+        self._ctx = ctx
+
+
+class ActiveReader(ABC, Generic[T], Sequence[T]):
+    def __init__(self, cls: Type[T], ctx: Context):
+        super().__init__()
         self._cls = cls
-        self._endpoint = endpoint
+        self._ctx = ctx
+        self._cache = None
 
     @property
     @abstractmethod
-    def _data(self) -> List[T]:
+    def _endpoint(self) -> str:
         raise NotImplementedError()
 
-    def find(self, uid):
-        endpoint = self._endpoint + str(uid)
-        response = self.params.session.get(endpoint)
-        result = response.json()
-        return self._cls(self.params, endpoint=self._endpoint, **result)
+    @property
+    def _data(self) -> List[T]:
+        if self._cache:
+            return self._cache
+
+        response = self._ctx.session.get(self._endpoint)
+        results = response.json()
+        self._cache = [self._cls(self._ctx, **result) for result in results]
+        return self._cache
+
+    def __getitem__(self, index):
+        """Retrieve an item or slice from the sequence."""
+        return self._data[index]
+
+    def __len__(self):
+        """Return the length of the sequence."""
+        return len(self._data)
+
+    def __str__(self):
+        return str(self._data)
+
+    def __repr__(self):
+        return repr(self._data)
+
+    def reload(self):
+        self._cache = None
+        return self
+
+
+class ActiveFinderMethods(ActiveReader[T], ABC, Generic[T]):
+    _uid: str = "guid"
+
+    def find(self, uid) -> T:
+        if self._cache:
+            conditions = {self._uid: uid}
+            result = self.find_by(**conditions)
+        else:
+            endpoint = posixpath.join(self._endpoint + uid)
+            response = self._ctx.session.get(endpoint)
+            result = response.json()
+            result = self._cls(self._ctx, **result)
+
+        if not result:
+            raise ValueError("")
+
+        return result
 
     def find_by(self, **conditions: Any) -> Optional[T]:
         """Finds the first record matching the specified conditions.
