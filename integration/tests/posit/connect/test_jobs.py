@@ -8,7 +8,7 @@ from posit import connect
 from . import CONNECT_VERSION
 
 
-class TestContent:
+class TestJobs:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
