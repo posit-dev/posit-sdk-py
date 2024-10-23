@@ -1,0 +1,22 @@
+{
+    "id": "54",
+    "ppid": "20253",
+    "pid": "20253",
+    "key": "tHawGvHZTosJA2Dx",
+    "remote_id": "S3ViZXJuZXRlczpyZW5kZXItci1tYXJrZG93bi1zaXRlLWtnODJo",
+    "app_id": "54",
+    "variant_id": "54",
+    "bundle_id": "54",
+    "start_time": "2006-01-02T15:04:05-07:00",
+    "end_time": "2006-01-02T15:04:05-07:00",
+    "last_heartbeat_time": "2006-01-02T15:04:05-07:00",
+    "queued_time": "2006-01-02T15:04:05-07:00",
+    "queue_name": "default",
+    "tag": "build_report",
+    "exit_code": 0,
+    "status": 0,
+    "hostname": "connect",
+    "cluster": "Kubernetes",
+    "image": "someorg/image:jammy",
+    "run_as": "rstudio-connect"
+}
