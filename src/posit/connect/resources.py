@@ -2,7 +2,7 @@ import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, List, Optional, Sequence, Type, TypeVar
+from typing import Any, Generic, List, Optional, Sequence, Type, TypeVar, overload
 
 import requests
 
@@ -54,17 +54,19 @@ T = TypeVar("T", bound="Active", covariant=True)
 
 
 class Active(Resource):
-    def __init__(self, ctx: Context, **kwargs):
+    def __init__(self, ctx: Context, parent: Optional["Active"] = None, **kwargs):
         params = ResourceParameters(ctx.session, ctx.url)
         super().__init__(params, **kwargs)
         self._ctx = ctx
+        self._parent = parent
 
 
 class ActiveReader(ABC, Generic[T], Sequence[T]):
-    def __init__(self, cls: Type[T], ctx: Context):
+    def __init__(self, cls: Type[T], ctx: Context, parent: Optional[Active] = None):
         super().__init__()
         self._cls = cls
         self._ctx = ctx
+        self._parent = parent
         self._cache = None
 
     @property
@@ -79,8 +81,14 @@ class ActiveReader(ABC, Generic[T], Sequence[T]):
 
         response = self._ctx.session.get(self._endpoint)
         results = response.json()
-        self._cache = [self._cls(self._ctx, **result) for result in results]
+        self._cache = [self._cls(self._ctx, self._parent, **result) for result in results]
         return self._cache
+
+    @overload
+    def __getitem__(self, index: int) -> T: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> Sequence[T]: ...
 
     def __getitem__(self, index):
         """Retrieve an item or slice from the sequence."""
@@ -112,7 +120,7 @@ class ActiveFinderMethods(ActiveReader[T], ABC, Generic[T]):
             endpoint = posixpath.join(self._endpoint + uid)
             response = self._ctx.session.get(endpoint)
             result = response.json()
-            result = self._cls(self._ctx, **result)
+            result = self._cls(self._ctx, self._parent, **result)
 
         if not result:
             raise ValueError("")
