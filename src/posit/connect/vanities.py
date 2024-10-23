@@ -1,12 +1,17 @@
-from typing import Callable, List, Optional, TypedDict
+from typing import Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
 from .errors import ClientError
-from .resources import Resource, ResourceParameters, Resources
+from .resources import (
+    Active,
+    ActiveDestroyMethods,
+    ActiveFinderMethods,
+    Resource,
+)
 
 
-class Vanity(Resource):
+class Vanity(ActiveDestroyMethods):
     """A vanity resource.
 
     Vanities maintain custom URL paths assigned to content.
@@ -42,97 +47,94 @@ class Vanity(Resource):
     - `/content`
     """
 
-    AfterDestroyCallback = Callable[[], None]
-
-    class VanityAttributes(TypedDict):
+    class _Vanity(TypedDict):
         """Vanity attributes."""
 
         path: Required[str]
+        """The URL path."""
+
         content_guid: Required[str]
+        """Identifier of content associated with the vanity."""
+
         created_time: Required[str]
+        """RFC3339 timestamp indicating when the vanity was created."""
 
-    def __init__(
-        self,
-        /,
-        params: ResourceParameters,
-        *,
-        after_destroy: Optional[AfterDestroyCallback] = None,
-        **kwargs: Unpack[VanityAttributes],
-    ):
-        """Initialize a Vanity.
-
-        Parameters
-        ----------
-        params : ResourceParameters
-        after_destroy : AfterDestroyCallback, optional
-            Called after the Vanity is successfully destroyed, by default None
-        """
-        super().__init__(params, **kwargs)
-        self._after_destroy = after_destroy
-        self._content_guid = kwargs["content_guid"]
+    def __init__(self, ctx, **kwargs: Unpack[_Vanity]):
+        super().__init__(ctx, **kwargs)
 
     @property
     def _endpoint(self):
-        return self.params.url + f"v1/content/{self._content_guid}/vanity"
+        return self._ctx.url + f"v1/content/{self['content_guid']}/vanity"
 
-    def destroy(self) -> None:
-        """Destroy the vanity.
+
+class Vanities(ActiveFinderMethods[Vanity]):
+    """A collection of vanities."""
+
+    def __init__(self, ctx):
+        super().__init__(Vanity, ctx)
+
+    @property
+    def _endpoint(self) -> str:
+        return self._ctx.url + f"v1/vanities"
+
+    def find(self, uid):
+        """The 'find' method is not supported.
 
         Raises
         ------
-        ValueError
-            If the foreign unique identifier is missing or its value is `None`.
-
-        Warnings
-        --------
-        This operation is irreversible.
-
-        Note
-        ----
-        This action requires administrator privileges.
+        AttributeError
+            Raised to indicate that the 'find' method is not supported in this subclass.
         """
-        self.params.session.delete(self._endpoint)
+        raise AttributeError(f"'{self.__class__.__name__}' does not support 'find'")
 
-        if self._after_destroy:
-            self._after_destroy()
+    class _FindByRequest(TypedDict, total=False):
+        path: NotRequired[str]
+        """The URL path."""
 
+        content_guid: NotRequired[str]
+        """Identifier of content associated with the vanity."""
 
-class Vanities(Resources):
-    """Manages a collection of vanities."""
+        created_time: NotRequired[str]
+        """RFC3339 timestamp indicating when the vanity was created."""
 
-    def all(self) -> List[Vanity]:
-        """Retrieve all vanities.
+    @overload
+    def find_by(self, **conditions: Unpack[_FindByRequest]) -> Optional[Vanity]:
+        """Finds the first record matching the specified conditions.
+
+        There is no implied ordering so if order matters, you should specify it yourself.
+
+        Parameters
+        ----------
+        path: str, not required
+            The URL path.
+        content_guid: str, not required
+            Identifier of content associated with the vanity.
+        created_time: str, not required
+            RFC3339 timestamp indicating when the vanity was created.
 
         Returns
         -------
-        List[Vanity]
-
-        Notes
-        -----
-        This action requires administrator privileges.
+        Optional[Vanity]
         """
-        endpoint = self.params.url + "v1/vanities"
-        response = self.params.session.get(endpoint)
-        results = response.json()
-        return [Vanity(self.params, **result) for result in results]
+        ...
+
+    @overload
+    def find_by(self, **conditions) -> Optional[Vanity]: ...
+
+    def find_by(self, **conditions) -> Optional[Vanity]:
+        return super().find_by(**conditions)
 
 
-class VanityMixin(Resource):
+class VanityMixin(Active, Resource):
     """Mixin class to add a vanity attribute to a resource."""
 
-    class HasGuid(TypedDict):
-        """Has a guid."""
-
-        guid: Required[str]
-
-    def __init__(self, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
-        super().__init__(params, **kwargs)
-        self._content_guid = kwargs["guid"]
+    def __init__(self, ctx, **kwargs):
+        super().__init__(ctx, **kwargs)
         self._vanity: Optional[Vanity] = None
 
     @property
     def _endpoint(self):
-        return self.params.url + f"v1/content/{self._content_guid}/vanity"
+        return self.params.url + f"v1/content/{self['guid']}/vanity"
 
     @property
     def vanity(self) -> Optional[str]:
@@ -222,7 +224,7 @@ class VanityMixin(Resource):
         """
         response = self.params.session.put(self._endpoint, json=kwargs)
         result = response.json()
-        return Vanity(self.params, **result)
+        return Vanity(self._ctx, **result)
 
     def find_vanity(self) -> Vanity:
         """Find the vanity.
@@ -233,4 +235,4 @@ class VanityMixin(Resource):
         """
         response = self.params.session.get(self._endpoint)
         result = response.json()
-        return Vanity(self.params, **result)
+        return Vanity(self._ctx, **result)

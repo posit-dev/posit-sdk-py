@@ -2,7 +2,7 @@ import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, List, Optional, Sequence, Type, TypeVar
+from typing import Any, Callable, Generic, List, Optional, Sequence, Type, TypeVar
 
 import requests
 
@@ -58,6 +58,35 @@ class Active(Resource):
         params = ResourceParameters(ctx.session, ctx.url)
         super().__init__(params, **kwargs)
         self._ctx = ctx
+
+    @property
+    @abstractmethod
+    def _endpoint(self) -> str:
+        raise NotImplementedError()
+
+
+class ActiveDestroyMethods(Active):
+    _AfterDestroyCallback = Callable[[], None]
+
+    def __init__(self, ctx, *, after_destroy: Optional[_AfterDestroyCallback] = None, **kwargs):
+        super().__init__(ctx, **kwargs)
+        self._after_destroy = after_destroy
+
+    def destroy(self) -> None:
+        """Destroys the record.
+
+        Warnings
+        --------
+        This operation is irreversible.
+
+        Note
+        ----
+        This action requires administrator privileges.
+        """
+        self.params.session.delete(self._endpoint)
+
+        if self._after_destroy:
+            self._after_destroy()
 
 
 class ActiveReader(ABC, Generic[T], Sequence[T]):

@@ -2,7 +2,7 @@ from typing import Literal, Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
-from .resources import Active, ActiveFinderMethods, Resource
+from .resources import Active, ActiveDestroyMethods, ActiveFinderMethods, Resource
 
 JobTag = Literal[
     "unknown",
@@ -31,7 +31,7 @@ JobTag = Literal[
 ]
 
 
-class Job(Active):
+class Job(ActiveDestroyMethods):
     class _Job(TypedDict):
         # Identifiers
         id: Required[str]
@@ -105,21 +105,6 @@ class Job(Active):
     @property
     def _endpoint(self) -> str:
         return self._ctx.url + f"v1/content/{self['app_id']}/jobs/{self['key']}"
-
-    def destroy(self) -> None:
-        """Destroy the job.
-
-        Submit a request to kill the job.
-
-        Warnings
-        --------
-        This operation is irreversible.
-
-        Note
-        ----
-        This action requires administrator, owner, or collaborator privileges.
-        """
-        self._ctx.session.delete(self._endpoint)
 
 
 class Jobs(ActiveFinderMethods[Job]):

@@ -10,24 +10,23 @@ class TestVanities:
     def teardown_class(cls):
         assert cls.client.content.count() == 0
 
-    def test_all(self):
+    def test(self):
         content = self.client.content.create(name="example")
+        vanities = self.client.vanities
 
         # None by default
-        vanities = self.client.vanities.all()
         assert len(vanities) == 0
 
         # Set
         content.vanity = "example"
 
         # Get
-        vanities = self.client.vanities.all()
+        vanities.reload()
         assert len(vanities) == 1
 
         # Cleanup
         content.delete()
-
-        vanities = self.client.vanities.all()
+        vanities.reload()
         assert len(vanities) == 0
 
     def test_property(self):
