@@ -1,9 +1,8 @@
-from typing import List, Literal, Optional, Sequence, TypedDict, overload
+from typing import Literal, Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
-from .errors import ClientError
-from .resources import FinderMethods, Resource, ResourceParameters, Resources
+from .resources import Active, ActiveFinderMethods, Resource
 
 JobTag = Literal[
     "unknown",
@@ -32,7 +31,7 @@ JobTag = Literal[
 ]
 
 
-class Job(Resource):
+class Job(Active):
     class _Job(TypedDict):
         # Identifiers
         id: Required[str]
@@ -100,10 +99,12 @@ class Job(Resource):
         tag: Required[JobTag]
         """A tag categorizing the job type. Options are build_jupyter, build_report, build_site, configure_report, git, packrat_restore, python_restore, render_shiny, run_api, run_app, run_bokeh_app, run_dash_app, run_fastapi_app, run_pyshiny_app, run_python_api, run_streamlit, run_tensorflow, run_voila_app, testing, unknown, val_py_ext_pkg, val_r_ext_pkg, and val_r_install."""
 
-    def __init__(self, /, params, endpoint, **kwargs: Unpack[_Job]):
+    def __init__(self, /, params, **kwargs: Unpack[_Job]):
         super().__init__(params, **kwargs)
-        key = kwargs["key"]
-        self._endpoint = endpoint + key
+
+    @property
+    def _endpoint(self) -> str:
+        return self._ctx.url + f"v1/content/{self['app_id']}/jobs/{self['key']}"
 
     def destroy(self) -> None:
         """Destroy the job.
@@ -118,48 +119,21 @@ class Job(Resource):
         ----
         This action requires administrator, owner, or collaborator privileges.
         """
-        self.params.session.delete(self._endpoint)
+        self._ctx.session.delete(self._endpoint)
 
 
-class Jobs(FinderMethods[Job], Sequence[Job], Resources):
+class Jobs(ActiveFinderMethods[Job]):
     """A collection of jobs."""
 
-    def __init__(self, params, endpoint):
-        super().__init__(Job, params, endpoint)
-        self._endpoint = endpoint + "jobs"
-        self._cache = None
+    _uid = "key"
+
+    def __init__(self, cls, ctx, parent: Active):
+        super().__init__(cls, ctx)
+        self._parent = parent
 
     @property
-    def _data(self) -> List[Job]:
-        if self._cache:
-            return self._cache
-
-        response = self.params.session.get(self._endpoint)
-        results = response.json()
-        self._cache = [Job(self.params, self._endpoint, **result) for result in results]
-        return self._cache
-
-    def __getitem__(self, index):
-        """Retrieve an item or slice from the sequence."""
-        return self._data[index]
-
-    def __len__(self):
-        """Return the length of the sequence."""
-        return len(self._data)
-
-    def __repr__(self):
-        """Return the string representation of the sequence."""
-        return f"Jobs({', '.join(map(str, self._data))})"
-
-    def count(self, value):
-        """Return the number of occurrences of a value in the sequence."""
-        return self._data.count(value)
-
-    def index(self, value, start=0, stop=None):
-        """Return the index of the first occurrence of a value in the sequence."""
-        if stop is None:
-            stop = len(self._data)
-        return self._data.index(value, start, stop)
+    def _endpoint(self) -> str:
+        return self._ctx.url + f"v1/content/{self._parent['guid']}/jobs"
 
     class _FindByRequest(TypedDict, total=False):
         # Identifiers
@@ -286,28 +260,11 @@ class Jobs(FinderMethods[Job], Sequence[Job], Resources):
     @overload
     def find_by(self, **conditions): ...
 
-    def find_by(self, **conditions):
-        if "key" in conditions and self._cache is None:
-            key = conditions["key"]
-            try:
-                return self.find(key)
-            except ClientError as e:
-                if e.http_status == 404:
-                    return None
-                raise e
-
+    def find_by(self, **conditions) -> Optional[Job]:
         return super().find_by(**conditions)
 
-    def reload(self) -> "Jobs":
-        """Unload the cached jobs.
 
-        Forces the next access, if any, to query the jobs from the Connect server.
-        """
-        self._cache = None
-        return self
-
-
-class JobsMixin(Resource):
+class JobsMixin(Active, Resource):
     """Mixin class to add a jobs attribute to a resource."""
 
     class HasGuid(TypedDict):
@@ -315,8 +272,6 @@ class JobsMixin(Resource):
 
         guid: Required[str]
 
-    def __init__(self, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
-        super().__init__(params, **kwargs)
-        uid = kwargs["guid"]
-        endpoint = self.params.url + f"v1/content/{uid}"
-        self.jobs = Jobs(self.params, endpoint)
+    def __init__(self, ctx, **kwargs):
+        super().__init__(ctx, **kwargs)
+        self.jobs = Jobs(Job, ctx, self)

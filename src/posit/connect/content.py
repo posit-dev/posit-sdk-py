@@ -9,6 +9,7 @@ from typing import Any, List, Literal, Optional, overload
 
 from . import tasks
 from .bundles import Bundles
+from .context import Context
 from .env import EnvVars
 from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
@@ -34,6 +35,10 @@ class ContentItemOwner(Resource):
 
 
 class ContentItem(JobsMixin, VanityMixin, Resource):
+    def __init__(self, /, params: ResourceParameters, **kwargs):
+        ctx = Context(params.session, params.url)
+        super().__init__(ctx, **kwargs)
+
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
         if key == "owner" and isinstance(v, dict):

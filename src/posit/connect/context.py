@@ -40,7 +40,7 @@ class Context(dict):
         return value
 
     @version.setter
-    def version(self, value: str):
+    def version(self, value):
         self["version"] = value
 
 
