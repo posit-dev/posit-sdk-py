@@ -123,7 +123,7 @@ class ActiveFinderMethods(ActiveReader[T], ABC, Generic[T]):
             result = self._cls(self._ctx, self._parent, **result)
 
         if not result:
-            raise ValueError("")
+            raise ValueError(f"Failed to find instance where {self._uid} is '{uid}'")
 
         return result
 
