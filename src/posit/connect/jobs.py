@@ -99,12 +99,13 @@ class Job(Active):
         tag: Required[JobTag]
         """A tag categorizing the job type. Options are build_jupyter, build_report, build_site, configure_report, git, packrat_restore, python_restore, render_shiny, run_api, run_app, run_bokeh_app, run_dash_app, run_fastapi_app, run_pyshiny_app, run_python_api, run_streamlit, run_tensorflow, run_voila_app, testing, unknown, val_py_ext_pkg, val_r_ext_pkg, and val_r_install."""
 
-    def __init__(self, /, params, **kwargs: Unpack[_Job]):
-        super().__init__(params, **kwargs)
+    def __init__(self, ctx, parent: Active, **kwargs: Unpack[_Job]):
+        super().__init__(ctx, parent, **kwargs)
+        self._parent = parent
 
     @property
     def _endpoint(self) -> str:
-        return self._ctx.url + f"v1/content/{self['app_id']}/jobs/{self['key']}"
+        return self._ctx.url + f"v1/content/{self._parent['guid']}/jobs/{self['key']}"
 
     def destroy(self) -> None:
         """Destroy the job.
@@ -128,7 +129,7 @@ class Jobs(ActiveFinderMethods[Job]):
     _uid = "key"
 
     def __init__(self, cls, ctx, parent: Active):
-        super().__init__(cls, ctx)
+        super().__init__(cls, ctx, parent)
         self._parent = parent
 
     @property
@@ -266,11 +267,6 @@ class Jobs(ActiveFinderMethods[Job]):
 
 class JobsMixin(Active, Resource):
     """Mixin class to add a jobs attribute to a resource."""
-
-    class HasGuid(TypedDict):
-        """Has a guid."""
-
-        guid: Required[str]
 
     def __init__(self, ctx, **kwargs):
         super().__init__(ctx, **kwargs)
