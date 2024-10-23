@@ -1,6 +1,11 @@
 from pathlib import Path
 
+import pytest
+from packaging import version
+
 from posit import connect
+
+from . import CONNECT_VERSION
 
 
 class TestContent:
@@ -14,6 +19,10 @@ class TestContent:
         cls.content.delete()
         assert cls.client.content.count() == 0
 
+    @pytest.mark.skipif(
+        CONNECT_VERSION <= version.parse("2023.01.1"),
+        reason="Quarto not available",
+    )
     def test(self):
         content = self.content
 
