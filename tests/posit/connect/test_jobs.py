@@ -105,6 +105,7 @@ class TestJobsFindBy:
         assert job
         assert job["key"] == "tHawGvHZTosJA2Dx"
 
+
 class TestJobsReload:
     @responses.activate
     def test(self):
@@ -128,6 +129,7 @@ class TestJobsReload:
 
         assert len(content.jobs) == 1
         assert mock_get.call_count == 2
+
 
 class TestJobDestory:
     @responses.activate
