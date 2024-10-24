@@ -2,7 +2,7 @@ from typing import Literal, Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
-from .resources import Active, ActiveFinderMethods, Resource
+from .resources import Active, ActiveFinderMethods, ActiveSequence, Resource
 
 JobTag = Literal[
     "unknown",
@@ -123,22 +123,41 @@ class Job(Active):
         self._ctx.session.delete(self._endpoint)
 
 
-class Jobs(ActiveFinderMethods[Job]):
-    """A collection of jobs."""
+class Jobs(
+    ActiveFinderMethods[Job],
+    ActiveSequence[Job],
+):
+    def __init__(self, ctx, parent: Active, uid="key"):
+        """A collection of jobs.
 
-    _uid = "key"
-
-    def __init__(self, cls, ctx, parent: Active):
-        super().__init__(cls, ctx, parent)
+        Parameters
+        ----------
+        ctx : Context
+            The context containing the HTTP session used to interact with the API.
+        parent : Active
+            Parent resource for maintaining hierarchical relationships
+        uid : str, optional
+            The default field name used to uniquely identify records, by default "key"
+        """
+        super().__init__(ctx, parent, uid)
         self._parent = parent
 
     @property
     def _endpoint(self) -> str:
         return self._ctx.url + f"v1/content/{self._parent['guid']}/jobs"
 
+    def _create_instance(self, **kwargs) -> Job:
+        """Creates a `Job` instance.
+
+        Returns
+        -------
+        Job
+        """
+        return Job(self._ctx, self._parent, **kwargs)
+
     class _FindByRequest(TypedDict, total=False):
         # Identifiers
-        id: NotRequired[str]
+        id: Required[str]
         """A unique identifier for the job."""
 
         ppid: NotRequired[Optional[str]]
@@ -270,4 +289,4 @@ class JobsMixin(Active, Resource):
 
     def __init__(self, ctx, **kwargs):
         super().__init__(ctx, **kwargs)
-        self.jobs = Jobs(Job, ctx, self)
+        self.jobs = Jobs(ctx, self)
