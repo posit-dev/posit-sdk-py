@@ -38,7 +38,7 @@ class Paginator:
         url (str): The URL of the paginated API endpoint.
     """
 
-    def __init__(self, session: requests.Session, url: str, params = {}) -> None:
+    def __init__(self, session: requests.Session, url: str, params={}) -> None:
         self.session = session
         self.url = url
         self.params = params

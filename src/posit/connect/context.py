@@ -4,6 +4,8 @@ from typing import Optional, Protocol
 import requests
 from packaging.version import Version
 
+from .urls import Url
+
 
 def requires(version: str):
     def decorator(func):
@@ -22,7 +24,7 @@ def requires(version: str):
 
 
 class Context(dict):
-    def __init__(self, session: requests.Session, url: str):
+    def __init__(self, session: requests.Session, url: Url):
         self.session = session
         self.url = url
 
@@ -38,7 +40,7 @@ class Context(dict):
         return value
 
     @version.setter
-    def version(self, value: str):
+    def version(self, value):
         self["version"] = value
 
 

@@ -201,7 +201,7 @@ class VanityMixin(Resource):
         """A request schema for creating a vanity."""
 
         path: Required[str]
-        """The vanity path (.e.g, 'my-dashboard')"""
+        """The vanity path (e.g., 'my-dashboard')"""
 
         force: NotRequired[bool]
         """Whether to force creation of the vanity"""

@@ -1,197 +1,10 @@
-from unittest import mock
-
 import pytest
 import responses
 from responses import matchers
 
 from posit.connect.client import Client
-from posit.connect.content import (
-    ContentItem,
-    ContentItemOAuth,
-    ContentItemOwner,
-)
-from posit.connect.oauth.associations import ContentItemAssociations
-from posit.connect.permissions import Permissions
 
 from .api import load_mock  # type: ignore
-
-
-class TestContentOwnerAttributes:
-    @classmethod
-    def setup_class(cls):
-        guid = "20a79ce3-6e87-4522-9faf-be24228800a4"
-        fake_item = load_mock(f"v1/users/{guid}.json")
-        cls.item = ContentItemOwner(mock.Mock(), **fake_item)
-
-    def test_guid(self):
-        assert self.item.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
-
-    def test_username(self):
-        assert self.item.username == "carlos12"
-
-    def test_first_name(self):
-        assert self.item.first_name == "Carlos"
-
-    def test_last_name(self):
-        assert self.item.last_name == "User"
-
-
-class TestContentItemAttributes:
-    @classmethod
-    def setup_class(cls):
-        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_item = load_mock(f"v1/content/{guid}.json")
-        cls.item = ContentItem(mock.Mock(), **fake_item)
-
-    def test_id(self):
-        assert self.item.id == "8274"
-
-    def test_guid(self):
-        assert self.item.guid == "f2f37341-e21d-3d80-c698-a935ad614066"
-
-    def test_name(self):
-        assert self.item.name == "Performance-Data-1671216053560"
-
-    def test_title(self):
-        assert self.item.title == "Performance Data"
-
-    def test_description(self):
-        assert self.item.description == ""
-
-    def test_access_type(self):
-        assert self.item.access_type == "logged_in"
-
-    def test_connection_timeout(self):
-        assert self.item.connection_timeout is None
-
-    def test_read_timeout(self):
-        assert self.item.read_timeout is None
-
-    def test_init_timeout(self):
-        assert self.item.init_timeout is None
-
-    def test_idle_timeout(self):
-        assert self.item.idle_timeout is None
-
-    def test_max_processes(self):
-        assert self.item.max_processes is None
-
-    def test_min_processes(self):
-        assert self.item.min_processes is None
-
-    def test_max_conns_per_process(self):
-        assert self.item.max_conns_per_process is None
-
-    def test_load_factor(self):
-        assert self.item.load_factor is None
-
-    def test_cpu_request(self):
-        assert self.item.cpu_request is None
-
-    def test_cpu_limit(self):
-        assert self.item.cpu_limit is None
-
-    def test_memory_request(self):
-        assert self.item.memory_request is None
-
-    def test_memory_limit(self):
-        assert self.item.memory_limit is None
-
-    def test_amd_gpu_limit(self):
-        assert self.item.amd_gpu_limit is None
-
-    def test_nvidia_gpu_limit(self):
-        assert self.item.nvidia_gpu_limit is None
-
-    def test_created_time(self):
-        assert self.item.created_time == "2022-12-16T18:40:53Z"
-
-    def test_last_deployed_time(self):
-        assert self.item.last_deployed_time == "2024-02-24T09:56:30Z"
-
-    def test_bundle_id(self):
-        assert self.item.bundle_id == "401171"
-
-    def test_app_mode(self):
-        assert self.item.app_mode == "quarto-static"
-
-    def test_content_category(self):
-        assert self.item.content_category == ""
-
-    def test_parameterized(self):
-        assert self.item.parameterized is False
-
-    def test_cluster_name(self):
-        assert self.item.cluster_name == "Local"
-
-    def test_image_name(self):
-        assert self.item.image_name is None
-
-    def test_default_image_name(self):
-        assert self.item.default_image_name is None
-
-    def test_default_r_environment_management(self):
-        assert self.item.default_r_environment_management is None
-
-    def test_default_py_environment_management(self):
-        assert self.item.default_py_environment_management is None
-
-    def test_service_account_name(self):
-        assert self.item.service_account_name is None
-
-    def test_r_version(self):
-        assert self.item.r_version is None
-
-    def test_r_environment_management(self):
-        assert self.item.r_environment_management is None
-
-    def test_py_version(self):
-        assert self.item.py_version == "3.9.17"
-
-    def test_py_environment_management(self):
-        assert self.item.py_environment_management is True
-
-    def test_quarto_version(self):
-        assert self.item.quarto_version == "1.3.340"
-
-    def test_run_as(self):
-        assert self.item.run_as is None
-
-    def test_run_as_current_user(self):
-        assert self.item.run_as_current_user is False
-
-    def test_owner_guid(self):
-        assert self.item.owner_guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
-
-    def test_content_url(self):
-        assert (
-            self.item.content_url
-            == "https://connect.example/content/f2f37341-e21d-3d80-c698-a935ad614066/"
-        )
-
-    def test_dashboard_url(self):
-        assert (
-            self.item.dashboard_url
-            == "https://connect.example/connect/#/apps/f2f37341-e21d-3d80-c698-a935ad614066"
-        )
-
-    def test_app_role(self):
-        assert self.item.app_role == "viewer"
-
-    def test_owner(self):
-        assert "owner" not in self.item
-
-    def test_permissions(self):
-        assert isinstance(self.item.permissions, Permissions)
-
-    def test_oauth(self):
-        assert isinstance(self.item.oauth, ContentItemOAuth)
-
-    def test_oauth_associations(self):
-        assert isinstance(self.item.oauth.associations, ContentItemAssociations)
-
-    def test_tags(self):
-        assert self.item.tags is None
 
 
 class TestContentItemGetContentOwner:
@@ -211,11 +24,11 @@ class TestContentItemGetContentOwner:
         c = Client("https://connect.example", "12345")
         item = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         owner = item.owner
-        assert owner.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+        assert owner["guid"] == "20a79ce3-6e87-4522-9faf-be24228800a4"
 
         # load a second time, assert tha owner is loaded from cached result
         owner = item.owner
-        assert owner.guid == "20a79ce3-6e87-4522-9faf-be24228800a4"
+        assert owner["guid"] == "20a79ce3-6e87-4522-9faf-be24228800a4"
         assert mock_user_get.call_count == 1
 
 
