@@ -91,7 +91,7 @@ class Active(Resource):
 
 
 T_co = TypeVar("T_co", bound="Active", covariant=True)
-"""A covariant type variable that is bound to the `Active` class, meaning that `T_co` must be or derive from `Active`."""
+"""A covariant type variable that is bound to the `Active` class and must inherit from it."""
 
 
 class ActiveSequence(ABC, Generic[T_co], Sequence[T_co]):
