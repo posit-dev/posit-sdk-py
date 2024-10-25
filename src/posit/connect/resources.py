@@ -1,3 +1,4 @@
+import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -50,7 +51,7 @@ class Resources:
 
 
 class Active(ABC, Resource):
-    def __init__(self, ctx: Context, parent: Optional["Active"] = None, **kwargs):
+    def __init__(self, ctx: Context, **kwargs):
         """A base class representing an active resource.
 
         Extends the `Resource` class and provides additional functionality for via the session context and an optional parent resource.
@@ -59,15 +60,12 @@ class Active(ABC, Resource):
         ----------
         ctx : Context
             The context object containing the session and URL for API interactions.
-        parent : Optional[Active], optional
-            An optional parent resource that establishes a hierarchical relationship, by default None.
         **kwargs : dict
             Additional keyword arguments passed to the parent `Resource` class.
         """
         params = ResourceParameters(ctx.session, ctx.url)
         super().__init__(params, **kwargs)
         self._ctx = ctx
-        self._parent = parent
 
 
 T = TypeVar("T", bound="Active")
@@ -75,7 +73,7 @@ T = TypeVar("T", bound="Active")
 
 
 class ActiveSequence(ABC, Generic[T], Sequence[T]):
-    def __init__(self, ctx: Context, parent: Optional[Active] = None):
+    def __init__(self, ctx: Context, base: str, name: str, uid="guid"):
         """A sequence abstraction for any HTTP GET endpoint that returns a collection.
 
         It lazily fetches data on demand, caches the results, and allows for standard sequence operations like indexing and slicing.
@@ -83,30 +81,32 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         Parameters
         ----------
         ctx : Context
-            The context object that holds the HTTP session used for sending the GET request.
-        parent : Optional[Active], optional
-            An optional parent resource to establish a nested relationship, by default None.
+            The context object containing the session and URL for API interactions
+        base : str
+            The base HTTP path for the collection endpoint
+        name : str
+            The collection name
+        uid : str, optional
+            The field name used to uniquely identify records, by default "guid"
+
+        Attributes
+        ----------
+        _ctx : Context
+            The context object containing the session and URL for API interactions
+        _path : str
+            The HTTP path for the collection endpoint.
+        _endpoint : Url
+            The HTTP URL for the collection endpoint.
+        _uid : str
+            The default field name used to uniquely identify records.
+        _cache: Optional[List[T]]
         """
         super().__init__()
         self._ctx = ctx
-        self._parent = parent
+        self._path: str = posixpath.join(base, name)
+        self._endpoint: Url = ctx.url + self._path
+        self._uid: str = uid
         self._cache: Optional[List[T]] = None
-
-    @property
-    @abstractmethod
-    def _endpoint(self) -> str:
-        """
-        Abstract property to define the endpoint URL for the GET request.
-
-        Subclasses must implement this property to return the API endpoint URL that will
-        be queried to fetch the data.
-
-        Returns
-        -------
-        str
-            The API endpoint URL.
-        """
-        raise NotImplementedError()
 
     @property
     def _data(self) -> List[T]:
@@ -127,7 +127,13 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
 
         response = self._ctx.session.get(self._endpoint)
         results = response.json()
-        self._cache = [self._create_instance(**result) for result in results]
+
+        self._cache = []
+        for result in results:
+            uid = result[self._uid]
+            instance = self._create_instance(self._path, uid, **result)
+            self._cache.append(instance)
+
         return self._cache
 
     @overload
@@ -149,7 +155,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         return repr(self._data)
 
     @abstractmethod
-    def _create_instance(self, **kwargs) -> T:
+    def _create_instance(self, base: str, uid: str, /, **kwargs: Any) -> T:
         """Create an instance of 'T'.
 
         Returns
@@ -171,29 +177,12 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         return self
 
 
-class ActiveFinderMethods(ActiveSequence[T], ABC, Generic[T]):
-    def __init__(self, ctx: Context, parent: Optional[Active] = None, uid: str = "guid"):
-        """Finder methods.
-
-        Provides various finder methods for locating records in any endpoint supporting HTTP GET requests.
-
-        Parameters
-        ----------
-        ctx : Context
-            The context containing the HTTP session used to interact with the API.
-        parent : Optional[Active], optional
-            Optional parent resource for maintaining hierarchical relationships, by default None
-        uid : str, optional
-            The default field name used to uniquely identify records, by default "guid"
-        """
-        super().__init__(ctx, parent)
-        self._uid = uid
-
+class ActiveFinderMethods(ActiveSequence[T], ABC):
     def find(self, uid) -> T:
         """
         Find a record by its unique identifier.
 
-        Fetches a record either by searching the cache or by making a GET request to the endpoint.
+        If the cache is already populated, it is checked first for matching record. If not, a conventional GET request is made to the Connect server.
 
         Parameters
         ----------
@@ -203,24 +192,23 @@ class ActiveFinderMethods(ActiveSequence[T], ABC, Generic[T]):
         Returns
         -------
         T
-
-        Raises
-        ------
-        ValueError
-            If no record is found.
         """
-        # todo - add some more comments about this
         if self._cache:
+            # Check if the record already exists in the cache.
+            # It is assumed that local cache scan is faster than an additional HTTP request.
             conditions = {self._uid: uid}
             result = self.find_by(**conditions)
-        else:
-            endpoint = self._endpoint + uid
-            response = self._ctx.session.get(endpoint)
-            result = response.json()
-            result = self._create_instance(**result)
+            if result:
+                return result
 
-        if not result:
-            raise ValueError(f"Failed to find instance where {self._uid} is '{uid}'")
+        endpoint = self._endpoint + uid
+        response = self._ctx.session.get(endpoint)
+        result = response.json()
+        result = self._create_instance(self._path, uid, **result)
+
+        # Invalidate the cache.
+        # It is assumed that the cache is stale since a record exists on the server and not in the cache.
+        self._cache = None
 
         return result
 
