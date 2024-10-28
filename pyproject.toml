@@ -19,10 +19,23 @@ classifiers = [
     "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = [
-    "requests>=2.31.0,<3",
-    "packaging",
-    "typing-extensions"
+dependencies = ["requests>=2.31.0,<3", "packaging", "typing-extensions"]
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "coverage",
+    "pandas",
+    "pre-commit",
+    "pyjson5",
+    "pyright",
+    "pytest",
+    "responses",
+    "rsconnect-python",
+    "ruff",
+    "setuptools",
+    "setuptools-scm",
+    "uv",
 ]
 
 
