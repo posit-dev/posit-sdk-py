@@ -101,34 +101,13 @@ class Job(Active):
         """A tag categorizing the job type. Options are build_jupyter, build_report, build_site, configure_report, git, packrat_restore, python_restore, render_shiny, run_api, run_app, run_bokeh_app, run_dash_app, run_fastapi_app, run_pyshiny_app, run_python_api, run_streamlit, run_tensorflow, run_voila_app, testing, unknown, val_py_ext_pkg, val_r_ext_pkg, and val_r_install."""
 
     @overload
-    def __init__(self, ctx: Context, base: str, uid: str, /, **attributes: Unpack[_Job]):
-        ...
+    def __init__(self, ctx: Context, path: str, pathinfo: str, /, **attributes: Unpack[_Job]): ...
 
     @overload
-    def __init__(self, ctx: Context, base: str, uid: str, /, **attributes: Any): ...
+    def __init__(self, ctx: Context, path: str, pathinfo: str, /, **attributes: Any): ...
 
-    def __init__(self, ctx: Context, base: str, uid: str, /, **attributes: Any):
-        """A Job.
-
-        A Job represents single execution instance of Content on Connect. Whenever Content runs, whether it's a scheduled report, a script execution, or server processes related to an application, a Job is created to manage and encapsulate that execution.
-
-        Parameters
-        ----------
-        ctx : Context
-            The context object containing the session and URL for API interactions.
-        base : str
-            The base HTTP path for the Job endpoint (e.g., '/jobs')
-        uid : str
-            The unique identifier
-        **attributes
-            Object items passed to the base resource dictionary.
-
-        Notes
-        -----
-        A Job is a reference to a server process on Connect, it is not the process itself. Jobs are executed asynchronously.
-        """
-        super().__init__(ctx, **attributes)
-        self._endpoint = ctx.url + base + uid
+    def __init__(self, ctx: Context, path: str, pathinfo: str, /, **attributes: Any):
+        super().__init__(ctx, path, pathinfo, **attributes)
 
     def destroy(self) -> None:
         """Destroy the job.
@@ -143,41 +122,42 @@ class Job(Active):
         ----
         This action requires administrator, owner, or collaborator privileges.
         """
-        self._ctx.session.delete(self._endpoint)
+        endpoint = self._ctx.url + self._path
+        self._ctx.session.delete(endpoint)
 
 
 class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
-    def __init__(self, ctx: Context, base: str, path: str = "jobs", uid="key"):
+    def __init__(self, ctx: Context, path: str, pathinfo: str = "jobs", uid: str = "key"):
         """A collection of jobs.
 
         Parameters
         ----------
         ctx : Context
             The context object containing the session and URL for API interactions
-        base : str
-            The base HTTP path for the collection endpoint
-        name : str
-            The collection name, by default "jobs"
+        path : str
+            The HTTP path component for the collection endpoint
+        pathinfo : str
+            The HTTP part of the path directed at a specific resource, by default "jobs"
         uid : str, optional
-            The field name used to uniquely identify records, by default "key"
+            The field name used to uniquely identify records, by default "guid"
         """
-        super().__init__(ctx, base, path, uid)
+        super().__init__(ctx, path, pathinfo, uid)
 
-    def _create_instance(self, base: str, uid: str, **kwargs: Any) -> Job:
+    def _create_instance(self, path: str, pathinfo: str, **kwargs: Any) -> Job:
         """Creates a Job instance.
 
         Parameters
         ----------
-        base : str
-            The base HTTP path for the instance endpoint
-        uid : str
-            The unique identifier for the instance.
+        path : str
+            The HTTP path component for the collection endpoint
+        pathinfo : str
+            The HTTP part of the path directed at a specific resource
 
         Returns
         -------
         Job
         """
-        return Job(self._ctx, base, uid, **kwargs)
+        return Job(self._ctx, path, pathinfo, **kwargs)
 
     class _FindByRequest(TypedDict, total=False):
         # Identifiers
@@ -311,15 +291,19 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
 class JobsMixin(Active, Resource):
     """Mixin class to add a jobs attribute to a resource."""
 
-    def __init__(self, ctx: Context, base: str, /, **kwargs):
+    def __init__(self, ctx, path, pathinfo="", /, **kwargs):
         """Mixin class which adds a `jobs` attribute to the Active Resource.
 
         Parameters
         ----------
         ctx : Context
-            The context object containing the session and URL for API interactions
-        base : str
-            The base path associated with the instance.
+            The context object containing the session and URL for API interactions.
+        path : str
+            The HTTP path component for the collection endpoint
+        pathinfo : str
+            The HTTP part of the path directed at a specific resource
+        **attributes : dict
+            Resource attributes passed
         """
-        super().__init__(ctx, **kwargs)
-        self.jobs = Jobs(ctx, base)
+        super().__init__(ctx, path, pathinfo, **kwargs)
+        self.jobs = Jobs(ctx, self._path)

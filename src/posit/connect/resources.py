@@ -51,8 +51,8 @@ class Resources:
 
 
 class Active(ABC, Resource):
-    def __init__(self, ctx: Context, **kwargs):
-        """A base class representing an active resource.
+    def __init__(self, ctx: Context, path: str, pathinfo: str = "", /, **attributes):
+        """A dict abstraction for any HTTP endpoint that returns a singular resource.
 
         Extends the `Resource` class and provides additional functionality for via the session context and an optional parent resource.
 
@@ -60,34 +60,12 @@ class Active(ABC, Resource):
         ----------
         ctx : Context
             The context object containing the session and URL for API interactions.
-        **kwargs : dict
-            Additional keyword arguments passed to the parent `Resource` class.
-        """
-        params = ResourceParameters(ctx.session, ctx.url)
-        super().__init__(params, **kwargs)
-        self._ctx = ctx
-
-
-T = TypeVar("T", bound="Active")
-"""A type variable that is bound to the `Active` class"""
-
-
-class ActiveSequence(ABC, Generic[T], Sequence[T]):
-    def __init__(self, ctx: Context, base: str, name: str, uid="guid"):
-        """A sequence abstraction for any HTTP GET endpoint that returns a collection.
-
-        It lazily fetches data on demand, caches the results, and allows for standard sequence operations like indexing and slicing.
-
-        Parameters
-        ----------
-        ctx : Context
-            The context object containing the session and URL for API interactions
-        base : str
-            The base HTTP path for the collection endpoint
-        name : str
-            The collection name
-        uid : str, optional
-            The field name used to uniquely identify records, by default "guid"
+        path : str
+            The HTTP path component for the collection endpoint
+        pathinfo : str
+            The HTTP part of the path directed at a specific resource
+        **attributes : dict
+            Resource attributes passed
 
         Attributes
         ----------
@@ -95,17 +73,37 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
             The context object containing the session and URL for API interactions
         _path : str
             The HTTP path for the collection endpoint.
-        _endpoint : Url
-            The HTTP URL for the collection endpoint.
+        """
+        params = ResourceParameters(ctx.session, ctx.url)
+        super().__init__(params, **attributes)
+        self._ctx = ctx
+        self._path = posixpath.join(path, pathinfo)
+
+
+T = TypeVar("T", bound="Active")
+"""A type variable that is bound to the `Active` class"""
+
+
+class ActiveSequence(ABC, Generic[T], Sequence[T]):
+    def __init__(self, ctx: Context, path: str, pathinfo: str = "", uid: str = "guid"):
+        """A sequence abstraction for any HTTP GET endpoint that returns a collection.
+
+        It lazily fetches data on demand, caches the results, and allows for standard sequence operations like indexing and slicing.
+
+        Attributes
+        ----------
+        _ctx : Context
+            The context object containing the session and URL for API interactions
+        _path : str
+            The HTTP path for the collection endpoint.
         _uid : str
-            The default field name used to uniquely identify records.
+            The field name used to uniquely identify records.
         _cache: Optional[List[T]]
         """
         super().__init__()
         self._ctx = ctx
-        self._path: str = posixpath.join(base, name)
-        self._endpoint: Url = ctx.url + self._path
-        self._uid: str = uid
+        self._path = posixpath.join(path, pathinfo)
+        self._uid = uid
         self._cache: Optional[List[T]] = None
 
     @property
@@ -125,7 +123,8 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         if self._cache:
             return self._cache
 
-        response = self._ctx.session.get(self._endpoint)
+        endpoint = self._ctx.url + self._path
+        response = self._ctx.session.get(endpoint)
         results = response.json()
 
         self._cache = []
@@ -155,7 +154,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         return repr(self._data)
 
     @abstractmethod
-    def _create_instance(self, base: str, uid: str, /, **kwargs: Any) -> T:
+    def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> T:
         """Create an instance of 'T'.
 
         Returns
@@ -201,7 +200,7 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
             if result:
                 return result
 
-        endpoint = self._endpoint + uid
+        endpoint = self._ctx.url + self._path + uid
         response = self._ctx.session.get(endpoint)
         result = response.json()
         result = self._create_instance(self._path, uid, **result)
