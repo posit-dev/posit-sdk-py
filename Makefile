@@ -40,7 +40,7 @@ $(VIRTUAL_ENV):
 _ensure-uv-venv: _ensure-uv-cmd $(VIRTUAL_ENV)
 _ensure-uv-cmd:
 	@if ! command -v $(UV) >/dev/null; then \
-		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install uv; \
+		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install "uv >= 0.4.27"; \
 	fi
 ensure-uv: _ensure-uv-cmd _ensure-uv-venv
 
