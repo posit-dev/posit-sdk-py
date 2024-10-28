@@ -2,11 +2,11 @@ include vars.mk
 
 .DEFAULT_GOAL := all
 
-.PHONY: build clean cov default deps dev docs ensure-uv fmt fix install it lint test uninstall version help
+.PHONY: build clean cov default dev docs ensure-uv _ensure-uv-cmd _ensure-uv-venv fmt fix install it lint test uninstall version help
 
 all: dev test lint build
 
-build:
+build: ensure-uv
 	$(UV) build
 
 clean:
@@ -19,15 +19,15 @@ clean:
 	find . -name "__pycache__" -exec rm -rf {} +
 	find . -type d -empty -delete
 
-cov:
-	$(PYTHON) -m coverage report
+cov: dev
+	$(UV) run coverage report
 
-cov-html:
-	$(PYTHON) -m coverage html
+cov-html: dev
+	$(UV) run coverage html
 	open htmlcov/index.html
 
-cov-xml:
-	$(PYTHON) -m coverage xml
+cov-xml: dev
+	$(UV) run coverage xml
 
 dev: ensure-uv
 	$(UV) pip install -e '.[dev]'
@@ -35,14 +35,18 @@ dev: ensure-uv
 docs:
 	$(MAKE) -C ./docs
 
-ensure-uv:
+$(VENV):
+	$(UV) venv $(VENV)
+_ensure-uv-venv: _ensure-uv-cmd $(VENV)
+_ensure-uv-cmd:
 	@if ! command -v $(UV) >/dev/null; then \
 		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install uv; \
 	fi
+ensure-uv: _ensure-uv-cmd _ensure-uv-venv
 
-fmt:
-	$(PYTHON) -m ruff check --fix
-	$(PYTHON) -m ruff format
+fmt: dev
+	$(UV) run ruff check --fix
+	$(UV) run ruff format
 
 install: ensure-uv
 	$(UV) pip install dist/*.whl
@@ -50,18 +54,18 @@ install: ensure-uv
 it:
 	$(MAKE) -C ./integration
 
-lint:
-	$(PYTHON) -m pyright
-	$(PYTHON) -m ruff check
+lint: dev
+	$(UV) run pyright
+	$(UV) run ruff check
 
-test:
-	$(PYTHON) -m coverage run --source=src -m pytest tests
+test: dev
+	$(UV) run coverage run --source=src -m pytest tests
 
 uninstall: ensure-uv
 	$(UV) pip uninstall $(PROJECT_NAME)
 
-version:
-	@$(PYTHON) -m setuptools_scm
+version: dev
+	@$(UV) run setuptools_scm
 
 help:
 	@echo "Makefile Targets"
