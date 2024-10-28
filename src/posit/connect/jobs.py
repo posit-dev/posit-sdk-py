@@ -2,8 +2,7 @@ from typing import Any, Literal, Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
-from posit.connect.context import Context
-
+from .context import Context
 from .resources import Active, ActiveFinderMethods, ActiveSequence, Resource
 
 JobTag = Literal[
@@ -102,7 +101,13 @@ class Job(Active):
         """A tag categorizing the job type. Options are build_jupyter, build_report, build_site, configure_report, git, packrat_restore, python_restore, render_shiny, run_api, run_app, run_bokeh_app, run_dash_app, run_fastapi_app, run_pyshiny_app, run_python_api, run_streamlit, run_tensorflow, run_voila_app, testing, unknown, val_py_ext_pkg, val_r_ext_pkg, and val_r_install."""
 
     @overload
-    def __init__(self, ctx: Context, base: str, uid: str, /, **kwargs: Unpack[_Job]):
+    def __init__(self, ctx: Context, base: str, uid: str, /, **attributes: Unpack[_Job]):
+        ...
+
+    @overload
+    def __init__(self, ctx: Context, base: str, uid: str, /, **attributes: Any): ...
+
+    def __init__(self, ctx: Context, base: str, uid: str, /, **attributes: Any):
         """A Job.
 
         A Job represents single execution instance of Content on Connect. Whenever Content runs, whether it's a scheduled report, a script execution, or server processes related to an application, a Job is created to manage and encapsulate that execution.
@@ -110,21 +115,19 @@ class Job(Active):
         Parameters
         ----------
         ctx : Context
-            The context object that holds the HTTP session used for sending the GET request.
-        parent : ContentItem
-            The Content related to this Job.
+            The context object containing the session and URL for API interactions.
+        base : str
+            The base HTTP path for the Job endpoint (e.g., '/jobs')
+        uid : str
+            The unique identifier
+        **attributes
+            Object items passed to the base resource dictionary.
 
         Notes
         -----
-        A Job is a reference to a server process on Connect, it is not the process itself. Jobs are executed asynchronously
+        A Job is a reference to a server process on Connect, it is not the process itself. Jobs are executed asynchronously.
         """
-        ...
-
-    @overload
-    def __init__(self, ctx: Context, base: str, uid: str, /, **kwargs: Any): ...
-
-    def __init__(self, ctx: Context, base: str, uid: str, /, **kwargs: Any):
-        super().__init__(ctx, **kwargs)
+        super().__init__(ctx, **attributes)
         self._endpoint = ctx.url + base + uid
 
     def destroy(self) -> None:
