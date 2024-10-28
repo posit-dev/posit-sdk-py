@@ -4,7 +4,7 @@ include vars.mk
 
 .PHONY: build clean cov default deps dev docs ensure-uv fmt fix install it lint test uninstall version help
 
-all: deps dev test lint build
+all: dev test lint build
 
 build:
 	$(UV) build
@@ -29,11 +29,8 @@ cov-html:
 cov-xml:
 	$(PYTHON) -m coverage xml
 
-deps: ensure-uv
-	$(UV) pip install --upgrade pip setuptools wheel -r requirements.txt -r requirements-dev.txt
-
 dev: ensure-uv
-	$(UV) pip install -e .
+	$(UV) pip install -e '.[dev]'
 
 docs:
 	$(MAKE) -C ./docs
@@ -68,13 +65,12 @@ version:
 
 help:
 	@echo "Makefile Targets"
-	@echo "  all            Run deps, dev, test, lint, and build"
+	@echo "  all            Run dev, test, lint, and build"
 	@echo "  build          Build the project"
 	@echo "  clean          Clean up project artifacts"
 	@echo "  cov            Generate a coverage report"
 	@echo "  cov-html       Generate an HTML coverage report and open it"
 	@echo "  cov-xml        Generate an XML coverage report"
-	@echo "  deps           Install dependencies"
 	@echo "  dev            Install the project in editable mode"
 	@echo "  docs           Build the documentation"
 	@echo "  ensure-uv      Ensure 'uv' is installed"
