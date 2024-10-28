@@ -30,7 +30,7 @@ cov-xml: dev
 	$(UV) run coverage xml
 
 dev: ensure-uv
-	$(UV) pip install -e '.[dev]'
+	$(UV) pip install -e .
 
 docs: ensure-uv
 	$(MAKE) -C ./docs

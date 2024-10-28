@@ -36,9 +36,9 @@ clean:
 	find . -type d -empty -delete
 
 deps:
-	$(UV) pip install --upgrade pip -r requirements-site.txt
 	$(QUARTO) add --no-prompt posit-dev/product-doc-theme@v4.0.2
 	$(QUARTO) add --no-prompt machow/quartodoc
+	cd .. && $(MAKE) dev
 
 preview:
 	CURRENT_YEAR=$(CURRENT_YEAR) \

@@ -21,24 +21,6 @@ classifiers = [
 dynamic = ["version"]
 dependencies = ["requests>=2.31.0,<3", "packaging", "typing-extensions"]
 
-[project.optional-dependencies]
-dev = [
-    "build",
-    "coverage",
-    "pandas",
-    "pre-commit",
-    "pyjson5",
-    "pyright",
-    "pytest",
-    "responses",
-    "rsconnect-python",
-    "ruff",
-    "setuptools",
-    "setuptools-scm",
-    "uv",
-]
-
-
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
@@ -112,3 +94,21 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+
+[dependency-groups]
+build = ["build"]
+coverage = ["coverage"]
+examples = ["rsconnect-python", "pandas"]
+git = ["pre-commit"]
+site = ["quartodoc"]
+test = ["responses", "pytest", "pyjson5"]
+# Default install group by `uv`
+dev = [
+    { include-group = "build" },
+    { include-group = "coverage" },
+    { include-group = "examples" },
+    { include-group = "git" },
+    { include-group = "site" },
+    { include-group = "test" },
+]
