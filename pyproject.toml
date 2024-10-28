@@ -25,6 +25,7 @@ dependencies = [
     "typing-extensions"
 ]
 
+
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
@@ -72,7 +73,7 @@ select = [
     # https://docs.astral.sh/ruff/rules/#isort-i
     #
     # Sort imports.
-    "I"
+    "I",
 ]
 ignore = [
     # NumPy style docstring convention with noted exceptions.
