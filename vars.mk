@@ -18,3 +18,4 @@ PROJECT_NAME := posit-sdk
 # Python settings
 PYTHON ?= $(shell command -v python || command -v python3)
 UV ?= uv
+VENV ?= .venv
