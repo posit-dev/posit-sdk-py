@@ -33,7 +33,7 @@ Use the default make target to execute the full build pipeline. For details on s
 
 ## Style Guide
 
-We use [Ruff](https://docs.astral.sh/ruff/) for linting and code formatting. Run `make deps` to install it.
+We use [Ruff](https://docs.astral.sh/ruff/) for linting and code formatting.
 
 All proposed changes must successfully pass the `make lint` rules prior to merging.
 

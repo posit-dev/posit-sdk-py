@@ -12,16 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          check-latest: true
-          cache: 'pip'
-      - run: make deps
       - run: make dev
       - run: make test
       - run: make cov-xml
       - if: ${{ ! github.event.pull_request.head.repo.fork }}
         uses: orgoro/coverage@v3.2
         with:
-            coverageFile: coverage.xml
-            token: ${{ secrets.GITHUB_TOKEN }}
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}

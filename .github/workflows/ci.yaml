@@ -12,11 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          check-latest: true
-          cache: 'pip'
-      - run: make deps
       - run: make lint
       - run: make fmt
 
@@ -26,21 +21,18 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - '3.8'
-          - '3.9'
-          - '3.10'
-          - '3.11'
-          - '3.12'
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        check-latest: true
-        cache: 'pip'
-    - run: make deps
-    - run: make dev
-    - run: make test
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: make dev
+      - run: make test
 
   integration-test:
     runs-on: ubuntu-latest
@@ -68,18 +60,18 @@ jobs:
           - 2022.12.0
           - 2022.11.0
     steps:
-    - uses: actions/checkout@v4
-    - uses: docker/setup-buildx-action@v3
-    - name: Write Posit Connect license to disk
-      run: echo "$CONNECT_LICENSE" > ./integration/license.lic
-      env:
-        CONNECT_LICENSE: ${{ secrets.CONNECT_LICENSE }}
-    - run: make -C ./integration ${{ matrix.CONNECT_VERSION }}
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: ${{ matrix.CONNECT_VERSION }} - Integration Test Report
-        path: integration/reports/*.xml
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Write Posit Connect license to disk
+        run: echo "$CONNECT_LICENSE" > ./integration/license.lic
+        env:
+          CONNECT_LICENSE: ${{ secrets.CONNECT_LICENSE }}
+      - run: make -C ./integration ${{ matrix.CONNECT_VERSION }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.CONNECT_VERSION }} - Integration Test Report
+          path: integration/reports/*.xml
 
   integration-test-report:
     needs: integration-test
@@ -99,15 +91,10 @@ jobs:
           files: "artifacts/**/*.xml"
           report_individual_runs: true
 
-
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          check-latest: true
-          cache: 'pip'
-      - run: make deps
+      - run: make dev
       - run: make build

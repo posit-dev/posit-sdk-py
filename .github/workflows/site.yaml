@@ -26,10 +26,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          check-latest: true
-          cache: 'pip'
       - run: make deps
       - run: make build
       - run: make install
@@ -49,10 +45,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          check-latest: true
-          cache: 'pip'
       - uses: actions/setup-node@v4
       - uses: quarto-dev/quarto-actions/setup@v2
       - run: make deps
