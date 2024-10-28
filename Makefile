@@ -6,7 +6,7 @@ include vars.mk
 
 all: dev test lint build
 
-build: ensure-uv
+build: dev
 	$(UV) build
 
 clean:
@@ -32,12 +32,12 @@ cov-xml: dev
 dev: ensure-uv
 	$(UV) pip install -e '.[dev]'
 
-docs:
+docs: ensure-uv
 	$(MAKE) -C ./docs
 
-$(VENV):
-	$(UV) venv $(VENV)
-_ensure-uv-venv: _ensure-uv-cmd $(VENV)
+$(VIRTUAL_ENV):
+	$(UV) venv $(VIRTUAL_ENV)
+_ensure-uv-venv: _ensure-uv-cmd $(VIRTUAL_ENV)
 _ensure-uv-cmd:
 	@if ! command -v $(UV) >/dev/null; then \
 		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install uv; \

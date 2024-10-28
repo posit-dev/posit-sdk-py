@@ -18,4 +18,5 @@ PROJECT_NAME := posit-sdk
 # Python settings
 PYTHON ?= $(shell command -v python || command -v python3)
 UV ?= uv
-VENV ?= .venv
+# uv defaults virtual environment to `$VIRTUAL_ENV` if set; otherwise .venv
+VIRTUAL_ENV ?= .venv
