@@ -48,7 +48,7 @@ fmt: dev
 	$(UV) tool run --with . ruff check --fix
 	$(UV) tool run --with . ruff format
 
-install: ensure-uv
+install: build
 	$(UV) pip install dist/*.whl
 
 it:
