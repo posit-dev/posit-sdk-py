@@ -71,6 +71,7 @@ preview:
 
 # Build Dockerfile
 build:
+	make -C .. $(UV_LOCK)
 	docker build -t $(DOCKER_PROJECT_IMAGE_TAG) ..
 
 # Tear down resources.

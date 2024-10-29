@@ -59,9 +59,9 @@ fmt: dev
 install: build
 	$(UV) pip install dist/*.whl
 
-uv.lock: dev
+$(UV_LOCK): dev
 	$(UV) lock
-it: uv.lock
+it: $(UV_LOCK)
 	$(MAKE) -C ./integration
 
 lint: dev
