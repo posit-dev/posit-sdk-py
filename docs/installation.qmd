@@ -8,7 +8,7 @@ toc-depth: 2
 
 ## Python version
 
-We recommend using the latest version of Python available to you. The Posit SDK supports Python 3.9 and newer.
+We recommend using the latest version of Python available to you. The Posit SDK supports Python 3.8 and newer.
 
 ## Dependencies
 
