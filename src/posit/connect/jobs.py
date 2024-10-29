@@ -143,7 +143,7 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
         """
         super().__init__(ctx, path, pathinfo, uid)
 
-    def _create_instance(self, path: str, pathinfo: str, **kwargs: Any) -> Job:
+    def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> Job:
         """Creates a Job instance.
 
         Parameters
