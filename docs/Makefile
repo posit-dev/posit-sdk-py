@@ -26,12 +26,10 @@ ensure-dev:
 
 api: ensure-dev
 	@echo "::group::quartodoc interlinks"
-	source ../.venv/bin/activate && \
-		$(QUARTODOC) interlinks
+	$(UV) run $(QUARTODOC) interlinks
 	@echo "::endgroup::"
 	@echo "::group::quartodoc build"
-	source ../.venv/bin/activate && \
-		$(QUARTODOC) build --verbose
+	$(UV) run $(QUARTODOC) build --verbose
 	@echo "::endgroup::"
 	cp -r _extensions/ reference/_extensions  # Required to render footer
 
