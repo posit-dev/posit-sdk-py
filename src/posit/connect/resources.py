@@ -247,19 +247,15 @@ class ActiveCreatorMethods(ActiveSequence[T], ABC):
         return self._create_instance(self._path, uid, **result)
 
 
-class ActiveDestroyerMethods(Active):
+class ActiveDestroyerMethods(Active, ABC):
     def destroy(self):
         endpoint = self._ctx.url + self._path
         self._ctx.session.delete(endpoint)
 
 
-class ActiveUpdaterMethods(Active):
+class ActiveUpdaterMethods(Active, ABC):
     def update(self, /, **attributes):
-        super().update(**attributes)
-        self.save()
-
-    def save(self):
         endpoint = self._ctx.url + self._path
-        response = self._ctx.session.put(endpoint, json=self)
+        response = self._ctx.session.put(endpoint, json=attributes)
         result = response.json()
         super().update(**result)
