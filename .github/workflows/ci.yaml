@@ -66,6 +66,8 @@ jobs:
         run: echo "$CONNECT_LICENSE" > ./integration/license.lic
         env:
           CONNECT_LICENSE: ${{ secrets.CONNECT_LICENSE }}
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install
       - run: make -C ./integration ${{ matrix.CONNECT_VERSION }}
       - uses: actions/upload-artifact@v4
         if: always()
