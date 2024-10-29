@@ -8,7 +8,7 @@ The `posit-sdk` is a software development kit (SDK) for working with Posit's pro
 
 Before contributing to the `posit-sdk`, ensure that the following prerequisites are met:
 
-- Python >=3.8
+- Python >=3.9
 
 > [!INFO]
 > We require using virtual environments to maintain a clean and consistent development environment.
