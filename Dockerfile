@@ -1,14 +1,13 @@
 FROM python:3
 
-ENV UV_SYSTEM_PYTHON=true
-
 RUN apt-get update && apt-get install -y make
 
 WORKDIR /sdk
 
-COPY Makefile pyproject.toml requirements.txt requirements-dev.txt vars.mk ./
+COPY Makefile pyproject.toml vars.mk uv.lock ./
 
-RUN --mount=type=cache,mode=0755,target=/root/.cache/pip make deps
+# Run before `COPY src src` to cache dependencies for faster iterative builds
+RUN --mount=type=cache,mode=0755,target=/root/.cache/pip make docker-deps
 
 COPY .git .git
 COPY src src

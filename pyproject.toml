@@ -19,11 +19,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = [
-    "requests>=2.31.0,<3",
-    "packaging",
-    "typing-extensions"
-]
+dependencies = ["requests>=2.31.0,<3", "packaging", "typing-extensions"]
 
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
@@ -72,7 +68,7 @@ select = [
     # https://docs.astral.sh/ruff/rules/#isort-i
     #
     # Sort imports.
-    "I"
+    "I",
 ]
 ignore = [
     # NumPy style docstring convention with noted exceptions.
@@ -98,3 +94,24 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+
+[dependency-groups]
+build = ["build"]
+coverage = ["coverage"]
+examples = ["rsconnect-python", "pandas"]
+git = ["pre-commit"]
+lint = ["ruff", "pyright"]
+test = ["rsconnect-python", "responses", "pytest", "pyjson5"]
+# Default install group by `uv`: `dev`
+dev = [
+    { include-group = "build" },
+    { include-group = "coverage" },
+    # # Must comment out `examples` group until only python>3.8 is supported
+    # # `numpy==1.24.4` requires `distutils`, which is not available in python3.12
+    # # `numpy>1.24.4` does not require `distutils`
+    # { include-group = "examples" },
+    { include-group = "git" },
+    { include-group = "lint" },
+    { include-group = "test" },
+]

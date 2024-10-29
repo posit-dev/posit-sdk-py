@@ -6,9 +6,6 @@ on:
       - "v*.*.*"
   pull_request:
 
-env:
-  UV_SYSTEM_PYTHON: true
-
 permissions:
   id-token: write
   pages: write
@@ -25,14 +22,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          check-latest: true
-          cache: 'pip'
-      - run: make deps
-      - run: make build
-      - run: make install
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install
+      - run: make build install
       - uses: quarto-dev/quarto-actions/setup@v2
       - run: make docs
       - uses: actions/configure-pages@v3
@@ -48,14 +40,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          check-latest: true
-          cache: 'pip'
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install
       - uses: actions/setup-node@v4
       - uses: quarto-dev/quarto-actions/setup@v2
-      - run: make deps
       - run: make dev
       - run: make docs
       - id: preview
