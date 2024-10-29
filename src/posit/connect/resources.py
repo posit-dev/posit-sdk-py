@@ -106,8 +106,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         self._uid = uid
         self._cache: Optional[List[T]] = None
 
-    @property
-    def _data(self) -> List[T]:
+    def _get_or_fetch(self) -> List[T]:
         """
         Fetch and cache the data from the API.
 
@@ -142,16 +141,20 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
     def __getitem__(self, index: slice) -> Sequence[T]: ...
 
     def __getitem__(self, index):
-        return self._data[index]
+        data = self._get_or_fetch()
+        return data[index]
 
     def __len__(self) -> int:
-        return len(self._data)
+        data = self._get_or_fetch()
+        return len(data)
 
     def __str__(self) -> str:
-        return str(self._data)
+        data = self._get_or_fetch()
+        return str(data)
 
     def __repr__(self) -> str:
-        return repr(self._data)
+        data = self._get_or_fetch()
+        return repr(data)
 
     @abstractmethod
     def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> T:
@@ -226,4 +229,5 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         Optional[T]
             The first record matching the conditions, or `None` if no match is found.
         """
-        return next((v for v in self._data if v.items() >= conditions.items()), None)
+        data = self._get_or_fetch()
+        return next((v for v in data if v.items() >= conditions.items()), None)
