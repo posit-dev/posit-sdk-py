@@ -134,4 +134,5 @@ help:
 test:
 	mkdir -p logs
 	set -o pipefail; \
+		source ../.venv/bin/activate && \
 		CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest -s --junit-xml=./reports/$(CONNECT_VERSION).xml | tee ./logs/$(CONNECT_VERSION).log;

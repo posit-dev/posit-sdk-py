@@ -108,7 +108,7 @@ examples = ["rsconnect-python", "pandas"]
 git = ["pre-commit"]
 lint = ["ruff", "pyright"]
 site = ["quartodoc==0.8.1", "griffe>=1.3.2"]
-test = ["responses", "pytest", "pyjson5"]
+test = ["rsconnect-python", "responses", "pytest", "pyjson5"]
 # Default install group by `uv`
 dev = [
     { include-group = "build" },
