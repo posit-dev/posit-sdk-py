@@ -1,7 +1,15 @@
-import select
+import pytest
+from packaging import version
+
 from posit import connect
 
+from . import CONNECT_VERSION
 
+
+@pytest.mark.skipif(
+    CONNECT_VERSION <= version.parse("2023.01.1"),
+    reason="Environments API not available",
+)
 class TestContent:
     @classmethod
     def setup_class(cls):

@@ -187,6 +187,7 @@ class Client(ContextManager):
         return me.get(self.resource_params)
 
     @property
+    @requires(version="2023.05.0")
     def environments(self) -> Environments:
         return Environments(self.ctx, "v1")
 
