@@ -68,7 +68,7 @@ uninstall: ensure-uv
 
 version:
 	@$(MAKE) ensure-uv &>/dev/null
-	@$(UV) run --quiet python -m setuptools_scm
+	@$(UV) run --quiet --with "setuptools_scm" python -m setuptools_scm
 
 help:
 	@echo "Makefile Targets"

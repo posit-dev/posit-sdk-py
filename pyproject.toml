@@ -19,12 +19,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = [
-    "requests>=2.31.0,<3",
-    "packaging",
-    "typing-extensions",
-    "setuptools-scm;python_version>='3.12'",
-]
+dependencies = ["requests>=2.31.0,<3", "packaging", "typing-extensions"]
 
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
