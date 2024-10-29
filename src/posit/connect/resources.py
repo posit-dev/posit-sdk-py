@@ -180,6 +180,9 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
 
 
 class ActiveFinderMethods(ActiveSequence[T], ABC):
+    """Finder methods.
+
+    Provides various finder methods for locating records in any endpoint supporting HTTP GET requests.""""
     def find(self, uid) -> T:
         """
         Find a record by its unique identifier.
