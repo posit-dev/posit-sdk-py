@@ -37,14 +37,14 @@ docs: ensure-uv
 
 $(VIRTUAL_ENV):
 	$(UV) venv $(VIRTUAL_ENV)
-ensure-uv: $(VIRTUAL_ENV)
+ensure-uv:
 	@if ! command -v $(UV) >/dev/null; then \
 		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install "uv >= 0.4.27"; \
 	fi
-	@# Be sure latest pip is installed
-	@$(UV) pip install "uv >= 0.4.27" --quiet
-	@# Install virtual environment
+	@# Install virtual environment (before calling `uv pip install ...`)
 	@$(MAKE) $(VIRTUAL_ENV) 1>/dev/null
+	@# Be sure recent uv is installed
+	@$(UV) pip install "uv >= 0.4.27" --quiet
 
 fmt: dev
 	$(UV) run ruff check --fix
