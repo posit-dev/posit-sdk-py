@@ -21,15 +21,25 @@ endif
 
 all: deps api build
 
-api:
-	$(QUARTODOC) build
-	$(QUARTODOC) interlinks
+ensure-dev:
+	$(MAKE) -C .. dev
+
+api: ensure-dev
+	@echo "::group::quartodoc interlinks"
+	source ../.venv/bin/activate && \
+		$(QUARTODOC) interlinks
+	@echo "::endgroup::"
+	@echo "::group::quartodoc build"
+	source ../.venv/bin/activate && \
+		$(QUARTODOC) build --verbose
+	@echo "::endgroup::"
 	cp -r _extensions/ reference/_extensions  # Required to render footer
 
-build:
-	CURRENT_YEAR=$(CURRENT_YEAR) \
-	PROJECT_VERSION=$(PROJECT_VERSION) \
-	$(QUARTO) render
+build: ensure-dev
+	source ../.venv/bin/activate && \
+		CURRENT_YEAR=$(CURRENT_YEAR) \
+		PROJECT_VERSION=$(PROJECT_VERSION) \
+		$(QUARTO) render
 
 clean:
 	rm -rf _extensions _inv _site .quarto reference objects.json
@@ -41,7 +51,8 @@ _extensions/machow/interlinks/_extension.yml:
 	$(QUARTO) add --no-prompt machow/quartodoc
 deps: ensure-dev _extensions/posit-dev/posit-docs/_extension.yml _extensions/machow/interlinks/_extension.yml
 
-preview:
+preview: ensure-dev
+	source ../.venv/bin/activate && \
 	CURRENT_YEAR=$(CURRENT_YEAR) \
 	PROJECT_VERSION=$(PROJECT_VERSION) \
 	$(QUARTO) preview
