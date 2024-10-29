@@ -119,7 +119,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         List[T]
             A list of items of type `T` representing the fetched data.
         """
-        if self._cache:
+        if self._cache is not None:
             return self._cache
 
         endpoint = self._ctx.url + self._path
