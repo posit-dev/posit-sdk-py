@@ -17,7 +17,7 @@ Before contributing to the `posit-sdk`, ensure that the following prerequisites 
 ## Instructions
 
 > [!WARNING]
-> Executing `make` will install third-party packages in your Python environment. Please review the [`Makefile`](./Makefile) to verify behavior before executing any commands.
+> Executing `make` will install third-party packages in your `.venv` virtual Python environment. Please review the [`Makefile`](./Makefile) to verify behavior before executing any commands.
 
 1. Fork the repository and open it in your development environment.
 2. Activate your Python environment (e.g., `source .venv/bin/activate`)
