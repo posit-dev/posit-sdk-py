@@ -106,7 +106,8 @@ build = ["build"]
 coverage = ["coverage"]
 examples = ["rsconnect-python", "pandas"]
 git = ["pre-commit"]
-site = ["quartodoc"]
+lint = ["ruff", "pyright"]
+site = ["quartodoc==0.8.1", "griffe>=1.3.2"]
 test = ["responses", "pytest", "pyjson5"]
 # Default install group by `uv`
 dev = [
@@ -114,6 +115,7 @@ dev = [
     { include-group = "coverage" },
     { include-group = "examples" },
     { include-group = "git" },
+    { include-group = "lint" },
     { include-group = "site" },
     { include-group = "test" },
 ]
