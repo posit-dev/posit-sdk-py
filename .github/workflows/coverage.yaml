@@ -4,14 +4,13 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-env:
-  UV_SYSTEM_PYTHON: true
 jobs:
   cov:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install
       - run: make dev
       - run: make test
       - run: make cov-xml

@@ -3,8 +3,6 @@ on:
   push:
     tags:
       - "v*.*.*"
-env:
-  UV_SYSTEM_PYTHON: true
 jobs:
   default:
     runs-on: ubuntu-latest
@@ -14,7 +12,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install
       - uses: actions/setup-node@v4
       - run: make build
       - run: make install
