@@ -45,8 +45,8 @@ ensure-uv: $(VIRTUAL_ENV)
 	@$(MAKE) $(VIRTUAL_ENV) 1>/dev/null
 
 fmt: dev
-	$(UV) run ruff check --fix
-	$(UV) run ruff format
+	$(UV) tool run --with . ruff check --fix
+	$(UV) tool run --with . ruff format
 
 install: ensure-uv
 	$(UV) pip install dist/*.whl
@@ -55,11 +55,11 @@ it:
 	$(MAKE) -C ./integration
 
 lint: dev
-	$(UV) run pyright
-	$(UV) run ruff check
+	$(UV) tool run --with . pyright
+	$(UV) tool run --with . ruff check
 
 test: dev
-	$(UV) run coverage run --source=src -m pytest tests
+	$(UV) tool run coverage run --source=src -m pytest tests
 
 uninstall: ensure-uv
 	$(UV) pip uninstall $(PROJECT_NAME)
