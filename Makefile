@@ -2,7 +2,7 @@ include vars.mk
 
 .DEFAULT_GOAL := all
 
-.PHONY: build clean cov default dev docs ensure-uv _ensure-uv-cmd _ensure-uv-venv fmt fix install it lint test uninstall version help
+.PHONY: build clean cov default dev docs ensure-uv fmt fix install it lint test uninstall version help
 
 all: dev test lint build
 
@@ -37,12 +37,12 @@ docs: ensure-uv
 
 $(VIRTUAL_ENV):
 	$(UV) venv $(VIRTUAL_ENV)
-_ensure-uv-venv: _ensure-uv-cmd $(VIRTUAL_ENV)
-_ensure-uv-cmd:
+ensure-uv: $(VIRTUAL_ENV)
 	@if ! command -v $(UV) >/dev/null; then \
 		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install "uv >= 0.4.27"; \
 	fi
-ensure-uv: _ensure-uv-cmd _ensure-uv-venv
+	@$(UV) pip install "uv >= 0.4.27" --quiet
+	@$(MAKE) $(VIRTUAL_ENV) 1>/dev/null
 
 fmt: dev
 	$(UV) run ruff check --fix
