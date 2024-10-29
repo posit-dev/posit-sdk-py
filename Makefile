@@ -64,8 +64,9 @@ test: dev
 uninstall: ensure-uv
 	$(UV) pip uninstall $(PROJECT_NAME)
 
-version: dev
-	@$(UV) run setuptools_scm
+version:
+	@$(MAKE) dev &>/dev/null
+	@$(UV) run python -m setuptools_scm
 
 help:
 	@echo "Makefile Targets"
