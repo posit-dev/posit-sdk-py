@@ -6,7 +6,8 @@ CURRENT_YEAR ?= $(shell date +%Y)
 
 # Quarto settings
 QUARTO ?= quarto
-QUARTODOC ?= quartodoc
+# quartodoc doesn't like py3.8; Run using `--with` as it can conflict with the project's dependencies
+QUARTODOC ?= --with "quartodoc==0.8.1" quartodoc
 
 # Netlify settings
 NETLIFY_SITE_ID ?= 5cea1f56-7935-4387-975a-18a7905d15ee
@@ -26,18 +27,18 @@ ensure-dev:
 
 api: ensure-dev
 	@echo "::group::quartodoc interlinks"
-	$(UV) run $(QUARTODOC) interlinks
+	$(UV) tool run --with ../ $(QUARTODOC) interlinks
 	@echo "::endgroup::"
 	@echo "::group::quartodoc build"
-	$(UV) run $(QUARTODOC) build --verbose
+	$(UV) tool run --with ../ $(QUARTODOC) build --verbose
 	@echo "::endgroup::"
 	cp -r _extensions/ reference/_extensions  # Required to render footer
 
 build: ensure-dev
-	source ../.venv/bin/activate && \
-		CURRENT_YEAR=$(CURRENT_YEAR) \
-		PROJECT_VERSION=$(PROJECT_VERSION) \
-		$(QUARTO) render
+	CURRENT_YEAR=$(CURRENT_YEAR) \
+	PROJECT_VERSION=$(PROJECT_VERSION) \
+	$(UV) tool run --with ../ \
+	$(QUARTO) render
 
 clean:
 	rm -rf _extensions _inv _site .quarto reference objects.json
@@ -50,9 +51,9 @@ _extensions/machow/interlinks/_extension.yml:
 deps: ensure-dev _extensions/posit-dev/posit-docs/_extension.yml _extensions/machow/interlinks/_extension.yml
 
 preview: ensure-dev
-	source ../.venv/bin/activate && \
 	CURRENT_YEAR=$(CURRENT_YEAR) \
 	PROJECT_VERSION=$(PROJECT_VERSION) \
+	$(UV) tool run --with ../ \
 	$(QUARTO) preview
 
 deploy:
