@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y make
 
 WORKDIR /sdk
 
-COPY Makefile pyproject.toml requirements.txt requirements-dev.txt vars.mk ./
+COPY Makefile pyproject.toml vars.mk ./
 
 COPY .git .git
 COPY src src
