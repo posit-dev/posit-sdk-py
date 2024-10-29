@@ -2,11 +2,11 @@ include vars.mk
 
 .DEFAULT_GOAL := all
 
-.PHONY: build clean cov default deps dev docs ensure-uv fmt fix install it lint test uninstall version help
+.PHONY: build clean cov default dev docker-deps docs ensure-uv fmt fix install it lint test uninstall version help
 
-all: deps dev test lint build
+all: dev test lint build
 
-build:
+build: dev
 	$(UV) build
 
 clean:
@@ -19,62 +19,73 @@ clean:
 	find . -name "__pycache__" -exec rm -rf {} +
 	find . -type d -empty -delete
 
-cov:
-	$(PYTHON) -m coverage report
+cov: dev
+	$(UV) run coverage report
 
-cov-html:
-	$(PYTHON) -m coverage html
+cov-html: dev
+	$(UV) run coverage html
 	open htmlcov/index.html
 
-cov-xml:
-	$(PYTHON) -m coverage xml
-
-deps: ensure-uv
-	$(UV) pip install --upgrade pip setuptools wheel -r requirements.txt -r requirements-dev.txt
+cov-xml: dev
+	$(UV) run coverage xml
 
 dev: ensure-uv
 	$(UV) pip install -e .
 
-docs:
+docker-deps: ensure-uv
+	# Sync given the `uv.lock` file
+	# --frozen : assert that the lock file exists
+	# --no-install-project : do not install the project itself, but install its dependencies
+	$(UV) sync --frozen --no-install-project
+
+docs: ensure-uv
 	$(MAKE) -C ./docs
 
+$(VIRTUAL_ENV):
+	$(UV) venv $(VIRTUAL_ENV)
 ensure-uv:
 	@if ! command -v $(UV) >/dev/null; then \
-		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install uv; \
+		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install "uv >= 0.4.27"; \
 	fi
+	@# Install virtual environment (before calling `uv pip install ...`)
+	@$(MAKE) $(VIRTUAL_ENV) 1>/dev/null
+	@# Be sure recent uv is installed
+	@$(UV) pip install "uv >= 0.4.27" --quiet
 
-fmt:
-	$(PYTHON) -m ruff check --fix
-	$(PYTHON) -m ruff format
+fmt: dev
+	$(UV) run ruff check --fix
+	$(UV) run ruff format
 
-install: ensure-uv
+install: build
 	$(UV) pip install dist/*.whl
 
-it:
+$(UV_LOCK): dev
+	$(UV) lock
+it: $(UV_LOCK)
 	$(MAKE) -C ./integration
 
-lint:
-	$(PYTHON) -m pyright
-	$(PYTHON) -m ruff check
+lint: dev
+	$(UV) run pyright
+	$(UV) run ruff check
 
-test:
-	$(PYTHON) -m coverage run --source=src -m pytest tests
+test: dev
+	$(UV) run coverage run --source=src -m pytest tests
 
 uninstall: ensure-uv
 	$(UV) pip uninstall $(PROJECT_NAME)
 
 version:
-	@$(PYTHON) -m setuptools_scm
+	@$(MAKE) ensure-uv &>/dev/null
+	@$(UV) run --quiet --with "setuptools_scm" python -m setuptools_scm
 
 help:
 	@echo "Makefile Targets"
-	@echo "  all            Run deps, dev, test, lint, and build"
+	@echo "  all            Run dev, test, lint, and build"
 	@echo "  build          Build the project"
 	@echo "  clean          Clean up project artifacts"
 	@echo "  cov            Generate a coverage report"
 	@echo "  cov-html       Generate an HTML coverage report and open it"
 	@echo "  cov-xml        Generate an XML coverage report"
-	@echo "  deps           Install dependencies"
 	@echo "  dev            Install the project in editable mode"
 	@echo "  docs           Build the documentation"
 	@echo "  ensure-uv      Ensure 'uv' is installed"

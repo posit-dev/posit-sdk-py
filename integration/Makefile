@@ -71,6 +71,7 @@ preview:
 
 # Build Dockerfile
 build:
+	make -C .. $(UV_LOCK)
 	docker build -t $(DOCKER_PROJECT_IMAGE_TAG) ..
 
 # Tear down resources.
@@ -134,4 +135,7 @@ help:
 test:
 	mkdir -p logs
 	set -o pipefail; \
-		CONNECT_VERSION=${CONNECT_VERSION} CONNECT_API_KEY="$(shell rsconnect bootstrap -i -s http://connect:3939 --raw)" $(PYTHON) -m pytest -s --junit-xml=./reports/$(CONNECT_VERSION).xml | tee ./logs/$(CONNECT_VERSION).log;
+		CONNECT_VERSION=${CONNECT_VERSION} \
+		CONNECT_API_KEY="$(shell $(UV) run rsconnect bootstrap -i -s http://connect:3939 --raw)" \
+		$(UV) run pytest -s --junit-xml=./reports/$(CONNECT_VERSION).xml | \
+		tee ./logs/$(CONNECT_VERSION).log;

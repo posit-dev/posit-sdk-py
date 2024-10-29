@@ -8,7 +8,7 @@ The `posit-sdk` is a software development kit (SDK) for working with Posit's pro
 
 Before contributing to the `posit-sdk`, ensure that the following prerequisites are met:
 
-- Python >=3.8
+- Python >=3.9
 
 > [!INFO]
 > We require using virtual environments to maintain a clean and consistent development environment.
@@ -17,7 +17,7 @@ Before contributing to the `posit-sdk`, ensure that the following prerequisites 
 ## Instructions
 
 > [!WARNING]
-> Executing `make` will install third-party packages in your Python environment. Please review the [`Makefile`](./Makefile) to verify behavior before executing any commands.
+> Executing `make` will install third-party packages in your `.venv` virtual Python environment. Please review the [`Makefile`](./Makefile) to verify behavior before executing any commands.
 
 1. Fork the repository and open it in your development environment.
 2. Activate your Python environment (e.g., `source .venv/bin/activate`)
@@ -33,7 +33,7 @@ Use the default make target to execute the full build pipeline. For details on s
 
 ## Style Guide
 
-We use [Ruff](https://docs.astral.sh/ruff/) for linting and code formatting. Run `make deps` to install it.
+We use [Ruff](https://docs.astral.sh/ruff/) for linting and code formatting.
 
 All proposed changes must successfully pass the `make lint` rules prior to merging.
 
