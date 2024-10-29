@@ -6,6 +6,8 @@ from typing import Optional, overload
 
 from requests import Response, Session
 
+from posit.connect.environments import Environments
+
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -183,6 +185,10 @@ class Client(ContextManager):
             The currently authenticated user.
         """
         return me.get(self.resource_params)
+
+    @property
+    def environments(self) -> Environments:
+        return Environments(self.ctx, "v1")
 
     @property
     def groups(self) -> Groups:
