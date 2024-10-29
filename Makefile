@@ -41,7 +41,9 @@ ensure-uv: $(VIRTUAL_ENV)
 	@if ! command -v $(UV) >/dev/null; then \
 		$(PYTHON) -m ensurepip && $(PYTHON) -m pip install "uv >= 0.4.27"; \
 	fi
+	@# Be sure latest pip is installed
 	@$(UV) pip install "uv >= 0.4.27" --quiet
+	@# Install virtual environment
 	@$(MAKE) $(VIRTUAL_ENV) 1>/dev/null
 
 fmt: dev
@@ -65,8 +67,8 @@ uninstall: ensure-uv
 	$(UV) pip uninstall $(PROJECT_NAME)
 
 version:
-	@$(MAKE) dev &>/dev/null
-	@$(UV) run python -m setuptools_scm
+	@$(MAKE) ensure-uv &>/dev/null
+	@$(UV) run --quiet python -m setuptools_scm
 
 help:
 	@echo "Makefile Targets"
