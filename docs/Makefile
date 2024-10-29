@@ -35,10 +35,11 @@ clean:
 	rm -rf _extensions _inv _site .quarto reference objects.json
 	find . -type d -empty -delete
 
-deps:
+_extensions/posit-dev/posit-docs/_extension.yml:
 	$(QUARTO) add --no-prompt posit-dev/product-doc-theme@v4.0.2
+_extensions/machow/interlinks/_extension.yml:
 	$(QUARTO) add --no-prompt machow/quartodoc
-	cd .. && $(MAKE) dev
+deps: ensure-dev _extensions/posit-dev/posit-docs/_extension.yml _extensions/machow/interlinks/_extension.yml
 
 preview:
 	CURRENT_YEAR=$(CURRENT_YEAR) \
