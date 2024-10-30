@@ -301,5 +301,5 @@ class JobsMixin(Active, Resource):
         **attributes : dict
             Resource attributes passed
         """
-        super().__init__(ctx, path, "", **kwargs)
+        super().__init__(ctx, path, **kwargs)
         self.jobs = Jobs(ctx, self._path)
