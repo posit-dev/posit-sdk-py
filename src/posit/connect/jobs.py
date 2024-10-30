@@ -127,7 +127,7 @@ class Job(Active):
 
 
 class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
-    def __init__(self, ctx: Context, path: str, pathinfo: str = "jobs", uid: str = "key"):
+    def __init__(self, ctx: Context, path: str):
         """A collection of jobs.
 
         Parameters
@@ -135,13 +135,9 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
         ctx : Context
             The context object containing the session and URL for API interactions
         path : str
-            The HTTP path component for the collection endpoint
-        pathinfo : str
-            The HTTP part of the path directed at a specific resource, by default "jobs"
-        uid : str, optional
-            The field name used to uniquely identify records, by default "guid"
+            The HTTP path component for the jobs endpoint (e.g., 'v1/content/544509fc-e4f0-41de-acb4-1fe3a2c1d797')
         """
-        super().__init__(ctx, path, pathinfo, uid)
+        super().__init__(ctx, path, "jobs", "key")
 
     def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> Job:
         """Creates a Job instance.
@@ -291,7 +287,7 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
 class JobsMixin(Active, Resource):
     """Mixin class to add a jobs attribute to a resource."""
 
-    def __init__(self, ctx, path, pathinfo="", /, **kwargs):
+    def __init__(self, ctx, path, /, **kwargs):
         """Mixin class which adds a `jobs` attribute to the Active Resource.
 
         Parameters
@@ -305,5 +301,5 @@ class JobsMixin(Active, Resource):
         **attributes : dict
             Resource attributes passed
         """
-        super().__init__(ctx, path, pathinfo, **kwargs)
+        super().__init__(ctx, path, "", **kwargs)
         self.jobs = Jobs(ctx, self._path)

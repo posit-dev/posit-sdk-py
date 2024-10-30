@@ -37,9 +37,9 @@ class ContentItemOwner(Resource):
 class ContentItem(JobsMixin, VanityMixin, Resource):
     def __init__(self, /, params: ResourceParameters, **kwargs):
         ctx = Context(params.session, params.url)
-        path = f"v1/content"
-        pathinfo = kwargs["guid"]
-        super().__init__(ctx, path, pathinfo, **kwargs)
+        uid = kwargs["guid"]
+        path = f"v1/content/{uid}"
+        super().__init__(ctx, path, **kwargs)
 
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
