@@ -1,3 +1,4 @@
+import posixpath
 from typing import Any, Literal, Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
@@ -100,14 +101,8 @@ class Job(Active):
         tag: Required[JobTag]
         """A tag categorizing the job type. Options are build_jupyter, build_report, build_site, configure_report, git, packrat_restore, python_restore, render_shiny, run_api, run_app, run_bokeh_app, run_dash_app, run_fastapi_app, run_pyshiny_app, run_python_api, run_streamlit, run_tensorflow, run_voila_app, testing, unknown, val_py_ext_pkg, val_r_ext_pkg, and val_r_install."""
 
-    @overload
-    def __init__(self, ctx: Context, path: str, pathinfo: str, /, **attributes: Unpack[_Job]): ...
-
-    @overload
-    def __init__(self, ctx: Context, path: str, pathinfo: str, /, **attributes: Any): ...
-
-    def __init__(self, ctx: Context, path: str, pathinfo: str, /, **attributes: Any):
-        super().__init__(ctx, path, pathinfo, **attributes)
+    def __init__(self, ctx: Context, path: str, /, **attributes: Unpack[_Job]):
+        super().__init__(ctx, path, **attributes)
 
     def destroy(self) -> None:
         """Destroy the job.
@@ -135,25 +130,23 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
         ctx : Context
             The context object containing the session and URL for API interactions
         path : str
-            The HTTP path component for the jobs endpoint (e.g., 'v1/content/544509fc-e4f0-41de-acb4-1fe3a2c1d797')
+            The HTTP path component for the jobs endpoint (e.g., 'v1/content/544509fc-e4f0-41de-acb4-1fe3a2c1d797/jobs')
         """
-        super().__init__(ctx, path, "jobs", "key")
+        super().__init__(ctx, path, "key")
 
-    def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> Job:
+    def _create_instance(self, path: str, /, **attributes: Any) -> Job:
         """Creates a Job instance.
 
         Parameters
         ----------
         path : str
-            The HTTP path component for the collection endpoint
-        pathinfo : str
-            The HTTP part of the path directed at a specific resource
+            The HTTP path component for the Job resource endpoint (e.g., 'v1/content/544509fc-e4f0-41de-acb4-1fe3a2c1d797/jobs/7add0bc0-0d89-4397-ab51-90ad4bc3f5c9')
 
         Returns
         -------
         Job
         """
-        return Job(self._ctx, path, pathinfo, **kwargs)
+        return Job(self._ctx, path, **attributes)
 
     class _FindByRequest(TypedDict, total=False):
         # Identifiers
@@ -287,19 +280,19 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
 class JobsMixin(Active, Resource):
     """Mixin class to add a jobs attribute to a resource."""
 
-    def __init__(self, ctx, path, /, **kwargs):
+    def __init__(self, ctx, path, /, **attributes):
         """Mixin class which adds a `jobs` attribute to the Active Resource.
 
         Parameters
         ----------
         ctx : Context
-            The context object containing the session and URL for API interactions.
+            The context object containing the session and URL for API interactions
         path : str
-            The HTTP path component for the collection endpoint
-        pathinfo : str
-            The HTTP part of the path directed at a specific resource
+            The HTTP path component for the resource endpoint
         **attributes : dict
             Resource attributes passed
         """
-        super().__init__(ctx, path, **kwargs)
-        self.jobs = Jobs(ctx, self._path)
+        super().__init__(ctx, path, **attributes)
+
+        path = posixpath.join(path, "jobs")
+        self.jobs = Jobs(ctx, path)

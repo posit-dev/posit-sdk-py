@@ -51,7 +51,7 @@ class Resources:
 
 
 class Active(ABC, Resource):
-    def __init__(self, ctx: Context, path: str, pathinfo: str = "", /, **attributes):
+    def __init__(self, ctx: Context, path: str, /, **attributes):
         """A dict abstraction for any HTTP endpoint that returns a singular resource.
 
         Extends the `Resource` class and provides additional functionality for via the session context and an optional parent resource.
@@ -61,23 +61,14 @@ class Active(ABC, Resource):
         ctx : Context
             The context object containing the session and URL for API interactions.
         path : str
-            The HTTP path component for the collection endpoint
-        pathinfo : str
-            The HTTP part of the path directed at a specific resource
+            The HTTP path component for the resource endpoint
         **attributes : dict
             Resource attributes passed
-
-        Attributes
-        ----------
-        _ctx : Context
-            The context object containing the session and URL for API interactions
-        _path : str
-            The HTTP path for the collection endpoint.
         """
         params = ResourceParameters(ctx.session, ctx.url)
         super().__init__(params, **attributes)
         self._ctx = ctx
-        self._path = posixpath.join(path, pathinfo)
+        self._path = path
 
 
 T = TypeVar("T", bound="Active")
@@ -85,18 +76,30 @@ T = TypeVar("T", bound="Active")
 
 
 class ActiveSequence(ABC, Generic[T], Sequence[T]):
-    """A sequence for any HTTP endpoint that returns a collection."""
+    """A sequence for any HTTP GET endpoint that returns a collection."""
 
-    def __init__(self, ctx: Context, path: str, pathinfo: str = "", uid: str = "guid"):
-        """A sequence abstraction for any HTTP GET endpoint that returns a collection."""
+    _cache: Optional[List[T]]
+
+    def __init__(self, ctx: Context, path: str, uid: str = "guid"):
+        """A sequence abstraction for any HTTP GET endpoint that returns a collection.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions.
+        path : str
+            The HTTP path component for the collection endpoint
+        uid : str, optional
+            The field name of that uniquely identifiers an instance of T, by default "guid"
+        """
         super().__init__()
-        self._ctx: Context = ctx
-        self._path: str = posixpath.join(path, pathinfo)
-        self._uid: str = uid
-        self._cache: Optional[List[T]] = None
+        self._ctx = ctx
+        self._path = path
+        self._uid = uid
+        self._cache = None
 
     @abstractmethod
-    def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> T:
+    def _create_instance(self, path: str, /, **kwargs: Any) -> T:
         """Create an instance of 'T'."""
         raise NotImplementedError()
 
@@ -140,7 +143,8 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
     def _to_instance(self, result: dict) -> T:
         """Converts a result into an instance of T."""
         uid = result[self._uid]
-        return self._create_instance(self._path, uid, **result)
+        path = posixpath.join(self._path, uid)
+        return self._create_instance(path, **result)
 
     @property
     def _data(self) -> List[T]:
