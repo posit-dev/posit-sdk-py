@@ -85,47 +85,81 @@ T = TypeVar("T", bound="Active")
 
 
 class ActiveSequence(ABC, Generic[T], Sequence[T]):
+    """A sequence for any HTTP endpoint that returns a collection."""
+
     def __init__(self, ctx: Context, path: str, pathinfo: str = "", uid: str = "guid"):
-        """A sequence abstraction for any HTTP GET endpoint that returns a collection.
-
-        It lazily fetches data on demand, caches the results, and allows for standard sequence operations like indexing and slicing.
-
-        Attributes
-        ----------
-        _ctx : Context
-            The context object containing the session and URL for API interactions
-        _path : str
-            The HTTP path for the collection endpoint.
-        _uid : str
-            The field name used to uniquely identify records.
-        _cache: Optional[List[T]]
-        """
+        """A sequence abstraction for any HTTP GET endpoint that returns a collection."""
         super().__init__()
-        self._ctx = ctx
-        self._path = posixpath.join(path, pathinfo)
-        self._uid = uid
-        self._cache = None
+        self._ctx: Context = ctx
+        self._path: str = posixpath.join(path, pathinfo)
+        self._uid: str = uid
+        self._cache: Optional[List[T]] = None
 
-    def _make(self, result: dict) -> T:
+    @abstractmethod
+    def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> T:
+        """Create an instance of 'T'."""
+        raise NotImplementedError()
+
+    def cached(self) -> bool:
+        """Returns True if the collection is cached.
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        reload
+        """
+        return self._cache is not None
+
+    def reload(self) -> Self:
+        """Reloads the collection from Connect.
+
+        Returns
+        -------
+        Self
+        """
+        self._cache = None
+        return self
+
+    def _fetch(self) -> List[T]:
+        """Fetch the collection.
+
+        Fetches the collection directly from Connect. This operation does not effect the cache state.
+
+        Returns
+        -------
+        List[T]
+        """
+        endpoint = self._ctx.url + self._path
+        response = self._ctx.session.get(endpoint)
+        results = response.json()
+        return [self._to_instance(result) for result in results]
+
+    def _to_instance(self, result: dict) -> T:
+        """Converts a result into an instance of T."""
         uid = result[self._uid]
         return self._create_instance(self._path, uid, **result)
 
-    def cached(self) -> bool:
-        return self._cache is not None
-
     @property
     def _data(self) -> List[T]:
+        """Get the collection.
+
+        Fetches the collection from Connect and caches the result. Subsequent invocations return the cached results unless the cache is explicitly reset.
+
+        Returns
+        -------
+        List[T]
+
+        See Also
+        --------
+        cached
+        reload
+        """
         if self._cache is None:
-            self._cache = self.fetch()
+            self._cache = self._fetch()
         return self._cache
-
-    @_data.setter
-    def _data(self, value: List[T]):
-        self._cache = value
-
-    @_data.deleter
-    def _data(self):
-        self._cache = None
 
     @overload
     def __getitem__(self, index: int) -> T: ...
@@ -144,44 +178,6 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
 
     def __repr__(self) -> str:
         return repr(self._data)
-
-    @abstractmethod
-    def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> T:
-        """Create an instance of 'T'.
-
-        Returns
-        -------
-        T
-        """
-        raise NotImplementedError()
-
-    def reload(self) -> Self:
-        """
-        Clear the cache and reload the data from the API on the next access.
-
-        Returns
-        -------
-        ActiveSequence
-            The current instance with cleared cache, ready to reload data on next access.
-        """
-        del self._data
-        return self
-
-    def fetch(self) -> List[T]:
-        """
-        Fetch the collection.
-
-        Sends a GET request to fetch the collection from Connect.
-
-        Returns
-        -------
-        List[T]
-            A list of items of type `T` representing the fetched data.
-        """
-        endpoint = self._ctx.url + self._path
-        response = self._ctx.session.get(endpoint)
-        results = response.json()
-        return [self._make(result) for result in results]
 
 
 class ActiveFinderMethods(ActiveSequence[T], ABC):
@@ -206,8 +202,6 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         T
         """
         if self.cached():
-            # Check if the record already exists in the cache.
-            # It is assumed that local cache scan is faster than an additional HTTP request.
             conditions = {self._uid: uid}
             result = self.find_by(**conditions)
             if result:
@@ -216,13 +210,7 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         endpoint = self._ctx.url + self._path + uid
         response = self._ctx.session.get(endpoint)
         result = response.json()
-        result = self._create_instance(self._path, uid, **result)
-
-        # Invalidate the cache.
-        # It is assumed that the cache is stale since a record exists on the server and not in the cache.
-        self.reload()
-
-        return result
+        return self._to_instance(result)
 
     def find_by(self, **conditions: Any) -> Optional[T]:
         """
