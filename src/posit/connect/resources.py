@@ -85,53 +85,80 @@ T = TypeVar("T", bound="Active")
 
 
 class ActiveSequence(ABC, Generic[T], Sequence[T]):
+    """A sequence for any HTTP endpoint that returns a collection."""
+
     def __init__(self, ctx: Context, path: str, pathinfo: str = "", uid: str = "guid"):
-        """A sequence abstraction for any HTTP GET endpoint that returns a collection.
-
-        It lazily fetches data on demand, caches the results, and allows for standard sequence operations like indexing and slicing.
-
-        Attributes
-        ----------
-        _ctx : Context
-            The context object containing the session and URL for API interactions
-        _path : str
-            The HTTP path for the collection endpoint.
-        _uid : str
-            The field name used to uniquely identify records.
-        _cache: Optional[List[T]]
-        """
+        """A sequence abstraction for any HTTP GET endpoint that returns a collection."""
         super().__init__()
-        self._ctx = ctx
-        self._path = posixpath.join(path, pathinfo)
-        self._uid = uid
+        self._ctx: Context = ctx
+        self._path: str = posixpath.join(path, pathinfo)
+        self._uid: str = uid
         self._cache: Optional[List[T]] = None
 
-    def _get_or_fetch(self) -> List[T]:
-        """
-        Fetch and cache the data from the API.
+    @abstractmethod
+    def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> T:
+        """Create an instance of 'T'."""
+        raise NotImplementedError()
 
-        This method sends a GET request to the `_endpoint` and parses the response as a list of JSON objects.
-        Each JSON object is used to instantiate an item of type `T` using the class specified by `_cls`.
-        The results are cached after the first request and reused for subsequent access unless reloaded.
+    def cached(self) -> bool:
+        """Returns True if the collection is cached.
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        reload
+        """
+        return self._cache is not None
+
+    def reload(self) -> Self:
+        """Reloads the collection from Connect.
+
+        Returns
+        -------
+        Self
+        """
+        self._cache = None
+        return self
+
+    def _fetch(self) -> List[T]:
+        """Fetch the collection.
+
+        Fetches the collection directly from Connect. This operation does not effect the cache state.
 
         Returns
         -------
         List[T]
-            A list of items of type `T` representing the fetched data.
         """
-        if self._cache is not None:
-            return self._cache
-
         endpoint = self._ctx.url + self._path
         response = self._ctx.session.get(endpoint)
         results = response.json()
+        return [self._to_instance(result) for result in results]
 
-        self._cache = []
-        for result in results:
-            uid = result[self._uid]
-            instance = self._create_instance(self._path, uid, **result)
-            self._cache.append(instance)
+    def _to_instance(self, result: dict) -> T:
+        """Converts a result into an instance of T."""
+        uid = result[self._uid]
+        return self._create_instance(self._path, uid, **result)
 
+    @property
+    def _data(self) -> List[T]:
+        """Get the collection.
+
+        Fetches the collection from Connect and caches the result. Subsequent invocations return the cached results unless the cache is explicitly reset.
+
+        Returns
+        -------
+        List[T]
+
+        See Also
+        --------
+        cached
+        reload
+        """
+        if self._cache is None:
+            self._cache = self._fetch()
         return self._cache
 
     @overload
@@ -141,42 +168,16 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
     def __getitem__(self, index: slice) -> Sequence[T]: ...
 
     def __getitem__(self, index):
-        data = self._get_or_fetch()
-        return data[index]
+        return self._data[index]
 
     def __len__(self) -> int:
-        data = self._get_or_fetch()
-        return len(data)
+        return len(self._data)
 
     def __str__(self) -> str:
-        data = self._get_or_fetch()
-        return str(data)
+        return str(self._data)
 
     def __repr__(self) -> str:
-        data = self._get_or_fetch()
-        return repr(data)
-
-    @abstractmethod
-    def _create_instance(self, path: str, pathinfo: str, /, **kwargs: Any) -> T:
-        """Create an instance of 'T'.
-
-        Returns
-        -------
-        T
-        """
-        raise NotImplementedError()
-
-    def reload(self) -> Self:
-        """
-        Clear the cache and reload the data from the API on the next access.
-
-        Returns
-        -------
-        ActiveSequence
-            The current instance with cleared cache, ready to reload data on next access.
-        """
-        self._cache = None
-        return self
+        return repr(self._data)
 
 
 class ActiveFinderMethods(ActiveSequence[T], ABC):
@@ -200,9 +201,7 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         -------
         T
         """
-        if self._cache:
-            # Check if the record already exists in the cache.
-            # It is assumed that local cache scan is faster than an additional HTTP request.
+        if self.cached():
             conditions = {self._uid: uid}
             result = self.find_by(**conditions)
             if result:
@@ -211,13 +210,7 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         endpoint = self._ctx.url + self._path + uid
         response = self._ctx.session.get(endpoint)
         result = response.json()
-        result = self._create_instance(self._path, uid, **result)
-
-        # Invalidate the cache.
-        # It is assumed that the cache is stale since a record exists on the server and not in the cache.
-        self._cache = None
-
-        return result
+        return self._to_instance(result)
 
     def find_by(self, **conditions: Any) -> Optional[T]:
         """
@@ -234,5 +227,4 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         Optional[T]
             The first record matching the conditions, or `None` if no match is found.
         """
-        data = self._get_or_fetch()
-        return next((v for v in data if v.items() >= conditions.items()), None)
+        return next((v for v in self._data if v.items() >= conditions.items()), None)
