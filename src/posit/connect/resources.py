@@ -236,3 +236,26 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         """
         data = self._get_or_fetch()
         return next((v for v in data if v.items() >= conditions.items()), None)
+
+
+class ActiveCreatorMethods(ActiveSequence[T], ABC):
+    def create(self, **attributes) -> T:
+        endpoint = self._ctx.url + self._path
+        response = self._ctx.session.post(endpoint, json=attributes)
+        result = response.json()
+        uid = result[self._uid]
+        return self._create_instance(self._path, uid, **result)
+
+
+class ActiveDestroyerMethods(Active, ABC):
+    def destroy(self):
+        endpoint = self._ctx.url + self._path
+        self._ctx.session.delete(endpoint)
+
+
+class ActiveUpdaterMethods(Active, ABC):
+    def update(self, /, **attributes):
+        endpoint = self._ctx.url + self._path
+        response = self._ctx.session.put(endpoint, json=attributes)
+        result = response.json()
+        super().update(**result)
