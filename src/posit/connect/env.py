@@ -183,7 +183,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
             for key in other:
                 d[key] = other[key]
         elif hasattr(other, "keys"):
-            for key in other:
+            for key in other.keys():  # noqa: SIM118
                 d[key] = other[key]
         else:
             for key, value in other:
