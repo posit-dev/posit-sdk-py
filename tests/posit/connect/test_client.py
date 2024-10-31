@@ -172,3 +172,13 @@ class TestClient:
         client = Client(api_key=api_key, url=url)
         client.delete("/foo")
         client.session.delete.assert_called_once_with("https://connect.example.com/__api__/foo")
+
+
+class TestClientOAuth:
+    def test_required_version(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client.ctx.version = "2024.07.0"
+        with pytest.raises(RuntimeError):
+            client.oauth

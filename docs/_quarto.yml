@@ -82,7 +82,6 @@ quartodoc:
       include_empty: true
   sections:
     - title: Clients
-      package: posit
       desc: >
         The `Client` is the entrypoint for each Posit product. Initialize a `Client` to get started.
       contents:
@@ -96,7 +95,6 @@ quartodoc:
             - patch
             - delete
     - title: Posit Connect Resources
-      package: posit
       contents:
         - connect.bundles
         - connect.content
@@ -104,8 +102,8 @@ quartodoc:
         - connect.permissions
         - connect.tasks
         - connect.users
+        - connect.vanities
     - title: Posit Connect Metrics
-      package: posit
       contents:
         - connect.metrics
         - connect.metrics.usage

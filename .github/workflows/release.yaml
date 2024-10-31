@@ -3,25 +3,19 @@ on:
   push:
     tags:
       - "v*.*.*"
-env:
-  UV_SYSTEM_PYTHON: true
 jobs:
   default:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-python@v5
-      with:
-        python-version: 3.x
-        check-latest: true
-        cache: 'pip'
-    - uses: actions/setup-node@v4
-    - run: make deps
-    - run: make build
-    - run: make install
-    - id: release
-      uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install
+      - uses: actions/setup-node@v4
+      - run: make build
+      - run: make install
+      - id: release
+        uses: pypa/gh-action-pypi-publish@release/v1

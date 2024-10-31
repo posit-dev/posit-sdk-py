@@ -7,14 +7,16 @@ import time
 from posixpath import dirname
 from typing import Any, List, Literal, Optional, overload
 
-from posit.connect.oauth.associations import ContentItemAssociations
-
 from . import tasks
 from .bundles import Bundles
+from .context import Context
 from .env import EnvVars
+from .jobs import JobsMixin
+from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
 from .tasks import Task
+from .vanities import VanityMixin
 from .variants import Variants
 
 
@@ -83,8 +85,11 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(Resource):
-    
+class ContentItem(JobsMixin, VanityMixin, Resource):
+    def __init__(self, /, params: ResourceParameters, **kwargs):
+        ctx = Context(params.session, params.url)
+        super().__init__(ctx, **kwargs)
+
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
         if key == "owner" and isinstance(v, dict):
@@ -480,7 +485,7 @@ class Content(Resources):
             Content title. Default is None.
         description : str, optional
             Content description. Default is None.
-        access_type : Literal['all', 'acl', 'logged_in', optional
+        access_type : Literal['all', 'acl', 'logged_in'], optional
             How content manages viewers. Default is 'acl'. Options: 'all', 'logged_in', 'acl'.
         connection_timeout : int, optional
             Max seconds without data exchange. Default is None. Falls back to server setting 'Scheduler.ConnectionTimeout'.
