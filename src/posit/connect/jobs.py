@@ -1,7 +1,9 @@
-from typing import Literal, Optional, TypedDict, overload
+import posixpath
+from typing import Any, Literal, Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
+from .context import Context
 from .resources import Active, ActiveFinderMethods, ActiveSequence, Resource
 
 JobTag = Literal[
@@ -99,13 +101,8 @@ class Job(Active):
         tag: Required[JobTag]
         """A tag categorizing the job type. Options are build_jupyter, build_report, build_site, configure_report, git, packrat_restore, python_restore, render_shiny, run_api, run_app, run_bokeh_app, run_dash_app, run_fastapi_app, run_pyshiny_app, run_python_api, run_streamlit, run_tensorflow, run_voila_app, testing, unknown, val_py_ext_pkg, val_r_ext_pkg, and val_r_install."""
 
-    def __init__(self, ctx, parent: Active, **kwargs: Unpack[_Job]):
-        super().__init__(ctx, parent, **kwargs)
-        self._parent = parent
-
-    @property
-    def _endpoint(self) -> str:
-        return self._ctx.url + f"v1/content/{self._parent['guid']}/jobs/{self['key']}"
+    def __init__(self, ctx: Context, path: str, /, **attributes: Unpack[_Job]):
+        super().__init__(ctx, path, **attributes)
 
     def destroy(self) -> None:
         """Destroy the job.
@@ -120,40 +117,36 @@ class Job(Active):
         ----
         This action requires administrator, owner, or collaborator privileges.
         """
-        self._ctx.session.delete(self._endpoint)
+        endpoint = self._ctx.url + self._path
+        self._ctx.session.delete(endpoint)
 
 
-class Jobs(
-    ActiveFinderMethods[Job],
-    ActiveSequence[Job],
-):
-    def __init__(self, ctx, parent: Active, uid="key"):
+class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
+    def __init__(self, ctx: Context, path: str):
         """A collection of jobs.
 
         Parameters
         ----------
         ctx : Context
-            The context containing the HTTP session used to interact with the API.
-        parent : Active
-            Parent resource for maintaining hierarchical relationships
-        uid : str, optional
-            The default field name used to uniquely identify records, by default "key"
+            The context object containing the session and URL for API interactions
+        path : str
+            The HTTP path component for the jobs endpoint (e.g., 'v1/content/544509fc-e4f0-41de-acb4-1fe3a2c1d797/jobs')
         """
-        super().__init__(ctx, parent, uid)
-        self._parent = parent
+        super().__init__(ctx, path, "key")
 
-    @property
-    def _endpoint(self) -> str:
-        return self._ctx.url + f"v1/content/{self._parent['guid']}/jobs"
+    def _create_instance(self, path: str, /, **attributes: Any) -> Job:
+        """Creates a Job instance.
 
-    def _create_instance(self, **kwargs) -> Job:
-        """Creates a `Job` instance.
+        Parameters
+        ----------
+        path : str
+            The HTTP path component for the Job resource endpoint (e.g., 'v1/content/544509fc-e4f0-41de-acb4-1fe3a2c1d797/jobs/7add0bc0-0d89-4397-ab51-90ad4bc3f5c9')
 
         Returns
         -------
         Job
         """
-        return Job(self._ctx, self._parent, **kwargs)
+        return Job(self._ctx, path, **attributes)
 
     class _FindByRequest(TypedDict, total=False):
         # Identifiers
@@ -287,6 +280,19 @@ class Jobs(
 class JobsMixin(Active, Resource):
     """Mixin class to add a jobs attribute to a resource."""
 
-    def __init__(self, ctx, **kwargs):
-        super().__init__(ctx, **kwargs)
-        self.jobs = Jobs(ctx, self)
+    def __init__(self, ctx, path, /, **attributes):
+        """Mixin class which adds a `jobs` attribute to the Active Resource.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions
+        path : str
+            The HTTP path component for the resource endpoint
+        **attributes : dict
+            Resource attributes passed
+        """
+        super().__init__(ctx, path, **attributes)
+
+        path = posixpath.join(path, "jobs")
+        self.jobs = Jobs(ctx, path)
