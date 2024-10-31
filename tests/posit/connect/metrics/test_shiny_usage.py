@@ -39,27 +39,27 @@ class TestShinyUsageFind:
         # behavior
         mock_get = [None] * 2
         mock_get[0] = responses.get(
-            f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
+            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
             json=load_mock("v1/instrumentation/shiny/usage?limit=500.json"),
             match=[
                 matchers.query_param_matcher(
                     {
                         "limit": 500,
-                    }
-                )
+                    },
+                ),
             ],
         )
 
         mock_get[1] = responses.get(
-            f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
+            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
             json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
                         "next": "23948901087",
                         "limit": 500,
-                    }
-                )
+                    },
+                ),
             ],
         )
 
@@ -81,27 +81,27 @@ class TestShinyUsageFindOne:
         # behavior
         mock_get = [None] * 2
         mock_get[0] = responses.get(
-            f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
+            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
             json=load_mock("v1/instrumentation/shiny/usage?limit=500.json"),
             match=[
                 matchers.query_param_matcher(
                     {
                         "limit": 500,
-                    }
-                )
+                    },
+                ),
             ],
         )
 
         mock_get[1] = responses.get(
-            f"https://connect.example/__api__/v1/instrumentation/shiny/usage",
+            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
             json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
             match=[
                 matchers.query_param_matcher(
                     {
                         "next": "23948901087",
                         "limit": 500,
-                    }
-                )
+                    },
+                ),
             ],
         )
 

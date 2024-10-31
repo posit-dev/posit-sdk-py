@@ -25,12 +25,10 @@ class Permission(Resource):
         role : str
             The principal role.
         """
-        ...
 
     @overload
     def update(self, *args, **kwargs) -> None:
         """Update the permission."""
-        ...
 
     def update(self, *args, **kwargs) -> None:
         """Update the permission."""
@@ -78,7 +76,6 @@ class Permissions(Resources):
         -------
         Permission
         """
-        ...
 
     @overload
     def create(self, **kwargs) -> Permission:
@@ -88,7 +85,6 @@ class Permissions(Resources):
         -------
         Permission
         """
-        ...
 
     def create(self, **kwargs) -> Permission:
         """Create a permission.
@@ -97,7 +93,6 @@ class Permissions(Resources):
         -------
         Permission
         """
-        ...
         path = f"v1/content/{self.content_guid}/permissions"
         url = self.params.url + path
         response = self.params.session.post(url, json=kwargs)

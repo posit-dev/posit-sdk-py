@@ -5,7 +5,7 @@ from __future__ import annotations
 import posixpath
 import time
 from posixpath import dirname
-from typing import Any, List, Literal, Optional, overload
+from typing import TYPE_CHECKING, Any, List, Literal, Optional, overload
 
 from . import tasks
 from .bundles import Bundles
@@ -15,9 +15,11 @@ from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
-from .tasks import Task
 from .vanities import VanityMixin
 from .variants import Variants
+
+if TYPE_CHECKING:
+    from .tasks import Task
 
 
 class ContentItemOAuth(Resource):
@@ -100,13 +102,13 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
             variants = [variant for variant in variants if variant.is_default]
             if len(variants) != 1:
                 raise RuntimeError(
-                    f"Found {len(variants)} default variants. Expected 1. Without a single default variant, the content cannot be refreshed. This is indicative of a corrupted state."
+                    f"Found {len(variants)} default variants. Expected 1. Without a single default variant, the content cannot be refreshed. This is indicative of a corrupted state.",
                 )
             variant = variants[0]
             return variant.render()
         else:
             raise ValueError(
-                f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
+                f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
     def restart(self) -> None:
@@ -135,7 +137,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
             return None
         else:
             raise ValueError(
-                f"Restart not supported for this application mode: {self.app_mode}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'."
+                f"Restart not supported for this application mode: {self.app_mode}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
     @overload
@@ -232,12 +234,10 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         -------
         None
         """
-        ...
 
     @overload
     def update(self, **attributes: Any) -> None:
         """Update the content."""
-        ...
 
     def update(self, **attributes: Any) -> None:
         """Update the content."""
@@ -422,7 +422,6 @@ class Content(Resources):
         -------
         ContentItem
         """
-        ...
 
     @overload
     def create(self, **attributes) -> ContentItem:
@@ -432,7 +431,6 @@ class Content(Resources):
         -------
         ContentItem
         """
-        ...
 
     def create(self, **attributes) -> ContentItem:
         """Create a content item.
@@ -478,7 +476,6 @@ class Content(Resources):
         ----
         Specifying both `name` and `owner_guid` returns at most one content item due to uniqueness.
         """
-        ...
 
     @overload
     def find(
@@ -510,7 +507,6 @@ class Content(Resources):
         ----
         Specifying both `name` and `owner_guid` returns at most one content item due to uniqueness.
         """
-        ...
 
     @overload
     def find(self, include: Optional[str | list[Any]], **conditions) -> List[ContentItem]: ...
@@ -636,7 +632,6 @@ class Content(Resources):
         -------
         Optional[ContentItem]
         """
-        ...
 
     @overload
     def find_by(self, **attributes) -> Optional[ContentItem]:
@@ -646,7 +641,6 @@ class Content(Resources):
         -------
         Optional[ContentItem]
         """
-        ...
 
     def find_by(self, **attributes) -> Optional[ContentItem]:
         """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
@@ -697,7 +691,6 @@ class Content(Resources):
         ----
         Specifying both `name` and `owner_guid` returns at most one content item due to uniqueness.
         """
-        ...
 
     @overload
     def find_one(
@@ -729,7 +722,6 @@ class Content(Resources):
         ----
         Specifying both `name` and `owner_guid` returns at most one content item due to uniqueness.
         """
-        ...
 
     @overload
     def find_one(self, **conditions) -> Optional[ContentItem]: ...

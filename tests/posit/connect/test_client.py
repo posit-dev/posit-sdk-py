@@ -8,19 +8,19 @@ from posit.connect import Client
 from .api import load_mock  # type: ignore
 
 
-@pytest.fixture()
+@pytest.fixture
 def MockAuth():
     with patch("posit.connect.client.Auth") as mock:
         yield mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def MockConfig():
     with patch("posit.connect.client.Config") as mock:
         yield mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def MockSession():
     with patch("posit.connect.client.Session") as mock:
         yield mock
@@ -135,7 +135,8 @@ class TestClient:
         client = Client(api_key=api_key, url=url)
         client.request("GET", "/foo")
         MockSession.return_value.request.assert_called_once_with(
-            "GET", "https://connect.example.com/__api__/foo"
+            "GET",
+            "https://connect.example.com/__api__/foo",
         )
 
     def test_get(self, MockSession):
@@ -180,5 +181,6 @@ class TestClientOAuth:
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client.ctx.version = "2024.07.0"
+
         with pytest.raises(RuntimeError):
-            client.oauth
+            client.oauth  # noqa: B018

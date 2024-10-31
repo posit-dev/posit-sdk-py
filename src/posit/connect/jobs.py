@@ -268,7 +268,6 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
         -------
         Optional[Job]
         """
-        ...
 
     @overload
     def find_by(self, **conditions): ...

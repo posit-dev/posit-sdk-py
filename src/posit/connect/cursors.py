@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generator, List
+from typing import TYPE_CHECKING, Any, Generator, List
 
-import requests
+if TYPE_CHECKING:
+    import requests
 
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
@@ -16,7 +17,11 @@ class CursorPage:
 
 
 class CursorPaginator:
-    def __init__(self, session: requests.Session, url: str, params: dict = {}) -> None:
+    def __init__(
+        self, session: requests.Session, url: str, params: dict[str, Any] | None = None
+    ) -> None:
+        if params is None:
+            params = {}
         self.session = session
         self.url = url
         self.params = params

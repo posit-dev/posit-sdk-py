@@ -60,12 +60,10 @@ class Task(resources.Resource):
         wait : int, default 0
             Maximum number of seconds to wait for the task to complete.
         """
-        ...
 
     @overload
     def update(self, *args, **kwargs) -> None:
         """Update the task."""
-        ...
 
     def update(self, *args, **kwargs) -> None:
         """Update the task.
@@ -128,7 +126,6 @@ class Tasks(resources.Resources):
         -------
         Task
         """
-        ...
 
     @overload
     def get(self, uid: str, **kwargs) -> Task:
@@ -143,7 +140,6 @@ class Tasks(resources.Resources):
         -------
         Task
         """
-        ...
 
     def get(self, uid: str, **kwargs) -> Task:
         """Get a task.

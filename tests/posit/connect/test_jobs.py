@@ -1,5 +1,6 @@
 import pytest
 import responses
+from requests.exceptions import HTTPError
 
 from posit.connect.client import Client
 
@@ -36,7 +37,7 @@ class TestJobsFind:
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx",
             json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json"
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json",
             ),
         )
 
@@ -61,7 +62,7 @@ class TestJobsFind:
         c = Client("https://connect.example", "12345")
         content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
 
-        with pytest.raises(Exception):
+        with pytest.raises(HTTPError):
             content.jobs.find("not-found")
 
 
@@ -122,7 +123,7 @@ class TestJobDestory:
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx",
             json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json"
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json",
             ),
         )
 

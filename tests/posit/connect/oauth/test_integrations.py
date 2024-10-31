@@ -68,7 +68,7 @@ class TestIntegrationDelete:
         )
 
         mock_delete = responses.delete(
-            f"https://connect.example/__api__/v1/oauth/integrations/{guid}"
+            f"https://connect.example/__api__/v1/oauth/integrations/{guid}",
         )
 
         # setup
@@ -123,7 +123,7 @@ class TestIntegrationsCreate:
 
         # behavior
         mock_create = responses.post(
-            f"https://connect.example/__api__/v1/oauth/integrations",
+            "https://connect.example/__api__/v1/oauth/integrations",
             json=load_mock(f"v1/oauth/integrations/{guid}.json"),
             match=[
                 matchers.json_params_matcher(
@@ -132,8 +132,8 @@ class TestIntegrationsCreate:
                         "description": fake_integration["description"],
                         "template": fake_integration["template"],
                         "config": fake_integration["config"],
-                    }
-                )
+                    },
+                ),
             ],
         )
 
