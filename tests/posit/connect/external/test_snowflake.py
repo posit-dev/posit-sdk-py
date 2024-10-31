@@ -52,4 +52,4 @@ class TestPositAuthenticator:
             client=client,
         )
         assert auth.authenticator == "SNOWFLAKE"
-        assert auth.token == None
+        assert auth.token is None

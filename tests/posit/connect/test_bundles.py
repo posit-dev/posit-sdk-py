@@ -37,19 +37,19 @@ class TestBundleProperties:
         assert self.bundle.r_version == "3.5.1"
 
     def test_r_environment_management(self):
-        assert self.bundle.r_environment_management == True
+        assert self.bundle.r_environment_management is True
 
     def test_py_version(self):
         assert self.bundle.py_version == "3.8.2"
 
     def test_py_environment_management(self):
-        assert self.bundle.py_environment_management == True
+        assert self.bundle.py_environment_management is True
 
     def test_quarto_version(self):
         assert self.bundle.quarto_version == "0.2.22"
 
     def test_active(self):
-        assert self.bundle.active == False
+        assert self.bundle.active is False
 
     def test_size(self):
         assert self.bundle.size == 1000000

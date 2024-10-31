@@ -5,7 +5,7 @@ from __future__ import annotations
 import posixpath
 import time
 from posixpath import dirname
-from typing import Any, List, Literal, Optional, overload
+from typing import TYPE_CHECKING, Any, List, Literal, Optional, overload
 
 from . import tasks
 from .bundles import Bundles
@@ -15,9 +15,11 @@ from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
-from .tasks import Task
 from .vanities import VanityMixin
 from .variants import Variants
+
+if TYPE_CHECKING:
+    from .tasks import Task
 
 
 class ContentItemOAuth(Resource):

@@ -178,12 +178,12 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         ...     ]
         ... )
         """
-        d = dict()
+        d = {}
         if isinstance(other, Mapping):
             for key in other:
                 d[key] = other[key]
         elif hasattr(other, "keys"):
-            for key in other.keys():
+            for key in other:
                 d[key] = other[key]
         else:
             for key, value in other:

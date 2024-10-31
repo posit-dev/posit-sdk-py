@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import List, overload
-
-import requests
+from typing import TYPE_CHECKING, List, overload
 
 from .paginator import Paginator
 from .resources import Resource, Resources
+
+if TYPE_CHECKING:
+    import requests
 
 
 class Group(Resource):

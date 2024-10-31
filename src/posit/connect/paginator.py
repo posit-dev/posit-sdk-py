@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Generator, List
 
@@ -38,7 +40,9 @@ class Paginator:
         url (str): The URL of the paginated API endpoint.
     """
 
-    def __init__(self, session: requests.Session, url: str, params={}) -> None:
+    def __init__(self, session: requests.Session, url: str, params: dict | None = None) -> None:
+        if params is None:
+            params = {}
         self.session = session
         self.url = url
         self.params = params
