@@ -103,19 +103,6 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         """Create an instance of 'T'."""
         raise NotImplementedError()
 
-    def cached(self) -> bool:
-        """Returns True if the collection is cached.
-
-        Returns
-        -------
-        bool
-
-        See Also
-        --------
-        reload
-        """
-        return self._cache is not None
-
     def reload(self) -> Self:
         """Reloads the collection from Connect.
 
@@ -194,7 +181,7 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         """
         Find a record by its unique identifier.
 
-        If the cache is already populated, it is checked first for matching record. If not, a conventional GET request is made to the Connect server.
+        Fetches the record from Connect by it's identifier.
 
         Parameters
         ----------
@@ -205,12 +192,6 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         -------
         T
         """
-        if self.cached():
-            conditions = {self._uid: uid}
-            result = self.find_by(**conditions)
-            if result:
-                return result
-
         endpoint = self._ctx.url + self._path + uid
         response = self._ctx.session.get(endpoint)
         result = response.json()
