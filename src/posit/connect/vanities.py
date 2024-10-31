@@ -71,10 +71,6 @@ class Vanity(Resource):
         self._after_destroy = after_destroy
         self._content_guid = kwargs["content_guid"]
 
-    @property
-    def _endpoint(self):
-        return self.params.url + f"v1/content/{self._content_guid}/vanity"
-
     def destroy(self) -> None:
         """Destroy the vanity.
 
@@ -91,7 +87,8 @@ class Vanity(Resource):
         ----
         This action requires administrator privileges.
         """
-        self.params.session.delete(self._endpoint)
+        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
+        self.params.session.delete(endpoint)
 
         if self._after_destroy:
             self._after_destroy()
@@ -129,10 +126,6 @@ class VanityMixin(Resource):
         super().__init__(params, **kwargs)
         self._content_guid = kwargs["guid"]
         self._vanity: Optional[Vanity] = None
-
-    @property
-    def _endpoint(self):
-        return self.params.url + f"v1/content/{self._content_guid}/vanity"
 
     @property
     def vanity(self) -> Optional[str]:
@@ -222,7 +215,8 @@ class VanityMixin(Resource):
         --------
         If setting force=True, the destroy operation performed on the other vanity is irreversible.
         """
-        response = self.params.session.put(self._endpoint, json=kwargs)
+        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
+        response = self.params.session.put(endpoint, json=kwargs)
         result = response.json()
         return Vanity(self.params, **result)
 
@@ -233,6 +227,7 @@ class VanityMixin(Resource):
         -------
         Vanity
         """
-        response = self.params.session.get(self._endpoint)
+        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
+        response = self.params.session.get(endpoint)
         result = response.json()
         return Vanity(self.params, **result)
