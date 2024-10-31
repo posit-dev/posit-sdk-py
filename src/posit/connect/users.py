@@ -241,7 +241,7 @@ class Users(Resources):
         >>> users = client.find(account_status="locked|licensed")
         """
         url = self.params.url + "v1/users"
-        paginator = Paginator(self.params.session, url, params=conditions)
+        paginator = Paginator(self.params.session, url, params={**conditions})
         results = paginator.fetch_results()
         return [
             User(
@@ -284,7 +284,7 @@ class Users(Resources):
         >>> user = client.find_one(account_status="locked|licensed")
         """
         url = self.params.url + "v1/users"
-        paginator = Paginator(self.params.session, url, params=conditions)
+        paginator = Paginator(self.params.session, url, params={**conditions})
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (

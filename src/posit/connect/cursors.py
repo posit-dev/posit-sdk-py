@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generator, List
+from typing import TYPE_CHECKING, Any, Generator, List
 
 if TYPE_CHECKING:
     import requests
@@ -17,7 +17,9 @@ class CursorPage:
 
 
 class CursorPaginator:
-    def __init__(self, session: requests.Session, url: str, params: dict | None = None) -> None:
+    def __init__(
+        self, session: requests.Session, url: str, params: dict[str, Any] | None = None
+    ) -> None:
         if params is None:
             params = {}
         self.session = session
