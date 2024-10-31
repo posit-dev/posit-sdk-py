@@ -70,6 +70,7 @@ extend-select = [
     # Check docstring formatting. Many of these rules are intentionally ignored below.
     "D",
 
+    "ARG",    # ARG; flake8-argparse: https://docs.astral.sh/ruff/rules/#flake8-unused-arguments-arg
     "E",      # E; pycodestyle: https://docs.astral.sh/ruff/rules/#pycodestyle-e-w
     "F",      # F; Pyflakes: https://docs.astral.sh/ruff/rules/#pyflakes-f
     "I",      # I; isort: https://docs.astral.sh/ruff/rules/#isort-i
@@ -111,8 +112,8 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"examples/*" = ["D"]
-"tests/*" = ["D"]
+"examples/connect*" = ["D", "ARG"]
+"tests/posit/connect/*" = ["D", "ARG"]
 
 
 [tool.ruff.lint.pydocstyle]
@@ -130,7 +131,7 @@ exclude = ".*"
 [dependency-groups]
 build = ["build"]
 coverage = ["coverage"]
-examples = ["rsconnect-python", "pandas"]
+examples = ["rsconnect-python", "pandas", "databricks", "shiny"]
 git = ["pre-commit"]
 lint = ["ruff", "pyright"]
 test = ["rsconnect-python", "responses", "pytest", "pyjson5"]
