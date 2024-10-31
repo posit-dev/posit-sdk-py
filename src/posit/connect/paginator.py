@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generator, List
+from typing import TYPE_CHECKING, Generator, List
 
-import requests
+if TYPE_CHECKING:
+    import requests
 
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500

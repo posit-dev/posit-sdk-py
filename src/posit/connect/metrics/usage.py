@@ -15,10 +15,10 @@ class UsageEvent(resources.Resource):
     def from_event(
         event: visits.VisitEvent | shiny_usage.ShinyUsageEvent,
     ) -> UsageEvent:
-        if type(event) == visits.VisitEvent:
+        if isinstance(event, visits.VisitEvent):
             return UsageEvent.from_visit_event(event)
 
-        if type(event) == shiny_usage.ShinyUsageEvent:
+        if isinstance(event, shiny_usage.ShinyUsageEvent):
             return UsageEvent.from_shiny_usage_event(event)
 
         raise TypeError
