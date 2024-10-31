@@ -1,4 +1,3 @@
-import os
 import posixpath
 import warnings
 from abc import ABC, abstractmethod
