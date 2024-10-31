@@ -1,4 +1,9 @@
 {
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.tabSize": 2,
+    "files.encoding": "utf8",
+    "files.eol": "\n",
     "python.testing.pytestArgs": [
         "tests"
     ],
@@ -16,4 +21,5 @@
         "**/__pycache__": true,
         "build/**": true
     },
+    "editor.rulers": [99],
 }
