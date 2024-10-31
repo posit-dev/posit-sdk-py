@@ -8,6 +8,7 @@ from posixpath import dirname
 from typing import TYPE_CHECKING, Any, List, Literal, Optional, overload
 
 from . import tasks
+from ._utils import drop_none
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
@@ -33,14 +34,14 @@ class ContentItemRepository(Resource):
         url = self.params.url + path
         self.params.session.delete(url)
 
-    @overload
     def update(
-            self,
-            *,
-            repository: Optional[str] = None,
-            branch: Optional[str] = "main",
-            directory: Optional[str] = ".",
-            polling: Optional[bool] = False,
+        self,
+        *,
+        repository: Optional[str] = None,
+        branch: Optional[str] = "main",
+        directory: Optional[str] = ".",
+        polling: Optional[bool] = False,
+        **attributes: Any,
     ) -> None:
         """Update the content's repository.
 
@@ -54,24 +55,24 @@ class ContentItemRepository(Resource):
             Directory containing the content. Default is '.'
         polling: bool, optional
             Indicates that the Git repository is regularly polled. Default is False.
-            
+        attributes: Any
+            Additional attributes.
 
         Returns
         -------
         None
         """
-        ...
-
-    @overload
-    def update(self, **attributes: Any) -> None:
-        """Update the content's repository."""
-        ...
-
-    def update(self, **attributes: Any) -> None:
-        """Update the content's repository."""
+        args = {
+            "repository": repository,
+            "branch": branch,
+            "directory": directory,
+            "polling": polling,
+            **attributes,
+        }
         url = self.params.url + f"v1/content/{self.content_guid}/repository"
-        response = self.params.session.patch(url, json=attributes) 
+        response = self.params.session.patch(url, json=drop_none(args))
         super().update(**response.json())
+
 
 class ContentItemOAuth(Resource):
     def __init__(self, params: ResourceParameters, content_guid: str) -> None:
@@ -108,13 +109,12 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
     def repository(self) -> Optional[ContentItemRepository]:
         path = f"v1/content/{self.guid}/repository"
         url = self.params.url + path
-        try: 
+        try:
             response = self.params.session.get(url)
             return ContentItemRepository(self.params, self["guid"], **response.json())
-        except:
+        except Exception:
             return None
 
-    @overload
     def create_repository(
         self,
         *,
@@ -122,6 +122,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         branch: Optional[str] = "main",
         directory: Optional[str] = ".",
         polling: Optional[bool] = False,
+        **attributes: Any,
     ) -> ContentItemRepository:
         """Create repository.
 
@@ -135,33 +136,23 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
             Directory containing the content. Default is '.'.
         polling : bool, optional
             Indicates that the Git repository is regularly polled. Default is False.
-        
-        Returns
-        -------
-        ContentItemRepository
-        """
-        ...
+        **attributes : Any
+            Additional attributes.
 
-    @overload
-    def create_repository(self, **attributes) -> ContentItemRepository:
-        """Create a repository.
-        
         Returns
         -------
         ContentItemRepository
         """
-        ...
-
-    def create_repository(self, **attributes):
-        """Create a repository.
-        
-        Returns
-        -------
-        ContentItemRepository
-        """
+        args = {
+            "repository": repository,
+            "branch": branch,
+            "directory": directory,
+            "polling": polling,
+            **attributes,
+        }
         path = f"v1/content/{self.guid}/repository"
         url = self.params.url + path
-        response = self.params.session.put(url, json=attributes)
+        response = self.params.session.put(url, json=drop_none(args))
         return ContentItemRepository(self.params, **response.json())
 
     def delete(self) -> None:
@@ -206,7 +197,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> render()
         """
-        self.update()
+        self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_rendered:
             variants = self._variants.find()
@@ -222,7 +213,6 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
                 f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
-
     def restart(self) -> None:
         """Mark for restart.
 
@@ -236,7 +226,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> restart()
         """
-        self.update()
+        self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_interactive:
             unix_epoch_in_seconds = str(int(time.time()))
@@ -252,7 +242,6 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
                 f"Restart not supported for this application mode: {self.app_mode}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
-    @overload
     def update(
         self,
         *,
@@ -286,6 +275,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         default_r_environment_management: Optional[bool] = None,
         default_py_environment_management: Optional[bool] = None,
         service_account_name: Optional[str] = None,
+        **attributes: Any,
     ) -> None:
         """Update the content item.
 
@@ -346,15 +336,36 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         -------
         None
         """
-
-    @overload
-    def update(self, **attributes: Any) -> None:
-        """Update the content."""
-
-    def update(self, **attributes: Any) -> None:
-        """Update the content."""
+        args = {
+            "name": name,
+            "title": title,
+            "description": description,
+            "access_type": access_type,
+            "owner_guid": owner_guid,
+            "connection_timeout": connection_timeout,
+            "read_timeout": read_timeout,
+            "init_timeout": init_timeout,
+            "idle_timeout": idle_timeout,
+            "max_processes": max_processes,
+            "min_processes": min_processes,
+            "max_conns_per_process": max_conns_per_process,
+            "load_factor": load_factor,
+            "cpu_request": cpu_request,
+            "cpu_limit": cpu_limit,
+            "memory_request": memory_request,
+            "memory_limit": memory_limit,
+            "amd_gpu_limit": amd_gpu_limit,
+            "nvidia_gpu_limit": nvidia_gpu_limit,
+            "run_as": run_as,
+            "run_as_current_user": run_as_current_user,
+            "default_image_name": default_image_name,
+            "default_r_environment_management": default_r_environment_management,
+            "default_py_environment_management": default_py_environment_management,
+            "service_account_name": service_account_name,
+            **attributes,
+        }
         url = self.params.url + f"v1/content/{self['guid']}"
-        response = self.params.session.patch(url, json=attributes)
+        response = self.params.session.patch(url, json=drop_none(args))
         super().update(**response.json())
 
     # Relationships
@@ -443,7 +454,6 @@ class Content(Resources):
         """
         return len(self.find())
 
-    @overload
     def create(
         self,
         *,
@@ -476,6 +486,7 @@ class Content(Resources):
         default_r_environment_management: Optional[bool] = None,
         default_py_environment_management: Optional[bool] = None,
         service_account_name: Optional[str] = None,
+        **attributes: Any,
     ) -> ContentItem:
         """Create content.
 
@@ -529,31 +540,43 @@ class Content(Resources):
             Manage Python environment for the content. Default is None.
         service_account_name : str, optional
             Kubernetes service account name for running content. Default is None.
+        **attributes : Any
+            Additional attributes.
 
         Returns
         -------
         ContentItem
         """
-
-    @overload
-    def create(self, **attributes) -> ContentItem:
-        """Create a content item.
-
-        Returns
-        -------
-        ContentItem
-        """
-
-    def create(self, **attributes) -> ContentItem:
-        """Create a content item.
-
-        Returns
-        -------
-        ContentItem
-        """
+        args = {
+            "name": name,
+            "title": title,
+            "description": description,
+            "access_type": access_type,
+            "connection_timeout": connection_timeout,
+            "read_timeout": read_timeout,
+            "init_timeout": init_timeout,
+            "idle_timeout": idle_timeout,
+            "max_processes": max_processes,
+            "min_processes": min_processes,
+            "max_conns_per_process": max_conns_per_process,
+            "load_factor": load_factor,
+            "cpu_request": cpu_request,
+            "cpu_limit": cpu_limit,
+            "memory_request": memory_request,
+            "memory_limit": memory_limit,
+            "amd_gpu_limit": amd_gpu_limit,
+            "nvidia_gpu_limit": nvidia_gpu_limit,
+            "run_as": run_as,
+            "run_as_current_user": run_as_current_user,
+            "default_image_name": default_image_name,
+            "default_r_environment_management": default_r_environment_management,
+            "default_py_environment_management": default_py_environment_management,
+            "service_account_name": service_account_name,
+            **attributes,
+        }
         path = "v1/content"
         url = self.params.url + path
-        response = self.params.session.post(url, json=attributes)
+        response = self.params.session.post(url, json=drop_none(args))
         return ContentItem(self.params, **response.json())
 
     @overload
@@ -650,7 +673,6 @@ class Content(Resources):
             for result in response.json()
         ]
 
-    @overload
     def find_by(
         self,
         *,
@@ -684,8 +706,11 @@ class Content(Resources):
         default_r_environment_management: Optional[bool] = None,
         default_py_environment_management: Optional[bool] = None,
         service_account_name: Optional[str] = None,
+        **attributes: Any,
     ) -> Optional[ContentItem]:
-        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
+        """Find the first content record matching the specified attributes.
+
+        There is no implied ordering so if order matters, you should find it yourself.
 
         Parameters
         ----------
@@ -739,23 +764,8 @@ class Content(Resources):
             Manage Python environment for the content.
         service_account_name : str, optional
             Kubernetes service account name for running content.
-
-        Returns
-        -------
-        Optional[ContentItem]
-        """
-
-    @overload
-    def find_by(self, **attributes) -> Optional[ContentItem]:
-        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
-
-        Returns
-        -------
-        Optional[ContentItem]
-        """
-
-    def find_by(self, **attributes) -> Optional[ContentItem]:
-        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
+        **attributes : Any
+            Additional attributes.
 
         Returns
         -------
@@ -765,11 +775,37 @@ class Content(Resources):
         -------
         >>> find_by(name="example-content-name")
         """
+        args = {
+            "name": name,
+            "title": title,
+            "description": description,
+            "access_type": access_type,
+            "owner_guid": owner_guid,
+            "connection_timeout": connection_timeout,
+            "read_timeout": read_timeout,
+            "init_timeout": init_timeout,
+            "idle_timeout": idle_timeout,
+            "max_processes": max_processes,
+            "min_processes": min_processes,
+            "max_conns_per_process": max_conns_per_process,
+            "load_factor": load_factor,
+            "cpu_request": cpu_request,
+            "cpu_limit": cpu_limit,
+            "memory_request": memory_request,
+            "memory_limit": memory_limit,
+            "amd_gpu_limit": amd_gpu_limit,
+            "nvidia_gpu_limit": nvidia_gpu_limit,
+            "run_as": run_as,
+            "run_as_current_user": run_as_current_user,
+            "default_image_name": default_image_name,
+            "default_r_environment_management": default_r_environment_management,
+            "default_py_environment_management": default_py_environment_management,
+            "service_account_name": service_account_name,
+            **attributes,
+        }
         results = self.find()
         results = (
-            result
-            for result in results
-            if all(item in result.items() for item in attributes.items())
+            result for result in results if all(item in result.items() for item in args.items())
         )
         return next(results, None)
 
