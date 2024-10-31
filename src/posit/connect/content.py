@@ -13,6 +13,7 @@ from .context import Context
 from .env import EnvVars
 from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
+from .packages import PackagesMixin
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
 from .vanities import VanityMixin
