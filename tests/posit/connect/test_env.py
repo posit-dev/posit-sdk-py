@@ -27,9 +27,9 @@ def test__delitem__():
                     {
                         "name": "TEST",
                         "value": None,
-                    }
-                ]
-            )
+                    },
+                ],
+            ),
         ],
     )
 
@@ -65,9 +65,9 @@ def test__getitem__():
                     {
                         "name": "TEST",
                         "value": None,
-                    }
-                ]
-            )
+                    },
+                ],
+            ),
         ],
     )
 
@@ -161,9 +161,9 @@ def test__setitem__():
                     {
                         "name": "TEST",
                         "value": "TEST",
-                    }
-                ]
-            )
+                    },
+                ],
+            ),
         ],
     )
 
@@ -228,9 +228,9 @@ def test_create():
                     {
                         "name": "TEST",
                         "value": "TEST",
-                    }
-                ]
-            )
+                    },
+                ],
+            ),
         ],
     )
 
@@ -266,9 +266,9 @@ def test_delete():
                     {
                         "name": "TEST",
                         "value": None,
-                    }
-                ]
-            )
+                    },
+                ],
+            ),
         ],
     )
 
@@ -359,9 +359,9 @@ class TestUpdate:
                         {
                             "name": "TEST",
                             "value": "TEST",
-                        }
-                    ]
-                )
+                        },
+                    ],
+                ),
             ],
         )
 
@@ -396,9 +396,9 @@ class TestUpdate:
                         {
                             "name": "TEST",
                             "value": "TEST",
-                        }
-                    ]
-                )
+                        },
+                    ],
+                ),
             ],
         )
 
@@ -433,9 +433,9 @@ class TestUpdate:
                         {
                             "name": "TEST",
                             "value": "TEST",
-                        }
-                    ]
-                )
+                        },
+                    ],
+                ),
             ],
         )
 
@@ -477,9 +477,9 @@ class TestUpdate:
                         {
                             "name": "TEST",
                             "value": "TEST",
-                        }
-                    ]
-                )
+                        },
+                    ],
+                ),
             ],
         )
 
@@ -514,9 +514,9 @@ class TestUpdate:
                         {
                             "name": "TEST",
                             "value": "TEST",
-                        }
-                    ]
-                )
+                        },
+                    ],
+                ),
             ],
         )
 

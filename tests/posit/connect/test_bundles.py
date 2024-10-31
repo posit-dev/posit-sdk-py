@@ -15,7 +15,7 @@ class TestBundleProperties:
     def setup_class(cls):
         cls.bundle = Bundle(
             mock.Mock(),
-            **load_mock(f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"),
+            **load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"),
         )
 
     def test_id(self):
@@ -267,7 +267,7 @@ class TestBundlesCreate:
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
         pathname = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
+            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz",
         )
 
         # behavior
@@ -299,7 +299,7 @@ class TestBundlesCreate:
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
         pathname = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
+            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz",
         )
 
         # behavior

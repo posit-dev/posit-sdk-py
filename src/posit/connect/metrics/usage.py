@@ -177,7 +177,6 @@ class Usage(resources.Resources):
         -------
         List[UsageEvent]
         """
-        ...
 
     @overload
     def find(self, **kwargs) -> List[UsageEvent]:
@@ -187,7 +186,6 @@ class Usage(resources.Resources):
         -------
         List[UsageEvent]
         """
-        ...
 
     def find(self, **kwargs) -> List[UsageEvent]:
         """Find view events.
@@ -204,7 +202,7 @@ class Usage(resources.Resources):
                 [
                     UsageEvent.from_event(event)
                     for event in instance.find(**kwargs)  # type: ignore[attr-defined]
-                ]
+                ],
             )
         return events
 
@@ -234,7 +232,6 @@ class Usage(resources.Resources):
         -------
         Visit | None
         """
-        ...
 
     @overload
     def find_one(self, **kwargs) -> UsageEvent | None:
@@ -244,7 +241,6 @@ class Usage(resources.Resources):
         -------
         Visit | None
         """
-        ...
 
     def find_one(self, **kwargs) -> UsageEvent | None:
         """Find a view event.

@@ -21,7 +21,7 @@ class TestPermissionDelete:
 
         # behavior
         mock_delete = responses.delete(
-            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{uid}"
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{uid}",
         )
 
         # setup
@@ -63,8 +63,8 @@ class TestPermissionUpdate:
                         "role": role,
                         # validate that arguments passed to update are set
                         "extraneous": extraneous,
-                    }
-                )
+                    },
+                ),
             ],
         )
 
@@ -106,8 +106,8 @@ class TestPermissionUpdate:
                         "principal_guid": None,
                         "principal_type": None,
                         "role": new_role,
-                    }
-                )
+                    },
+                ),
             ],
         )
 
@@ -171,8 +171,8 @@ class TestPermissionsCreate:
                         "principal_guid": principal_guid,
                         "principal_type": principal_type,
                         "role": role,
-                    }
-                )
+                    },
+                ),
             ],
         )
 

@@ -14,8 +14,8 @@ class TestOAuthIntegrations:
                         "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                         "subject_token_type": "urn:posit:connect:user-session-token",
                         "subject_token": "cit",
-                    }
-                )
+                    },
+                ),
             ],
             json={
                 "access_token": "viewer-token",

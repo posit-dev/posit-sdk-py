@@ -34,7 +34,6 @@ class Groups(Resources):
         -------
         Group
         """
-        ...
 
     @overload
     def create(self, **kwargs) -> Group:
@@ -44,7 +43,6 @@ class Groups(Resources):
         -------
         Group
         """
-        ...
 
     def create(self, **kwargs) -> Group:
         """Create a group.
@@ -58,7 +56,6 @@ class Groups(Resources):
         -------
         Group
         """
-        ...
         path = "v1/groups"
         url = self.params.url + path
         response = self.params.session.post(url, json=kwargs)

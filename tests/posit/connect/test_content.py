@@ -17,8 +17,8 @@ class TestContentItemGetContentOwner:
         )
 
         mock_user_get = responses.get(
-            f"https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
-            json=load_mock(f"v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
+            "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
+            json=load_mock("v1/users/20a79ce3-6e87-4522-9faf-be24228800a4.json"),
         )
 
         c = Client("https://connect.example", "12345")
@@ -127,7 +127,7 @@ class TestContentCreate:
 
         # behavior
         responses.post(
-            f"https://connect.example/__api__/v1/content",
+            "https://connect.example/__api__/v1/content",
             json=load_mock(f"v1/content/{guid}.json"),
             match=[matchers.json_params_matcher({"name": fake_content_item["name"]})],
         )

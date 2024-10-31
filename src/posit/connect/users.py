@@ -45,7 +45,7 @@ class User(Resource):
         _me = me.get(self.params)
         if _me.guid == self["guid"] and not force:
             raise RuntimeError(
-                "You cannot lock your own account. Set force=True to override this behavior."
+                "You cannot lock your own account. Set force=True to override this behavior.",
             )
         url = self.params.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": True}

@@ -36,7 +36,7 @@ class TestJobsFind:
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx",
             json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json"
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json",
             ),
         )
 
@@ -142,7 +142,7 @@ class TestJobDestory:
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx",
             json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json"
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json",
             ),
         )
 

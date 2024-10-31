@@ -85,7 +85,6 @@ class ShinyUsage(Resources):
         -------
         List[ShinyUsageEvent]
         """
-        ...
 
     @overload
     def find(self, **kwargs) -> List[ShinyUsageEvent]:
@@ -95,7 +94,6 @@ class ShinyUsage(Resources):
         -------
         List[ShinyUsageEvent]
         """
-        ...
 
     def find(self, **kwargs) -> List[ShinyUsageEvent]:
         """Find usage.
@@ -144,7 +142,6 @@ class ShinyUsage(Resources):
         -------
         ShinyUsageEvent | None
         """
-        ...
 
     @overload
     def find_one(self, **kwargs) -> ShinyUsageEvent | None:
@@ -154,7 +151,6 @@ class ShinyUsage(Resources):
         -------
         ShinyUsageEvent | None
         """
-        ...
 
     def find_one(self, **kwargs) -> ShinyUsageEvent | None:
         """Find a usage event.

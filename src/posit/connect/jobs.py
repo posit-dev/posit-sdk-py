@@ -275,7 +275,6 @@ class Jobs(
         -------
         Optional[Job]
         """
-        ...
 
     @overload
     def find_by(self, **conditions): ...
