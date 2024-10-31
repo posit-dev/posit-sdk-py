@@ -1,3 +1,4 @@
+import os
 import posixpath
 import warnings
 from abc import ABC, abstractmethod
@@ -26,6 +27,9 @@ class ResourceParameters:
     url: Url
 
 
+has_shown_warning_dict: bool = False
+
+
 class Resource(dict):
     def __init__(self, /, params: ResourceParameters, **kwargs):
         self.params = params
@@ -33,12 +37,16 @@ class Resource(dict):
 
     def __getattr__(self, name):
         if name in self:
-            warnings.warn(
-                f"Accessing the field '{name}' via attribute is deprecated and will be removed in v1.0.0. "
-                f"Please use __getitem__ (e.g., {self.__class__.__name__.lower()}['{name}']) for field access instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+            # TODO-future; Temp silence during all testing; Turn it into an error.
+            global has_shown_warning_dict
+            if not has_shown_warning_dict:
+                has_shown_warning_dict = True
+                warnings.warn(
+                    f"Accessing the field '{name}' via attribute is deprecated and will be removed in v1.0.0. "
+                    f"Please use __getitem__ (e.g., {self.__class__.__name__.lower()}['{name}']) for field access instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
             return self[name]
         return None
 
