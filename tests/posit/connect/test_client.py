@@ -181,7 +181,6 @@ class TestClientOAuth:
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client.ctx.version = "2024.07.0"
-        oauth = None
+
         with pytest.raises(RuntimeError):
-            oauth = client.oauth
-        assert oauth is not None
+            client.oauth  # noqa: B018
