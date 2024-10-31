@@ -113,7 +113,7 @@ class TestUserContent:
                 matchers.query_param_matcher(
                     {"owner_guid": "20a79ce3-6e87-4522-9faf-be24228800a4"},
                     strict_match=False,
-                )
+                ),
             ],
         )
 
@@ -321,8 +321,8 @@ class TestUsersFindOne:
                         "key1": "value1",
                         "key2": "value2",
                         "key3": "value3",
-                    }
-                )
+                    },
+                ),
             ],
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
         )
@@ -387,8 +387,8 @@ class TestUsersFind:
                         "key1": "value1",
                         "key2": "value2",
                         "key3": "value3",
-                    }
-                )
+                    },
+                ),
             ],
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
         )
@@ -402,8 +402,8 @@ class TestUsersFind:
                         "key1": "value1",
                         "key2": "value2",
                         "key3": "value3",
-                    }
-                )
+                    },
+                ),
             ],
             json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
         )

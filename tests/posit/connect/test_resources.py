@@ -20,7 +20,7 @@ class TestResource:
         p = mock.Mock()
         k = "foo"
         v = "bar"
-        d = dict({k: v})
+        d = {k: v}
         r = FakeResource(p, **d)
         assert r.params == p
 
@@ -28,7 +28,7 @@ class TestResource:
         warnings.filterwarnings("ignore", category=FutureWarning)
         k = "foo"
         v = "bar"
-        d = dict({k: v})
+        d = {k: v}
         r = FakeResource(mock.Mock(), **d)
         assert r.__getitem__(k) == d.__getitem__(k)
         assert r[k] == d[k]
@@ -38,7 +38,7 @@ class TestResource:
         k = "foo"
         v1 = "bar"
         v2 = "baz"
-        d = dict({k: v1})
+        d = {k: v1}
         r = FakeResource(mock.Mock(), **d)
         assert r[k] == v1
         r[k] = v2
@@ -48,7 +48,7 @@ class TestResource:
         warnings.filterwarnings("ignore", category=FutureWarning)
         k = "foo"
         v = "bar"
-        d = dict({k: v})
+        d = {k: v}
         r = FakeResource(mock.Mock(), **d)
         assert k in r
         assert r[k] == v
@@ -58,6 +58,6 @@ class TestResource:
     def test_foo(self):
         k = "foo"
         v = "bar"
-        d = dict({k: v})
+        d = {k: v}
         r = FakeResource(mock.Mock(), **d)
         assert r.foo == v

@@ -117,7 +117,6 @@ class Visits(Resources):
         -------
         List[Visit]
         """
-        ...
 
     @overload
     def find(self, **kwargs) -> List[VisitEvent]:
@@ -127,7 +126,6 @@ class Visits(Resources):
         -------
         List[Visit]
         """
-        ...
 
     def find(self, **kwargs) -> List[VisitEvent]:
         """Find visits.
@@ -176,7 +174,6 @@ class Visits(Resources):
         -------
         Visit | None
         """
-        ...
 
     @overload
     def find_one(self, **kwargs) -> VisitEvent | None:
@@ -186,7 +183,6 @@ class Visits(Resources):
         -------
         Visit | None
         """
-        ...
 
     def find_one(self, **kwargs) -> VisitEvent | None:
         """Find a visit.

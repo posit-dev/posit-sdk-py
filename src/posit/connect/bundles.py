@@ -74,7 +74,7 @@ class Bundle(resources.Resource):
         """
         if not isinstance(output, (io.BufferedWriter, str)):
             raise TypeError(
-                f"download() expected argument type 'io.BufferedWriter` or 'str', but got '{type(output).__name__}'"
+                f"download() expected argument type 'io.BufferedWriter` or 'str', but got '{type(output).__name__}'",
             )
 
         path = f"v1/content/{self.content_guid}/bundles/{self.id}/download"
@@ -160,7 +160,7 @@ class Bundles(resources.Resources):
                 data = file.read()
         else:
             raise TypeError(
-                f"create() expected argument type 'io.BufferedReader', 'bytes', or 'str', but got '{type(archive).__name__}'"
+                f"create() expected argument type 'io.BufferedReader', 'bytes', or 'str', but got '{type(archive).__name__}'",
             )
 
         path = f"v1/content/{self.content_guid}/bundles"

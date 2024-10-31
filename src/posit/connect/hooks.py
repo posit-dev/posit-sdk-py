@@ -37,5 +37,5 @@ def check_for_deprecation_header(response: Response, *args, **kwargs) -> Respons
             + " is deprecated and will be removed in a future version of Connect."
             + " Please upgrade `posit-sdk` in order to use the new APIs."
         )
-        warnings.warn(msg, DeprecationWarning)
+        warnings.warn(msg, DeprecationWarning, stacklevel=3)
     return response

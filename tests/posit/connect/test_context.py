@@ -61,7 +61,7 @@ class TestContextVersion:
     @responses.activate
     def test_unknown(self):
         responses.get(
-            f"http://connect.example/__api__/server_settings",
+            "http://connect.example/__api__/server_settings",
             json={},
         )
 
@@ -74,7 +74,7 @@ class TestContextVersion:
     @responses.activate
     def test_known(self):
         responses.get(
-            f"http://connect.example/__api__/server_settings",
+            "http://connect.example/__api__/server_settings",
             json={"version": "2024.09.24"},
         )
 

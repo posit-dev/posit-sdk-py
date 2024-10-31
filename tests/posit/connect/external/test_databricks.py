@@ -31,8 +31,8 @@ def register_mocks():
                     "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                     "subject_token_type": "urn:posit:connect:user-session-token",
                     "subject_token": "cit",
-                }
-            )
+                },
+            ),
         ],
         json={
             "access_token": "dynamic-viewer-access-token",
@@ -50,7 +50,7 @@ class TestPositCredentialsHelpers:
         client = Client(api_key="12345", url="https://connect.example/")
         client.ctx.version = None
         cp = PositCredentialsProvider(client=client, user_session_token="cit")
-        assert cp() == {"Authorization": f"Bearer dynamic-viewer-access-token"}
+        assert cp() == {"Authorization": "Bearer dynamic-viewer-access-token"}
 
     @responses.activate
     @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})

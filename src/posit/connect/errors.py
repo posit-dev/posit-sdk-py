@@ -24,6 +24,6 @@ class ClientError(Exception):
                     "http_status": http_status,
                     "http_message": http_message,
                     "payload": payload,
-                }
-            )
+                },
+            ),
         )

@@ -24,7 +24,7 @@ class OAuth(Resources):
         url = self.params.url + "v1/oauth/integrations/credentials"
 
         # craft a credential exchange request
-        data = dict()
+        data = {}
         data["grant_type"] = "urn:ietf:params:oauth:grant-type:token-exchange"
         data["subject_token_type"] = "urn:posit:connect:user-session-token"
         if user_session_token:

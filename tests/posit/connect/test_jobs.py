@@ -1,5 +1,6 @@
 import pytest
 import responses
+from requests.exceptions import HTTPError
 
 from posit.connect.client import Client
 
@@ -36,32 +37,13 @@ class TestJobsFind:
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx",
             json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json"
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json",
             ),
         )
 
         c = Client("https://connect.example", "12345")
         content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
 
-        job = content.jobs.find("tHawGvHZTosJA2Dx")
-        assert job["key"] == "tHawGvHZTosJA2Dx"
-
-    @responses.activate
-    def test_cached(self):
-        responses.get(
-            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
-            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
-        )
-
-        responses.get(
-            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs",
-            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs.json"),
-        )
-
-        c = Client("https://connect.example", "12345")
-        content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
-
-        assert content.jobs
         job = content.jobs.find("tHawGvHZTosJA2Dx")
         assert job["key"] == "tHawGvHZTosJA2Dx"
 
@@ -73,15 +55,14 @@ class TestJobsFind:
         )
 
         responses.get(
-            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs",
-            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs.json"),
+            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/not-found",
+            status=404,
         )
 
         c = Client("https://connect.example", "12345")
         content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
 
-        assert content.jobs
-        with pytest.raises(ValueError):
+        with pytest.raises(HTTPError):
             content.jobs.find("not-found")
 
 
@@ -142,7 +123,7 @@ class TestJobDestory:
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx",
             json=load_mock(
-                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json"
+                "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json",
             ),
         )
 

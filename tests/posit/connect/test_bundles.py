@@ -15,7 +15,7 @@ class TestBundleProperties:
     def setup_class(cls):
         cls.bundle = Bundle(
             mock.Mock(),
-            **load_mock(f"v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"),
+            **load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066/bundles/101.json"),
         )
 
     def test_id(self):
@@ -37,19 +37,19 @@ class TestBundleProperties:
         assert self.bundle.r_version == "3.5.1"
 
     def test_r_environment_management(self):
-        assert self.bundle.r_environment_management == True
+        assert self.bundle.r_environment_management is True
 
     def test_py_version(self):
         assert self.bundle.py_version == "3.8.2"
 
     def test_py_environment_management(self):
-        assert self.bundle.py_environment_management == True
+        assert self.bundle.py_environment_management is True
 
     def test_quarto_version(self):
         assert self.bundle.quarto_version == "0.2.22"
 
     def test_active(self):
-        assert self.bundle.active == False
+        assert self.bundle.active is False
 
     def test_size(self):
         assert self.bundle.size == 1000000
@@ -144,7 +144,7 @@ class TestBundleDeploy:
         task = bundle.deploy()
 
         # assert
-        task.id == task_id
+        assert task.id == task_id
         assert mock_content_get.call_count == 1
         assert mock_bundle_get.call_count == 1
         assert mock_bundle_deploy.call_count == 1
@@ -267,7 +267,7 @@ class TestBundlesCreate:
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
         pathname = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
+            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz",
         )
 
         # behavior
@@ -299,7 +299,7 @@ class TestBundlesCreate:
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
         pathname = get_path(
-            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz"
+            f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz",
         )
 
         # behavior

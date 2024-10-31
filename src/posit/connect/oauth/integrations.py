@@ -37,12 +37,10 @@ class Integration(Resource):
         description: str, optional
         config: dict, optional
         """
-        ...
 
     @overload
     def update(self, *args, **kwargs) -> None:
         """Update the OAuth integration."""
-        ...
 
     def update(self, *args, **kwargs) -> None:
         """Update the OAuth integration."""
@@ -77,7 +75,6 @@ class Integrations(Resources):
         -------
         Integration
         """
-        ...
 
     @overload
     def create(self, **kwargs) -> Integration:
@@ -87,7 +84,6 @@ class Integrations(Resources):
         -------
         Integration
         """
-        ...
 
     def create(self, **kwargs) -> Integration:
         """Create an OAuth integration.
@@ -103,7 +99,6 @@ class Integrations(Resources):
         -------
         Integration
         """
-        ...
         path = "v1/oauth/integrations"
         url = self.params.url + path
         response = self.params.session.post(url, json=kwargs)

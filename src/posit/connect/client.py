@@ -67,7 +67,6 @@ class Client(ContextManager):
         --------
         Client()
         """
-        ...
 
     @overload
     def __init__(self, url: str) -> None:
@@ -88,7 +87,6 @@ class Client(ContextManager):
         --------
         Client("https://connect.example.com)
         """
-        ...
 
     @overload
     def __init__(self, url: str, api_key: str) -> None:
@@ -105,7 +103,6 @@ class Client(ContextManager):
         --------
         >>> Client("https://connect.example.com", abcdefghijklmnopqrstuvwxyz012345")
         """
-        ...
 
     def __init__(self, *args, **kwargs) -> None:
         """Initialize a Client instance.

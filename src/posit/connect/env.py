@@ -27,7 +27,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
 
     def __getitem__(self, key: Any) -> Any:
         raise NotImplementedError(
-            "Since environment variables may contain sensitive information, the values are not accessible outside of Connect."
+            "Since environment variables may contain sensitive information, the values are not accessible outside of Connect.",
         )
 
     def __iter__(self) -> Iterator:
@@ -127,7 +127,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
 
     def items(self):
         raise NotImplementedError(
-            "Since environment variables may contain sensitive information, the values are not accessible outside of Connect."
+            "Since environment variables may contain sensitive information, the values are not accessible outside of Connect.",
         )
 
     def update(self, other=(), /, **kwargs: Optional[str]):
@@ -178,12 +178,12 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         ...     ]
         ... )
         """
-        d = dict()
+        d = {}
         if isinstance(other, Mapping):
             for key in other:
                 d[key] = other[key]
         elif hasattr(other, "keys"):
-            for key in other.keys():
+            for key in other.keys():  # noqa: SIM118
                 d[key] = other[key]
         else:
             for key, value in other:

@@ -1,7 +1,10 @@
-from dataclasses import dataclass
-from typing import Generator, List
+from __future__ import annotations
 
-import requests
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Generator, List
+
+if TYPE_CHECKING:
+    import requests
 
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
@@ -38,7 +41,11 @@ class Paginator:
         url (str): The URL of the paginated API endpoint.
     """
 
-    def __init__(self, session: requests.Session, url: str, params={}) -> None:
+    def __init__(
+        self, session: requests.Session, url: str, params: dict[str, Any] | None = None
+    ) -> None:
+        if params is None:
+            params = {}
         self.session = session
         self.url = url
         self.params = params

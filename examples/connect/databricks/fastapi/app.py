@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 # mypy: ignore-errors
+from __future__ import annotations
+
 import os
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from databricks import sql
 from databricks.sdk.core import Config, databricks_cli
 from fastapi import FastAPI, Header
-from fastapi.responses import JSONResponse
 
 from posit.connect.external.databricks import PositCredentialsStrategy
+
+if TYPE_CHECKING:
+    from fastapi.responses import JSONResponse
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
