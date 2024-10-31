@@ -197,7 +197,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> render()
         """
-        self.update()  # pyright: ignore[reportCallIssue]
+        self.update(name=None)  # pyright: ignore[reportArgumentType]
 
         if self.is_rendered:
             variants = self._variants.find()
@@ -226,7 +226,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> restart()
         """
-        self.update()  # pyright: ignore[reportCallIssue]
+        self.update(name=None)  # pyright: ignore[reportArgumentType]
 
         if self.is_interactive:
             unix_epoch_in_seconds = str(int(time.time()))
@@ -250,7 +250,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         # Content Metadata
         title: Optional[str] = None,
         description: Optional[str] = None,
-        access_type: Literal["all", "acl", "logged_in"] = "acl",
+        access_type: Optional[Literal["all", "acl", "logged_in"]] = None,
         owner_guid: Optional[str] = None,
         # Timeout Settings
         connection_timeout: Optional[int] = None,
@@ -270,7 +270,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         nvidia_gpu_limit: Optional[int] = None,
         # Execution Settings
         run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = False,
+        run_as_current_user: Optional[bool] = None,
         default_image_name: Optional[str] = None,
         default_r_environment_management: Optional[bool] = None,
         default_py_environment_management: Optional[bool] = None,
@@ -462,7 +462,7 @@ class Content(Resources):
         # Content Metadata
         title: Optional[str] = None,
         description: Optional[str] = None,
-        access_type: Literal["all", "acl", "logged_in"] = "acl",
+        access_type: Optional[Literal["all", "acl", "logged_in"]] = None,
         # Timeout Settings
         connection_timeout: Optional[int] = None,
         read_timeout: Optional[int] = None,
@@ -481,7 +481,7 @@ class Content(Resources):
         nvidia_gpu_limit: Optional[int] = None,
         # Execution Settings
         run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = False,
+        run_as_current_user: Optional[bool] = None,
         default_image_name: Optional[str] = None,
         default_r_environment_management: Optional[bool] = None,
         default_py_environment_management: Optional[bool] = None,
@@ -681,7 +681,7 @@ class Content(Resources):
         # Content Metadata
         title: Optional[str] = None,
         description: Optional[str] = None,
-        access_type: Literal["all", "acl", "logged_in"] = "acl",
+        access_type: Optional[Literal["all", "acl", "logged_in"]] = None,
         owner_guid: Optional[str] = None,
         # Timeout Settings
         connection_timeout: Optional[int] = None,
@@ -701,7 +701,7 @@ class Content(Resources):
         nvidia_gpu_limit: Optional[int] = None,
         # Execution Settings
         run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = False,
+        run_as_current_user: Optional[bool] = None,
         default_image_name: Optional[str] = None,
         default_r_environment_management: Optional[bool] = None,
         default_py_environment_management: Optional[bool] = None,
@@ -803,9 +803,10 @@ class Content(Resources):
             "service_account_name": service_account_name,
             **attributes,
         }
+        args_items = drop_none(args).items()
         results = self.find()
         results = (
-            result for result in results if all(item in result.items() for item in args.items())
+            result for result in results if all(item in result.items() for item in args_items)
         )
         return next(results, None)
 
