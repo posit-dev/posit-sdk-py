@@ -30,7 +30,7 @@ def test_client_error_without_payload(JSONDecodeError):
     response.status_code = 404
     response.json = Mock(side_effect=JSONDecodeError())
     response.raise_for_status = Mock(side_effect=Exception())
-    with pytest.raises(Exception):
+    with pytest.raises(ClientError):
         handle_errors(response)
 
 

@@ -6,13 +6,19 @@ class TestUser:
     def setup_class(cls):
         cls.client = client = connect.Client()
         cls.aron = client.users.create(
-            username="aron", email="aron@example.com", password="s3cur3p@ssword",
+            username="aron",
+            email="aron@example.com",
+            password="s3cur3p@ssword",
         )
         cls.bill = client.users.create(
-            username="bill", email="bill@example.com", password="s3cur3p@ssword",
+            username="bill",
+            email="bill@example.com",
+            password="s3cur3p@ssword",
         )
         cls.cole = client.users.create(
-            username="cole", email="cole@example.com", password="s3cur3p@ssword",
+            username="cole",
+            email="cole@example.com",
+            password="s3cur3p@ssword",
         )
 
     def test_lock(self):
@@ -71,7 +77,9 @@ class TestUserContent:
 
     def test_multiple_users(self):
         user = self.client.users.create(
-            username="example", email="example@example.com", password="s3cur3p@ssword",
+            username="example",
+            email="example@example.com",
+            password="s3cur3p@ssword",
         )
         # assert filtering limits to the provided user.
         assert self.me.content.find_one() == self.content

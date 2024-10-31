@@ -38,7 +38,8 @@ def update_page(_):
     """
     session_token = flask.request.headers.get("Posit-Connect-User-Session-Token")
     posit_strategy = PositCredentialsStrategy(
-        local_strategy=databricks_cli, user_session_token=session_token,
+        local_strategy=databricks_cli,
+        user_session_token=session_token,
     )
     cfg = Config(
         host=DATABRICKS_HOST_URL,

@@ -185,7 +185,9 @@ class VanityMixin(Resource):
         --------
         reset_vanity
         """
-        self.vanity
+        # Populate value
+        self.vanity  # noqa: B018
+
         if self._vanity:
             self._vanity.destroy()
         self.reset_vanity()

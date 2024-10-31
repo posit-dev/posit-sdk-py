@@ -45,10 +45,13 @@ docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
 extend-ignore = [
-    "E501",  # E501: Line too long
-    "PT011", # PT011 `pytest.raises(ValueError)` is too broad
-    "PT022", # PT022 [*] No teardown in fixture
-    "F841",  # F841 Local variable is assigned but never used
+    "E501",   # Line too long
+    "PT011",  # `pytest.raises(ValueError)` is too broad
+    "PT022",  # No teardown in fixture
+    "F841",   # Local variable is assigned but never used
+    "COM812", # missing-trailing-comma
+    "ISC001", # single-line-implicit-string-concatenation
+    "ISC002", # multi-line-implicit-string-concatenation
 ]
 extend-select = [
     # "C90", # Many false positives # C90; mccabe: https://docs.astral.sh/ruff/rules/complex-structure/

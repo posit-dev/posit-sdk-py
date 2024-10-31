@@ -135,7 +135,8 @@ class TestClient:
         client = Client(api_key=api_key, url=url)
         client.request("GET", "/foo")
         MockSession.return_value.request.assert_called_once_with(
-            "GET", "https://connect.example.com/__api__/foo",
+            "GET",
+            "https://connect.example.com/__api__/foo",
         )
 
     def test_get(self, MockSession):
@@ -180,5 +181,7 @@ class TestClientOAuth:
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client.ctx.version = "2024.07.0"
+        oauth = None
         with pytest.raises(RuntimeError):
-            client.oauth
+            oauth = client.oauth
+        assert oauth is not None

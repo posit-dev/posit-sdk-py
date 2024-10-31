@@ -16,7 +16,8 @@ SQL_HTTP_PATH = os.getenv("DATABRICKS_PATH")
 
 session_token = st.context.headers.get("Posit-Connect-User-Session-Token")
 posit_strategy = PositCredentialsStrategy(
-    local_strategy=databricks_cli, user_session_token=session_token,
+    local_strategy=databricks_cli,
+    user_session_token=session_token,
 )
 cfg = Config(
     host=DATABRICKS_HOST_URL,

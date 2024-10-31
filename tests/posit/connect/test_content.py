@@ -88,7 +88,7 @@ class TestContentDeploy:
         task = content.deploy()
 
         # assert
-        task.id == task_id
+        assert task.id == task_id
         assert mock_content_get.call_count == 1
         assert mock_content_deploy.call_count == 1
         assert mock_tasks_get.call_count == 1
