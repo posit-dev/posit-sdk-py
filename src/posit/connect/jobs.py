@@ -4,7 +4,7 @@ from typing import Any, Literal, Optional, TypedDict, overload
 from typing_extensions import NotRequired, Required, Unpack
 
 from .context import Context
-from .resources import Active, ActiveFinderMethods, ActiveSequence, Resource
+from .resources import ActiveFinderMethods, ActiveParams, ActiveSequence, Resource
 
 JobTag = Literal[
     "unknown",
@@ -33,7 +33,7 @@ JobTag = Literal[
 ]
 
 
-class Job(Active):
+class Job(ActiveParams):
     class _Job(TypedDict):
         # Identifiers
         id: Required[str]
@@ -276,7 +276,7 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
         return super().find_by(**conditions)
 
 
-class JobsMixin(Active, Resource):
+class JobsMixin(ActiveParams, Resource):
     """Mixin class to add a jobs attribute to a resource."""
 
     def __init__(self, ctx, path, /, **attributes):

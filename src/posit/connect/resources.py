@@ -18,6 +18,8 @@ class ResourceParameters:
     Attributes
     ----------
     session: requests.Session
+        A `requests.Session` object. Provides cookie persistence, connection-pooling, and
+        configuration.
     url: str
         The Connect API base URL (e.g., https://connect.example.com/__api__)
     """
@@ -58,7 +60,7 @@ class Resources:
         self.params = params
 
 
-class Active(ABC, Resource):
+class ActiveParams(ABC, Resource):
     def __init__(self, ctx: Context, path: str, /, **attributes):
         """A dict abstraction for any HTTP endpoint that returns a singular resource.
 
@@ -79,8 +81,8 @@ class Active(ABC, Resource):
         self._path = path
 
 
-T = TypeVar("T", bound="Active")
-"""A type variable that is bound to the `Active` class"""
+T = TypeVar("T", bound="ActiveParams")
+"""A type variable that is bound to the `ActiveParams` class"""
 
 
 class ActiveSequence(ABC, Generic[T], Sequence[T]):
@@ -179,7 +181,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         return repr(self._data)
 
 
-class ActiveFinderMethods(ActiveSequence[T], ABC):
+class ActiveFinderMethods(ActiveSequence[T]):
     """Finder methods.
 
     Provides various finder methods for locating records in any endpoint supporting HTTP GET requests.
