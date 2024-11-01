@@ -39,7 +39,7 @@ class Bundle(resources.Resource):
         >>> task.wait_for()
         None
         """
-        path = f"v1/content/{self.content_guid}/deploy"
+        path = f"v1/content/{self['content_guid']}/deploy"
         url = self.params.url + path
         response = self.params.session.post(url, json={"bundle_id": self.id})
         result = response.json()

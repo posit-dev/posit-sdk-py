@@ -26,11 +26,17 @@ if TYPE_CHECKING:
 class ContentItemRepository(Resource):
     def __init__(self, params: ResourceParameters, content_guid: str, **kwargs) -> None:
         super().__init__(params, **kwargs)
-        self.content_guid = content_guid
+        self["content_guid"] = content_guid
 
     def delete(self) -> None:
-        """Delete the content's repository."""
-        path = f"v1/content/{self.content_guid}/repository"
+        """
+        Delete the content's git repository location.
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
+        """
+        path = f"v1/content/{self["content_guid"]}/repository"
         url = self.params.url + path
         self.params.session.delete(url)
 
@@ -38,9 +44,9 @@ class ContentItemRepository(Resource):
         self,
         *,
         repository: Optional[str] = None,
-        branch: Optional[str] = "main",
-        directory: Optional[str] = ".",
-        polling: Optional[bool] = False,
+        branch: Optional[str] = None,
+        directory: Optional[str] = None,
+        polling: Optional[bool] = None,
         **attributes: Any,
     ) -> None:
         """Update the content's repository.
@@ -69,7 +75,7 @@ class ContentItemRepository(Resource):
             "polling": polling,
             **attributes,
         }
-        url = self.params.url + f"v1/content/{self.content_guid}/repository"
+        url = self.params.url + f"v1/content/{self["content_guid"]}/repository"
         response = self.params.session.patch(url, json=drop_none(args))
         super().update(**response.json())
 
@@ -77,11 +83,11 @@ class ContentItemRepository(Resource):
 class ContentItemOAuth(Resource):
     def __init__(self, params: ResourceParameters, content_guid: str) -> None:
         super().__init__(params)
-        self.content_guid = content_guid
+        self["content_guid"] = content_guid
 
     @property
     def associations(self) -> ContentItemAssociations:
-        return ContentItemAssociations(self.params, content_guid=self.content_guid)
+        return ContentItemAssociations(self.params, content_guid=self["content_guid"])
 
 
 class ContentItemOwner(Resource):
@@ -119,9 +125,9 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         self,
         *,
         repository: str,
-        branch: Optional[str] = "main",
-        directory: Optional[str] = ".",
-        polling: Optional[bool] = False,
+        branch: Optional[str] = None,
+        directory: Optional[str] = None,
+        polling: Optional[bool] = None,
         **attributes: Any,
     ) -> ContentItemRepository:
         """Create repository.
@@ -246,7 +252,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         self,
         *,
         # Required argument
-        name: str,
+        name: Optional[str] = None,
         # Content Metadata
         title: Optional[str] = None,
         description: Optional[str] = None,
@@ -458,7 +464,7 @@ class Content(Resources):
         self,
         *,
         # Required argument
-        name: str,
+        name: Optional[str] = None,
         # Content Metadata
         title: Optional[str] = None,
         description: Optional[str] = None,
@@ -677,7 +683,7 @@ class Content(Resources):
         self,
         *,
         # Required
-        name: str,
+        name: Optional[str] = None,
         # Content Metadata
         title: Optional[str] = None,
         description: Optional[str] = None,
