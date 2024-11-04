@@ -51,7 +51,6 @@ class ContentItemRepository(ApiDictEndpoint):
     See Also
     --------
     * Get info: https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
-    * Set info: https://docs.posit.co/connect/api/#put-/v1/content/-guid-/repository
     * Delete info: https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
     * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
     """
