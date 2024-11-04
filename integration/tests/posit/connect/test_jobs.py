@@ -36,3 +36,17 @@ class TestJobs:
 
         jobs = content.jobs
         assert len(jobs) == 1
+
+    def test_find_by(self):
+        content = self.content
+
+        path = Path("../../../resources/connect/bundles/example-quarto-minimal/bundle.tar.gz")
+        path = Path(__file__).parent / path
+        path = path.resolve()
+        path = str(path)
+
+        bundle = content.bundles.create(path)
+        bundle.deploy()
+
+        jobs = content.jobs.find_by(status=1)
+        assert len(jobs) == 1

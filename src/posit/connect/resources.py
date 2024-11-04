@@ -1,6 +1,7 @@
 import posixpath
 import warnings
 from abc import ABC, abstractmethod
+from copy import copy
 from dataclasses import dataclass
 from typing import Any, Generic, List, Optional, Sequence, TypeVar, overload
 
@@ -81,7 +82,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
 
     _cache: Optional[List[T]]
 
-    def __init__(self, ctx: Context, path: str, uid: str = "guid"):
+    def __init__(self, ctx: Context, path: str, uid: str = "guid", params: dict = {}):
         """A sequence abstraction for any HTTP GET endpoint that returns a collection.
 
         Parameters
@@ -97,6 +98,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         self._ctx = ctx
         self._path = path
         self._uid = uid
+        self._params = params
         self._cache = None
 
     @abstractmethod
@@ -114,7 +116,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         List[T]
         """
         endpoint = self._ctx.url + self._path
-        response = self._ctx.session.get(endpoint)
+        response = self._ctx.session.get(endpoint, params=self._params)
         results = response.json()
         return [self._to_instance(result) for result in results]
 

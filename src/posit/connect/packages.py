@@ -1,89 +1,64 @@
-from typing import Literal, Optional, Sequence, TypedDict
+import posixpath
+from typing import Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Active, ActiveFinderMethods, ActiveSequence
 
 
-class Package(Resource):
-    """A package resource."""
-
-    class PackageAttributes(TypedDict):
-        """Package attributes."""
-
-        language: Required[Literal["r", "python"]]
+class Package(Active):
+    class _Package(TypedDict):
+        language: Required[str]
         name: Required[str]
         version: Required[str]
-        hash: NotRequired[str]
+        hash: Required[Optional[str]]
 
-    def __init__(self, params: ResourceParameters, **kwargs: Unpack[PackageAttributes]):
-        super().__init__(params, **kwargs)
+    def __init__(self, ctx, path, /, **attributes: Unpack[_Package]):
+        super().__init__(ctx, path, **attributes)
 
 
-class Packages(Resources, Sequence[Package]):
+class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
     """A collection of packages."""
 
-    def __init__(self, params, endpoint):
-        super().__init__(params)
-        self._endpoint = endpoint
-        self._packages = []
-        self.reload()
+    def __init__(self, ctx, path):
+        super().__init__(ctx, path, "name")
 
-    def __getitem__(self, index):
-        """Retrieve an item or slice from the sequence."""
-        return self._packages[index]
+    def _create_instance(self, path, /, **attributes):
+        return Package(self._ctx, path, **attributes)
 
-    def __len__(self):
-        """Return the length of the sequence."""
-        return len(self._packages)
+    class _FindBy(TypedDict, total=False):
+        language: NotRequired[str]
+        name: NotRequired[str]
+        version: NotRequired[str]
+        hash: NotRequired[Optional[str]]
 
-    def __repr__(self):
-        """Return the string representation of the sequence."""
-        return f"Packages({', '.join(map(str, self._packages))})"
+    @overload
+    def find_by(self, **conditions: Unpack[_FindBy]):
+        ...
 
-    def count(self, value):
-        """Return the number of occurrences of a value in the sequence."""
-        return self._packages.count(value)
+    @overload
+    def find_by(self, **conditions):
+        ...
 
-    def index(self, value, start=0, stop=None):
-        """Return the index of the first occurrence of a value in the sequence."""
-        if stop is None:
-            stop = len(self._packages)
-        return self._packages.index(value, start, stop)
+    def find_by(self, **conditions):
+        return super().find_by(**conditions)
 
-    def reload(self) -> "Packages":
-        """Reload packages from the Connect server.
+class PackagesMixin(Active):
+    """Mixin class to add a packages attribute."""
 
-        Returns
-        -------
-        List[Package]
+    def __init__(self, ctx, path, /, **attributes):
+        """Mixin class which adds a `packages` attribute.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions
+        path : str
+            The HTTP path component for the resource endpoint
+        **attributes : dict
+            Resource attributes passed
         """
-        response = self.params.session.get(self._endpoint)
-        results = response.json()
-        packages = [Package(self.params, **result) for result in results]
-        self._packages = packages
-        return self
+        super().__init__(ctx, path, **attributes)
 
-
-class PackagesMixin(Resource):
-    """Mixin class to add a packages to a resource."""
-
-    class HasGuid(TypedDict):
-        """Has a guid."""
-
-        guid: Required[str]
-
-    def __init__(self, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
-        super().__init__(params, **kwargs)
-        self._guid = kwargs["guid"]
-        self._packages: Optional[Packages] = None
-
-    @property
-    def packages(self) -> Packages:
-        """Get the packages."""
-        if self._packages:
-            return self._packages
-
-        endpoint = self.params.url + f"v1/content/{self._guid}/packages"
-        self._packages = Packages(self.params, endpoint)
-        return self._packages
+        path = posixpath.join(path, "packages")
+        self.packages = Packages(ctx, path)

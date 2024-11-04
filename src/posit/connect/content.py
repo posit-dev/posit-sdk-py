@@ -37,7 +37,7 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(JobsMixin, VanityMixin, Resource):
+class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
     def __init__(self, /, params: ResourceParameters, **kwargs):
         ctx = Context(params.session, params.url)
         uid = kwargs["guid"]
