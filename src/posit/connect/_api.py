@@ -13,6 +13,12 @@ if TYPE_CHECKING:
 # * Perform API calls on property retrieval
 # * Dictionary endpoints: Retrieve all attributes during init unless provided
 # * List endpoints: Do not retrieve until `.fetch()` is called directly. Avoids cache invalidation issues.
+# * Only expose methods needed for `ReadOnlyDict`.
+#   * Ex: When inheriting from `dict`, we'd need to shut down `update`, `pop`, etc.
+# * Use `ApiContextProtocol` to ensure that the class has the necessary attributes for API calls.
+#    * Inherit from `EndpointMixin` to add all helper methods for API calls.
+# * Classes should write the `path` only once within its init method.
+#    * Through regular interactions, the path should only be written once.
 
 
 class ApiContextProtocol(Protocol):
@@ -20,7 +26,7 @@ class ApiContextProtocol(Protocol):
     _path: str
 
 
-# TODO-future; Add type hints for the ReadOnlyDict class
+# TODO-future?; Add type hints for the ReadOnlyDict class
 # ArgsT = TypeVar("ArgsT", bound="ResponseAttrs")
 
 
@@ -176,6 +182,7 @@ class ApiListEndpoint(EndpointMixin, Generic[T], ABC, object):
         results = self._get_api()
         return tuple(self._to_instance(result) for result in results)
 
+    # Return a `tuple` to provide immutability to hint that this is a read-only collection.
     def __iter__(self) -> tuple[T, ...]:
         return self.fetch()
 
