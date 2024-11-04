@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar, overload
 
-import requests
 from typing_extensions import Self
 
-from .context import Context
-from .urls import Url
+if TYPE_CHECKING:
+    import requests
+
+    from .context import Context
+    from .urls import Url
 
 
 @dataclass(frozen=True)
@@ -60,7 +64,7 @@ class Resources:
         self.params = params
 
 
-class ActiveParams(ABC, Resource):
+class Active(ABC, Resource):
     def __init__(self, ctx: Context, path: str, /, **attributes):
         """A dict abstraction for any HTTP endpoint that returns a singular resource.
 
@@ -81,8 +85,8 @@ class ActiveParams(ABC, Resource):
         self._path = path
 
 
-T = TypeVar("T", bound="ActiveParams")
-"""A type variable that is bound to the `ActiveParams` class"""
+T = TypeVar("T", bound="Active")
+"""A type variable that is bound to the `Active` class"""
 
 
 class ActiveSequence(ABC, Generic[T], Sequence[T]):
@@ -210,7 +214,7 @@ class ActiveFinderMethods(ActiveSequence[T]):
         result = response.json()
         return self._to_instance(result)
 
-    def find_by(self, **conditions: Any) -> Optional[T]:
+    def find_by(self, **conditions: Any) -> T | None:
         """
         Find the first record matching the specified conditions.
 
