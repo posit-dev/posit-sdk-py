@@ -104,17 +104,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         """Create an instance of 'T'."""
         raise NotImplementedError()
 
-    def reload(self) -> Self:
-        """Reloads the collection from Connect.
-
-        Returns
-        -------
-        Self
-        """
-        self._cache = None
-        return self
-
-    def _fetch(self) -> List[T]:
+    def fetch(self) -> List[T]:
         """Fetch the collection.
 
         Fetches the collection directly from Connect. This operation does not effect the cache state.
@@ -127,6 +117,16 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         response = self._ctx.session.get(endpoint)
         results = response.json()
         return [self._to_instance(result) for result in results]
+
+    def reload(self) -> Self:
+        """Reloads the collection from Connect.
+
+        Returns
+        -------
+        Self
+        """
+        self._cache = None
+        return self
 
     def _to_instance(self, result: dict) -> T:
         """Converts a result into an instance of T."""
@@ -150,7 +150,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         reload
         """
         if self._cache is None:
-            self._cache = self._fetch()
+            self._cache = self.fetch()
         return self._cache
 
     @overload
@@ -161,6 +161,9 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
 
     def __getitem__(self, index):
         return self._data[index]
+
+    def __iter__(self):
+        return iter(self._data)
 
     def __len__(self) -> int:
         return len(self._data)
@@ -213,4 +216,5 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         Optional[T]
             The first record matching the conditions, or `None` if no match is found.
         """
-        return next((v for v in self._data if v.items() >= conditions.items()), None)
+        collection = self.fetch()
+        return next((v for v in collection if v.items() >= conditions.items()), None)
