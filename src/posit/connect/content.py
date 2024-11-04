@@ -5,9 +5,21 @@ from __future__ import annotations
 import posixpath
 import time
 from posixpath import dirname
-from typing import TYPE_CHECKING, Any, List, Literal, Optional, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+    Literal,
+    NotRequired,
+    Optional,
+    TypedDict,
+    Unpack,
+    cast,
+    overload,
+)
 
 from . import tasks
+from ._api import ApiDictEndpoint, JsonifiableDict
 from ._utils import drop_none
 from .bundles import Bundles
 from .context import Context
@@ -23,10 +35,65 @@ if TYPE_CHECKING:
     from .tasks import Task
 
 
-class ContentItemRepository(Resource):
-    def __init__(self, params: ResourceParameters, content_guid: str, **kwargs) -> None:
-        super().__init__(params, **kwargs)
-        self["content_guid"] = content_guid
+def _assert_guid_in_kwargs(kwargs: dict[str, Any]) -> None:
+    assert "guid" in kwargs, "Missing 'guid' in `**kwargs`"
+
+
+def _assert_content_guid(content_guid: str):
+    assert isinstance(content_guid, str), "Expected 'content_guid' to be a string"
+    assert len(content_guid) > 0, "Expected 'content_guid' to be non-empty"
+
+
+class ContentItemRepository(ApiDictEndpoint):
+    """
+    Content items GitHub repository information.
+
+    See Also
+    --------
+    * Get info: https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
+    * Set info: https://docs.posit.co/connect/api/#put-/v1/content/-guid-/repository
+    * Delete info: https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
+    * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
+    """
+
+    class _Attrs(TypedDict, total=False):
+        repository: NotRequired[str]
+        """URL for the repository."""
+        branch: NotRequired[str]
+        """The tracked Git branch."""
+        directory: NotRequired[str]
+        """Directory containing the content."""
+        polling: NotRequired[bool]
+        """Indicates that the Git repository is regularly polled."""
+
+    def __init__(
+        self,
+        ctx: Context,
+        *,
+        content_guid: str,
+        # By default, the attrs will be retrieved from the API.
+        **attrs: Unpack[_Attrs],
+    ) -> None:
+        """Content items GitHub repository information.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions.
+        content_guid : str
+            The unique identifier of the content item.
+        **attrs : _V1Attrs
+            Attributes for the content item repository. If not supplied, the attributes will be
+            retrieved from the API upon initialization
+        """
+        _assert_content_guid(content_guid)
+
+        init_attrs = {"content_guid": content_guid, **attrs} if len(attrs) > 0 else None
+        super().__init__(
+            ctx=ctx,
+            path=f"v1/content/{content_guid}/repository",
+            attrs=init_attrs,
+        )
 
     def delete(self) -> None:
         """
@@ -34,20 +101,14 @@ class ContentItemRepository(Resource):
 
         See Also
         --------
-        * https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
+        * https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
         """
-        path = f"v1/content/{self["content_guid"]}/repository"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._delete_api()
 
     def update(
         self,
-        *,
-        repository: Optional[str] = None,
-        branch: Optional[str] = None,
-        directory: Optional[str] = None,
-        polling: Optional[bool] = None,
-        **attributes: Any,
+        # *,
+        **attrs: Unpack[_Attrs],
     ) -> None:
         """Update the content's repository.
 
@@ -61,23 +122,16 @@ class ContentItemRepository(Resource):
             Directory containing the content. Default is '.'
         polling: bool, optional
             Indicates that the Git repository is regularly polled. Default is False.
-        attributes: Any
-            Additional attributes.
 
         Returns
         -------
         None
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
         """
-        args = {
-            "repository": repository,
-            "branch": branch,
-            "directory": directory,
-            "polling": polling,
-            **attributes,
-        }
-        url = self.params.url + f"v1/content/{self["content_guid"]}/repository"
-        response = self.params.session.patch(url, json=drop_none(args))
-        super().update(**response.json())
+        self._patch_api(cast(JsonifiableDict, dict(attrs)))
 
 
 class ContentItemOAuth(Resource):
@@ -96,10 +150,13 @@ class ContentItemOwner(Resource):
 
 class ContentItem(JobsMixin, VanityMixin, Resource):
     def __init__(self, /, params: ResourceParameters, **kwargs):
-        ctx = Context(params.session, params.url)
-        uid = kwargs["guid"]
-        path = f"v1/content/{uid}"
-        super().__init__(ctx, path, **kwargs)
+        _assert_guid_in_kwargs(kwargs)
+
+        super().__init__(
+            Context(params.session, params.url),
+            f"v1/content/{kwargs["guid"]}",
+            **kwargs,
+        )
 
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
@@ -112,23 +169,15 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         return ContentItemOAuth(self.params, content_guid=self["guid"])
 
     @property
-    def repository(self) -> Optional[ContentItemRepository]:
-        path = f"v1/content/{self.guid}/repository"
-        url = self.params.url + path
-        try:
-            response = self.params.session.get(url)
-            return ContentItemRepository(self.params, self["guid"], **response.json())
-        except Exception:
-            return None
+    def repository(self) -> ContentItemRepository | None:
+        return ContentItemRepository(
+            self._ctx,
+            content_guid=self["guid"],
+        )
 
     def create_repository(
         self,
-        *,
-        repository: str,
-        branch: Optional[str] = None,
-        directory: Optional[str] = None,
-        polling: Optional[bool] = None,
-        **attributes: Any,
+        **attrs: Unpack[ContentItemRepository._Attrs],
     ) -> ContentItemRepository:
         """Create repository.
 
@@ -149,17 +198,15 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         -------
         ContentItemRepository
         """
-        args = {
-            "repository": repository,
-            "branch": branch,
-            "directory": directory,
-            "polling": polling,
-            **attributes,
-        }
-        path = f"v1/content/{self.guid}/repository"
-        url = self.params.url + path
-        response = self.params.session.put(url, json=drop_none(args))
-        return ContentItemRepository(self.params, **response.json())
+        response = ContentItemRepository(self._ctx, content_guid=self["guid"])._put_api(
+            cast(JsonifiableDict, attrs)
+        )
+
+        return ContentItemRepository(
+            self._ctx,
+            content_guid=self["guid"],
+            **response,  # pyright: ignore[reportCallIssue]
+        )
 
     def delete(self) -> None:
         """Delete the content item."""
