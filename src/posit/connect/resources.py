@@ -162,6 +162,9 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
     def __getitem__(self, index):
         return self._data[index]
 
+    def __iter__(self):
+        return iter(self._data)
+
     def __len__(self) -> int:
         return len(self._data)
 
