@@ -24,6 +24,7 @@ from ._utils import drop_none
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
+from .errors import ClientError
 from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
@@ -68,7 +69,7 @@ class ContentItemRepository(ApiDictEndpoint):
     def __init__(
         self,
         ctx: Context,
-        *,
+        /,
         content_guid: str,
         # By default, the attrs will be retrieved from the API.
         **attrs: Unpack[_Attrs],
@@ -88,6 +89,7 @@ class ContentItemRepository(ApiDictEndpoint):
         _assert_content_guid(content_guid)
 
         init_attrs = {"content_guid": content_guid, **attrs} if len(attrs) > 0 else None
+        print("init_attrs", init_attrs)
         super().__init__(
             ctx=ctx,
             path=f"v1/content/{content_guid}/repository",
@@ -108,7 +110,7 @@ class ContentItemRepository(ApiDictEndpoint):
         self,
         # *,
         **attrs: Unpack[_Attrs],
-    ) -> None:
+    ) -> ContentItemRepository:
         """Update the content's repository.
 
         Parameters
@@ -130,7 +132,12 @@ class ContentItemRepository(ApiDictEndpoint):
         --------
         * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
         """
-        self._patch_api(cast(JsonifiableDict, dict(attrs)))
+        result = self._patch_api(cast(JsonifiableDict, dict(attrs)))
+        return ContentItemRepository(
+            self._ctx,
+            content_guid=self["content_guid"],
+            **result,  # pyright: ignore[reportCallIssue]
+        )
 
 
 class ContentItemOAuth(Resource):
@@ -169,10 +176,10 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
 
     @property
     def repository(self) -> ContentItemRepository | None:
-        return ContentItemRepository(
-            self._ctx,
-            content_guid=self["guid"],
-        )
+        try:
+            return ContentItemRepository(self._ctx, content_guid=self["guid"])
+        except ClientError:
+            return None
 
     def create_repository(
         self,
@@ -197,9 +204,12 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         -------
         ContentItemRepository
         """
-        response = ContentItemRepository(self._ctx, content_guid=self["guid"])._put_api(
-            cast(JsonifiableDict, attrs)
-        )
+        response = ContentItemRepository(
+            self._ctx,
+            content_guid=self["guid"],
+            # Add a placeholder `attr` to avoid a `GET` request.
+            _init=True,  # pyright: ignore[reportCallIssue]
+        )._put_api(cast(JsonifiableDict, attrs))
 
         return ContentItemRepository(
             self._ctx,
@@ -297,6 +307,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
     def update(
         self,
         *,
+        # TODO-barret; Reformat arguments to be similar to `ContentItemRepository._Attrs`
         # Required argument
         name: Optional[str] = None,
         # Content Metadata
@@ -417,6 +428,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
             **attributes,
         }
         url = self.params.url + f"v1/content/{self['guid']}"
+        # TODO-barret; Remove `drop_none`
         response = self.params.session.patch(url, json=drop_none(args))
         super().update(**response.json())
 

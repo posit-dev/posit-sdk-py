@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import posixpath
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
+from ._api_call import ApiCallMixin, get_api
 from ._json import Jsonifiable, JsonifiableDict, ResponseAttrs
 
 if TYPE_CHECKING:
     from .context import Context
+
 
 # Design Notes:
 # * Perform API calls on property retrieval
@@ -16,14 +19,9 @@ if TYPE_CHECKING:
 # * Only expose methods needed for `ReadOnlyDict`.
 #   * Ex: When inheriting from `dict`, we'd need to shut down `update`, `pop`, etc.
 # * Use `ApiContextProtocol` to ensure that the class has the necessary attributes for API calls.
-#    * Inherit from `EndpointMixin` to add all helper methods for API calls.
+#    * Inherit from `ApiCallMixin` to add all helper methods for API calls.
 # * Classes should write the `path` only once within its init method.
 #    * Through regular interactions, the path should only be written once.
-
-
-class ApiContextProtocol(Protocol):
-    _ctx: Context
-    _path: str
 
 
 # TODO-future?; Add type hints for the ReadOnlyDict class
@@ -32,12 +30,11 @@ class ApiContextProtocol(Protocol):
 
 class ReadOnlyDict(
     # Generic[ArgsT],
+    Mapping,
 ):
     # _attrs: ArgsT
     _attrs: ResponseAttrs
     """Resource attributes passed."""
-    _attrs_locked: bool
-    """Semaphore for locking the resource attributes. Deters setting new attributes after initialization."""
 
     def __init__(self, attrs: ResponseAttrs) -> None:
         """
@@ -48,8 +45,10 @@ class ReadOnlyDict(
         attrs : dict
             Resource attributes passed
         """
+        print("here!", attrs)
+        super().__init__()
+        print("mapping attrs", attrs)
         self._attrs = attrs
-        self._attrs_locked = True
 
     def get(self, key: str, default: Any = None) -> Any:
         return self._attrs.get(key, default)
@@ -58,53 +57,37 @@ class ReadOnlyDict(
         return self._attrs[key]
 
     def __setitem__(self, key: str, value: Any) -> None:
-        if self._attrs_locked:
-            raise AttributeError(
-                "Resource attributes are locked. "
-                "To retrieve updated values, please retrieve the parent object again."
-            )
-        self._attrs[key] = value
-
-    def _set_attrs(self, **kwargs: Any) -> None:
-        # Unlock
-        self._attrs_locked = False
-        # Set
-        for key, value in kwargs.items():
-            self._attrs[key] = value
-        # Lock
-        self._attrs_locked = True
+        raise AttributeError(
+            "Resource attributes are locked. "
+            "To retrieve updated values, please retrieve the parent object again."
+        )
 
     def __len__(self) -> int:
         return self._attrs.__len__()
 
+    def __iter__(self):
+        return self._attrs.__iter__()
 
-class EndpointMixin(ApiContextProtocol):
-    _ctx: Context
-    """The context object containing the session and URL for API interactions."""
-    _path: str
-    """The HTTP path component for the resource endpoint."""
+    def __contains__(self, key: object) -> bool:
+        return self._attrs.__contains__(key)
 
-    def _endpoint(self, extra_endpoint: str = "") -> str:
-        return self._ctx.url + self._path + extra_endpoint
+    def __repr__(self) -> str:
+        return repr(self._attrs)
 
-    def _get_api(self, *, extra_endpoint: str = "") -> Jsonifiable:
-        response = self._ctx.session.get(self._endpoint(extra_endpoint))
-        return response.json()
+    def __str__(self) -> str:
+        return str(self._attrs)
 
-    def _delete_api(self, *, extra_endpoint: str = "") -> Jsonifiable:
-        response = self._ctx.session.get(self._endpoint(extra_endpoint))
-        return response.json()
+    def keys(self):
+        return self._attrs.keys()
 
-    def _patch_api(self, json: Jsonifiable | None, *, extra_endpoint: str = "") -> Jsonifiable:
-        response = self._ctx.session.patch(self._endpoint(extra_endpoint), json=json)
-        return response.json()
+    def values(self):
+        return self._attrs.values()
 
-    def _put_api(self, json: Jsonifiable | None, *, extra_endpoint: str = "") -> Jsonifiable:
-        response = self._ctx.session.put(self._endpoint(extra_endpoint), json=json)
-        return response.json()
+    def items(self):
+        return self._attrs.items()
 
 
-class ApiDictEndpoint(EndpointMixin, ReadOnlyDict):
+class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
     def _get_api(self, *, extra_endpoint: str = "") -> JsonifiableDict | None:
         super()._get_api(extra_endpoint=extra_endpoint)
 
@@ -123,21 +106,26 @@ class ApiDictEndpoint(EndpointMixin, ReadOnlyDict):
         attrs : dict
             Resource attributes passed
         """
-        super().__init__(attrs or {})
+        # If no attributes are provided, fetch the API and set the attributes from the response
+        print("dict attrs", attrs)
+        if attrs is None:
+            init_attrs: Jsonifiable = get_api(ctx, path)
+            attrs = cast(ResponseAttrs, init_attrs)
+            print("dict init attrs", attrs)
+
+        print("pre init")
+        print("super", super())
+        super().__init__(attrs)
+        print("post init")
         self._ctx = ctx
         self._path = path
-
-        # If attrs is None, Fetch the API and set the attributes
-        if attrs is None:
-            init_attrs = self._get_api() or {}
-            self._set_attrs(**init_attrs)
 
 
 T = TypeVar("T", bound="ReadOnlyDict")
 """A type variable that is bound to the `Active` class"""
 
 
-class ApiListEndpoint(EndpointMixin, Generic[T], ABC, object):
+class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
     """A tuple for any HTTP GET endpoint that returns a collection."""
 
     _data: tuple[T, ...]

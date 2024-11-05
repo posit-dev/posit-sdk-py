@@ -559,6 +559,10 @@ class TestContentRepository:
         return "8ce6eaca-60af-4c2f-93a0-f5f3cddf5ee5"
 
     @property
+    def content_item(self):
+        return ContentItem(self.params, guid=self.content_guid)
+
+    @property
     def endpoint(self):
         return f"{self.base_url}/__api__/v1/content/{self.content_guid}/repository"
 
@@ -572,10 +576,12 @@ class TestContentRepository:
         }
 
     @property
+    def patch_branch_value(self):
+        return "testing-main"
+
+    @property
     def patch_value(self):
-        ret = {**self.get_value}
-        ret["branch"] = "testing-main"
-        return ret
+        return {"branch": self.patch_branch_value} | self.get_value
 
     @property
     def ctx(self):
@@ -585,95 +591,42 @@ class TestContentRepository:
     def params(self):
         return ResourceParameters(self.ctx.session, self.ctx.url)
 
-    @responses.activate
-    def test_repository_getter_returns_repository(self):
+    def mock_repository_info(self):
+        content_item = self.content_item
+
         mock_get = responses.get(self.endpoint, json=self.get_value)
-
-        content_item = ContentItem(self.params, guid=self.content_guid)
-
-        assert mock_get.call_count == 0
-
         repository_info = content_item.repository
+
         assert isinstance(repository_info, ContentItemRepository)
         assert mock_get.call_count == 1
 
+        return repository_info
+
+    @responses.activate
+    def test_repository_getter_returns_repository(self):
+        # Performs assertions in helper property method
+        self.mock_repository_info()
+
     @responses.activate
     def test_repository_update(self):
-        mock_patch = responses.patch(self.endpoint, json=self.patch_value)
+        repository_info = self.mock_repository_info()
 
-        # TODO-barret; Implement
+        # print(dict(repository_info))
+        print(repository_info.__dict__)
+        print(repository_info._attrs)
+
+        mock_patch = responses.patch(self.endpoint, json=self.patch_value)
+        new_repository_info = repository_info.update(branch=self.patch_branch_value)
+        assert mock_patch.call_count == 1
+
+        for key, value in self.patch_value.items():
+            assert getattr(new_repository_info, key) == value
 
     @responses.activate
     def test_repository_delete(self):
+        repository_info = self.mock_repository_info()
+
         mock_delete = responses.delete(self.endpoint)
-        # TODO-barret; Implement
+        repository_info.delete()
 
-
-# # TODO-barret; Remove all tests below this line
-
-
-# class TestVanityMixin:
-#     @responses.activate
-#     def test_vanity_getter_returns_vanity(self):
-#         guid = "12345678-1234-1234-1234-1234567890ab"
-#         base_url = "http://connect.example/__api__"
-#         endpoint = f"{base_url}/v1/content/{guid}/repository"
-#         mock_get = responses.get(
-#             endpoint,
-#             json={
-#                 "repository": "git-owner/git-repo",
-#                 "branch": "testing-main",
-#                 "directory": "test_path",
-#                 "polling": False,
-#             },
-#         )
-
-#         session = requests.Session()
-#         url = Url(base_url)
-#         params = ResourceParameters(session, url)
-#         content = VanityMixin(params, guid=guid)
-
-#         assert content
-
-#         assert content.vanity == "my-dashboard"
-#         assert mock_get.call_count == 1
-
-#     @responses.activate
-#     def test_vanity_setter_with_string(self):
-#         guid = "8ce6eaca-60af-4c2f-93a0-f5f3cddf5ee5"
-#         base_url = "http://connect.example/__api__"
-#         endpoint = f"{base_url}/v1/content/{guid}/vanity"
-#         path = "example"
-#         mock_put = responses.put(
-#             endpoint,
-#             json={"content_guid": guid, "path": path},
-#             match=[matchers.json_params_matcher({"path": path})],
-#         )
-
-#         session = requests.Session()
-#         url = Url(base_url)
-#         params = ResourceParameters(session, url)
-#         content = VanityMixin(params, guid=guid)
-#         content.vanity = path
-#         assert content.vanity == path
-
-#         assert mock_put.call_count == 1
-
-#     @responses.activate
-#     def test_vanity_deleter(self):
-#         guid = "12345678-1234-1234-1234-1234567890ab"
-#         base_url = "http://connect.example/__api__"
-#         endpoint = f"{base_url}/v1/content/{guid}/repository"
-#         mock_delete = responses.delete(endpoint)
-
-#         session = requests.Session()
-#         url = Url(base_url)
-#         params = ResourceParameters(session, url)
-#         content = VanityMixin(params, guid=guid)
-#         content._vanity = Vanity(
-#             params, path=mock.Mock(), content_guid=guid, created_time=mock.Mock()
-#         )
-#         del content.vanity
-
-#         assert content._vanity is None
-#         assert mock_delete.call_count == 1
+        assert mock_delete.call_count == 1
