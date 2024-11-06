@@ -31,6 +31,7 @@ else:
         Required,
         Self,
         TypedDict,
+        Unpack,
     )
 
 
