@@ -611,16 +611,12 @@ class TestContentRepository:
     def test_repository_update(self):
         repository_info = self.mock_repository_info()
 
-        # print(dict(repository_info))
-        print(repository_info.__dict__)
-        print(repository_info._attrs)
-
         mock_patch = responses.patch(self.endpoint, json=self.patch_value)
         new_repository_info = repository_info.update(branch=self.patch_branch_value)
         assert mock_patch.call_count == 1
 
         for key, value in self.patch_value.items():
-            assert getattr(new_repository_info, key) == value
+            assert new_repository_info[key] == value
 
     @responses.activate
     def test_repository_delete(self):
