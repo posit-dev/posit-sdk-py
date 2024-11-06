@@ -70,6 +70,7 @@ class ContentItemRepository(ApiDictEndpoint):
         self,
         ctx: Context,
         /,
+        *,
         content_guid: str,
         # By default, the attrs will be retrieved from the API.
         **attrs: Unpack[_Attrs],
