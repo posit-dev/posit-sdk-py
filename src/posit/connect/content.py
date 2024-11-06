@@ -12,6 +12,7 @@ from typing import (
     Literal,
     NotRequired,
     Optional,
+    Required,
     TypedDict,
     Unpack,
     cast,
@@ -20,7 +21,6 @@ from typing import (
 
 from . import tasks
 from ._api import ApiDictEndpoint, JsonifiableDict
-from ._utils import drop_none
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
@@ -36,8 +36,11 @@ if TYPE_CHECKING:
     from .tasks import Task
 
 
-def _assert_guid_in_kwargs(kwargs: dict[str, Any]) -> None:
+def _assert_guid_in_kwargs(kwargs: object) -> str:
+    if not isinstance(kwargs, dict):
+        raise TypeError("Expected `kwargs` to be a dictionary")
     assert "guid" in kwargs, "Missing 'guid' in `**kwargs`"
+    return kwargs["guid"]
 
 
 def _assert_content_guid(content_guid: str):
@@ -73,7 +76,7 @@ class ContentItemRepository(ApiDictEndpoint):
         *,
         content_guid: str,
         # By default, the `attrs` will be retrieved from the API if no `attrs` are supplied.
-        **attrs: Unpack[_Attrs],
+        **attrs: Unpack[ContentItemRepository._Attrs],
     ) -> None:
         """Content items GitHub repository information.
 
@@ -103,7 +106,10 @@ class ContentItemRepository(ApiDictEndpoint):
 
     @classmethod
     def _create(
-        cls, ctx: Context, content_guid: str, **attrs: Unpack[_Attrs]
+        cls,
+        ctx: Context,
+        content_guid: str,
+        **attrs: Unpack[ContentItemRepository._Attrs],
     ) -> ContentItemRepository:
         from ._api_call import put_api
 
@@ -128,7 +134,7 @@ class ContentItemRepository(ApiDictEndpoint):
     def update(
         self,
         # *,
-        **attrs: Unpack[_Attrs],
+        **attrs: Unpack[ContentItemRepository._Attrs],
     ) -> ContentItemRepository:
         """Update the content's repository.
 
@@ -174,12 +180,50 @@ class ContentItemOwner(Resource):
 
 
 class ContentItem(JobsMixin, VanityMixin, Resource):
-    def __init__(self, /, params: ResourceParameters, **kwargs):
-        _assert_guid_in_kwargs(kwargs)
+    class _AttrsInit(TypedDict, total=False):
+        name: Required[str]
+        # Content Metadata
+        title: NotRequired[str]
+        description: NotRequired[str]
+        access_type: NotRequired[Literal["all", "acl", "logged_in"]]
+        # Timeout Settings
+        connection_timeout: NotRequired[int]
+        read_timeout: NotRequired[int]
+        init_timeout: NotRequired[int]
+        idle_timeout: NotRequired[int]
+        # Process and Resource Limits
+        max_processes: NotRequired[int]
+        min_processes: NotRequired[int]
+        max_conns_per_process: NotRequired[int]
+        load_factor: NotRequired[float]
+        cpu_request: NotRequired[float]
+        cpu_limit: NotRequired[float]
+        memory_request: NotRequired[int]
+        memory_limit: NotRequired[int]
+        amd_gpu_limit: NotRequired[int]
+        nvidia_gpu_limit: NotRequired[int]
+        # Execution Settings
+        run_as: NotRequired[str]
+        run_as_current_user: NotRequired[bool]
+        default_image_name: NotRequired[str]
+        default_r_environment_management: NotRequired[bool]
+        default_py_environment_management: NotRequired[bool]
+        service_account_name: NotRequired[str]
+
+    class _Attr(_AttrsInit):
+        owner_guid: NotRequired[str]
+
+    def __init__(
+        self,
+        /,
+        params: ResourceParameters,
+        **kwargs: Unpack[ContentItem._AttrsInit],
+    ) -> None:
+        guid = _assert_guid_in_kwargs(kwargs)
 
         super().__init__(
             Context(params.session, params.url),
-            f"v1/content/{kwargs["guid"]}",
+            f"v1/content/{guid}",
             **kwargs,
         )
 
@@ -265,7 +309,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> render()
         """
-        self.update(name=None)  # pyright: ignore[reportArgumentType]
+        self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_rendered:
             variants = self._variants.find()
@@ -294,7 +338,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> restart()
         """
-        self.update(name=None)  # pyright: ignore[reportArgumentType]
+        self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_interactive:
             unix_epoch_in_seconds = str(int(time.time()))
@@ -312,39 +356,9 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
 
     def update(
         self,
-        *,
+        **attrs: Unpack[ContentItem._Attrs],
         # TODO-barret; Reformat arguments to be similar to `ContentItemRepository._Attrs`
         # Required argument
-        name: Optional[str] = None,
-        # Content Metadata
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        access_type: Optional[Literal["all", "acl", "logged_in"]] = None,
-        owner_guid: Optional[str] = None,
-        # Timeout Settings
-        connection_timeout: Optional[int] = None,
-        read_timeout: Optional[int] = None,
-        init_timeout: Optional[int] = None,
-        idle_timeout: Optional[int] = None,
-        # Process and Resource Limits
-        max_processes: Optional[int] = None,
-        min_processes: Optional[int] = None,
-        max_conns_per_process: Optional[int] = None,
-        load_factor: Optional[float] = None,
-        cpu_request: Optional[float] = None,
-        cpu_limit: Optional[float] = None,
-        memory_request: Optional[int] = None,
-        memory_limit: Optional[int] = None,
-        amd_gpu_limit: Optional[int] = None,
-        nvidia_gpu_limit: Optional[int] = None,
-        # Execution Settings
-        run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = None,
-        default_image_name: Optional[str] = None,
-        default_r_environment_management: Optional[bool] = None,
-        default_py_environment_management: Optional[bool] = None,
-        service_account_name: Optional[str] = None,
-        **attributes: Any,
     ) -> None:
         """Update the content item.
 
@@ -405,37 +419,9 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         -------
         None
         """
-        args = {
-            "name": name,
-            "title": title,
-            "description": description,
-            "access_type": access_type,
-            "owner_guid": owner_guid,
-            "connection_timeout": connection_timeout,
-            "read_timeout": read_timeout,
-            "init_timeout": init_timeout,
-            "idle_timeout": idle_timeout,
-            "max_processes": max_processes,
-            "min_processes": min_processes,
-            "max_conns_per_process": max_conns_per_process,
-            "load_factor": load_factor,
-            "cpu_request": cpu_request,
-            "cpu_limit": cpu_limit,
-            "memory_request": memory_request,
-            "memory_limit": memory_limit,
-            "amd_gpu_limit": amd_gpu_limit,
-            "nvidia_gpu_limit": nvidia_gpu_limit,
-            "run_as": run_as,
-            "run_as_current_user": run_as_current_user,
-            "default_image_name": default_image_name,
-            "default_r_environment_management": default_r_environment_management,
-            "default_py_environment_management": default_py_environment_management,
-            "service_account_name": service_account_name,
-            **attributes,
-        }
         url = self.params.url + f"v1/content/{self['guid']}"
         # TODO-barret; Remove `drop_none`
-        response = self.params.session.patch(url, json=drop_none(args))
+        response = self.params.session.patch(url, json=attrs)
         super().update(**response.json())
 
     # Relationships
@@ -526,37 +512,7 @@ class Content(Resources):
 
     def create(
         self,
-        *,
-        # Required argument
-        name: Optional[str] = None,
-        # Content Metadata
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        access_type: Optional[Literal["all", "acl", "logged_in"]] = None,
-        # Timeout Settings
-        connection_timeout: Optional[int] = None,
-        read_timeout: Optional[int] = None,
-        init_timeout: Optional[int] = None,
-        idle_timeout: Optional[int] = None,
-        # Process and Resource Limits
-        max_processes: Optional[int] = None,
-        min_processes: Optional[int] = None,
-        max_conns_per_process: Optional[int] = None,
-        load_factor: Optional[float] = None,
-        cpu_request: Optional[float] = None,
-        cpu_limit: Optional[float] = None,
-        memory_request: Optional[int] = None,
-        memory_limit: Optional[int] = None,
-        amd_gpu_limit: Optional[int] = None,
-        nvidia_gpu_limit: Optional[int] = None,
-        # Execution Settings
-        run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = None,
-        default_image_name: Optional[str] = None,
-        default_r_environment_management: Optional[bool] = None,
-        default_py_environment_management: Optional[bool] = None,
-        service_account_name: Optional[str] = None,
-        **attributes: Any,
+        **attrs: Unpack[ContentItem._Attrs],
     ) -> ContentItem:
         """Create content.
 
@@ -617,36 +573,9 @@ class Content(Resources):
         -------
         ContentItem
         """
-        args = {
-            "name": name,
-            "title": title,
-            "description": description,
-            "access_type": access_type,
-            "connection_timeout": connection_timeout,
-            "read_timeout": read_timeout,
-            "init_timeout": init_timeout,
-            "idle_timeout": idle_timeout,
-            "max_processes": max_processes,
-            "min_processes": min_processes,
-            "max_conns_per_process": max_conns_per_process,
-            "load_factor": load_factor,
-            "cpu_request": cpu_request,
-            "cpu_limit": cpu_limit,
-            "memory_request": memory_request,
-            "memory_limit": memory_limit,
-            "amd_gpu_limit": amd_gpu_limit,
-            "nvidia_gpu_limit": nvidia_gpu_limit,
-            "run_as": run_as,
-            "run_as_current_user": run_as_current_user,
-            "default_image_name": default_image_name,
-            "default_r_environment_management": default_r_environment_management,
-            "default_py_environment_management": default_py_environment_management,
-            "service_account_name": service_account_name,
-            **attributes,
-        }
         path = "v1/content"
         url = self.params.url + path
-        response = self.params.session.post(url, json=drop_none(args))
+        response = self.params.session.post(url, json=attrs)
         return ContentItem(self.params, **response.json())
 
     @overload
@@ -745,38 +674,7 @@ class Content(Resources):
 
     def find_by(
         self,
-        *,
-        # Required
-        name: Optional[str] = None,
-        # Content Metadata
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        access_type: Optional[Literal["all", "acl", "logged_in"]] = None,
-        owner_guid: Optional[str] = None,
-        # Timeout Settings
-        connection_timeout: Optional[int] = None,
-        read_timeout: Optional[int] = None,
-        init_timeout: Optional[int] = None,
-        idle_timeout: Optional[int] = None,
-        # Process and Resource Limits
-        max_processes: Optional[int] = None,
-        min_processes: Optional[int] = None,
-        max_conns_per_process: Optional[int] = None,
-        load_factor: Optional[float] = None,
-        cpu_request: Optional[float] = None,
-        cpu_limit: Optional[float] = None,
-        memory_request: Optional[int] = None,
-        memory_limit: Optional[int] = None,
-        amd_gpu_limit: Optional[int] = None,
-        nvidia_gpu_limit: Optional[int] = None,
-        # Execution Settings
-        run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = None,
-        default_image_name: Optional[str] = None,
-        default_r_environment_management: Optional[bool] = None,
-        default_py_environment_management: Optional[bool] = None,
-        service_account_name: Optional[str] = None,
-        **attributes: Any,
+        **attrs: Unpack[ContentItem._Attrs],
     ) -> Optional[ContentItem]:
         """Find the first content record matching the specified attributes.
 
@@ -834,8 +732,6 @@ class Content(Resources):
             Manage Python environment for the content.
         service_account_name : str, optional
             Kubernetes service account name for running content.
-        **attributes : Any
-            Additional attributes.
 
         Returns
         -------
@@ -845,38 +741,10 @@ class Content(Resources):
         -------
         >>> find_by(name="example-content-name")
         """
-        args = {
-            "name": name,
-            "title": title,
-            "description": description,
-            "access_type": access_type,
-            "owner_guid": owner_guid,
-            "connection_timeout": connection_timeout,
-            "read_timeout": read_timeout,
-            "init_timeout": init_timeout,
-            "idle_timeout": idle_timeout,
-            "max_processes": max_processes,
-            "min_processes": min_processes,
-            "max_conns_per_process": max_conns_per_process,
-            "load_factor": load_factor,
-            "cpu_request": cpu_request,
-            "cpu_limit": cpu_limit,
-            "memory_request": memory_request,
-            "memory_limit": memory_limit,
-            "amd_gpu_limit": amd_gpu_limit,
-            "nvidia_gpu_limit": nvidia_gpu_limit,
-            "run_as": run_as,
-            "run_as_current_user": run_as_current_user,
-            "default_image_name": default_image_name,
-            "default_r_environment_management": default_r_environment_management,
-            "default_py_environment_management": default_py_environment_management,
-            "service_account_name": service_account_name,
-            **attributes,
-        }
-        args_items = drop_none(args).items()
+        attr_items = attrs.items()
         results = self.find()
         results = (
-            result for result in results if all(item in result.items() for item in args_items)
+            result for result in results if all(item in result.items() for item in attr_items)
         )
         return next(results, None)
 
