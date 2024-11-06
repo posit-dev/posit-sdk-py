@@ -57,7 +57,7 @@ class ContentItemRepository(ApiDictEndpoint):
     """
 
     class _Attrs(TypedDict, total=False):
-        repository: NotRequired[str]
+        repository: str
         """URL for the repository."""
         branch: NotRequired[str]
         """The tracked Git branch."""
@@ -216,8 +216,6 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
             Directory containing the content. Default is '.'.
         polling : bool, optional
             Indicates that the Git repository is regularly polled. Default is False.
-        **attributes : Any
-            Additional attributes.
 
         Returns
         -------
