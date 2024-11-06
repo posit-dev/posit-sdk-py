@@ -160,9 +160,7 @@ T = TypeVar("T", bound="ReadOnlyDict")
 
 
 class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
-    """A tuple for any HTTP GET endpoint that returns a collection."""
-
-    _data: tuple[T, ...]
+    """A HTTP GET endpoint that can fetch a collection."""
 
     def _get_api(self, *, extra_endpoint: str = "") -> tuple[JsonifiableDict, ...]:
         vals: Jsonifiable = super()._get_api(extra_endpoint=extra_endpoint)
@@ -184,15 +182,13 @@ class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
         self._ctx = ctx
         self._path = path
         self._uid_key = uid_key
-        # # TODO-barret; Key component! Fetch the data immediately?
-        # self._data = self._fetch_data()
 
     @abstractmethod
     def _create_instance(self, path: str, /, **kwargs: Any) -> T:
         """Create an instance of 'T'."""
         raise NotImplementedError()
 
-    def fetch(self) -> tuple[T, ...]:
+    def fetch(self) -> Generator[T, None, None]:
         """Fetch the collection.
 
         Fetches the collection directly from Connect. This operation does not effect the cache state.
@@ -202,10 +198,10 @@ class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
         List[T]
         """
         results = self._get_api()
-        return tuple(self._to_instance(result) for result in results)
+        for result in results:
+            yield self._to_instance(result)
 
-    # Return a `tuple` to provide immutability to hint that this is a read-only collection.
-    def __iter__(self) -> tuple[T, ...]:
+    def __iter__(self) -> Generator[T, None, None]:
         return self.fetch()
 
     def _to_instance(self, result: dict) -> T:
@@ -214,14 +210,19 @@ class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
         path = posixpath.join(self._path, uid)
         return self._create_instance(path, **result)
 
-    # @overload
-    # def __getitem__(self, index: int) -> T: ...
+    @overload
+    def __getitem__(self, index: int) -> T: ...
 
-    # @overload
-    # def __getitem__(self, index: slice) -> Sequence[T]: ...
+    @overload
+    def __getitem__(self, index: slice) -> Generator[T, None, None]: ...
 
-    # def __getitem__(self, index: int | slice) -> T | Sequence[T]:
-    #     return self.fetch()[index]
+    def __getitem__(self, index: int | slice) -> T | Generator[T, None, None]:
+        if isinstance(index, slice):
+            results = itertools.islice(self.fetch(), index.start, index.stop, index.step)
+            for result in results:
+                yield result
+        else:
+            return list(itertools.islice(self.fetch(), index, index + 1))[0]
 
     # def __len__(self) -> int:
     #     return len(self.fetch())
