@@ -20,7 +20,7 @@ class TestContentItemRepository:
 
     @property
     def repo_repository(self):
-        return "posit-dev/posit-sdk-py"
+        return "https://github.com/posit-dev/posit-sdk-py"
 
     @property
     def repo_branch(self):
@@ -47,10 +47,6 @@ class TestContentItemRepository:
         content = self.create_content()
 
         # None by default
-        print("!!!!HERE!!!!")
-        print(content)
-        print(content.repository)
-
         assert content.repository is None
 
         # Create
