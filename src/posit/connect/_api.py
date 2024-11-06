@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import itertools
 import posixpath
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generator, Generic, Optional, TypeVar, cast, overload
 
 from ._api_call import ApiCallMixin, get_api
 from ._json import Jsonifiable, JsonifiableDict, ResponseAttrs
@@ -22,6 +23,21 @@ if TYPE_CHECKING:
 #    * Inherit from `ApiCallMixin` to add all helper methods for API calls.
 # * Classes should write the `path` only once within its init method.
 #    * Through regular interactions, the path should only be written once.
+
+# TODO-barret; Add `.client` (a `Client` class) within `._ctx`.
+
+# When making a new class,
+# * Use a class to define the parameters and their types
+#    * If attaching the type info class to the parent class, start with `_`. E.g.: `_Attrs`
+# * Document all attributes like normal
+#    * When the time comes that there are multiple attribute types, we can use overloads with full documentation and unpacking of type info class for each overload method.
+# * Inherit from `ApiDictEndpoint` or `ApiListEndpoint` as needed
+#    * Init signature should be `def __init__(self, ctx: Context, path: str, /, **attrs: Jsonifiable) -> None:`
+# *
+#
+#
+# * Inherit from `ApiDictEndpoint` or `ApiListEndpoint` as needed
+# Use a internal
 
 
 # TODO-future?; Add type hints for the ReadOnlyDict class
@@ -45,9 +61,7 @@ class ReadOnlyDict(
         attrs : dict
             Resource attributes passed
         """
-        print("here!", attrs)
         super().__init__()
-        print("mapping attrs", attrs)
         self._attrs = attrs
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -133,6 +147,13 @@ class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
         # self._ctx.client = client
         self._path = path
 
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def __repr__(self) -> str:
+        # CLASSNAME - v1/content/123/path; {'guid': '123', 'name': 'My Content'}
+        return repr(f"{self.__class__.__name__} - {self._path}; {super().__repr__()}")
+
 
 T = TypeVar("T", bound="ReadOnlyDict")
 """A type variable that is bound to the `Active` class"""
@@ -210,7 +231,9 @@ class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
 
     def __repr__(self) -> str:
         # Jobs - 123 items
-        return repr(f"{self.__class__.__name__} - { len(self.fetch()) } items")
+        return repr(
+            f"{self.__class__.__name__} - { len(list(self.fetch())) } items - {self._path}"
+        )
 
     def find(self, uid: str) -> T | None:
         """
