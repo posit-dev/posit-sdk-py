@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import List, Literal, TypedDict
-
-from typing_extensions import NotRequired, Required, Unpack
+from typing import List, Literal
 
 from . import me
+from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from .content import Content
 from .paginator import Paginator
 from .resources import Resource, ResourceParameters, Resources

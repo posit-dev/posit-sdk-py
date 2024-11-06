@@ -10,17 +10,14 @@ from typing import (
     Any,
     List,
     Literal,
-    NotRequired,
     Optional,
-    Required,
-    TypedDict,
-    Unpack,
     cast,
     overload,
 )
 
 from . import tasks
 from ._api import ApiDictEndpoint, JsonifiableDict
+from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
@@ -210,7 +207,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         default_py_environment_management: NotRequired[bool]
         service_account_name: NotRequired[str]
 
-    class _Attr(_AttrsInit):
+    class _Attrs(_AttrsInit):
         owner_guid: NotRequired[str]
 
     def __init__(
