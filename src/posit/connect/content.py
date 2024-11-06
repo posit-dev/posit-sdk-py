@@ -354,8 +354,6 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
     def update(
         self,
         **attrs: Unpack[ContentItem._Attrs],
-        # TODO-barret; Reformat arguments to be similar to `ContentItemRepository._Attrs`
-        # Required argument
     ) -> None:
         """Update the content item.
 
@@ -417,7 +415,6 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         None
         """
         url = self.params.url + f"v1/content/{self['guid']}"
-        # TODO-barret; Remove `drop_none`
         response = self.params.session.patch(url, json=attrs)
         super().update(**response.json())
 
