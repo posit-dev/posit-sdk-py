@@ -1,3 +1,6 @@
+# TODO-barret-future; Piecemeal migrate everything to leverage `ApiDictEndpoint` and `ApiListEndpoint` classes.
+# TODO-barret-future; Merge any trailing behavior of `Active` or `ActiveList` into the new classes.
+
 from __future__ import annotations
 
 import itertools
@@ -14,9 +17,10 @@ if TYPE_CHECKING:
 
 
 # Design Notes:
-# * Perform API calls on property retrieval
+# * Perform API calls on property retrieval. e.g. `my_content.repository`
 # * Dictionary endpoints: Retrieve all attributes during init unless provided
 # * List endpoints: Do not retrieve until `.fetch()` is called directly. Avoids cache invalidation issues.
+#   * While slower, all ApiListEndpoint helper methods should `.fetch()` on demand.
 # * Only expose methods needed for `ReadOnlyDict`.
 #   * Ex: When inheriting from `dict`, we'd need to shut down `update`, `pop`, etc.
 # * Use `ApiContextProtocol` to ensure that the class has the necessary attributes for API calls.
@@ -24,31 +28,19 @@ if TYPE_CHECKING:
 # * Classes should write the `path` only once within its init method.
 #    * Through regular interactions, the path should only be written once.
 
-# TODO-barret; Add `.client` (a `Client` class) within `._ctx`.
-
 # When making a new class,
 # * Use a class to define the parameters and their types
-#    * If attaching the type info class to the parent class, start with `_`. E.g.: `_Attrs`
+#    * If attaching the type info class to the parent class, start with `_`. E.g.: `ContentItemRepository._Attrs`
 # * Document all attributes like normal
 #    * When the time comes that there are multiple attribute types, we can use overloads with full documentation and unpacking of type info class for each overload method.
 # * Inherit from `ApiDictEndpoint` or `ApiListEndpoint` as needed
 #    * Init signature should be `def __init__(self, ctx: Context, path: str, /, **attrs: Jsonifiable) -> None:`
-# *
-#
-#
-# * Inherit from `ApiDictEndpoint` or `ApiListEndpoint` as needed
-# Use a internal
 
 
-# TODO-future?; Add type hints for the ReadOnlyDict class
-# ArgsT = TypeVar("ArgsT", bound="ResponseAttrs")
-
-
-class ReadOnlyDict(
-    # Generic[ArgsT],
-    Mapping,
-):
-    # _attrs: ArgsT
+# This class should not have typing about the class keys as that would fix the class's typing. If
+# for some reason, we _know_ the keys are fixed (as we've moved on to a higher version), we can add
+# `Generic[AttrsT]` to the class.
+class ReadOnlyDict(Mapping):
     _attrs: ResponseAttrs
     """Resource attributes passed."""
 
@@ -145,8 +137,6 @@ class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
 
         super().__init__(attrs)
         self._ctx = ctx
-        # TODO-barret; Look into `client` to make get,put,patch,delete calls.
-        # self._ctx.client = client
         self._path = path
 
     def __str__(self) -> str:

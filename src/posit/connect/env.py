@@ -196,4 +196,3 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         path = f"v1/content/{self.content_guid}/environment"
         url = self.params.url + path
         self.params.session.patch(url, json=body)
-        # TODO-barret; Q: No `super().update(**response.json())`?
