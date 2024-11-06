@@ -45,7 +45,8 @@ class Resource(dict):
             # TODO-future; Temp silence during all testing; Turn it into an error.
             global has_shown_warning_dict
             if not has_shown_warning_dict:
-                has_shown_warning_dict = True
+                # # Uncomment for local testing
+                # has_shown_warning_dict = True
                 warnings.warn(
                     f"Accessing the field '{name}' via attribute is deprecated and will be removed in v1.0.0. "
                     f"Please use __getitem__ (e.g., {self.__class__.__name__.lower()}['{name}']) for field access instead.",
