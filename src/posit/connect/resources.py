@@ -6,11 +6,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar, overload
 
-from typing_extensions import Self
-
 if TYPE_CHECKING:
     import requests
 
+    from ._typing_extensions import Self
     from .context import Context
     from .urls import Url
 
@@ -176,11 +175,11 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
     def __getitem__(self, index):
         return self._data[index]
 
-    def __iter__(self):
-        return iter(self._data)
-
     def __len__(self) -> int:
         return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
 
     def __str__(self) -> str:
         return str(self._data)
