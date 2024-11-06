@@ -138,8 +138,10 @@ class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
         # If we should get data, fetch the API and set the attributes from the response
         if get_data:
             init_attrs: Jsonifiable = get_api(ctx, path)
-            # Merge the initial attributes with the provided attributes: e.g. {'key': value} | {'content_guid': '123'}
-            attrs = cast(ResponseAttrs, init_attrs) | attrs
+            init_attrs_dict = cast(ResponseAttrs, init_attrs)
+            # Overwrite the initial attributes with `attrs`: e.g. {'key': value} | {'content_guid': '123'}
+            init_attrs_dict.update(attrs)
+            attrs = init_attrs_dict
 
         super().__init__(attrs)
         self._ctx = ctx

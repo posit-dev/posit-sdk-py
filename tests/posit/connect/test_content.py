@@ -581,7 +581,9 @@ class TestContentRepository:
 
     @property
     def patch_value(self):
-        return {"branch": self.patch_branch_value} | self.get_value
+        ret = {**self.get_value}
+        ret.update({"branch": self.patch_branch_value})
+        return ret
 
     @property
     def ctx(self):
