@@ -1,5 +1,10 @@
+import pytest
+from packaging import version
+
 from posit import connect
 from posit.connect.content import ContentItem, ContentItemRepository
+
+from . import CONNECT_VERSION
 
 
 class TestContentItemRepository:
@@ -43,6 +48,12 @@ class TestContentItemRepository:
             "polling": self.repo_polling,
         }
 
+    @pytest.mark.skipif(
+        # Added to the v2022.12.0 milestone
+        # https://github.com/rstudio/connect/issues/22242#event-7859377097
+        CONNECT_VERSION < version.parse("2022.12.0"),
+        reason="Repository routes not implemented",
+    )
     def test_create_get_update_delete(self):
         content = self.create_content()
 
