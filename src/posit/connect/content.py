@@ -72,7 +72,7 @@ class ContentItemRepository(ApiDictEndpoint):
         /,
         *,
         content_guid: str,
-        # By default, the attrs will be retrieved from the API.
+        # By default, the `attrs` will be retrieved from the API if no `attrs` are supplied.
         **attrs: Unpack[_Attrs],
     ) -> None:
         """Content items GitHub repository information.
@@ -89,12 +89,30 @@ class ContentItemRepository(ApiDictEndpoint):
         """
         _assert_content_guid(content_guid)
 
-        init_attrs = {"content_guid": content_guid, **attrs} if len(attrs) > 0 else None
-        print("init_attrs", init_attrs)
         super().__init__(
-            ctx=ctx,
-            path=f"v1/content/{content_guid}/repository",
-            attrs=init_attrs,
+            ctx,
+            self._api_path(content_guid),
+            # Only fetch data if `attrs` are not supplied
+            len(attrs) == 0,
+            **{"content_guid": content_guid, **attrs},
+        )
+
+    @classmethod
+    def _api_path(cls, content_guid: str) -> str:
+        return f"v1/content/{content_guid}/repository"
+
+    @classmethod
+    def _create(
+        cls, ctx: Context, content_guid: str, **attrs: Unpack[_Attrs]
+    ) -> ContentItemRepository:
+        from ._api_call import put_api
+
+        result = put_api(ctx, cls._api_path(content_guid), json=cast(JsonifiableDict, attrs))
+
+        return ContentItemRepository(
+            ctx,
+            content_guid=content_guid,
+            **result,  # pyright: ignore[reportCallIssue]
         )
 
     def delete(self) -> None:
@@ -205,18 +223,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         -------
         ContentItemRepository
         """
-        response = ContentItemRepository(
-            self._ctx,
-            content_guid=self["guid"],
-            # Add a placeholder `attr` to avoid a `GET` request.
-            _init=True,  # pyright: ignore[reportCallIssue]
-        )._put_api(cast(JsonifiableDict, attrs))
-
-        return ContentItemRepository(
-            self._ctx,
-            content_guid=self["guid"],
-            **response,  # pyright: ignore[reportCallIssue]
-        )
+        return ContentItemRepository._create(self._ctx, self["guid"], **attrs)
 
     def delete(self) -> None:
         """Delete the content item."""

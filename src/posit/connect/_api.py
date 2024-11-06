@@ -88,10 +88,17 @@ class ReadOnlyDict(
 
 
 class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
+    _ctx: Context
+    """The context object containing the session and URL for API interactions."""
+    _path: str
+    """The HTTP path component for the resource endpoint."""
+
     def _get_api(self, *, extra_endpoint: str = "") -> JsonifiableDict | None:
         super()._get_api(extra_endpoint=extra_endpoint)
 
-    def __init__(self, *, ctx: Context, path: str, attrs: ResponseAttrs | None = None) -> None:
+    def __init__(
+        self, ctx: Context, path: str, get_data: Optional[bool] = None, /, **attrs: Jsonifiable
+    ) -> None:
         """
         A dict abstraction for any HTTP endpoint that returns a singular resource.
 
@@ -103,21 +110,27 @@ class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
             The context object containing the session and URL for API interactions.
         path : str
             The HTTP path component for the resource endpoint
+        get_data : Optional[bool]
+            If `True`, fetch the API and set the attributes from the response. If `False`, only set
+            the provided attributes. If `None` [default], fetch the API if no attributes are
+            provided.
         attrs : dict
             Resource attributes passed
         """
         # If no attributes are provided, fetch the API and set the attributes from the response
-        print("dict attrs", attrs)
-        if attrs is None:
-            init_attrs: Jsonifiable = get_api(ctx, path)
-            attrs = cast(ResponseAttrs, init_attrs)
-            print("dict init attrs", attrs)
+        if get_data is None:
+            get_data = len(attrs) == 0
 
-        print("pre init")
-        print("super", super())
+        # If we should get data, fetch the API and set the attributes from the response
+        if get_data:
+            init_attrs: Jsonifiable = get_api(ctx, path)
+            # Merge the initial attributes with the provided attributes: e.g. {'key': value} | {'content_guid': '123'}
+            attrs = cast(ResponseAttrs, init_attrs) | attrs
+
         super().__init__(attrs)
-        print("post init")
         self._ctx = ctx
+        # TODO-barret; Look into `client` to make get,put,patch,delete calls.
+        # self._ctx.client = client
         self._path = path
 
 
