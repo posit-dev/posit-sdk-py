@@ -8,6 +8,10 @@ from posit import connect
 from . import CONNECT_VERSION
 
 
+@pytest.mark.skipif(
+    CONNECT_VERSION <= version.parse("2023.01.1"),
+    reason="Quarto not available",
+)
 class TestJobs:
     @classmethod
     def setup_class(cls):
@@ -19,10 +23,6 @@ class TestJobs:
         cls.content.delete()
         assert cls.client.content.count() == 0
 
-    @pytest.mark.skipif(
-        CONNECT_VERSION <= version.parse("2023.01.1"),
-        reason="Quarto not available",
-    )
     def test(self):
         content = self.content
 
@@ -46,7 +46,8 @@ class TestJobs:
         path = str(path)
 
         bundle = content.bundles.create(path)
-        bundle.deploy()
+        task = bundle.deploy()
+        task.wait_for()
 
-        jobs = content.jobs.find_by()
+        jobs = content.jobs.reload()
         assert len(jobs) != 0
