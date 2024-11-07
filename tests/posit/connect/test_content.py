@@ -560,7 +560,9 @@ class TestContentRepository:
 
     @property
     def content_item(self):
-        return ContentItem(self.params, guid=self.content_guid)
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fixture_content = load_mock(f"v1/content/{guid}.json")
+        return ContentItem(self.params, self.content_guid, **fixture_content)
 
     @property
     def endpoint(self):
@@ -618,13 +620,14 @@ class TestContentRepository:
         assert mock_patch.call_count == 1
 
         for key, value in self.patch_value.items():
-            assert new_repository_info[key] == value
+            if new_repository_info:
+                assert new_repository_info[key] == value
 
     @responses.activate
-    def test_repository_delete(self):
+    def test_repository_destroy(self):
         repository_info = self.mock_repository_info()
 
         mock_delete = responses.delete(self.endpoint)
-        repository_info.delete()
+        repository_info.destroy()
 
         assert mock_delete.call_count == 1

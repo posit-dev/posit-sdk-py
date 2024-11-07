@@ -2,7 +2,7 @@ import pytest
 from packaging import version
 
 from posit import connect
-from posit.connect.content import ContentItem, ContentItemRepository
+from posit.connect.content import ContentItemRepository
 
 from . import CONNECT_VERSION
 
@@ -11,17 +11,16 @@ class TestContentItemRepository:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
+        cls.content = cls.client.content.create(name="example")
 
     @classmethod
     def teardown_class(cls):
+        cls.content.delete()
         assert cls.client.content.count() == 0
 
     @property
     def content_name(self):
         return "example"
-
-    def create_content(self) -> ContentItem:
-        return self.client.content.create(name=self.content_name)
 
     @property
     def repo_repository(self):
@@ -55,7 +54,7 @@ class TestContentItemRepository:
         reason="Repository routes not implemented",
     )
     def test_create_get_update_delete(self):
-        content = self.create_content()
+        content = self.content
 
         # None by default
         assert content.repository is None
@@ -79,16 +78,14 @@ class TestContentItemRepository:
 
         # Update
         ex_branch = "main"
-        updated_repo = content_repo.update(branch=ex_branch)
-        assert updated_repo["branch"] == ex_branch
-
-        assert updated_repo["repository"] == self.repo_repository
-        assert updated_repo["directory"] == self.repo_directory
-        assert updated_repo["polling"] is self.repo_polling
+        content_repo.update(branch=ex_branch)
+        assert content_repo["branch"] == ex_branch
+        assert content_repo["repository"] == self.repo_repository
+        assert content_repo["directory"] == self.repo_directory
+        assert content_repo["polling"] is self.repo_polling
 
         # Delete
-        content.repository.delete()
+        repository = content.repository
+        assert repository is not None
+        repository.destroy()
         assert content.repository is None
-
-        # Cleanup
-        content.delete()
