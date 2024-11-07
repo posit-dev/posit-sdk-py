@@ -63,7 +63,7 @@ class ReadOnlyDict(Mapping):
         return self._attrs[key]
 
     def __setitem__(self, key: str, value: Any) -> None:
-        raise AttributeError(
+        raise NotImplementedError(
             "Resource attributes are locked. "
             "To retrieve updated values, please retrieve the parent object again."
         )
