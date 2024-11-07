@@ -8,20 +8,17 @@ from . import CONNECT_VERSION
 
 
 class TestContentItemRepository:
+    content: ContentItem
+
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
+        cls.content = cls.client.content.create(name="example")
 
     @classmethod
     def teardown_class(cls):
+        cls.content.delete()
         assert cls.client.content.count() == 0
-
-    @property
-    def content_name(self):
-        return "example"
-
-    def create_content(self) -> ContentItem:
-        return self.client.content.create(name=self.content_name)
 
     @property
     def repo_repository(self):
@@ -55,7 +52,7 @@ class TestContentItemRepository:
         reason="Repository routes not implemented",
     )
     def test_create_get_update_delete(self):
-        content = self.create_content()
+        content = self.content
 
         # None by default
         assert content.repository is None
@@ -87,8 +84,5 @@ class TestContentItemRepository:
         assert updated_repo["polling"] is self.repo_polling
 
         # Delete
-        content.repository.delete()
+        content_repo.delete()
         assert content.repository is None
-
-        # Cleanup
-        content.delete()
