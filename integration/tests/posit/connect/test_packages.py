@@ -9,7 +9,7 @@ from . import CONNECT_VERSION
 
 
 @pytest.mark.skipif(
-    CONNECT_VERSION <= version.parse("2024.09.0"),
+    CONNECT_VERSION < version.parse("2024.10.0-dev"),
     reason="Packages API unavailable",
 )
 class TestPackages:
