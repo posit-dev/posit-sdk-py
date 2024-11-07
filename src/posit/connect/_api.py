@@ -154,10 +154,6 @@ T = TypeVar("T", bound="ReadOnlyDict")
 class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
     """A HTTP GET endpoint that can fetch a collection."""
 
-    def _get_api(self, *, extra_endpoint: str = "") -> tuple[JsonifiableDict, ...]:
-        vals: Jsonifiable = super()._get_api(extra_endpoint=extra_endpoint)
-        return cast(tuple[JsonifiableDict, ...], vals)
-
     def __init__(self, *, ctx: Context, path: str, uid_key: str = "guid") -> None:
         """A sequence abstraction for any HTTP GET endpoint that returns a collection.
 
@@ -189,8 +185,9 @@ class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
         -------
         List[T]
         """
-        results = self._get_api()
-        for result in results:
+        results: Jsonifiable = self._get_api()
+        results_list = cast(list[JsonifiableDict], results)
+        for result in results_list:
             yield self._to_instance(result)
 
     def __iter__(self) -> Generator[T, None, None]:
@@ -244,7 +241,10 @@ class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
         :
             Single instance of T if found, else None
         """
-        return self.find_by(**{self._uid_key: uid})
+        result: Jsonifiable = self._get_api(extra_endpoint=uid)
+        result_obj = cast(JsonifiableDict, result)
+
+        return self._to_instance(result_obj)
 
     def find_by(self, **conditions: Any) -> T | None:
         """
