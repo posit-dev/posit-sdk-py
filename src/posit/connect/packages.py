@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import posixpath
-from typing import Literal, Optional, TypedDict, overload
+from typing import List, Literal, Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
 from posit.connect.context import requires
+from posit.connect.errors import ClientError
 from posit.connect.paginator import Paginator
 
 from .resources import Active, ActiveFinderMethods, ActiveSequence
@@ -29,6 +32,14 @@ class ContentPackages(ActiveFinderMethods["ContentPackage"], ActiveSequence["Con
 
     def _create_instance(self, path, /, **attributes):
         return ContentPackage(self._ctx, **attributes)
+
+    def fetch(self, **conditions):
+        try:
+            return super().fetch(**conditions)
+        except ClientError as e:
+            if e.http_status == 204:
+                return []
+            raise e
 
     def find(self, uid):
         raise NotImplementedError("The 'find' method is not support by the Packages API.")
@@ -87,30 +98,53 @@ class ContentPackagesMixin(Active):
     """Mixin class to add a packages attribute."""
 
     @property
-    @requires(version="2024.11.0")
+    @requires(version="2024.10.0-dev")
     def packages(self):
         path = posixpath.join(self._path, "packages")
         return ContentPackages(self._ctx, path)
 
 
-class GlobalPackage(Active):
-    class _GlobalPackage(TypedDict):
-        language: Required[str]
-        name: Required[str]
-        version: Required[str]
-        hash: Required[Optional[str]]
+class Package(Active):
+    class _Package(TypedDict):
+        language: Required[Literal["python", "r"]]
+        """Programming language ecosystem, options are 'python' and 'r'"""
 
-    def __init__(self, ctx, /, **attributes: Unpack[_GlobalPackage]):
+        name: Required[str]
+        """The package name"""
+
+        version: Required[str]
+        """The package version"""
+
+        hash: Required[Optional[str]]
+        """Package description hash for R packages."""
+
+        bundle_id: Required[str]
+        """The unique identifier of the bundle this package is associated with"""
+
+        app_id: Required[str]
+        """The numerical identifier of the application this package is associated with"""
+
+        app_guid: Required[str]
+        """The numerical identifier of the application this package is associated with"""
+
+    def __init__(self, ctx, /, **attributes: Unpack[_Package]):
         # todo - passing "" is a hack since path isn't needed. Instead, this class should inherit from Resource, but ActiveSequence is designed to operate on Active. That should change.
         super().__init__(ctx, "", **attributes)
 
 
-class GlobalPackages(ContentPackages):
+class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
     def __init__(self, ctx, path):
         super().__init__(ctx, path, "name")
 
     def _create_instance(self, path, /, **attributes):
-        return ContentPackage(self._ctx, **attributes)
+        return Package(self._ctx, **attributes)
+
+    def fetch(self, **conditions) -> List["Package"]:
+        # todo - add pagination support to ActiveSequence
+        url = self._ctx.url + self._path
+        paginator = Paginator(self._ctx.session, url, conditions)
+        results = paginator.fetch_results()
+        return [self._create_instance("", **result) for result in results]
 
     def find(self, uid):
         raise NotImplementedError("The 'find' method is not support by the Packages API.")
@@ -128,14 +162,17 @@ class GlobalPackages(ContentPackages):
         hash: NotRequired[Optional[str]]
         """Package description hash for R packages."""
 
-    def fetch(self, **conditions):
-        url = self._ctx.url + self._path
-        paginator = Paginator(self._ctx.session, url, conditions)
-        results = paginator.fetch_results()
-        return [self._create_instance("", **result) for result in results]
+        bundle_id: NotRequired[str]
+        """The unique identifier of the bundle this package is associated with"""
+
+        app_id: NotRequired[str]
+        """The numerical identifier of the application this package is associated with"""
+
+        app_guid: NotRequired[str]
+        """The numerical identifier of the application this package is associated with"""
 
     @overload
-    def find_by(self, **conditions: Unpack[_FindBy]):
+    def find_by(self, **conditions: Unpack[_FindBy]) -> "Package | None":
         """
         Find the first record matching the specified conditions.
 
@@ -160,12 +197,12 @@ class GlobalPackages(ContentPackages):
 
         Returns
         -------
-        Optional[T]
+        Optional[Package]
             The first record matching the specified conditions, or `None` if no such record exists.
         """
 
     @overload
-    def find_by(self, **conditions): ...
+    def find_by(self, **conditions) -> "Package | None": ...
 
-    def find_by(self, **conditions):
+    def find_by(self, **conditions) -> "Package | None":
         return super().find_by(**conditions)

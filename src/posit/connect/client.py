@@ -14,7 +14,7 @@ from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
-from .packages import GlobalPackages
+from .packages import Packages
 from .resources import ResourceParameters
 from .tasks import Tasks
 from .users import User, Users
@@ -271,8 +271,9 @@ class Client(ContextManager):
         return OAuth(self.resource_params, self.cfg.api_key)
 
     @property
-    def packages(self) -> GlobalPackages:
-        return GlobalPackages(self._ctx, "v1/packages")
+    @requires(version="2024.10.0-dev")
+    def packages(self) -> Packages:
+        return Packages(self._ctx, "v1/packages")
 
     @property
     def vanities(self) -> Vanities:

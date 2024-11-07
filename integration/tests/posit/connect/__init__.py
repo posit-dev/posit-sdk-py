@@ -4,3 +4,4 @@ from posit import connect
 
 client = connect.Client()
 CONNECT_VERSION = version.parse(client.version)
+print(CONNECT_VERSION)

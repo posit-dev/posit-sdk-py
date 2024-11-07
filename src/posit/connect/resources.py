@@ -4,13 +4,15 @@ import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar, overload
 
-import requests
 from typing_extensions import Self
 
-from .context import Context
-from .urls import Url
+if TYPE_CHECKING:
+    import requests
+
+    from .context import Context
+    from .urls import Url
 
 
 @dataclass(frozen=True)
