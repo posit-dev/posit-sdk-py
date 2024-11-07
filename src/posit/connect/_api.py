@@ -262,17 +262,19 @@ class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
             The first record matching the conditions, or `None` if no match is found.
         """
         results = self.fetch()
-        for item in results:
-            if obj_has_attrs(item, conditions):
-                return item
-        return None
 
+        conditions_items = conditions.items()
 
-def obj_has_attrs(obj: ReadOnlyDict, attrs: dict[str, Any]) -> bool:
-    for attr_key, attr_val in attrs.items():
-        if not hasattr(obj, attr_key):
-            return False
-        obj_val = getattr(obj, attr_key)
-        if obj_val != attr_val:
-            return False
-    return True
+        # Get the first item of the generator that matches the conditions
+        # If no item is found, return None
+        return next(
+            (
+                # Return result
+                result
+                # Iterate through `results` generator
+                for result in results
+                # If all `conditions`'s key/values are found in `result`'s key/values...
+                if result.items() >= conditions_items
+            ),
+            None,
+        )
