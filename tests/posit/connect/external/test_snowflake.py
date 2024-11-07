@@ -33,7 +33,7 @@ class TestPositAuthenticator:
         register_mocks()
 
         client = Client(api_key="12345", url="https://connect.example/")
-        client.ctx.version = None
+        client._ctx.version = None
         auth = PositAuthenticator(
             local_authenticator="SNOWFLAKE",
             user_session_token="cit",
@@ -45,7 +45,7 @@ class TestPositAuthenticator:
     def test_posit_authenticator_fallback(self):
         # local_authenticator is used when the content is running locally
         client = Client(api_key="12345", url="https://connect.example/")
-        client.ctx.version = None
+        client._ctx.version = None
         auth = PositAuthenticator(
             local_authenticator="SNOWFLAKE",
             user_session_token="cit",

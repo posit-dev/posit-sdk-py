@@ -21,7 +21,7 @@ class TestSessionDelete:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
         session = c.oauth.sessions.get(guid)
 
         # invoke
@@ -42,7 +42,7 @@ class TestSessionsFind:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
 
         # invoke
         sessions = c.oauth.sessions.find()
@@ -65,7 +65,7 @@ class TestSessionsFind:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
 
         # invoke
         c.oauth.sessions.find(all=True)
@@ -87,7 +87,7 @@ class TestSessionsGet:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
 
         # invoke
         session = c.oauth.sessions.get(guid=guid)

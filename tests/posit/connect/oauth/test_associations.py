@@ -55,7 +55,7 @@ class TestIntegrationAssociationsFind:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
         # invoke
         associations = c.oauth.integrations.get(guid).associations.find()
 
@@ -84,7 +84,7 @@ class TestContentAssociationsFind:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
         # invoke
         associations = c.content.get(guid).oauth.associations.find()
 
@@ -117,7 +117,7 @@ class TestContentAssociationsUpdate:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
 
         # invoke
         c.content.get(guid).oauth.associations.update(new_integration_guid)
@@ -145,7 +145,7 @@ class TestContentAssociationsDelete:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
 
         # invoke
         c.content.get(guid).oauth.associations.delete()

@@ -180,7 +180,7 @@ class TestClientOAuth:
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
-        client.ctx.version = "2024.07.0"
+        client._ctx.version = "2024.07.0"
 
         with pytest.raises(RuntimeError):
             client.oauth  # noqa: B018

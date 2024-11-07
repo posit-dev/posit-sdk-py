@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import posixpath
 import warnings
 from abc import ABC, abstractmethod
-from copy import copy
 from dataclasses import dataclass
 from typing import Any, Generic, List, Optional, Sequence, TypeVar, overload
 
@@ -82,7 +83,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
 
     _cache: Optional[List[T]]
 
-    def __init__(self, ctx: Context, path: str, uid: str = "guid", params: dict = {}):
+    def __init__(self, ctx: Context, path: str, uid: str = "guid"):
         """A sequence abstraction for any HTTP GET endpoint that returns a collection.
 
         Parameters
@@ -98,7 +99,6 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         self._ctx = ctx
         self._path = path
         self._uid = uid
-        self._params = params
         self._cache = None
 
     @abstractmethod
@@ -106,7 +106,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         """Create an instance of 'T'."""
         raise NotImplementedError()
 
-    def fetch(self) -> List[T]:
+    def fetch(self, **conditions) -> List[T]:
         """Fetch the collection.
 
         Fetches the collection directly from Connect. This operation does not effect the cache state.
@@ -116,7 +116,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         List[T]
         """
         endpoint = self._ctx.url + self._path
-        response = self._ctx.session.get(endpoint, params=self._params)
+        response = self._ctx.session.get(endpoint, params=conditions)
         results = response.json()
         return [self._to_instance(result) for result in results]
 
@@ -203,7 +203,7 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         result = response.json()
         return self._to_instance(result)
 
-    def find_by(self, **conditions: Any) -> Optional[T]:
+    def find_by(self, **conditions) -> Optional[T]:
         """
         Find the first record matching the specified conditions.
 

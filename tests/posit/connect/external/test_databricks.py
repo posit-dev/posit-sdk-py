@@ -48,7 +48,7 @@ class TestPositCredentialsHelpers:
         register_mocks()
 
         client = Client(api_key="12345", url="https://connect.example/")
-        client.ctx.version = None
+        client._ctx.version = None
         cp = PositCredentialsProvider(client=client, user_session_token="cit")
         assert cp() == {"Authorization": "Bearer dynamic-viewer-access-token"}
 
@@ -58,7 +58,7 @@ class TestPositCredentialsHelpers:
         register_mocks()
 
         client = Client(api_key="12345", url="https://connect.example/")
-        client.ctx.version = None
+        client._ctx.version = None
         cs = PositCredentialsStrategy(
             local_strategy=mock_strategy(),
             user_session_token="cit",

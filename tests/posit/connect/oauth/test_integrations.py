@@ -23,7 +23,7 @@ class TestIntegrationDelete:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
         integration = c.oauth.integrations.get(guid)
 
         # invoke
@@ -44,7 +44,7 @@ class TestIntegrationUpdate:
         )
 
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
         integration = c.oauth.integrations.get(guid)
         assert integration["guid"] == guid
 
@@ -89,7 +89,7 @@ class TestIntegrationsCreate:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
 
         # invoke
         integration = c.oauth.integrations.create(
@@ -118,7 +118,7 @@ class TestIntegrationsFind:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
 
         # invoke
         integrations = c.oauth.integrations.find()
@@ -143,7 +143,7 @@ class TestIntegrationsGet:
 
         # setup
         c = Client("https://connect.example", "12345")
-        c.ctx.version = None
+        c._ctx.version = None
         integration = c.oauth.integrations.get(guid)
 
         assert mock_get.call_count == 1
