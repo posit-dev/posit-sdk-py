@@ -18,8 +18,8 @@ class ApiCallProtocol(Protocol):
     def _put_api(self, json: Jsonifiable | None, *, extra_endpoint: str = "") -> Jsonifiable: ...
 
 
-def endpoint(ctx: Context, path: str, *, extra_endpoint: str = "") -> str:
-    return ctx.url + path + extra_endpoint
+def endpoint(ctx: Context, *path) -> str:
+    return ctx.url + posixpath.join(*path)
 
 
 # Helper methods for API interactions
