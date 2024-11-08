@@ -103,7 +103,12 @@ class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
         super()._get_api(extra_endpoint=extra_endpoint)
 
     def __init__(
-        self, ctx: Context, path: str, get_data: Optional[bool] = None, /, **attrs: Jsonifiable
+        self,
+        ctx: Context,
+        path: str,
+        get_data: Optional[bool] = None,
+        /,
+        **attrs: Jsonifiable,
     ) -> None:
         """
         A dict abstraction for any HTTP endpoint that returns a singular resource.

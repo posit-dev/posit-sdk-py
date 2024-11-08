@@ -42,7 +42,10 @@ class Paginator:
     """
 
     def __init__(
-        self, session: requests.Session, url: str, params: dict[str, Any] | None = None
+        self,
+        session: requests.Session,
+        url: str,
+        params: dict[str, Any] | None = None,
     ) -> None:
         if params is None:
             params = {}

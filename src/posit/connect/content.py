@@ -89,13 +89,10 @@ class ContentItemRepository(ApiDictEndpoint):
         """
         _assert_content_guid(content_guid)
 
-        super().__init__(
-            ctx,
-            self._api_path(content_guid),
-            # Only fetch data if `attrs` are not supplied
-            len(attrs) == 0,
-            **{"content_guid": content_guid, **attrs},
-        )
+        path = self._api_path(content_guid)
+        # Only fetch data if `attrs` are not supplied
+        get_data = len(attrs) == 0
+        super().__init__(ctx, path, get_data, **{"content_guid": content_guid, **attrs})
 
     @classmethod
     def _api_path(cls, content_guid: str) -> str:
@@ -218,11 +215,9 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
     ) -> None:
         guid = _assert_guid_in_kwargs(kwargs)
 
-        super().__init__(
-            Context(params.session, params.url),
-            f"v1/content/{guid}",
-            **kwargs,
-        )
+        ctx = Context(params.session, params.url)
+        path = f"v1/content/{guid}"
+        super().__init__(ctx, path, **kwargs)
 
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
