@@ -144,14 +144,6 @@ class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
         self._ctx = ctx
         self._path = path
 
-    # TODO-barret-future: Keep this method for now, but consider removing it in the future (or adopting it into `Active` class)
-    def __str__(self) -> str:
-        return self.__repr__()
-
-    def __repr__(self) -> str:
-        # CLASSNAME - v1/content/123/path; {'guid': '123', 'name': 'My Content'}
-        return repr(f"{self.__class__.__name__} - {self._path}; {super().__repr__()}")
-
 
 T = TypeVar("T", bound="ReadOnlyDict")
 """A type variable that is bound to the `Active` class"""
