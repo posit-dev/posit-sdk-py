@@ -6,7 +6,7 @@ from responses import matchers
 from posit import connect
 from posit.connect import tasks
 
-from .api import load_mock  # type: ignore
+from .api import load_mock
 
 
 class TestTaskAttributes:

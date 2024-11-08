@@ -7,7 +7,7 @@ from responses import matchers
 
 from posit.connect.client import Client
 
-from .api import load_mock  # type: ignore
+from .api import load_mock
 
 session = Mock()
 url = Mock()

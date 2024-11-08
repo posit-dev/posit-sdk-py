@@ -7,7 +7,7 @@ from responses import matchers
 from posit.connect.metrics import shiny_usage
 from posit.connect.resources import ResourceParameters
 
-from ..api import load_mock  # type: ignore
+from ..api import load_mock
 
 
 class TestShinyUsageEventAttributes:

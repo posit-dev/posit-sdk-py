@@ -7,7 +7,7 @@ from responses import matchers
 
 from posit.connect import Client
 
-from .api import get_path, load_mock  # type: ignore
+from .api import get_path, load_mock
 
 
 class TestBundleDelete:

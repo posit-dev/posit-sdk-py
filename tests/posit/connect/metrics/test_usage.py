@@ -7,7 +7,7 @@ from responses import matchers
 from posit import connect
 from posit.connect.metrics import shiny_usage, usage, visits
 
-from ..api import load_mock  # type: ignore
+from ..api import load_mock
 
 
 class TestUsageEventFromEvent:

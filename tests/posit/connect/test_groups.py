@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from posit.connect.groups import Group
 
-from .api import load_mock  # type: ignore
+from .api import load_mock
 
 session = Mock()
 url = Mock()

@@ -9,7 +9,7 @@ from posit.connect.permissions import Permission, Permissions
 from posit.connect.resources import ResourceParameters
 from posit.connect.urls import Url
 
-from .api import load_mock  # type: ignore
+from .api import load_mock
 
 
 class TestPermissionDelete:
