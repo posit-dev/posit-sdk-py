@@ -26,7 +26,7 @@ Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["src", "tests", "integration/tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
