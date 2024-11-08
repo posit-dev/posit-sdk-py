@@ -151,7 +151,7 @@ class ContentItemRepository(ApiDictEndpoint):
         --------
         * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
         """
-        result = self._patch_api(cast(JsonifiableDict, dict(attrs)))
+        result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
         return ContentItemRepository(
             self._ctx,
             content_guid=self["content_guid"],

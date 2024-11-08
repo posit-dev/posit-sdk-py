@@ -99,8 +99,8 @@ class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
     _path: str
     """The HTTP path component for the resource endpoint."""
 
-    def _get_api(self, *, extra_endpoint: str = "") -> JsonifiableDict | None:
-        super()._get_api(extra_endpoint=extra_endpoint)
+    def _get_api(self, *path) -> JsonifiableDict | None:
+        super()._get_api(*path)
 
     def __init__(
         self,
@@ -246,7 +246,7 @@ class ApiListEndpoint(ApiCallMixin, Generic[T], ABC, object):
         :
             Single instance of T if found, else None
         """
-        result: Jsonifiable = self._get_api(extra_endpoint=uid)
+        result: Jsonifiable = self._get_api(uid)
         result_obj = cast(JsonifiableDict, result)
 
         return self._to_instance(result_obj)
