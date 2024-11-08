@@ -558,7 +558,7 @@ class TestContentRepository:
 
     @property
     def content_guid(self):
-        return "8ce6eaca-60af-4c2f-93a0-f5f3cddf5ee5"
+        return "f2f37341-e21d-3d80-c698-a935ad614066"
 
     @property
     def content_item(self):
@@ -567,25 +567,6 @@ class TestContentRepository:
     @property
     def endpoint(self):
         return f"{self.base_url}/__api__/v1/content/{self.content_guid}/repository"
-
-    @property
-    def get_value(self):
-        return {
-            "repository": "https://github.com/posit-dev/posit-sdk-py/",
-            "branch": "main",
-            "directory": "integration/resources/connect/bundles/example-flask-minimal",
-            "polling": True,
-        }
-
-    @property
-    def patch_branch_value(self):
-        return "testing-main"
-
-    @property
-    def patch_value(self):
-        ret = {**self.get_value}
-        ret.update({"branch": self.patch_branch_value})
-        return ret
 
     @property
     def ctx(self):
@@ -598,7 +579,10 @@ class TestContentRepository:
     def mock_repository_info(self):
         content_item = self.content_item
 
-        mock_get = responses.get(self.endpoint, json=self.get_value)
+        mock_get = responses.get(
+            self.endpoint,
+            json=load_mock_dict(f"v1/content/{self.content_guid}/repository.json"),
+        )
         repository_info = content_item.repository
 
         assert isinstance(repository_info, ContentItemRepository)
@@ -615,18 +599,24 @@ class TestContentRepository:
     def test_repository_update(self):
         repository_info = self.mock_repository_info()
 
-        mock_patch = responses.patch(self.endpoint, json=self.patch_value)
-        new_repository_info = repository_info.update(branch=self.patch_branch_value)
+        mock_patch = responses.patch(
+            self.endpoint,
+            json=load_mock_dict(f"v1/content/{self.content_guid}/repository_patch.json"),
+        )
+        new_repository_info = repository_info.update(branch="testing-main")
         assert mock_patch.call_count == 1
 
-        for key, value in self.patch_value.items():
-            assert new_repository_info[key] == value
+        for key, value in repository_info.items():
+            if key == "branch":
+                assert new_repository_info[key] == "testing-main"
+            else:
+                assert new_repository_info[key] == value
 
     @responses.activate
     def test_repository_delete(self):
         repository_info = self.mock_repository_info()
 
         mock_delete = responses.delete(self.endpoint)
-        repository_info.delete()
+        repository_info.destroy()
 
         assert mock_delete.call_count == 1

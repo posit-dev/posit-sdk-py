@@ -113,7 +113,7 @@ class ContentItemRepository(ApiDictEndpoint):
             **result,  # pyright: ignore[reportCallIssue]
         )
 
-    def delete(self) -> None:
+    def destroy(self) -> None:
         """
         Delete the content's git repository location.
 
