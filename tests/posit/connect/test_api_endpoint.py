@@ -11,7 +11,7 @@ class TestApiEndpoint:
 
         assert obj.get("foo", "bar") == "bar"
 
-        with pytest.raises(AttributeError):
+        with pytest.raises(NotImplementedError):
             obj["foo"] = "baz"
 
         eq_obj = ReadOnlyDict({"foo": "bar", "a": 1})
