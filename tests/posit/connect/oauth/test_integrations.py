@@ -1,59 +1,9 @@
-from unittest import mock
-
 import responses
 from responses import matchers
 
 from posit.connect.client import Client
-from posit.connect.oauth.associations import IntegrationAssociations
-from posit.connect.oauth.integrations import Integration
 
 from ..api import load_mock  # type: ignore
-
-
-class TestIntegrationAttributes:
-    @classmethod
-    def setup_class(cls):
-        guid = "22644575-a27b-4118-ad06-e24459b05126"
-        fake_item = load_mock(f"v1/oauth/integrations/{guid}.json")
-        cls.item = Integration(mock.Mock(), **fake_item)
-
-    def test_id(self):
-        assert self.item.id == "3"
-
-    def test_guid(self):
-        assert self.item.guid == "22644575-a27b-4118-ad06-e24459b05126"
-
-    def test_name(self):
-        assert self.item.name == "keycloak integration"
-
-    def test_description(self):
-        assert self.item.description == "integration description"
-
-    def test_template(self):
-        assert self.item.template == "custom"
-
-    def test_config(self):
-        assert self.item.config["auth_mode"] == "Confidential"
-        assert (
-            self.item.config["authorization_uri"]
-            == "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/auth"
-        )
-        assert self.item.config["client_id"] == "rsconnect-oidc"
-        assert self.item.config["scopes"] == "email"
-        assert self.item.config["token_endpoint_auth_method"] == "client_secret_basic"
-        assert (
-            self.item.config["token_uri"]
-            == "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/token"
-        )
-
-    def test_created_time(self):
-        assert self.item.created_time == "2024-07-16T19:28:05Z"
-
-    def test_updated_time(self):
-        assert self.item.updated_time == "2024-07-17T19:28:05Z"
-
-    def test_associations(self):
-        assert isinstance(self.item.associations, IntegrationAssociations)
 
 
 class TestIntegrationDelete:
@@ -96,7 +46,7 @@ class TestIntegrationUpdate:
         c = Client("https://connect.example", "12345")
         c.ctx.version = None
         integration = c.oauth.integrations.get(guid)
-        assert integration.guid == guid
+        assert integration["guid"] == guid
 
         new_name = "New Name"
 
@@ -111,7 +61,7 @@ class TestIntegrationUpdate:
 
         integration.update(name=new_name)
         assert mock_update.call_count == 1
-        assert integration.name == new_name
+        assert integration["name"] == new_name
 
 
 class TestIntegrationsCreate:
@@ -151,10 +101,10 @@ class TestIntegrationsCreate:
 
         # assert
         assert mock_create.call_count == 1
-        assert integration.name == fake_integration["name"]
-        assert integration.description == fake_integration["description"]
-        assert integration.template == fake_integration["template"]
-        assert integration.config == fake_integration["config"]
+        assert integration["name"] == fake_integration["name"]
+        assert integration["description"] == fake_integration["description"]
+        assert integration["template"] == fake_integration["template"]
+        assert integration["config"] == fake_integration["config"]
 
 
 class TestIntegrationsFind:
@@ -176,8 +126,8 @@ class TestIntegrationsFind:
         # assert
         assert mock_get.call_count == 1
         assert len(integrations) == 2
-        assert integrations[0].id == "3"
-        assert integrations[1].id == "4"
+        assert integrations[0]["id"] == "3"
+        assert integrations[1]["id"] == "4"
 
 
 class TestIntegrationsGet:
@@ -197,4 +147,4 @@ class TestIntegrationsGet:
         integration = c.oauth.integrations.get(guid)
 
         assert mock_get.call_count == 1
-        assert integration.guid == guid
+        assert integration["guid"] == guid

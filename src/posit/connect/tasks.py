@@ -90,7 +90,7 @@ class Task(resources.Resource):
         ]
         """
         params = dict(*args, **kwargs)
-        path = f"v1/tasks/{self.id}"
+        path = f"v1/tasks/{self['id']}"
         url = self.params.url + path
         response = self.params.session.get(url, params=kwargs)
         result = response.json()

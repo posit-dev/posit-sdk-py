@@ -43,7 +43,7 @@ class User(Resource):
         >>> user.lock(force=True)
         """
         _me = me.get(self.params)
-        if _me.guid == self["guid"] and not force:
+        if _me["guid"] == self["guid"] and not force:
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior.",
             )

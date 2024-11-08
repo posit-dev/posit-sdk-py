@@ -127,7 +127,7 @@ class TestClient:
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
-        assert con.me.username == "carlos12"
+        assert con.me["username"] == "carlos12"
 
     def test_request(self, MockSession):
         api_key = "12345"

@@ -88,7 +88,7 @@ class TestIntegrations:
 
         created.update(name="updated integration name")
         updated = self.client.oauth.integrations.get(integration["guid"])
-        assert updated.name == "updated integration name"
+        assert updated["name"] == "updated integration name"
 
         # delete the new integration
 
