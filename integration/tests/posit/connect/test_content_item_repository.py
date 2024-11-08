@@ -84,5 +84,5 @@ class TestContentItemRepository:
         assert updated_repo["polling"] is self.repo_polling
 
         # Delete
-        content_repo.delete()
+        content_repo.destroy()
         assert content.repository is None
