@@ -55,7 +55,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
 
     def delete(self) -> None:
         """Delete the content item."""
-        path = f"v1/content/{self.guid}"
+        path = f"v1/content/{self['guid']}"
         url = self.params.url + path
         self.params.session.delete(url)
 
@@ -75,7 +75,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         >>> task.wait_for()
         None
         """
-        path = f"v1/content/{self.guid}/deploy"
+        path = f"v1/content/{self['guid']}/deploy"
         url = self.params.url + path
         response = self.params.session.post(url, json={"bundle_id": None})
         result = response.json()
@@ -99,7 +99,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
 
         if self.is_rendered:
             variants = self._variants.find()
-            variants = [variant for variant in variants if variant.is_default]
+            variants = [variant for variant in variants if variant["is_default"]]
             if len(variants) != 1:
                 raise RuntimeError(
                     f"Found {len(variants)} default variants. Expected 1. Without a single default variant, the content cannot be refreshed. This is indicative of a corrupted state.",
@@ -108,7 +108,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
             return variant.render()
         else:
             raise ValueError(
-                f"Render not supported for this application mode: {self.app_mode}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
+                f"Render not supported for this application mode: {self['app_mode']}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
     def restart(self) -> None:
@@ -132,12 +132,12 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
             self.environment_variables.create(key, unix_epoch_in_seconds)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = posixpath.join(dirname(self.params.url), f"content/{self.guid}")
+            url = posixpath.join(dirname(self.params.url), f"content/{self['guid']}")
             self.params.session.get(url)
             return None
         else:
             raise ValueError(
-                f"Restart not supported for this application mode: {self.app_mode}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
+                f"Restart not supported for this application mode: {self['app_mode']}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
     @overload
@@ -276,7 +276,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
 
     @property
     def is_interactive(self) -> bool:
-        return self.app_mode in {
+        return self["app_mode"] in {
             "api",
             "jupyter-voila",
             "python-api",
@@ -293,7 +293,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
 
     @property
     def is_rendered(self) -> bool:
-        return self.app_mode in {
+        return self["app_mode"] in {
             "rmd-static",
             "jupyter-static",
             "quarto-static",

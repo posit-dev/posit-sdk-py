@@ -17,13 +17,13 @@ class TestTaskAttributes:
         )
 
     def test_id(self):
-        assert self.task.id == "jXhOhdm5OOSkGhJw"
+        assert self.task["id"] == "jXhOhdm5OOSkGhJw"
 
     def test_is_finished(self):
         assert self.task.is_finished
 
     def test_output(self):
-        assert self.task.output == [
+        assert self.task["output"] == [
             "Building static content...",
             "Launching static content...",
         ]
@@ -38,7 +38,7 @@ class TestTaskAttributes:
         )
 
     def test_result(self):
-        assert self.task.result is None
+        assert self.task["result"] is None
 
 
 class TestTaskUpdate:
@@ -152,5 +152,5 @@ class TestTasksGet:
         task = c.tasks.get(uid)
 
         # assert
-        assert task.id == uid
+        assert task["id"] == uid
         assert mock_tasks_get.call_count == 1
