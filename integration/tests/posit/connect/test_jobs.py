@@ -49,5 +49,5 @@ class TestJobs:
         task = bundle.deploy()
         task.wait_for()
 
-        jobs = content.jobs.reload()
+        jobs = content.jobs
         assert len(jobs) != 0

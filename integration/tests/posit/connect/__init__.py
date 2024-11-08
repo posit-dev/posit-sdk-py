@@ -1,7 +1,8 @@
-from packaging import version
+from packaging.version import parse
 
 from posit import connect
 
 client = connect.Client()
-CONNECT_VERSION = version.parse(client.version)
-print(CONNECT_VERSION)
+version = client.version
+assert version
+CONNECT_VERSION = parse(version)

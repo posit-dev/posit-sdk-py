@@ -28,13 +28,13 @@ class TestPackages:
         cls.content.delete()
 
     def test(self):
-        # assert self.client.packages
+        assert self.client.packages
         assert self.content.packages
 
     def test_find_by(self):
-        # package = self.client.packages.find_by(name="flask")
-        # assert package
-        # assert package["name"] == "flask"
+        package = self.client.packages.find_by(name="flask")
+        assert package
+        assert package["name"] == "flask"
 
         package = self.content.packages.find_by(name="flask")
         assert package

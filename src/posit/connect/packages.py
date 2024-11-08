@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import posixpath
-from typing import List, Literal, Optional, TypedDict, overload
+from typing import Generator, Literal, Optional, TypedDict, overload
 
 from typing_extensions import NotRequired, Required, Unpack
 
@@ -109,6 +109,9 @@ class Package(Active):
         language: Required[Literal["python", "r"]]
         """Programming language ecosystem, options are 'python' and 'r'"""
 
+        language_version: Required[str]
+        """Programming language version"""
+
         name: Required[str]
         """The package name"""
 
@@ -139,12 +142,13 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
     def _create_instance(self, path, /, **attributes):
         return Package(self._ctx, **attributes)
 
-    def fetch(self, **conditions) -> List["Package"]:
+    def fetch(self, **conditions) -> Generator["Package"]:
         # todo - add pagination support to ActiveSequence
         url = self._ctx.url + self._path
         paginator = Paginator(self._ctx.session, url, conditions)
-        results = paginator.fetch_results()
-        return [self._create_instance("", **result) for result in results]
+        for page in paginator.fetch_pages():
+            results = page.results
+            yield from (self._create_instance("", **result) for result in results)
 
     def find(self, uid):
         raise NotImplementedError("The 'find' method is not support by the Packages API.")
@@ -152,6 +156,9 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
     class _FindBy(TypedDict, total=False):
         language: NotRequired[Literal["python", "r"]]
         """Programming language ecosystem, options are 'python' and 'r'"""
+
+        language_version: NotRequired[str]
+        """Programming language version"""
 
         name: NotRequired[str]
         """The package name"""

@@ -4,9 +4,18 @@ import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar, overload
-
-from typing_extensions import Self
+from itertools import islice
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+    overload,
+)
 
 if TYPE_CHECKING:
     import requests
@@ -101,14 +110,13 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         self._ctx = ctx
         self._path = path
         self._uid = uid
-        self._cache = None
 
     @abstractmethod
     def _create_instance(self, path: str, /, **kwargs: Any) -> T:
         """Create an instance of 'T'."""
         raise NotImplementedError()
 
-    def fetch(self, **conditions) -> List[T]:
+    def fetch(self, **conditions) -> Iterable[T]:
         """Fetch the collection.
 
         Fetches the collection directly from Connect. This operation does not effect the cache state.
@@ -122,40 +130,11 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         results = response.json()
         return [self._to_instance(result) for result in results]
 
-    def reload(self) -> Self:
-        """Reloads the collection from Connect.
-
-        Returns
-        -------
-        Self
-        """
-        self._cache = None
-        return self
-
     def _to_instance(self, result: dict) -> T:
         """Converts a result into an instance of T."""
         uid = result[self._uid]
         path = posixpath.join(self._path, uid)
         return self._create_instance(path, **result)
-
-    @property
-    def _data(self) -> List[T]:
-        """Get the collection.
-
-        Fetches the collection from Connect and caches the result. Subsequent invocations return the cached results unless the cache is explicitly reset.
-
-        Returns
-        -------
-        List[T]
-
-        See Also
-        --------
-        cached
-        reload
-        """
-        if self._cache is None:
-            self._cache = self.fetch()
-        return self._cache
 
     @overload
     def __getitem__(self, index: int) -> T: ...
@@ -163,20 +142,45 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
     @overload
     def __getitem__(self, index: slice) -> Sequence[T]: ...
 
-    def __getitem__(self, index):
-        return self._data[index]
+    def __getitem__(self, index) -> Sequence[T] | T:
+        data = self.fetch()
+
+        if isinstance(index, int):
+            if index < 0:
+                # Handle negative indexing
+                data = list(data)
+                return data[index]
+            for i, value in enumerate(data):
+                if i == index:
+                    return value
+            raise KeyError(f"Index {index} is out of range.")
+
+        if isinstance(index, slice):
+            # Handle slicing with islice
+            start = index.start or 0
+            stop = index.stop
+            step = index.step or 1
+            if step == 0:
+                raise ValueError("slice step cannot be zero")
+            return [
+                value
+                for i, value in enumerate(islice(data, start, stop))
+                if (i + start) % step == 0
+            ]
+
+        raise TypeError(f"Index must be int or slice, not {type(index).__name__}.")
 
     def __iter__(self):
-        return iter(self._data)
+        return iter(self.fetch())
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(list(self.fetch()))
 
     def __str__(self) -> str:
-        return str(self._data)
+        return str(list(self.fetch()))
 
     def __repr__(self) -> str:
-        return repr(self._data)
+        return repr(list(self.fetch()))
 
 
 class ActiveFinderMethods(ActiveSequence[T], ABC):
@@ -220,5 +224,5 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         Optional[T]
             The first record matching the conditions, or `None` if no match is found.
         """
-        collection = self.fetch()
+        collection = self.fetch(**conditions)
         return next((v for v in collection if v.items() >= conditions.items()), None)
