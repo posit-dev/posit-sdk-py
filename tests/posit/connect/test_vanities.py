@@ -37,7 +37,13 @@ class TestVanityDestroy:
         url = Url(base_url)
         after_destroy = Mock()
         params = ResourceParameters(session, url)
-        vanity = Vanity(params, after_destroy=after_destroy, content_guid=content_guid)
+        vanity = Vanity(
+            params,
+            after_destroy=after_destroy,
+            content_guid=content_guid,
+            path=Mock(),
+            created_time=Mock(),
+        )
 
         vanity.destroy()
 

@@ -247,7 +247,7 @@ class TestUsersFindOne:
             json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
         )
         con = Client(api_key="12345", url="https://connect.example/")
-        con.users.find_one(key1="value1", key2="value2", key3="value3")
+        con.users.find_one(key1="value1", key2="value2", key3="value3")  # pyright: ignore[reportCallIssue]
         assert mock_get.call_count == 1
 
     @responses.activate
@@ -328,7 +328,7 @@ class TestUsersFind:
             json=load_mock("v1/users?page_number=2&page_size=500.jsonc"),
         )
         con = Client(api_key="12345", url="https://connect.example/")
-        con.users.find_one(key1="value1", key2="value2", key3="value3")
+        con.users.find_one(key1="value1", key2="value2", key3="value3")  # pyright: ignore[reportCallIssue]
         responses.assert_call_count(
             "https://connect.example/__api__/v1/users?key1=value1&key2=value2&key3=value3&page_number=1&page_size=500",
             1,
@@ -340,4 +340,6 @@ class TestUsersFind:
         con = Client(api_key="12345", url="https://connect.example/")
         not_dict_like = "string"
         with pytest.raises(TypeError):
-            con.users.find(not_dict_like)
+            con.users.find(
+                not_dict_like  # pyright: ignore[reportCallIssue]
+            )

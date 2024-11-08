@@ -1,19 +1,20 @@
 from unittest import mock
 
 import responses
-from responses import matchers
+from responses import BaseResponse, matchers
 
 from posit import connect
 from posit.connect import tasks
 
-from .api import load_mock
+from .api import load_mock_dict
 
 
 class TestTaskAttributes:
+    @classmethod
     def setup_class(cls):
         cls.task = tasks.Task(
             mock.Mock(),
-            **load_mock("v1/tasks/jXhOhdm5OOSkGhJw.json"),
+            **load_mock_dict("v1/tasks/jXhOhdm5OOSkGhJw.json"),
         )
 
     def test_id(self):
@@ -47,16 +48,16 @@ class TestTaskUpdate:
         uid = "jXhOhdm5OOSkGhJw"
 
         # behavior
-        mock_tasks_get = [0] * 2
-        mock_tasks_get[0] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{uid}",
-            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": False},
-        )
-
-        mock_tasks_get[1] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{uid}",
-            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": True},
-        )
+        mock_tasks_get = [
+            responses.get(
+                f"https://connect.example/__api__/v1/tasks/{uid}",
+                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
+            ),
+            responses.get(
+                f"https://connect.example/__api__/v1/tasks/{uid}",
+                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
+            ),
+        ]
 
         # setup
         c = connect.Client("https://connect.example", "12345")
@@ -77,17 +78,17 @@ class TestTaskUpdate:
         params = {"first": 10, "wait": 10}
 
         # behavior
-        mock_tasks_get = [0] * 2
-        mock_tasks_get[0] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{uid}",
-            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": False},
-        )
-
-        mock_tasks_get[1] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{uid}",
-            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": True},
-            match=[matchers.query_param_matcher(params)],
-        )
+        mock_tasks_get = [
+            responses.get(
+                f"https://connect.example/__api__/v1/tasks/{uid}",
+                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
+            ),
+            responses.get(
+                f"https://connect.example/__api__/v1/tasks/{uid}",
+                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
+                match=[matchers.query_param_matcher(params)],
+            ),
+        ]
 
         # setup
         c = connect.Client("https://connect.example", "12345")
@@ -109,16 +110,16 @@ class TestTaskWaitFor:
         uid = "jXhOhdm5OOSkGhJw"
 
         # behavior
-        mock_tasks_get = [0] * 2
-        mock_tasks_get[0] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{uid}",
-            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": False},
-        )
-
-        mock_tasks_get[1] = responses.get(
-            f"https://connect.example/__api__/v1/tasks/{uid}",
-            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": True},
-        )
+        mock_tasks_get = [
+            responses.get(
+                f"https://connect.example/__api__/v1/tasks/{uid}",
+                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
+            ),
+            responses.get(
+                f"https://connect.example/__api__/v1/tasks/{uid}",
+                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
+            ),
+        ]
 
         # setup
         c = connect.Client("https://connect.example", "12345")
@@ -140,9 +141,9 @@ class TestTasksGet:
         uid = "jXhOhdm5OOSkGhJw"
 
         # behavior
-        mock_tasks_get = responses.get(
+        mock_tasks_get: BaseResponse = responses.get(
             f"https://connect.example/__api__/v1/tasks/{uid}",
-            json={**load_mock(f"v1/tasks/{uid}.json"), "finished": False},
+            json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
         )
 
         # setup

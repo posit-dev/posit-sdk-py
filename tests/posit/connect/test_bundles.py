@@ -153,7 +153,9 @@ class TestBundleDownload:
 
         # invoke
         file = io.BytesIO()
-        buffer = io.BufferedWriter(file)
+        buffer = io.BufferedWriter(
+            file  # pyright: ignore[reportArgumentType]
+        )
         bundle.download(buffer)
         buffer.seek(0)
 
@@ -191,7 +193,9 @@ class TestBundleDownload:
 
         # invoke
         with pytest.raises(TypeError):
-            bundle.download(None)
+            bundle.download(
+                None  # pyright: ignore[reportArgumentType]
+            )
 
         # assert
         assert mock_content_get.call_count == 1
@@ -279,7 +283,9 @@ class TestBundlesCreate:
 
         # invoke
         with pytest.raises(TypeError):
-            content.bundles.create(None)
+            content.bundles.create(
+                None  # pyright: ignore[reportArgumentType]
+            )
 
 
 class TestBundlesFind:

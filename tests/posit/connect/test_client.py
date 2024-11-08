@@ -1,3 +1,4 @@
+# pyright: reportFunctionMemberAccess=false
 from unittest.mock import MagicMock, patch
 
 import pytest

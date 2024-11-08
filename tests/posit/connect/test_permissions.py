@@ -9,7 +9,7 @@ from posit.connect.permissions import Permission, Permissions
 from posit.connect.resources import ResourceParameters
 from posit.connect.urls import Url
 
-from .api import load_mock
+from .api import load_mock, load_mock_dict, load_mock_list
 
 
 class TestPermissionDelete:
@@ -26,7 +26,7 @@ class TestPermissionDelete:
 
         # setup
         params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
+        fake_permission = load_mock_dict(f"v1/content/{content_guid}/permissions/{uid}.json")
         permission = Permission(params, **fake_permission)
 
         # invoke
@@ -91,7 +91,7 @@ class TestPermissionUpdate:
 
         uid = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permission = load_mock(f"v1/content/{content_guid}/permissions/{uid}.json")
+        fake_permission = load_mock_dict(f"v1/content/{content_guid}/permissions/{uid}.json")
         fake_permission.update(role=new_role)
 
         # define api behavior
@@ -126,7 +126,7 @@ class TestPermissionsCount:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
+        fake_permissions = load_mock_list(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(
@@ -155,7 +155,7 @@ class TestPermissionsCreate:
         principal_type = "user"
         role = "owner"
         fake_permission = {
-            **load_mock(f"v1/content/{content_guid}/permissions/{uid}.json"),
+            **load_mock_dict(f"v1/content/{content_guid}/permissions/{uid}.json"),
             "principal_guid": principal_guid,
             "principal_type": principal_type,
             "role": role,
@@ -220,7 +220,7 @@ class TestPermissionsFindOne:
     def test(self):
         # test data
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_permissions = load_mock(f"v1/content/{content_guid}/permissions.json")
+        fake_permissions = load_mock_list(f"v1/content/{content_guid}/permissions.json")
 
         # define api behavior
         responses.get(

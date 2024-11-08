@@ -3,7 +3,7 @@ from responses import matchers
 
 from posit.connect.client import Client
 
-from ..api import load_mock
+from ..api import load_mock, load_mock_dict
 
 
 class TestIntegrationDelete:
@@ -50,7 +50,7 @@ class TestIntegrationUpdate:
 
         new_name = "New Name"
 
-        fake_integration = load_mock(f"v1/oauth/integrations/{guid}.json")
+        fake_integration = load_mock_dict(f"v1/oauth/integrations/{guid}.json")
         fake_integration.update(name=new_name)
         assert fake_integration["name"] == new_name
 
@@ -69,7 +69,7 @@ class TestIntegrationsCreate:
     def test(self):
         # data
         guid = "22644575-a27b-4118-ad06-e24459b05126"
-        fake_integration = load_mock(f"v1/oauth/integrations/{guid}.json")
+        fake_integration = load_mock_dict(f"v1/oauth/integrations/{guid}.json")
 
         # behavior
         mock_create = responses.post(
