@@ -81,7 +81,7 @@ class ContentItemRepository(ApiDictEndpoint):
             The context object containing the session and URL for API interactions.
         content_guid : str
             The unique identifier of the content item.
-        **attrs : _V1Attrs
+        **attrs : ContentItemRepository._Attrs
             Attributes for the content item repository. If not supplied, the attributes will be
             retrieved from the API upon initialization
         """
@@ -690,7 +690,7 @@ class Content(Resources):
 
     def find_by(
         self,
-        **attrs: Unpack[ContentItem._Attrs],
+        **attrs: Unpack[ContentItem._AttrsNotRequired],
     ) -> Optional[ContentItem]:
         """Find the first content record matching the specified attributes.
 
