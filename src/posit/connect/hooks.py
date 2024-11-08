@@ -6,7 +6,12 @@ from requests import JSONDecodeError, Response
 from .errors import ClientError
 
 
-def handle_errors(response: Response, *args, **kwargs) -> Response:  # noqa: ARG001
+def handle_errors(
+    response: Response,
+    # Arguments for the hook callback signature
+    *request_hook_args,  # noqa: ARG001
+    **request_hook_kwargs,  # noqa: ARG001
+) -> Response:
     if response.status_code >= 400:
         try:
             data = response.json()
@@ -22,7 +27,12 @@ def handle_errors(response: Response, *args, **kwargs) -> Response:  # noqa: ARG
     return response
 
 
-def check_for_deprecation_header(response: Response, *args, **kwargs) -> Response:  # noqa: ARG001
+def check_for_deprecation_header(
+    response: Response,
+    # Extra arguments for the hook callback signature
+    *args,  # noqa: ARG001
+    **kwargs,  # noqa: ARG001
+) -> Response:
     """
     Check for deprecation warnings from the server.
 
