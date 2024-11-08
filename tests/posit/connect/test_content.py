@@ -93,7 +93,7 @@ class TestContentDeploy:
         task = content.deploy()
 
         # assert
-        assert task.id == task_id
+        assert task["id"] == task_id
         assert mock_content_get.call_count == 1
         assert mock_content_deploy.call_count == 1
         assert mock_tasks_get.call_count == 1
@@ -109,7 +109,7 @@ class TestContentUpdate:
         )
         con = Client("https://connect.example", "12345")
         content = con.content.get(guid)
-        assert content.guid == guid
+        assert content["guid"] == guid
 
         new_name = "New Name"
         fake_content = load_mock(f"v1/content/{guid}.json")
@@ -120,7 +120,7 @@ class TestContentUpdate:
         )
 
         content.update(name=new_name)
-        assert content.name == new_name
+        assert content["name"] == new_name
 
 
 class TestContentCreate:
@@ -144,7 +144,7 @@ class TestContentCreate:
         content_item = client.content.create(name=fake_content_item["name"])
 
         # assert
-        assert content_item.name == fake_content_item["name"]
+        assert content_item["name"] == fake_content_item["name"]
 
 
 class TestContentsFind:
@@ -165,9 +165,9 @@ class TestContentsFind:
         # assert
         assert mock_get.call_count == 1
         assert len(content) == 3
-        assert content[0].name == "team-admin-dashboard"
-        assert content[1].name == "Performance-Data-1671216053560"
-        assert content[2].name == "My-Streamlit-app"
+        assert content[0]["name"] == "team-admin-dashboard"
+        assert content[1]["name"] == "Performance-Data-1671216053560"
+        assert content[2]["name"] == "My-Streamlit-app"
 
     @responses.activate
     def test_params_include(self):
@@ -242,7 +242,7 @@ class TestContentsFindBy:
         # assert
         assert mock_get.call_count == 1
         assert content
-        assert content.name == "team-admin-dashboard"
+        assert content["name"] == "team-admin-dashboard"
 
     @responses.activate
     def test_miss(self):
@@ -302,7 +302,7 @@ class TestContentsFindOne:
         #  assert
         assert mock_get.call_count == 1
         assert content_item
-        assert content_item.owner_guid == owner_guid
+        assert content_item["owner_guid"] == owner_guid
 
     @responses.activate
     def test_name(self):
@@ -324,7 +324,7 @@ class TestContentsFindOne:
         #  assert
         assert mock_get.call_count == 1
         assert content_item
-        assert content_item.name == name
+        assert content_item["name"] == name
 
     @responses.activate
     def test_params_include(self):
@@ -372,7 +372,7 @@ class TestContentsGet:
         )
         con = Client("https://connect.example", "12345")
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
-        assert get_one.name == "Performance-Data-1671216053560"
+        assert get_one["name"] == "Performance-Data-1671216053560"
 
 
 class TestContentsCount:

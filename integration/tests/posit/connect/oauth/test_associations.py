@@ -87,7 +87,9 @@ class TestAssociations:
         updated_associations = self.content.oauth.associations.find()
         assert len(updated_associations) == 1
         assert updated_associations[0]["app_guid"] == self.content["guid"]
-        assert updated_associations[0]["oauth_integration_guid"] == self.another_integration.guid
+        assert (
+            updated_associations[0]["oauth_integration_guid"] == self.another_integration["guid"]
+        )
 
         # unset content association
         self.content.oauth.associations.delete()
