@@ -5,16 +5,25 @@ from __future__ import annotations
 import posixpath
 import time
 from posixpath import dirname
-from typing import TYPE_CHECKING, Any, List, Literal, Optional, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+    Literal,
+    Optional,
+    overload,
+)
 
 from . import tasks
+from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
+from .errors import ClientError
 from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Active, Resource, ResourceParameters, Resources
 from .vanities import VanityMixin
 from .variants import Variants
 
@@ -22,14 +31,72 @@ if TYPE_CHECKING:
     from .tasks import Task
 
 
+class ContentItemRepository(Active):
+    """
+    Content items GitHub repository information.
+
+    See Also
+    --------
+    * Get info: https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
+    * Delete info: https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
+    * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
+    """
+
+    class _ContentRepository(TypedDict, total=False):
+        repository: str
+        """URL for the repository."""
+        branch: NotRequired[str]
+        """The tracked Git branch."""
+        directory: NotRequired[str]
+        """Directory containing the content."""
+        polling: NotRequired[bool]
+        """Indicates that the Git repository is regularly polled."""
+
+    def __init__(self, ctx: Context, path: str, /, **attributes: Unpack[_ContentRepository]):
+        super().__init__(ctx, path, **attributes)
+
+    def destroy(self) -> None:
+        """
+        Delete the content's git repository location.
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
+        """
+        endpoint = self._ctx.url + self._path
+        self._ctx.session.delete(endpoint)
+
+    class _UpdateRepository(TypedDict, total=False):
+        repository: NotRequired[str]
+        """URL for the repository."""
+        branch: NotRequired[str]
+        """The tracked Git branch."""
+        directory: NotRequired[str]
+        """Directory containing the content."""
+        polling: NotRequired[bool]
+        """Indicates that the Git repository is regularly polled."""
+
+    @overload
+    def update(self, *args, **attributes: Unpack[_UpdateRepository]) -> None: ...
+
+    @overload
+    def update(self, *args, **attributes) -> None: ...
+
+    def update(self, *args, **attributes) -> None:  # noqa: ARG002
+        url = self.params.url + self._path
+        response = self.params.session.patch(url, json=attributes)
+        result = response.json()
+        super().update(**result)
+
+
 class ContentItemOAuth(Resource):
     def __init__(self, params: ResourceParameters, content_guid: str) -> None:
         super().__init__(params)
-        self.content_guid = content_guid
+        self["content_guid"] = content_guid
 
     @property
     def associations(self) -> ContentItemAssociations:
-        return ContentItemAssociations(self.params, content_guid=self.content_guid)
+        return ContentItemAssociations(self.params, content_guid=self["content_guid"])
 
 
 class ContentItemOwner(Resource):
@@ -37,10 +104,46 @@ class ContentItemOwner(Resource):
 
 
 class ContentItem(JobsMixin, VanityMixin, Resource):
-    def __init__(self, /, params: ResourceParameters, **kwargs):
+    class _AttrsInit(TypedDict, total=False):
+        guid: Required[str]
+        name: Required[str]
+        # Content Metadata
+        title: NotRequired[str]
+        description: NotRequired[str]
+        access_type: NotRequired[Literal["all", "acl", "logged_in"]]
+        # Timeout Settings
+        connection_timeout: NotRequired[int]
+        read_timeout: NotRequired[int]
+        init_timeout: NotRequired[int]
+        idle_timeout: NotRequired[int]
+        # Process and Resource Limits
+        max_processes: NotRequired[int]
+        min_processes: NotRequired[int]
+        max_conns_per_process: NotRequired[int]
+        load_factor: NotRequired[float]
+        cpu_request: NotRequired[float]
+        cpu_limit: NotRequired[float]
+        memory_request: NotRequired[int]
+        memory_limit: NotRequired[int]
+        amd_gpu_limit: NotRequired[int]
+        nvidia_gpu_limit: NotRequired[int]
+        # Execution Settings
+        run_as: NotRequired[str]
+        run_as_current_user: NotRequired[bool]
+        default_image_name: NotRequired[str]
+        default_r_environment_management: NotRequired[bool]
+        default_py_environment_management: NotRequired[bool]
+        service_account_name: NotRequired[str]
+
+    def __init__(
+        self,
+        params: ResourceParameters,
+        guid: str,
+        /,
+        **kwargs: Unpack[ContentItem._AttrsInit],
+    ) -> None:
         ctx = Context(params.session, params.url)
-        uid = kwargs["guid"]
-        path = f"v1/content/{uid}"
+        path = f"v1/content/{guid}"
         super().__init__(ctx, path, **kwargs)
 
     def __getitem__(self, key: Any) -> Any:
@@ -52,6 +155,54 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
     @property
     def oauth(self) -> ContentItemOAuth:
         return ContentItemOAuth(self.params, content_guid=self["guid"])
+
+    @property
+    def repository(self) -> ContentItemRepository | None:
+        try:
+            path = posixpath.join(self._path, "repository")
+            endpoint = self._ctx.url + path
+            response = self._ctx.session.get(endpoint)
+            result = response.json()
+            return ContentItemRepository(self._ctx, path, **result)
+        except ClientError:
+            return None
+
+    class _CreateRepository(TypedDict, total=False):
+        repository: str
+        """URL for the repository."""
+        branch: NotRequired[str]
+        """The tracked Git branch."""
+        directory: NotRequired[str]
+        """Directory containing the content."""
+        polling: NotRequired[bool]
+        """Indicates that the Git repository is regularly polled."""
+
+    def create_repository(
+        self,
+        **attributes: Unpack[_CreateRepository],
+    ) -> ContentItemRepository:
+        """Create repository.
+
+        Parameters
+        ----------
+        repository : str
+            URL for the respository.
+        branch : str, optional
+            The tracked Git branch. Default is 'main'.
+        directory : str, optional
+            Directory containing the content. Default is '.'.
+        polling : bool, optional
+            Indicates that the Git repository is regularly polled. Default is False.
+
+        Returns
+        -------
+        ContentItemRepository
+        """
+        path = posixpath.join(self._path, "repository")
+        endpoint = self._ctx.url + path
+        response = self._ctx.session.put(endpoint, json=attributes)
+        result = response.json()
+        return ContentItemRepository(self._ctx, path, **result)
 
     def delete(self) -> None:
         """Delete the content item."""
@@ -95,7 +246,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> render()
         """
-        self.update()
+        self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_rendered:
             variants = self._variants.find()
@@ -124,7 +275,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> restart()
         """
-        self.update()
+        self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_interactive:
             unix_epoch_in_seconds = str(int(time.time()))
@@ -442,7 +593,9 @@ class Content(Resources):
         path = "v1/content"
         url = self.params.url + path
         response = self.params.session.post(url, json=attributes)
-        return ContentItem(self.params, **response.json())
+        result = response.json()
+        guid = result["guid"]
+        return ContentItem(self.params, guid, **result)
 
     @overload
     def find(
@@ -533,6 +686,7 @@ class Content(Resources):
         return [
             ContentItem(
                 self.params,
+                result["guid"],
                 **result,
             )
             for result in response.json()
@@ -750,4 +904,6 @@ class Content(Resources):
         path = f"v1/content/{guid}"
         url = self.params.url + path
         response = self.params.session.get(url)
-        return ContentItem(self.params, **response.json())
+        result = response.json()
+        guid = result["guid"]
+        return ContentItem(self.params, guid, **response.json())

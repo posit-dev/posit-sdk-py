@@ -2,9 +2,8 @@
 
 from typing import List, Optional, overload
 
-from posit.connect.oauth.associations import IntegrationAssociations
-
 from ..resources import Resource, Resources
+from .associations import IntegrationAssociations
 
 
 class Integration(Resource):
