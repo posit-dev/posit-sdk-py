@@ -33,11 +33,9 @@ if TYPE_CHECKING:
     from .tasks import Task
 
 
-def _assert_guid_in_kwargs(kwargs: object) -> str:
-    if not isinstance(kwargs, dict):
-        raise TypeError("Expected `kwargs` to be a dictionary")
-    assert "guid" in kwargs, "Missing 'guid' in `**kwargs`"
-    return kwargs["guid"]
+def _assert_guid(guid: str):
+    assert isinstance(guid, str), "Expected 'guid' to be a string"
+    assert len(guid) > 0, "Expected 'guid' to be non-empty"
 
 
 def _assert_content_guid(content_guid: str):
@@ -174,8 +172,10 @@ class ContentItemOwner(Resource):
 
 
 class ContentItem(JobsMixin, VanityMixin, Resource):
-    class _AttrsInit(TypedDict, total=False):
-        name: Required[str]
+    class _AttrsBase(TypedDict, total=False):
+        # # `name` will be set by other _Attrs classes
+        # name: str
+
         # Content Metadata
         title: NotRequired[str]
         description: NotRequired[str]
@@ -204,20 +204,47 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         default_py_environment_management: NotRequired[bool]
         service_account_name: NotRequired[str]
 
-    class _Attrs(_AttrsInit):
+    class _AttrsNotRequired(_AttrsBase):
+        name: NotRequired[str]
         owner_guid: NotRequired[str]
+
+    class _Attrs(_AttrsBase):
+        name: Required[str]
+        owner_guid: NotRequired[str]
+
+    class _AttrsCreate(_AttrsBase):
+        name: NotRequired[str]
+        # owner_guid is not supported
+
+    @overload
+    def __init__(
+        self,
+        /,
+        params: ResourceParameters,
+        guid: str,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        /,
+        params: ResourceParameters,
+        guid: str,
+        **kwargs: Unpack[ContentItem._Attrs],
+    ) -> None: ...
 
     def __init__(
         self,
         /,
         params: ResourceParameters,
-        **kwargs: Unpack[ContentItem._AttrsInit],
+        guid: str,
+        **kwargs: Unpack[ContentItem._AttrsNotRequired],
     ) -> None:
-        guid = _assert_guid_in_kwargs(kwargs)
+        _assert_guid(guid)
 
         ctx = Context(params.session, params.url)
         path = f"v1/content/{guid}"
-        super().__init__(ctx, path, **kwargs)
+        super().__init__(ctx, path, guid=guid, **kwargs)
 
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
@@ -501,7 +528,7 @@ class Content(Resources):
 
     def create(
         self,
-        **attrs: Unpack[ContentItem._Attrs],
+        **attrs: Unpack[ContentItem._AttrsCreate],
     ) -> ContentItem:
         """Create content.
 
