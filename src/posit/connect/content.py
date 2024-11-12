@@ -15,9 +15,10 @@ from typing import (
     overload,
 )
 
+from typing_extensions import NotRequired, Required, TypedDict, Unpack
+
 from . import tasks
 from ._api import ApiDictEndpoint, JsonifiableDict
-from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars

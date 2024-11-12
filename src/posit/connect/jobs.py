@@ -1,7 +1,8 @@
 import posixpath
 from typing import Any, Literal, Optional, overload
 
-from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
+from typing_extensions import NotRequired, Required, TypedDict, Unpack
+
 from .context import Context
 from .resources import Active, ActiveFinderMethods, ActiveSequence, Resource
 
