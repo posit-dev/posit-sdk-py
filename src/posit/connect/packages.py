@@ -142,6 +142,22 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
     def _create_instance(self, path, /, **attributes):
         return Package(self._ctx, **attributes)
 
+    class _Fetch(TypedDict, total=False):
+        language: Required[Literal["python", "r"]]
+        """Programming language ecosystem, options are 'python' and 'r'"""
+
+        name: Required[str]
+        """The package name"""
+
+        version: Required[str]
+        """The package version"""
+
+    @overload
+    def fetch(self, **conditions: Unpack[_Fetch]): ...
+
+    @overload
+    def fetch(self, **conditions): ...
+
     def fetch(self, **conditions) -> Generator["Package"]:
         # todo - add pagination support to ActiveSequence
         url = self._ctx.url + self._path
