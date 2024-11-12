@@ -5,12 +5,23 @@ from __future__ import annotations
 import posixpath
 import time
 from posixpath import dirname
-from typing import TYPE_CHECKING, Any, List, Literal, Optional, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+    Literal,
+    Optional,
+    cast,
+    overload,
+)
 
 from . import tasks
+from ._api import ApiDictEndpoint, JsonifiableDict
+from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
+from .errors import ClientError
 from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
@@ -22,14 +33,138 @@ if TYPE_CHECKING:
     from .tasks import Task
 
 
+def _assert_guid(guid: str):
+    assert isinstance(guid, str), "Expected 'guid' to be a string"
+    assert len(guid) > 0, "Expected 'guid' to be non-empty"
+
+
+def _assert_content_guid(content_guid: str):
+    assert isinstance(content_guid, str), "Expected 'content_guid' to be a string"
+    assert len(content_guid) > 0, "Expected 'content_guid' to be non-empty"
+
+
+class ContentItemRepository(ApiDictEndpoint):
+    """
+    Content items GitHub repository information.
+
+    See Also
+    --------
+    * Get info: https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
+    * Delete info: https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
+    * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
+    """
+
+    class _Attrs(TypedDict, total=False):
+        repository: str
+        """URL for the repository."""
+        branch: NotRequired[str]
+        """The tracked Git branch."""
+        directory: NotRequired[str]
+        """Directory containing the content."""
+        polling: NotRequired[bool]
+        """Indicates that the Git repository is regularly polled."""
+
+    def __init__(
+        self,
+        ctx: Context,
+        /,
+        *,
+        content_guid: str,
+        # By default, the `attrs` will be retrieved from the API if no `attrs` are supplied.
+        **attrs: Unpack[ContentItemRepository._Attrs],
+    ) -> None:
+        """Content items GitHub repository information.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions.
+        content_guid : str
+            The unique identifier of the content item.
+        **attrs : ContentItemRepository._Attrs
+            Attributes for the content item repository. If not supplied, the attributes will be
+            retrieved from the API upon initialization
+        """
+        _assert_content_guid(content_guid)
+
+        path = self._api_path(content_guid)
+        # Only fetch data if `attrs` are not supplied
+        get_data = len(attrs) == 0
+        super().__init__(ctx, path, get_data, **{"content_guid": content_guid, **attrs})
+
+    @classmethod
+    def _api_path(cls, content_guid: str) -> str:
+        return f"v1/content/{content_guid}/repository"
+
+    @classmethod
+    def _create(
+        cls,
+        ctx: Context,
+        content_guid: str,
+        **attrs: Unpack[ContentItemRepository._Attrs],
+    ) -> ContentItemRepository:
+        from ._api_call import put_api
+
+        result = put_api(ctx, cls._api_path(content_guid), json=cast(JsonifiableDict, attrs))
+
+        return ContentItemRepository(
+            ctx,
+            content_guid=content_guid,
+            **result,  # pyright: ignore[reportCallIssue]
+        )
+
+    def destroy(self) -> None:
+        """
+        Delete the content's git repository location.
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
+        """
+        self._delete_api()
+
+    def update(
+        self,
+        # *,
+        **attrs: Unpack[ContentItemRepository._Attrs],
+    ) -> ContentItemRepository:
+        """Update the content's repository.
+
+        Parameters
+        ----------
+        repository: str, optional
+            URL for the repository. Default is None.
+        branch: str, optional
+            The tracked Git branch. Default is 'main'.
+        directory: str, optional
+            Directory containing the content. Default is '.'
+        polling: bool, optional
+            Indicates that the Git repository is regularly polled. Default is False.
+
+        Returns
+        -------
+        None
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
+        """
+        result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
+        return ContentItemRepository(
+            self._ctx,
+            content_guid=self["content_guid"],
+            **result,  # pyright: ignore[reportCallIssue]
+        )
+
+
 class ContentItemOAuth(Resource):
     def __init__(self, params: ResourceParameters, content_guid: str) -> None:
         super().__init__(params)
-        self.content_guid = content_guid
+        self["content_guid"] = content_guid
 
     @property
     def associations(self) -> ContentItemAssociations:
-        return ContentItemAssociations(self.params, content_guid=self.content_guid)
+        return ContentItemAssociations(self.params, content_guid=self["content_guid"])
 
 
 class ContentItemOwner(Resource):
@@ -37,11 +172,79 @@ class ContentItemOwner(Resource):
 
 
 class ContentItem(JobsMixin, VanityMixin, Resource):
-    def __init__(self, /, params: ResourceParameters, **kwargs):
+    class _AttrsBase(TypedDict, total=False):
+        # # `name` will be set by other _Attrs classes
+        # name: str
+
+        # Content Metadata
+        title: NotRequired[str]
+        description: NotRequired[str]
+        access_type: NotRequired[Literal["all", "acl", "logged_in"]]
+        # Timeout Settings
+        connection_timeout: NotRequired[int]
+        read_timeout: NotRequired[int]
+        init_timeout: NotRequired[int]
+        idle_timeout: NotRequired[int]
+        # Process and Resource Limits
+        max_processes: NotRequired[int]
+        min_processes: NotRequired[int]
+        max_conns_per_process: NotRequired[int]
+        load_factor: NotRequired[float]
+        cpu_request: NotRequired[float]
+        cpu_limit: NotRequired[float]
+        memory_request: NotRequired[int]
+        memory_limit: NotRequired[int]
+        amd_gpu_limit: NotRequired[int]
+        nvidia_gpu_limit: NotRequired[int]
+        # Execution Settings
+        run_as: NotRequired[str]
+        run_as_current_user: NotRequired[bool]
+        default_image_name: NotRequired[str]
+        default_r_environment_management: NotRequired[bool]
+        default_py_environment_management: NotRequired[bool]
+        service_account_name: NotRequired[str]
+
+    class _AttrsNotRequired(_AttrsBase):
+        name: NotRequired[str]
+        owner_guid: NotRequired[str]
+
+    class _Attrs(_AttrsBase):
+        name: Required[str]
+        owner_guid: NotRequired[str]
+
+    class _AttrsCreate(_AttrsBase):
+        name: NotRequired[str]
+        # owner_guid is not supported
+
+    @overload
+    def __init__(
+        self,
+        /,
+        params: ResourceParameters,
+        guid: str,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        /,
+        params: ResourceParameters,
+        guid: str,
+        **kwargs: Unpack[ContentItem._Attrs],
+    ) -> None: ...
+
+    def __init__(
+        self,
+        /,
+        params: ResourceParameters,
+        guid: str,
+        **kwargs: Unpack[ContentItem._AttrsNotRequired],
+    ) -> None:
+        _assert_guid(guid)
+
         ctx = Context(params.session, params.url)
-        uid = kwargs["guid"]
-        path = f"v1/content/{uid}"
-        super().__init__(ctx, path, **kwargs)
+        path = f"v1/content/{guid}"
+        super().__init__(ctx, path, guid=guid, **kwargs)
 
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
@@ -52,6 +255,36 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
     @property
     def oauth(self) -> ContentItemOAuth:
         return ContentItemOAuth(self.params, content_guid=self["guid"])
+
+    @property
+    def repository(self) -> ContentItemRepository | None:
+        try:
+            return ContentItemRepository(self._ctx, content_guid=self["guid"])
+        except ClientError:
+            return None
+
+    def create_repository(
+        self,
+        **attrs: Unpack[ContentItemRepository._Attrs],
+    ) -> ContentItemRepository:
+        """Create repository.
+
+        Parameters
+        ----------
+        repository : str
+            URL for the respository.
+        branch : str, optional
+            The tracked Git branch. Default is 'main'.
+        directory : str, optional
+            Directory containing the content. Default is '.'.
+        polling : bool, optional
+            Indicates that the Git repository is regularly polled. Default is False.
+
+        Returns
+        -------
+        ContentItemRepository
+        """
+        return ContentItemRepository._create(self._ctx, self["guid"], **attrs)
 
     def delete(self) -> None:
         """Delete the content item."""
@@ -95,7 +328,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> render()
         """
-        self.update()
+        self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_rendered:
             variants = self._variants.find()
@@ -124,7 +357,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         --------
         >>> restart()
         """
-        self.update()
+        self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_interactive:
             unix_epoch_in_seconds = str(int(time.time()))
@@ -140,40 +373,9 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
                 f"Restart not supported for this application mode: {self['app_mode']}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
-    @overload
     def update(
         self,
-        *,
-        # Required argument
-        name: str,
-        # Content Metadata
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        access_type: Literal["all", "acl", "logged_in"] = "acl",
-        owner_guid: Optional[str] = None,
-        # Timeout Settings
-        connection_timeout: Optional[int] = None,
-        read_timeout: Optional[int] = None,
-        init_timeout: Optional[int] = None,
-        idle_timeout: Optional[int] = None,
-        # Process and Resource Limits
-        max_processes: Optional[int] = None,
-        min_processes: Optional[int] = None,
-        max_conns_per_process: Optional[int] = None,
-        load_factor: Optional[float] = None,
-        cpu_request: Optional[float] = None,
-        cpu_limit: Optional[float] = None,
-        memory_request: Optional[int] = None,
-        memory_limit: Optional[int] = None,
-        amd_gpu_limit: Optional[int] = None,
-        nvidia_gpu_limit: Optional[int] = None,
-        # Execution Settings
-        run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = False,
-        default_image_name: Optional[str] = None,
-        default_r_environment_management: Optional[bool] = None,
-        default_py_environment_management: Optional[bool] = None,
-        service_account_name: Optional[str] = None,
+        **attrs: Unpack[ContentItem._Attrs],
     ) -> None:
         """Update the content item.
 
@@ -234,15 +436,8 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         -------
         None
         """
-
-    @overload
-    def update(self, **attributes: Any) -> None:
-        """Update the content."""
-
-    def update(self, **attributes: Any) -> None:
-        """Update the content."""
         url = self.params.url + f"v1/content/{self['guid']}"
-        response = self.params.session.patch(url, json=attributes)
+        response = self.params.session.patch(url, json=attrs)
         super().update(**response.json())
 
     # Relationships
@@ -331,39 +526,9 @@ class Content(Resources):
         """
         return len(self.find())
 
-    @overload
     def create(
         self,
-        *,
-        # Required argument
-        name: str,
-        # Content Metadata
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        access_type: Literal["all", "acl", "logged_in"] = "acl",
-        # Timeout Settings
-        connection_timeout: Optional[int] = None,
-        read_timeout: Optional[int] = None,
-        init_timeout: Optional[int] = None,
-        idle_timeout: Optional[int] = None,
-        # Process and Resource Limits
-        max_processes: Optional[int] = None,
-        min_processes: Optional[int] = None,
-        max_conns_per_process: Optional[int] = None,
-        load_factor: Optional[float] = None,
-        cpu_request: Optional[float] = None,
-        cpu_limit: Optional[float] = None,
-        memory_request: Optional[int] = None,
-        memory_limit: Optional[int] = None,
-        amd_gpu_limit: Optional[int] = None,
-        nvidia_gpu_limit: Optional[int] = None,
-        # Execution Settings
-        run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = False,
-        default_image_name: Optional[str] = None,
-        default_r_environment_management: Optional[bool] = None,
-        default_py_environment_management: Optional[bool] = None,
-        service_account_name: Optional[str] = None,
+        **attrs: Unpack[ContentItem._AttrsCreate],
     ) -> ContentItem:
         """Create content.
 
@@ -417,23 +582,8 @@ class Content(Resources):
             Manage Python environment for the content. Default is None.
         service_account_name : str, optional
             Kubernetes service account name for running content. Default is None.
-
-        Returns
-        -------
-        ContentItem
-        """
-
-    @overload
-    def create(self, **attributes) -> ContentItem:
-        """Create a content item.
-
-        Returns
-        -------
-        ContentItem
-        """
-
-    def create(self, **attributes) -> ContentItem:
-        """Create a content item.
+        **attributes : Any
+            Additional attributes.
 
         Returns
         -------
@@ -441,7 +591,7 @@ class Content(Resources):
         """
         path = "v1/content"
         url = self.params.url + path
-        response = self.params.session.post(url, json=attributes)
+        response = self.params.session.post(url, json=attrs)
         return ContentItem(self.params, **response.json())
 
     @overload
@@ -538,42 +688,13 @@ class Content(Resources):
             for result in response.json()
         ]
 
-    @overload
     def find_by(
         self,
-        *,
-        # Required
-        name: str,
-        # Content Metadata
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        access_type: Literal["all", "acl", "logged_in"] = "acl",
-        owner_guid: Optional[str] = None,
-        # Timeout Settings
-        connection_timeout: Optional[int] = None,
-        read_timeout: Optional[int] = None,
-        init_timeout: Optional[int] = None,
-        idle_timeout: Optional[int] = None,
-        # Process and Resource Limits
-        max_processes: Optional[int] = None,
-        min_processes: Optional[int] = None,
-        max_conns_per_process: Optional[int] = None,
-        load_factor: Optional[float] = None,
-        cpu_request: Optional[float] = None,
-        cpu_limit: Optional[float] = None,
-        memory_request: Optional[int] = None,
-        memory_limit: Optional[int] = None,
-        amd_gpu_limit: Optional[int] = None,
-        nvidia_gpu_limit: Optional[int] = None,
-        # Execution Settings
-        run_as: Optional[str] = None,
-        run_as_current_user: Optional[bool] = False,
-        default_image_name: Optional[str] = None,
-        default_r_environment_management: Optional[bool] = None,
-        default_py_environment_management: Optional[bool] = None,
-        service_account_name: Optional[str] = None,
+        **attrs: Unpack[ContentItem._AttrsNotRequired],
     ) -> Optional[ContentItem]:
-        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
+        """Find the first content record matching the specified attributes.
+
+        There is no implied ordering so if order matters, you should find it yourself.
 
         Parameters
         ----------
@@ -631,33 +752,15 @@ class Content(Resources):
         Returns
         -------
         Optional[ContentItem]
-        """
-
-    @overload
-    def find_by(self, **attributes) -> Optional[ContentItem]:
-        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
-
-        Returns
-        -------
-        Optional[ContentItem]
-        """
-
-    def find_by(self, **attributes) -> Optional[ContentItem]:
-        """Find the first content record matching the specified attributes. There is no implied ordering so if order matters, you should find it yourself.
-
-        Returns
-        -------
-        Optional[ContentItem]
 
         Example
         -------
         >>> find_by(name="example-content-name")
         """
+        attr_items = attrs.items()
         results = self.find()
         results = (
-            result
-            for result in results
-            if all(item in result.items() for item in attributes.items())
+            result for result in results if all(item in result.items() for item in attr_items)
         )
         return next(results, None)
 

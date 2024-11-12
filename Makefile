@@ -65,8 +65,8 @@ it: $(UV_LOCK)
 	$(MAKE) -C ./integration
 
 lint: dev
-	$(UV) run pyright
 	$(UV) run ruff check
+	$(UV) run pyright
 
 test: dev
 	$(UV) run coverage run --source=src -m pytest tests

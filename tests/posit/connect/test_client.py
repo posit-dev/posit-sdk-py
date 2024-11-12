@@ -1,3 +1,4 @@
+# pyright: reportFunctionMemberAccess=false
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -5,7 +6,7 @@ import responses
 
 from posit.connect import Client
 
-from .api import load_mock  # type: ignore
+from .api import load_mock
 
 
 @pytest.fixture

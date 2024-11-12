@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar, overload
 
-import requests
-from typing_extensions import Self
+if TYPE_CHECKING:
+    import requests
 
-from .context import Context
-from .urls import Url
+    from ._typing_extensions import Self
+    from .context import Context
+    from .urls import Url
 
 
 @dataclass(frozen=True)
@@ -18,6 +21,8 @@ class ResourceParameters:
     Attributes
     ----------
     session: requests.Session
+        A `requests.Session` object. Provides cookie persistence, connection-pooling, and
+        configuration.
     url: str
         The Connect API base URL (e.g., https://connect.example.com/__api__)
     """
@@ -162,11 +167,11 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
     def __getitem__(self, index):
         return self._data[index]
 
-    def __iter__(self):
-        return iter(self._data)
-
     def __len__(self) -> int:
         return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
 
     def __str__(self) -> str:
         return str(self._data)
@@ -175,7 +180,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         return repr(self._data)
 
 
-class ActiveFinderMethods(ActiveSequence[T], ABC):
+class ActiveFinderMethods(ActiveSequence[T]):
     """Finder methods.
 
     Provides various finder methods for locating records in any endpoint supporting HTTP GET requests.
@@ -201,7 +206,7 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         result = response.json()
         return self._to_instance(result)
 
-    def find_by(self, **conditions: Any) -> Optional[T]:
+    def find_by(self, **conditions: Any) -> T | None:
         """
         Find the first record matching the specified conditions.
 

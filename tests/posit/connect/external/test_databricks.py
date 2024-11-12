@@ -6,12 +6,13 @@ import responses
 from posit.connect import Client
 from posit.connect.external.databricks import (
     CredentialsProvider,
+    CredentialsStrategy,
     PositCredentialsProvider,
     PositCredentialsStrategy,
 )
 
 
-class mock_strategy:
+class mock_strategy(CredentialsStrategy):
     def auth_type(self) -> str:
         return "local"
 

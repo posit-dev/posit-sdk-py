@@ -4,7 +4,7 @@ from responses import matchers
 
 from posit.connect import Client
 
-from .api import load_mock  # type: ignore
+from .api import load_mock
 
 
 @responses.activate

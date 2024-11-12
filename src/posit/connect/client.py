@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Optional, overload
+from typing import overload
 
 from requests import Response, Session
 
@@ -158,7 +158,7 @@ class Client(ContextManager):
         self.ctx = Context(self.session, self.cfg.url)
 
     @property
-    def version(self) -> Optional[str]:
+    def version(self) -> str | None:
         """
         The server version.
 
