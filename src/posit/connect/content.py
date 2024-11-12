@@ -16,7 +16,7 @@ from typing import (
 )
 
 from . import tasks
-from ._api import ApiDictEndpoint, JsonifiableDict
+from ._active import ActiveDict, JsonifiableDict
 from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from .bundles import Bundles
 from .context import Context
@@ -43,7 +43,7 @@ def _assert_content_guid(content_guid: str):
     assert len(content_guid) > 0, "Expected 'content_guid' to be non-empty"
 
 
-class ContentItemRepository(ApiDictEndpoint):
+class ContentItemRepository(ActiveDict):
     """
     Content items GitHub repository information.
 

@@ -1,6 +1,6 @@
 import pytest
 
-from posit.connect._api import ReadOnlyDict
+from posit.connect._active import ReadOnlyDict
 
 
 class TestApiEndpoint:
