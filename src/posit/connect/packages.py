@@ -30,7 +30,7 @@ class ContentPackages(ActiveFinderMethods["ContentPackage"], ActiveSequence["Con
     def __init__(self, ctx, path):
         super().__init__(ctx, path, "name")
 
-    def _create_instance(self, path, /, **attributes):
+    def _create_instance(self, path, /, **attributes):  # noqa: ARG002
         return ContentPackage(self._ctx, **attributes)
 
     def fetch(self, **conditions):
@@ -139,7 +139,7 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
     def __init__(self, ctx, path):
         super().__init__(ctx, path, "name")
 
-    def _create_instance(self, path, /, **attributes):
+    def _create_instance(self, path, /, **attributes):  # noqa: ARG002
         return Package(self._ctx, **attributes)
 
     class _Fetch(TypedDict, total=False):

@@ -176,7 +176,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         return len(list(self.fetch()))
 
     def __iter__(self):
-        return iter(self._data)
+        return iter(self.fetch())
 
     def __str__(self) -> str:
         return str(list(self.fetch()))
