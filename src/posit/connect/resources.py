@@ -4,7 +4,6 @@ import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from itertools import islice
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -16,6 +15,8 @@ from typing import (
     TypeVar,
     overload,
 )
+
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     import requests
@@ -112,6 +113,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         self._ctx = ctx
         self._path = path
         self._uid = uid
+        self._cache: Optional[List[T]] = None
 
     @abstractmethod
     def _create_instance(self, path: str, /, **kwargs: Any) -> T:
@@ -132,11 +134,40 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         results = response.json()
         return [self._to_instance(result) for result in results]
 
+    def reload(self) -> Self:
+        """Reloads the collection from Connect.
+
+        Returns
+        -------
+        Self
+        """
+        self._cache = None
+        return self
+
     def _to_instance(self, result: dict) -> T:
         """Converts a result into an instance of T."""
         uid = result[self._uid]
         path = posixpath.join(self._path, uid)
         return self._create_instance(path, **result)
+
+    @property
+    def _data(self) -> List[T]:
+        """Get the collection.
+
+        Fetches the collection from Connect and caches the result. Subsequent invocations return the cached results unless the cache is explicitly reset.
+
+        Returns
+        -------
+        List[T]
+
+        See Also
+        --------
+        cached
+        reload
+        """
+        if self._cache is None:
+            self._cache = list(self.fetch())
+        return self._cache
 
     @overload
     def __getitem__(self, index: int) -> T: ...
@@ -144,45 +175,20 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
     @overload
     def __getitem__(self, index: slice) -> Sequence[T]: ...
 
-    def __getitem__(self, index) -> Sequence[T] | T:
-        data = self.fetch()
-
-        if isinstance(index, int):
-            if index < 0:
-                # Handle negative indexing
-                data = list(data)
-                return data[index]
-            for i, value in enumerate(data):
-                if i == index:
-                    return value
-            raise KeyError(f"Index {index} is out of range.")
-
-        if isinstance(index, slice):
-            # Handle slicing with islice
-            start = index.start or 0
-            stop = index.stop
-            step = index.step or 1
-            if step == 0:
-                raise ValueError("slice step cannot be zero")
-            return [
-                value
-                for i, value in enumerate(islice(data, start, stop))
-                if (i + start) % step == 0
-            ]
-
-        raise TypeError(f"Index must be int or slice, not {type(index).__name__}.")
+    def __getitem__(self, index):
+        return self._data[index]
 
     def __len__(self) -> int:
-        return len(list(self.fetch()))
+        return len(self._data)
 
     def __iter__(self):
-        return iter(self.fetch())
+        return iter(self._data)
 
     def __str__(self) -> str:
-        return str(list(self.fetch()))
+        return str(self._data)
 
     def __repr__(self) -> str:
-        return repr(list(self.fetch()))
+        return repr(self._data)
 
 
 class ActiveFinderMethods(ActiveSequence[T]):

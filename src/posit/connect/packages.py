@@ -128,7 +128,7 @@ class Package(Active):
         """The numerical identifier of the application this package is associated with"""
 
         app_guid: Required[str]
-        """The numerical identifier of the application this package is associated with"""
+        """The unique identifier of the application this package is associated with"""
 
     def __init__(self, ctx, /, **attributes: Unpack[_Package]):
         # todo - passing "" is a hack since path isn't needed. Instead, this class should inherit from Resource, but ActiveSequence is designed to operate on Active. That should change.
@@ -192,7 +192,7 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
         """The numerical identifier of the application this package is associated with"""
 
         app_guid: NotRequired[str]
-        """The numerical identifier of the application this package is associated with"""
+        """The unique identifier of the application this package is associated with"""
 
     @overload
     def find_by(self, **conditions: Unpack[_FindBy]) -> "Package | None":
