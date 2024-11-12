@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from typing import (
     TYPE_CHECKING,
     Any,
+    Dict,
     Generator,
     Generic,
     List,
@@ -17,6 +18,7 @@ from typing import (
     Self,
     Sequence,
     TypeVar,
+    Unpack,
     cast,
     overload,
 )
@@ -152,7 +154,7 @@ class ActiveDict(ApiCallMixin, ResourceDict):
         path: str,
         get_data: Optional[bool] = None,
         /,
-        **attrs: Jsonifiable,
+        **kwargs: Any,
     ) -> None:
         """
         A dict abstraction for any HTTP endpoint that returns a singular resource.
@@ -169,22 +171,22 @@ class ActiveDict(ApiCallMixin, ResourceDict):
             If `True`, fetch the API and set the attributes from the response. If `False`, only set
             the provided attributes. If `None` [default], fetch the API if no attributes are
             provided.
-        attrs : dict
+        **kwargs : Any
             Resource attributes passed
         """
         # If no attributes are provided, fetch the API and set the attributes from the response
         if get_data is None:
-            get_data = len(attrs) == 0
+            get_data = len(kwargs) == 0
 
         # If we should get data, fetch the API and set the attributes from the response
         if get_data:
-            init_attrs: Jsonifiable = get_api(ctx, path)
-            init_attrs_dict = cast(ResponseAttrs, init_attrs)
-            # Overwrite the initial attributes with `attrs`: e.g. {'key': value} | {'content_guid': '123'}
-            init_attrs_dict.update(attrs)
-            attrs = init_attrs_dict
+            init_kwargs: Jsonifiable = get_api(ctx, path)
+            init_kwargs_dict = cast(ResponseAttrs, init_kwargs)
+            # Overwrite the initial attributes with `kwargs`: e.g. {'key': value} | {'content_guid': '123'}
+            init_kwargs_dict.update(kwargs)
+            kwargs = init_kwargs_dict
 
-        super().__init__(ctx, **attrs)
+        super().__init__(ctx, **kwargs)
         self._path = path
 
 
