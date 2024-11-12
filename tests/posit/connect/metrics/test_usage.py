@@ -7,20 +7,26 @@ from responses import matchers
 from posit import connect
 from posit.connect.metrics import shiny_usage, usage, visits
 
-from ..api import load_mock  # type: ignore
+from ..api import load_mock, load_mock_dict
 
 
 class TestUsageEventFromEvent:
     def test(self):
         with pytest.raises(TypeError):
-            usage.UsageEvent.from_event(None)
+            usage.UsageEvent.from_event(
+                None  # pyright: ignore[reportArgumentType]
+            )
 
 
 class TestUsageEventFromVisitEvent:
+    @classmethod
     def setup_class(cls):
+        results = load_mock_dict("v1/instrumentation/content/visits?limit=500.json")["results"]
+        assert isinstance(results, list)
+
         visit_event = visits.VisitEvent(
             mock.Mock(),
-            **load_mock("v1/instrumentation/content/visits?limit=500.json")["results"][0],
+            **results[0],
         )
         cls.view_event = usage.UsageEvent.from_visit_event(visit_event)
 
@@ -53,10 +59,13 @@ class TestUsageEventFromVisitEvent:
 
 
 class TestUsageEventFromShinyUsageEvent:
+    @classmethod
     def setup_class(cls):
+        results = load_mock_dict("v1/instrumentation/shiny/usage?limit=500.json")["results"]
+        assert isinstance(results, list)
         visit_event = shiny_usage.ShinyUsageEvent(
             mock.Mock(),
-            **load_mock("v1/instrumentation/shiny/usage?limit=500.json")["results"][0],
+            **results[0],
         )
         cls.view_event = usage.UsageEvent.from_shiny_usage_event(visit_event)
 
@@ -92,57 +101,56 @@ class TestUsageFind:
     @responses.activate
     def test(self):
         # behavior
-        mock_get = [None] * 4
-
-        mock_get[0] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "limit": 500,
-                    },
+        mock_get = [
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock(
+                    "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
                 ),
-            ],
-        )
-
-        mock_get[1] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "next": "23948901087",
-                        "limit": 500,
-                    },
-                ),
-            ],
-        )
-
-        mock_get[2] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock("v1/instrumentation/shiny/usage?limit=500.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "limit": 500,
-                    },
-                ),
-            ],
-        )
-
-        mock_get[3] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "next": "23948901087",
-                        "limit": 500,
-                    },
-                ),
-            ],
-        )
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "next": "23948901087",
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/shiny/usage",
+                json=load_mock("v1/instrumentation/shiny/usage?limit=500.json"),
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/shiny/usage",
+                json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "next": "23948901087",
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+        ]
 
         # setup
         c = connect.Client("https://connect.example", "12345")
@@ -162,57 +170,56 @@ class TestUsageFindOne:
     @responses.activate
     def test(self):
         # behavior
-        mock_get = [None] * 4
-
-        mock_get[0] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "limit": 500,
-                    },
+        mock_get = [
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock(
+                    "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
                 ),
-            ],
-        )
-
-        mock_get[1] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "next": "23948901087",
-                        "limit": 500,
-                    },
-                ),
-            ],
-        )
-
-        mock_get[2] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock("v1/instrumentation/shiny/usage?limit=500.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "limit": 500,
-                    },
-                ),
-            ],
-        )
-
-        mock_get[3] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "next": "23948901087",
-                        "limit": 500,
-                    },
-                ),
-            ],
-        )
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "next": "23948901087",
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/shiny/usage",
+                json=load_mock("v1/instrumentation/shiny/usage?limit=500.json"),
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/shiny/usage",
+                json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "next": "23948901087",
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+        ]
 
         # setup
         c = connect.Client("https://connect.example", "12345")
@@ -231,18 +238,19 @@ class TestUsageFindOne:
     @responses.activate
     def test_none(self):
         # behavior
-        mock_get = [None] * 2
-
-        # return an empty result set to push through the iterator
-        mock_get[0] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
-        )
-
-        mock_get[1] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/shiny/usage",
-            json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
-        )
+        mock_get = [
+            # return an empty result set to push through the iterator
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock(
+                    "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
+                ),
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/shiny/usage",
+                json=load_mock("v1/instrumentation/shiny/usage?limit=500&next=23948901087.json"),
+            ),
+        ]
 
         # setup
         c = connect.Client("https://connect.example", "12345")

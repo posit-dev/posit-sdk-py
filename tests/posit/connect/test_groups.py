@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from posit.connect.groups import Group
 
-from .api import load_mock  # type: ignore
+from .api import load_mock_dict
 
 session = Mock()
 url = Mock()
@@ -13,7 +13,7 @@ class TestGroupAttributes:
     @classmethod
     def setup_class(cls):
         guid = "6f300623-1e0c-48e6-a473-ddf630c0c0c3"
-        fake_item = load_mock(f"v1/groups/{guid}.json")
+        fake_item = load_mock_dict(f"v1/groups/{guid}.json")
         cls.item = Group(mock.Mock(), **fake_item)
 
     def test_guid(self):

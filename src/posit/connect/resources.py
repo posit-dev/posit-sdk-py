@@ -31,6 +31,8 @@ class ResourceParameters:
     Attributes
     ----------
     session: requests.Session
+        A `requests.Session` object. Provides cookie persistence, connection-pooling, and
+        configuration.
     url: str
         The Connect API base URL (e.g., https://connect.example.com/__api__)
     """
@@ -170,11 +172,11 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
 
         raise TypeError(f"Index must be int or slice, not {type(index).__name__}.")
 
-    def __iter__(self):
-        return iter(self.fetch())
-
     def __len__(self) -> int:
         return len(list(self.fetch()))
+
+    def __iter__(self):
+        return iter(self._data)
 
     def __str__(self) -> str:
         return str(list(self.fetch()))
@@ -183,7 +185,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         return repr(list(self.fetch()))
 
 
-class ActiveFinderMethods(ActiveSequence[T], ABC):
+class ActiveFinderMethods(ActiveSequence[T]):
     """Finder methods.
 
     Provides various finder methods for locating records in any endpoint supporting HTTP GET requests.
@@ -209,7 +211,7 @@ class ActiveFinderMethods(ActiveSequence[T], ABC):
         result = response.json()
         return self._to_instance(result)
 
-    def find_by(self, **conditions) -> Optional[T]:
+    def find_by(self, **conditions: Any) -> T | None:
         """
         Find the first record matching the specified conditions.
 

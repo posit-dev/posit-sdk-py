@@ -6,15 +6,21 @@ from responses import matchers
 
 from posit.connect.metrics import visits
 from posit.connect.resources import ResourceParameters
+from posit.connect.urls import Url
 
-from ..api import load_mock  # type: ignore
+from ..api import load_mock, load_mock_dict
 
 
 class TestVisitAttributes:
+    @classmethod
     def setup_class(cls):
+        results = load_mock_dict("v1/instrumentation/content/visits?limit=500.json")["results"]
+        assert isinstance(results, list)
+        first_result_dict = results[0]
+        assert isinstance(first_result_dict, dict)
         cls.visit = visits.VisitEvent(
             mock.Mock(),
-            **load_mock("v1/instrumentation/content/visits?limit=500.json")["results"][0],
+            **first_result_dict,
         )
 
     def test_content_guid(self):
@@ -46,34 +52,36 @@ class TestVisitsFind:
     @responses.activate
     def test(self):
         # behavior
-        mock_get = [None] * 2
-        mock_get[0] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "limit": 500,
-                    },
+        mock_get = [
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock(
+                    "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
                 ),
-            ],
-        )
-
-        mock_get[1] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "next": "23948901087",
-                        "limit": 500,
-                    },
-                ),
-            ],
-        )
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "next": "23948901087",
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+        ]
 
         # setup
-        params = ResourceParameters(requests.Session(), "https://connect.example/__api__")
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
 
         # invoke
         events = visits.Visits(params).find()
@@ -88,34 +96,36 @@ class TestVisitsFindOne:
     @responses.activate
     def test(self):
         # behavior
-        mock_get = [None] * 2
-        mock_get[0] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "limit": 500,
-                    },
+        mock_get = [
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock("v1/instrumentation/content/visits?limit=500.json"),
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+            responses.get(
+                "https://connect.example/__api__/v1/instrumentation/content/visits",
+                json=load_mock(
+                    "v1/instrumentation/content/visits?limit=500&next=23948901087.json"
                 ),
-            ],
-        )
-
-        mock_get[1] = responses.get(
-            "https://connect.example/__api__/v1/instrumentation/content/visits",
-            json=load_mock("v1/instrumentation/content/visits?limit=500&next=23948901087.json"),
-            match=[
-                matchers.query_param_matcher(
-                    {
-                        "next": "23948901087",
-                        "limit": 500,
-                    },
-                ),
-            ],
-        )
+                match=[
+                    matchers.query_param_matcher(
+                        {
+                            "next": "23948901087",
+                            "limit": 500,
+                        },
+                    ),
+                ],
+            ),
+        ]
 
         # setup
-        params = ResourceParameters(requests.Session(), "https://connect.example/__api__")
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
 
         # invoke
         event = visits.Visits(params).find_one()

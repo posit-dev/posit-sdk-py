@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Optional, TypedDict
+from typing import Optional
 
+from .._typing_extensions import TypedDict
 from ..resources import ResourceParameters, Resources
 from .integrations import Integrations
 from .sessions import Sessions

@@ -1,16 +1,21 @@
 import pytest
+import requests
 import responses
 from responses import matchers
 
 from posit.connect.client import Client
+from posit.connect.content import ContentItem, ContentItemRepository
+from posit.connect.context import Context
+from posit.connect.resources import ResourceParameters
+from posit.connect.urls import Url
 
-from .api import load_mock  # type: ignore
+from .api import load_mock, load_mock_dict
 
 
 class TestContentItemGetContentOwner:
     @responses.activate
     def test_owner(self):
-        mock_content = load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json")
+        mock_content = load_mock_dict("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json")
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
             json=mock_content,
@@ -107,7 +112,7 @@ class TestContentUpdate:
         assert content["guid"] == guid
 
         new_name = "New Name"
-        fake_content = load_mock(f"v1/content/{guid}.json")
+        fake_content = load_mock_dict(f"v1/content/{guid}.json")
         fake_content.update(name=new_name)
         responses.patch(
             f"https://connect.example/__api__/v1/content/{guid}",
@@ -123,7 +128,7 @@ class TestContentCreate:
     def test(self):
         # data
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fake_content_item = load_mock(f"v1/content/{guid}.json")
+        fake_content_item = load_mock_dict(f"v1/content/{guid}.json")
 
         # behavior
         responses.post(
@@ -136,7 +141,9 @@ class TestContentCreate:
         client = Client(api_key="12345", url="https://connect.example/")
 
         # invoke
-        content_item = client.content.create(name=fake_content_item["name"])
+        fake_name = fake_content_item["name"]
+        assert isinstance(fake_name, str)
+        content_item = client.content.create(name=fake_name)
 
         # assert
         assert content_item["name"] == fake_content_item["name"]
@@ -427,7 +434,7 @@ class TestRender:
     def test_app_mode_is_other(self):
         # data
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fixture_content = load_mock(f"v1/content/{guid}.json")
+        fixture_content = load_mock_dict(f"v1/content/{guid}.json")
         fixture_content.update(app_mode="other")
 
         # behavior
@@ -477,7 +484,7 @@ class TestRestart:
     def test(self):
         # data
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fixture_content = load_mock(f"v1/content/{guid}.json")
+        fixture_content = load_mock_dict(f"v1/content/{guid}.json")
         fixture_content.update(app_mode="api")
 
         # behavior
@@ -517,7 +524,7 @@ class TestRestart:
     def test_app_mode_is_other(self):
         # data
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        fixture_content = load_mock(f"v1/content/{guid}.json")
+        fixture_content = load_mock_dict(f"v1/content/{guid}.json")
         fixture_content.update(app_mode="other")
 
         # behavior
@@ -542,3 +549,74 @@ class TestRestart:
         # assert
         assert mock_get_content.call_count == 1
         assert mock_patch_content.call_count == 1
+
+
+class TestContentRepository:
+    @property
+    def base_url(self):
+        return "http://connect.example"
+
+    @property
+    def content_guid(self):
+        return "f2f37341-e21d-3d80-c698-a935ad614066"
+
+    @property
+    def content_item(self):
+        return ContentItem(self.params, guid=self.content_guid)
+
+    @property
+    def endpoint(self):
+        return f"{self.base_url}/__api__/v1/content/{self.content_guid}/repository"
+
+    @property
+    def ctx(self):
+        return Context(requests.Session(), Url(self.base_url))
+
+    @property
+    def params(self):
+        return ResourceParameters(self.ctx.session, self.ctx.url)
+
+    def mock_repository_info(self):
+        content_item = self.content_item
+
+        mock_get = responses.get(
+            self.endpoint,
+            json=load_mock_dict(f"v1/content/{self.content_guid}/repository.json"),
+        )
+        repository_info = content_item.repository
+
+        assert isinstance(repository_info, ContentItemRepository)
+        assert mock_get.call_count == 1
+
+        return repository_info
+
+    @responses.activate
+    def test_repository_getter_returns_repository(self):
+        # Performs assertions in helper property method
+        self.mock_repository_info()
+
+    @responses.activate
+    def test_repository_update(self):
+        repository_info = self.mock_repository_info()
+
+        mock_patch = responses.patch(
+            self.endpoint,
+            json=load_mock_dict(f"v1/content/{self.content_guid}/repository_patch.json"),
+        )
+        new_repository_info = repository_info.update(branch="testing-main")
+        assert mock_patch.call_count == 1
+
+        for key, value in repository_info.items():
+            if key == "branch":
+                assert new_repository_info[key] == "testing-main"
+            else:
+                assert new_repository_info[key] == value
+
+    @responses.activate
+    def test_repository_delete(self):
+        repository_info = self.mock_repository_info()
+
+        mock_delete = responses.delete(self.endpoint)
+        repository_info.destroy()
+
+        assert mock_delete.call_count == 1

@@ -5,14 +5,14 @@ import responses
 from posit.connect.client import Client
 from posit.connect.oauth.associations import Association
 
-from ..api import load_mock
+from ..api import load_mock, load_mock_list
 
 
 class TestAssociationAttributes:
     @classmethod
     def setup_class(cls):
         guid = "22644575-a27b-4118-ad06-e24459b05126"
-        fake_items = load_mock(f"v1/oauth/integrations/{guid}/associations.json")
+        fake_items = load_mock_list(f"v1/oauth/integrations/{guid}/associations.json")
 
         assert len(fake_items) == 1
         fake_item = fake_items[0]

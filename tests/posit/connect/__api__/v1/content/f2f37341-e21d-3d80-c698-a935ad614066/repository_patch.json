@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/posit-dev/posit-sdk-py/",
+  "branch": "testing-main",
+  "directory": "integration/resources/connect/bundles/example-flask-minimal",
+  "polling": true
+}

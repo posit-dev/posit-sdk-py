@@ -2,8 +2,10 @@ from pathlib import Path
 
 import pyjson5 as json
 
+from posit.connect._json import Jsonifiable, JsonifiableDict, JsonifiableList
 
-def load_mock(path: str) -> dict:
+
+def load_mock(path: str) -> Jsonifiable:
     """
     Load mock data from a file.
 
@@ -20,7 +22,7 @@ def load_mock(path: str) -> dict:
 
     Returns
     -------
-    dict
+    Jsonifiable
         The parsed data from the JSONC file.
 
     Examples
@@ -29,6 +31,18 @@ def load_mock(path: str) -> dict:
     >>> data = load_mock("v1/example.jsonc")
     """
     return json.loads((Path(__file__).parent / "__api__" / path).read_text())
+
+
+def load_mock_dict(path: str) -> JsonifiableDict:
+    result = load_mock(path)
+    assert isinstance(result, dict)
+    return result
+
+
+def load_mock_list(path: str) -> JsonifiableList:
+    result = load_mock(path)
+    assert isinstance(result, list)
+    return result
 
 
 def get_path(path: str) -> Path:
