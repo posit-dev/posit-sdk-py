@@ -53,56 +53,56 @@ if TYPE_CHECKING:
 # for some reason, we _know_ the keys are fixed (as we've moved on to a higher version), we can add
 # `Generic[AttrsT]` to the class.
 class ReadOnlyDict(Mapping):
-    _attrs: ResponseAttrs
-    """Resource attributes passed."""
+    _dict: ResponseAttrs
+    """Read only dictionary."""
 
-    def __init__(self, attrs: ResponseAttrs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """
         A read-only dict abstraction for any HTTP endpoint that returns a singular resource.
 
         Parameters
         ----------
-        attrs : dict
-            Resource attributes passed
+        **kwargs : Any
+            Values to be stored
         """
         super().__init__()
-        self._attrs = attrs
+        self._dict = kwargs
 
     def get(self, key: str, default: Any = None) -> Any:
-        return self._attrs.get(key, default)
+        return self._dict.get(key, default)
 
     def __getitem__(self, key: str) -> Any:
-        return self._attrs[key]
+        return self._dict[key]
 
     def __setitem__(self, key: str, value: Any) -> None:
         raise NotImplementedError(
-            "Resource attributes are locked. "
+            "Attributes are locked. "
             "To retrieve updated values, please retrieve the parent object again."
         )
 
     def __len__(self) -> int:
-        return self._attrs.__len__()
+        return self._dict.__len__()
 
     def __iter__(self):
-        return self._attrs.__iter__()
+        return self._dict.__iter__()
 
     def __contains__(self, key: object) -> bool:
-        return self._attrs.__contains__(key)
+        return self._dict.__contains__(key)
 
     def __repr__(self) -> str:
-        return repr(self._attrs)
+        return repr(self._dict)
 
     def __str__(self) -> str:
-        return str(self._attrs)
+        return str(self._dict)
 
     def keys(self):
-        return self._attrs.keys()
+        return self._dict.keys()
 
     def values(self):
-        return self._attrs.values()
+        return self._dict.values()
 
     def items(self):
-        return self._attrs.items()
+        return self._dict.items()
 
 
 class ActiveDict(ApiCallMixin, ReadOnlyDict):
