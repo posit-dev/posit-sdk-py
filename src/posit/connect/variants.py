@@ -1,17 +1,25 @@
 from typing import List
 
-from .resources import Resource, ResourceParameters, Resources
+from ._active import ResourceDict
+from .resources import (
+    ResourceParameters,
+    Resources,
+    context_to_resource_parameters,
+    resource_parameters_to_context,
+)
 from .tasks import Task
 
 
-class Variant(Resource):
+class Variant(ResourceDict):
     def render(self) -> Task:
+        # TODO Move to within Task logic?
         path = f"variants/{self['id']}/render"
-        url = self.params.url + path
-        response = self.params.session.post(url)
-        return Task(self.params, **response.json())
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url)
+        return Task(context_to_resource_parameters(self._ctx), **response.json())
 
 
+# TODO; Inherit from ActiveList
 class Variants(Resources):
     def __init__(self, params: ResourceParameters, content_guid: str) -> None:
         super().__init__(params)
@@ -22,4 +30,6 @@ class Variants(Resources):
         url = self.params.url + path
         response = self.params.session.get(url)
         results = response.json() or []
-        return [Variant(self.params, **result) for result in results]
+        return [
+            Variant(resource_parameters_to_context(self.params), **result) for result in results
+        ]

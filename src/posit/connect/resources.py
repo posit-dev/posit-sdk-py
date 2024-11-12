@@ -6,11 +6,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar, overload
 
+from .context import Context
+
 if TYPE_CHECKING:
     import requests
 
     from ._typing_extensions import Self
-    from .context import Context
     from .urls import Url
 
 
@@ -29,6 +30,16 @@ class ResourceParameters:
 
     session: requests.Session
     url: Url
+
+
+def context_to_resource_parameters(ctx: Context) -> ResourceParameters:
+    """Temp method to aid in transitioning from `Context` to `ResourceParameters`."""
+    return ResourceParameters(ctx.session, ctx.url)
+
+
+def resource_parameters_to_context(params: ResourceParameters) -> Context:
+    """Temp method to aid in transitioning from `ResourceParameters` to `Context`."""
+    return Context(params.session, params.url)
 
 
 class Resource(dict):
