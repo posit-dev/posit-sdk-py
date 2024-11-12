@@ -5,7 +5,7 @@ from posit.connect._active import ReadOnlyDict
 
 class TestApiEndpoint:
     def test_read_only(self):
-        obj = ReadOnlyDict({})
+        obj = ReadOnlyDict()
 
         assert len(obj) == 0
 
@@ -14,5 +14,5 @@ class TestApiEndpoint:
         with pytest.raises(NotImplementedError):
             obj["foo"] = "baz"
 
-        eq_obj = ReadOnlyDict({"foo": "bar", "a": 1})
+        eq_obj = ReadOnlyDict(foo="bar", a=1)
         assert eq_obj == {"foo": "bar", "a": 1}
