@@ -21,7 +21,7 @@ from typing import (
     overload,
 )
 
-from ._api_call import ApiCallMixin, get_api
+from ._api_call import ApiCallMixin, ContextP, get_api
 from ._json import Jsonifiable, JsonifiableDict, ResponseAttrs
 
 if TYPE_CHECKING:
@@ -105,7 +105,39 @@ class ReadOnlyDict(Mapping):
         return self._dict.items()
 
 
-class ActiveDict(ApiCallMixin, ReadOnlyDict):
+class ResourceDict(ReadOnlyDict, ContextP):
+    """An abstraction to contain the context and read-only information."""
+
+    _ctx: Context
+    """The context object containing the session and URL for API interactions."""
+
+    def __init__(
+        self,
+        ctx: Context,
+        /,
+        **kwargs: Any,
+    ) -> None:
+        """
+        A dict abstraction for any HTTP endpoint that returns a singular resource.
+
+        Adds helper methods to interact with the API with reduced boilerplate.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions.
+        path : str
+            The HTTP path component for the resource endpoint
+        **kwargs : Any
+            Values to be stored
+        """
+        super().__init__(**kwargs)
+        self._ctx = ctx
+
+
+class ActiveDict(ApiCallMixin, ResourceDict):
+    """A dict abstraction for any HTTP endpoint that returns a singular resource."""
+
     _ctx: Context
     """The context object containing the session and URL for API interactions."""
     _path: str
@@ -152,8 +184,7 @@ class ActiveDict(ApiCallMixin, ReadOnlyDict):
             init_attrs_dict.update(attrs)
             attrs = init_attrs_dict
 
-        super().__init__(attrs)
-        self._ctx = ctx
+        super().__init__(ctx, **attrs)
         self._path = path
 
 

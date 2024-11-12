@@ -8,8 +8,21 @@ if TYPE_CHECKING:
     from .context import Context
 
 
-class ApiCallProtocol(Protocol):
+# Just the same as `.context.py` ContextManager but with `._ctx` attribute, not `.ctx`
+class ContextP(Protocol):
     _ctx: Context
+
+
+class ContextCls(ContextP):
+    """Class that contains the client context."""
+
+    _ctx: Context
+
+    def __init__(self, ctx: Context):
+        self._ctx = ctx
+
+
+class ApiCallProtocol(ContextP, Protocol):
     _path: str
 
     def _endpoint(self, *path) -> str: ...
