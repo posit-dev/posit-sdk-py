@@ -23,7 +23,6 @@ from typing import (
 
 from ._api_call import ApiCallMixin, get_api
 from ._json import Jsonifiable, JsonifiableDict, ResponseAttrs
-from .resources import Resource, ResourceParameters
 
 if TYPE_CHECKING:
     from .context import Context
@@ -106,11 +105,27 @@ class ReadOnlyDict(Mapping):
         return self._attrs.items()
 
 
-class Active(ABC, Resource):
-    def __init__(self, ctx: Context, path: str, /, **attributes):
-        """A dict abstraction for any HTTP endpoint that returns a singular resource.
+class ActiveDict(ApiCallMixin, ReadOnlyDict):
+    _ctx: Context
+    """The context object containing the session and URL for API interactions."""
+    _path: str
+    """The HTTP path component for the resource endpoint."""
 
-        Extends the `Resource` class and provides additional functionality for via the session context and an optional parent resource.
+    def _get_api(self, *path) -> JsonifiableDict | None:
+        super()._get_api(*path)
+
+    def __init__(
+        self,
+        ctx: Context,
+        path: str,
+        get_data: Optional[bool] = None,
+        /,
+        **attrs: Jsonifiable,
+    ) -> None:
+        """
+        A dict abstraction for any HTTP endpoint that returns a singular resource.
+
+        Adds helper methods to interact with the API with reduced boilerplate.
 
         Parameters
         ----------
@@ -118,16 +133,31 @@ class Active(ABC, Resource):
             The context object containing the session and URL for API interactions.
         path : str
             The HTTP path component for the resource endpoint
-        **attributes : dict
+        get_data : Optional[bool]
+            If `True`, fetch the API and set the attributes from the response. If `False`, only set
+            the provided attributes. If `None` [default], fetch the API if no attributes are
+            provided.
+        attrs : dict
             Resource attributes passed
         """
-        params = ResourceParameters(ctx.session, ctx.url)
-        super().__init__(params, **attributes)
+        # If no attributes are provided, fetch the API and set the attributes from the response
+        if get_data is None:
+            get_data = len(attrs) == 0
+
+        # If we should get data, fetch the API and set the attributes from the response
+        if get_data:
+            init_attrs: Jsonifiable = get_api(ctx, path)
+            init_attrs_dict = cast(ResponseAttrs, init_attrs)
+            # Overwrite the initial attributes with `attrs`: e.g. {'key': value} | {'content_guid': '123'}
+            init_attrs_dict.update(attrs)
+            attrs = init_attrs_dict
+
+        super().__init__(attrs)
         self._ctx = ctx
         self._path = path
 
 
-T = TypeVar("T", bound="Active")
+T = TypeVar("T", bound="ActiveDict")
 """A type variable that is bound to the `Active` class"""
 
 
@@ -273,58 +303,6 @@ class ActiveFinderMethods(ActiveSequence[T]):
         """
         collection = self.fetch()
         return next((v for v in collection if v.items() >= conditions.items()), None)
-
-
-class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
-    _ctx: Context
-    """The context object containing the session and URL for API interactions."""
-    _path: str
-    """The HTTP path component for the resource endpoint."""
-
-    def _get_api(self, *path) -> JsonifiableDict | None:
-        super()._get_api(*path)
-
-    def __init__(
-        self,
-        ctx: Context,
-        path: str,
-        get_data: Optional[bool] = None,
-        /,
-        **attrs: Jsonifiable,
-    ) -> None:
-        """
-        A dict abstraction for any HTTP endpoint that returns a singular resource.
-
-        Adds helper methods to interact with the API with reduced boilerplate.
-
-        Parameters
-        ----------
-        ctx : Context
-            The context object containing the session and URL for API interactions.
-        path : str
-            The HTTP path component for the resource endpoint
-        get_data : Optional[bool]
-            If `True`, fetch the API and set the attributes from the response. If `False`, only set
-            the provided attributes. If `None` [default], fetch the API if no attributes are
-            provided.
-        attrs : dict
-            Resource attributes passed
-        """
-        # If no attributes are provided, fetch the API and set the attributes from the response
-        if get_data is None:
-            get_data = len(attrs) == 0
-
-        # If we should get data, fetch the API and set the attributes from the response
-        if get_data:
-            init_attrs: Jsonifiable = get_api(ctx, path)
-            init_attrs_dict = cast(ResponseAttrs, init_attrs)
-            # Overwrite the initial attributes with `attrs`: e.g. {'key': value} | {'content_guid': '123'}
-            init_attrs_dict.update(attrs)
-            attrs = init_attrs_dict
-
-        super().__init__(attrs)
-        self._ctx = ctx
-        self._path = path
 
 
 ReadOnlyDictT = TypeVar("ReadOnlyDictT", bound="ReadOnlyDict")
