@@ -120,7 +120,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         """Create an instance of 'T'."""
         raise NotImplementedError()
 
-    def fetch(self, **conditions) -> Iterable[T]:
+    def fetch(self, **conditions: Any) -> Iterable[T]:
         """Fetch the collection.
 
         Fetches the collection directly from Connect. This operation does not effect the cache state.

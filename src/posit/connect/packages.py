@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import posixpath
-from typing import Generator, Literal, Optional, TypedDict, overload
+from typing import Generator, Literal, Optional, TypedDict
 
 from typing_extensions import NotRequired, Required, Unpack
 
@@ -57,8 +57,7 @@ class ContentPackages(ActiveFinderMethods["ContentPackage"], ActiveSequence["Con
         hash: NotRequired[Optional[str]]
         """Package description hash for R packages."""
 
-    @overload
-    def find_by(self, **conditions: Unpack[_FindBy]):
+    def find_by(self, **conditions: Unpack[_FindBy]):  # type: ignore
         """
         Find the first record matching the specified conditions.
 
@@ -86,11 +85,6 @@ class ContentPackages(ActiveFinderMethods["ContentPackage"], ActiveSequence["Con
         Optional[T]
             The first record matching the specified conditions, or `None` if no such record exists.
         """
-
-    @overload
-    def find_by(self, **conditions): ...
-
-    def find_by(self, **conditions):
         return super().find_by(**conditions)
 
 
@@ -152,16 +146,10 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
         version: Required[str]
         """The package version"""
 
-    @overload
-    def fetch(self, **conditions: Unpack[_Fetch]): ...
-
-    @overload
-    def fetch(self, **conditions): ...
-
-    def fetch(self, **conditions) -> Generator["Package"]:
+    def fetch(self, **conditions: Unpack[_Fetch]) -> Generator["Package"]:  # type: ignore
         # todo - add pagination support to ActiveSequence
         url = self._ctx.url + self._path
-        paginator = Paginator(self._ctx.session, url, conditions)
+        paginator = Paginator(self._ctx.session, url, dict(**conditions))
         for page in paginator.fetch_pages():
             results = page.results
             yield from (self._create_instance("", **result) for result in results)
@@ -194,8 +182,7 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
         app_guid: NotRequired[str]
         """The unique identifier of the application this package is associated with"""
 
-    @overload
-    def find_by(self, **conditions: Unpack[_FindBy]) -> "Package | None":
+    def find_by(self, **conditions: Unpack[_FindBy]) -> "Package | None":  # type: ignore
         """
         Find the first record matching the specified conditions.
 
@@ -223,9 +210,4 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
         Optional[Package]
             The first record matching the specified conditions, or `None` if no such record exists.
         """
-
-    @overload
-    def find_by(self, **conditions) -> "Package | None": ...
-
-    def find_by(self, **conditions) -> "Package | None":
         return super().find_by(**conditions)
