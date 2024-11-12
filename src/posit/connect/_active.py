@@ -50,6 +50,62 @@ if TYPE_CHECKING:
 #    * Init signature should be `def __init__(self, ctx: Context, path: str, /, **attrs: Jsonifiable) -> None:`
 
 
+# This class should not have typing about the class keys as that would fix the class's typing. If
+# for some reason, we _know_ the keys are fixed (as we've moved on to a higher version), we can add
+# `Generic[AttrsT]` to the class.
+class ReadOnlyDict(Mapping):
+    _attrs: ResponseAttrs
+    """Resource attributes passed."""
+
+    def __init__(self, attrs: ResponseAttrs) -> None:
+        """
+        A read-only dict abstraction for any HTTP endpoint that returns a singular resource.
+
+        Parameters
+        ----------
+        attrs : dict
+            Resource attributes passed
+        """
+        super().__init__()
+        self._attrs = attrs
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._attrs.get(key, default)
+
+    def __getitem__(self, key: str) -> Any:
+        return self._attrs[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        raise NotImplementedError(
+            "Resource attributes are locked. "
+            "To retrieve updated values, please retrieve the parent object again."
+        )
+
+    def __len__(self) -> int:
+        return self._attrs.__len__()
+
+    def __iter__(self):
+        return self._attrs.__iter__()
+
+    def __contains__(self, key: object) -> bool:
+        return self._attrs.__contains__(key)
+
+    def __repr__(self) -> str:
+        return repr(self._attrs)
+
+    def __str__(self) -> str:
+        return str(self._attrs)
+
+    def keys(self):
+        return self._attrs.keys()
+
+    def values(self):
+        return self._attrs.values()
+
+    def items(self):
+        return self._attrs.items()
+
+
 class Active(ABC, Resource):
     def __init__(self, ctx: Context, path: str, /, **attributes):
         """A dict abstraction for any HTTP endpoint that returns a singular resource.
@@ -217,62 +273,6 @@ class ActiveFinderMethods(ActiveSequence[T]):
         """
         collection = self.fetch()
         return next((v for v in collection if v.items() >= conditions.items()), None)
-
-
-# This class should not have typing about the class keys as that would fix the class's typing. If
-# for some reason, we _know_ the keys are fixed (as we've moved on to a higher version), we can add
-# `Generic[AttrsT]` to the class.
-class ReadOnlyDict(Mapping):
-    _attrs: ResponseAttrs
-    """Resource attributes passed."""
-
-    def __init__(self, attrs: ResponseAttrs) -> None:
-        """
-        A read-only dict abstraction for any HTTP endpoint that returns a singular resource.
-
-        Parameters
-        ----------
-        attrs : dict
-            Resource attributes passed
-        """
-        super().__init__()
-        self._attrs = attrs
-
-    def get(self, key: str, default: Any = None) -> Any:
-        return self._attrs.get(key, default)
-
-    def __getitem__(self, key: str) -> Any:
-        return self._attrs[key]
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        raise NotImplementedError(
-            "Resource attributes are locked. "
-            "To retrieve updated values, please retrieve the parent object again."
-        )
-
-    def __len__(self) -> int:
-        return self._attrs.__len__()
-
-    def __iter__(self):
-        return self._attrs.__iter__()
-
-    def __contains__(self, key: object) -> bool:
-        return self._attrs.__contains__(key)
-
-    def __repr__(self) -> str:
-        return repr(self._attrs)
-
-    def __str__(self) -> str:
-        return str(self._attrs)
-
-    def keys(self):
-        return self._attrs.keys()
-
-    def values(self):
-        return self._attrs.values()
-
-    def items(self):
-        return self._attrs.items()
 
 
 class ApiDictEndpoint(ApiCallMixin, ReadOnlyDict):
