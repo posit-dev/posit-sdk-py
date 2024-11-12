@@ -40,7 +40,7 @@ class Resource(dict):
                 stacklevel=2,
             )
             return self[name]
-        return None
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
     def update(self, *args, **kwargs):
         super().update(*args, **kwargs)
