@@ -24,6 +24,7 @@ from .env import EnvVars
 from .errors import ClientError
 from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
+from .packages import ContentPackagesMixin as PackagesMixin
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
 from .vanities import VanityMixin
@@ -171,7 +172,7 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(JobsMixin, VanityMixin, Resource):
+class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str
