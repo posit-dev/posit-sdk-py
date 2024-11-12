@@ -3,23 +3,11 @@ from __future__ import annotations
 import posixpath
 from typing import TYPE_CHECKING, Protocol
 
+from ._types import ContextP
+
 if TYPE_CHECKING:
     from ._json import Jsonifiable
     from .context import Context
-
-
-# Just the same as `.context.py` ContextManager but with `._ctx` attribute, not `.ctx`
-class ContextP(Protocol):
-    _ctx: Context
-
-
-class ContextCls(ContextP):
-    """Class that contains the client context."""
-
-    _ctx: Context
-
-    def __init__(self, ctx: Context):
-        self._ctx = ctx
 
 
 class ApiCallProtocol(ContextP, Protocol):
