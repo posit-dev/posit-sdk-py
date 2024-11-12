@@ -23,25 +23,28 @@ def requires(version: str):
     return decorator
 
 
-class Context(dict):
+class Context:
     def __init__(self, session: requests.Session, url: Url):
         self.session = session
         self.url = url
+        self._version: str | None
 
     @property
     def version(self) -> Optional[str]:
-        try:
-            value = self["version"]
-        except KeyError:
-            endpoint = self.url + "server_settings"
-            response = self.session.get(endpoint)
-            result = response.json()
-            value = self["version"] = result.get("version")
+        value = self._version
+        if isinstance(value, str):
+            return value
+
+        # Populate version
+        endpoint = self.url + "server_settings"
+        response = self.session.get(endpoint)
+        result = response.json()
+        value = self._version = result.get("version")
         return value
 
     @version.setter
     def version(self, value):
-        self["version"] = value
+        self._version = value
 
 
 class ContextManager(Protocol):
