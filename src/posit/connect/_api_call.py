@@ -3,7 +3,7 @@ from __future__ import annotations
 import posixpath
 from typing import TYPE_CHECKING, Protocol
 
-from ._types import ContextP
+from ._types_context import ContextP
 
 if TYPE_CHECKING:
     from ._json import Jsonifiable

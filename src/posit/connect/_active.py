@@ -10,7 +10,6 @@ from collections.abc import Mapping
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
     Generator,
     Generic,
     List,
@@ -18,13 +17,13 @@ from typing import (
     Self,
     Sequence,
     TypeVar,
-    Unpack,
     cast,
     overload,
 )
 
 from ._api_call import ApiCallMixin, ContextP, get_api
 from ._json import Jsonifiable, JsonifiableDict, ResponseAttrs
+from ._types_context import ContextT
 
 if TYPE_CHECKING:
     from .context import Context
@@ -107,15 +106,15 @@ class ReadOnlyDict(Mapping):
         return self._dict.items()
 
 
-class ResourceDict(ReadOnlyDict, ContextP):
+class ResourceDict(ReadOnlyDict, ContextP[ContextT]):
     """An abstraction to contain the context and read-only information."""
 
-    _ctx: Context
+    _ctx: ContextT
     """The context object containing the session and URL for API interactions."""
 
     def __init__(
         self,
-        ctx: Context,
+        ctx: ContextT,
         /,
         **kwargs: Any,
     ) -> None:
@@ -137,10 +136,10 @@ class ResourceDict(ReadOnlyDict, ContextP):
         self._ctx = ctx
 
 
-class ActiveDict(ApiCallMixin, ResourceDict):
+class ActiveDict(ApiCallMixin, ResourceDict[ContextT]):
     """A dict abstraction for any HTTP endpoint that returns a singular resource."""
 
-    _ctx: Context
+    _ctx: ContextT
     """The context object containing the session and URL for API interactions."""
     _path: str
     """The HTTP path component for the resource endpoint."""
@@ -150,7 +149,7 @@ class ActiveDict(ApiCallMixin, ResourceDict):
 
     def __init__(
         self,
-        ctx: Context,
+        ctx: ContextT,
         path: str,
         get_data: Optional[bool] = None,
         /,
@@ -163,7 +162,7 @@ class ActiveDict(ApiCallMixin, ResourceDict):
 
         Parameters
         ----------
-        ctx : Context
+        ctx : ContextT
             The context object containing the session and URL for API interactions.
         path : str
             The HTTP path component for the resource endpoint
@@ -194,17 +193,17 @@ T = TypeVar("T", bound="ActiveDict")
 """A type variable that is bound to the `Active` class"""
 
 
-class ActiveSequence(ABC, Generic[T], Sequence[T]):
+class ActiveSequence(ABC, Generic[T, ContextT], Sequence[T]):
     """A sequence for any HTTP GET endpoint that returns a collection."""
 
     _cache: Optional[List[T]]
 
-    def __init__(self, ctx: Context, path: str, uid: str = "guid"):
+    def __init__(self, ctx: ContextT, path: str, uid: str = "guid"):
         """A sequence abstraction for any HTTP GET endpoint that returns a collection.
 
         Parameters
         ----------
-        ctx : Context
+        ctx : ContextT
             The context object containing the session and URL for API interactions.
         path : str
             The HTTP path component for the collection endpoint
@@ -293,7 +292,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         return repr(self._data)
 
 
-class ActiveFinderMethods(ActiveSequence[T]):
+class ActiveFinderMethods(ActiveSequence[T, ContextT]):
     """Finder methods.
 
     Provides various finder methods for locating records in any endpoint supporting HTTP GET requests.
@@ -319,7 +318,7 @@ class ActiveFinderMethods(ActiveSequence[T]):
         result = response.json()
         return self._to_instance(result)
 
-    def find_by(self, **conditions: Any) -> T | None:
+    def find_by(self, **conditions) -> T | None:
         """
         Find the first record matching the specified conditions.
 
