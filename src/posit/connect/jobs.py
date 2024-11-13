@@ -3,13 +3,10 @@ from __future__ import annotations
 import posixpath
 from typing import Any, Literal, Optional
 
-from ._active import ActiveDict, ActiveFinderMethods, ActiveSequence
-from ._types_content_item import ContentItemContext, ContentItemP
-from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
-from .context import Context
-from .resources import Active, ActiveFinderMethods, ActiveSequence, Resource
+from ._active import ActiveDict, ActiveFinderMethods, ActiveSequence
+from ._types_content_item import ContentItemContext, ContentItemP
 
 JobTag = Literal[
     "unknown",

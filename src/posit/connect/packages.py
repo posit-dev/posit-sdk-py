@@ -5,14 +5,14 @@ from typing import Generator, Literal, Optional, TypedDict
 
 from typing_extensions import NotRequired, Required, Unpack
 
-from posit.connect.context import requires
-from posit.connect.errors import ClientError
-from posit.connect.paginator import Paginator
+from ._active import ActiveFinderMethods, ActiveSequence, ResourceDict
+from ._types_content_item import ContentItemContext, ContentItemP
+from .context import Context, requires
+from .errors import ClientError
+from .paginator import Paginator
 
-from .resources import Active, ActiveFinderMethods, ActiveSequence
 
-
-class ContentPackage(Active):
+class ContentPackage(ResourceDict):
     class _Package(TypedDict):
         language: Required[str]
         name: Required[str]
@@ -20,14 +20,17 @@ class ContentPackage(Active):
         hash: Required[Optional[str]]
 
     def __init__(self, ctx, /, **attributes: Unpack[_Package]):
-        # todo - passing "" is a hack since path isn't needed. Instead, this class should inherit from Resource, but ActiveSequence is designed to operate on Active. That should change.
-        super().__init__(ctx, "", **attributes)
+        super().__init__(ctx, **attributes)
 
 
-class ContentPackages(ActiveFinderMethods["ContentPackage"], ActiveSequence["ContentPackage"]):
+class ContentPackages(
+    ActiveFinderMethods["ContentPackage", ContentItemContext],
+    ActiveSequence["ContentPackage", ContentItemContext],
+):
     """A collection of packages."""
 
-    def __init__(self, ctx, path):
+    def __init__(self, ctx: ContentItemContext):
+        path = posixpath.join(ctx.content_path, "packages")
         super().__init__(ctx, path, "name")
 
     def _create_instance(self, path, /, **attributes):  # noqa: ARG002
@@ -88,17 +91,16 @@ class ContentPackages(ActiveFinderMethods["ContentPackage"], ActiveSequence["Con
         return super().find_by(**conditions)
 
 
-class ContentPackagesMixin(Active):
+class ContentPackagesMixin:
     """Mixin class to add a packages attribute."""
 
     @property
     @requires(version="2024.10.0-dev")
-    def packages(self):
-        path = posixpath.join(self._path, "packages")
-        return ContentPackages(self._ctx, path)
+    def packages(self: ContentItemP):
+        return ContentPackages(self._ctx)
 
 
-class Package(Active):
+class Package(ResourceDict):
     class _Package(TypedDict):
         language: Required[Literal["python", "r"]]
         """Programming language ecosystem, options are 'python' and 'r'"""
@@ -125,12 +127,15 @@ class Package(Active):
         """The unique identifier of the application this package is associated with"""
 
     def __init__(self, ctx, /, **attributes: Unpack[_Package]):
-        # todo - passing "" is a hack since path isn't needed. Instead, this class should inherit from Resource, but ActiveSequence is designed to operate on Active. That should change.
-        super().__init__(ctx, "", **attributes)
+        super().__init__(ctx, **attributes)
 
 
-class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
-    def __init__(self, ctx, path):
+class Packages(
+    ActiveFinderMethods["Package", Context],
+    ActiveSequence["Package", Context],
+):
+    def __init__(self, ctx: Context):
+        path = "v1/packages"
         super().__init__(ctx, path, "name")
 
     def _create_instance(self, path, /, **attributes):  # noqa: ARG002

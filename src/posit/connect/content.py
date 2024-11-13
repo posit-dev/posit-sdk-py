@@ -21,7 +21,6 @@ from . import tasks
 from ._content_repository import ContentItemRepository
 from ._json import JsonifiableDict
 from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemResourceDict
-from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from ._utils import _assert_guid
 from .bundles import Bundles
 from .context import Context

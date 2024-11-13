@@ -273,7 +273,7 @@ class Client(ContextManager):
     @property
     @requires(version="2024.10.0-dev")
     def packages(self) -> Packages:
-        return Packages(self._ctx, "v1/packages")
+        return Packages(self._ctx)
 
     @property
     def vanities(self) -> Vanities:

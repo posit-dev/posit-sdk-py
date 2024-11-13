@@ -5,9 +5,10 @@ from typing import (
     cast,
 )
 
+from typing_extensions import NotRequired, TypedDict, Unpack
+
 from ._active import ActiveDict, JsonifiableDict
 from ._types_content_item import ContentItemContext
-from ._typing_extensions import NotRequired, TypedDict, Unpack
 
 if TYPE_CHECKING:
     from .context import Context

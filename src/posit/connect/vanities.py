@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import Callable, Optional, Protocol
 
-from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemP
-from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
+from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemP
 from .errors import ClientError
 from .resources import Resources, resource_parameters_to_content_item_context
 

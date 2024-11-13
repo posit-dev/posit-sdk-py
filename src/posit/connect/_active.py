@@ -14,12 +14,13 @@ from typing import (
     Generic,
     List,
     Optional,
-    Self,
     Sequence,
     TypeVar,
     cast,
     overload,
 )
+
+from typing_extensions import Self
 
 from ._api_call import ApiCallMixin, ContextP, get_api
 from ._json import Jsonifiable, JsonifiableDict, ResponseAttrs
@@ -189,7 +190,7 @@ class ActiveDict(ApiCallMixin, ResourceDict[ContextT]):
         self._path = path
 
 
-T = TypeVar("T", bound="ActiveDict")
+T = TypeVar("T", bound="ResourceDict")
 """A type variable that is bound to the `Active` class"""
 
 

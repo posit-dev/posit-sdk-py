@@ -16,16 +16,13 @@ from typing import (
     overload,
 )
 
-from typing_extensions import Self
-
 from ._types_content_item import ContentItemContext
 from .context import Context
 
 if TYPE_CHECKING:
     import requests
+    from typing_extensions import Self
 
-    from ._typing_extensions import Self
-    from .context import Context
     from .urls import Url
 
 
