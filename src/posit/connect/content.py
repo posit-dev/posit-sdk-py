@@ -16,9 +16,11 @@ from typing import (
 )
 
 from . import tasks
-from ._active import ActiveDict, JsonifiableDict
+from ._content_repository import ContentItemRepository
+from ._json import JsonifiableDict
+from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemResourceDict
 from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
-from ._utils import _assert_content_guid, _assert_guid
+from ._utils import _assert_guid
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
@@ -26,29 +28,32 @@ from .errors import ClientError
 from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
-from .resources import Resource, ResourceParameters, Resources
-from .vanities import VanityMixin
+from .resources import ResourceParameters, Resources, context_to_resource_parameters
+from .vanities import ContentItemVanityMixin
 from .variants import Variants
 
 if TYPE_CHECKING:
     from .tasks import Task
+    from .users import User
 
 
-class ContentItemOAuth(Resource):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
-        self["content_guid"] = content_guid
+class ContentItemOAuth(ContentItemResourceDict):
+    def __init__(self, ctx: ContentItemContext) -> None:
+        super().__init__(ctx)
 
     @property
     def associations(self) -> ContentItemAssociations:
-        return ContentItemAssociations(self.params, content_guid=self["content_guid"])
+        return ContentItemAssociations(
+            context_to_resource_parameters(self._ctx),
+            content_guid=self._ctx.content_guid,
+        )
 
 
-class ContentItemOwner(Resource):
+class ContentItemOwner(ContentItemResourceDict):
     pass
 
 
-class ContentItem(JobsMixin, VanityMixin, Resource):
+class ContentItem(JobsMixin, ContentItemVanityMixin, ContentItemActiveDict):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str
@@ -119,24 +124,27 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
     ) -> None:
         _assert_guid(guid)
 
-        ctx = Context(params.session, params.url)
+        ctx = ContentItemContext(Context(params.session, params.url), content_guid=guid)
         path = f"v1/content/{guid}"
-        super().__init__(ctx, path, guid=guid, **kwargs)
+        get_data = len(kwargs) == 0
+
+        super().__init__(ctx, path, get_data, guid=guid, **kwargs)
 
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
+        # TODO-barret-Q: Why isn't this a property?
         if key == "owner" and isinstance(v, dict):
-            return ContentItemOwner(params=self.params, **v)
+            return ContentItemOwner(self._ctx, **v)
         return v
 
     @property
     def oauth(self) -> ContentItemOAuth:
-        return ContentItemOAuth(self.params, content_guid=self["guid"])
+        return ContentItemOAuth(self._ctx)
 
     @property
     def repository(self) -> ContentItemRepository | None:
         try:
-            return ContentItemRepository(self._ctx, content_guid=self["guid"])
+            return ContentItemRepository(self._ctx)
         except ClientError:
             return None
 
@@ -163,11 +171,10 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         """
         return ContentItemRepository._create(self._ctx, self["guid"], **attrs)
 
+    # Rename to destroy()?
     def delete(self) -> None:
         """Delete the content item."""
-        path = f"v1/content/{self['guid']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._delete_api()
 
     def deploy(self) -> tasks.Task:
         """Deploy the content.
@@ -186,10 +193,10 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         None
         """
         path = f"v1/content/{self['guid']}/deploy"
-        url = self.params.url + path
-        response = self.params.session.post(url, json={"bundle_id": None})
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url, json={"bundle_id": None})
         result = response.json()
-        ts = tasks.Tasks(self.params)
+        ts = tasks.Tasks(context_to_resource_parameters(self._ctx))
         return ts.get(result["task_id"])
 
     def render(self) -> Task:
@@ -242,8 +249,8 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
             self.environment_variables.create(key, unix_epoch_in_seconds)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = posixpath.join(dirname(self.params.url), f"content/{self['guid']}")
-            self.params.session.get(url)
+            url = posixpath.join(dirname(self._ctx.url), f"content/{self['guid']}")
+            self._ctx.session.get(url)
             return None
         else:
             raise ValueError(
@@ -253,7 +260,7 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
     def update(
         self,
         **attrs: Unpack[ContentItem._Attrs],
-    ) -> None:
+    ) -> ContentItem:
         """Update the content item.
 
         Parameters
@@ -313,38 +320,47 @@ class ContentItem(JobsMixin, VanityMixin, Resource):
         -------
         None
         """
-        url = self.params.url + f"v1/content/{self['guid']}"
-        response = self.params.session.patch(url, json=attrs)
-        super().update(**response.json())
+        result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
+        assert isinstance(result, dict)
+        assert "guid" in result
+        new_content_item = ContentItem(
+            params=context_to_resource_parameters(self._ctx),
+            # `guid=` is contained within the `result` dict
+            **result,  # pyright: ignore[reportArgumentType, reportCallIssue]
+        )
+        # TODO-barret Update method returns new content item
+        return new_content_item
 
     # Relationships
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.params, self["guid"])
+        return Bundles(context_to_resource_parameters(self._ctx), self["guid"])
 
     @property
     def environment_variables(self) -> EnvVars:
-        return EnvVars(self.params, self["guid"])
+        return EnvVars(context_to_resource_parameters(self._ctx), self["guid"])
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.params, self["guid"])
+        return Permissions(context_to_resource_parameters(self._ctx), self["guid"])
+
+    _owner: User
 
     @property
     def owner(self) -> dict:
-        if "owner" not in self:
+        if "_owner" not in self.__dict__:
             # It is possible to get a content item that does not contain owner.
             # "owner" is an optional additional request param.
             # If it's not included, we can retrieve the information by `owner_guid`
             from .users import Users
 
-            self["owner"] = Users(self.params).get(self["owner_guid"])
-        return self["owner"]
+            self._owner = Users(context_to_resource_parameters(self._ctx)).get(self["owner_guid"])
+        return self._owner
 
     @property
     def _variants(self) -> Variants:
-        return Variants(self.params, self["guid"])
+        return Variants(context_to_resource_parameters(self._ctx), self["guid"])
 
     @property
     def is_interactive(self) -> bool:

@@ -3,6 +3,7 @@ import requests
 import responses
 from responses import matchers
 
+from posit.connect._types_content_item import ContentItemContext
 from posit.connect.client import Client
 from posit.connect.content import ContentItem, ContentItemRepository
 from posit.connect.context import Context
@@ -119,8 +120,8 @@ class TestContentUpdate:
             json=fake_content,
         )
 
-        content.update(name=new_name)
-        assert content["name"] == new_name
+        new_content = content.update(name=new_name)
+        assert new_content["name"] == new_name
 
 
 class TestContentCreate:
@@ -562,7 +563,11 @@ class TestContentRepository:
 
     @property
     def content_item(self):
-        return ContentItem(self.params, guid=self.content_guid)
+        return ContentItem(
+            self.params,
+            guid=self.content_guid,
+            name="testing",  # provide name to avoid request
+        )
 
     @property
     def endpoint(self):
@@ -570,7 +575,10 @@ class TestContentRepository:
 
     @property
     def ctx(self):
-        return Context(requests.Session(), Url(self.base_url))
+        return ContentItemContext(
+            Context(requests.Session(), Url(self.base_url)),
+            content_guid=self.content_guid,
+        )
 
     @property
     def params(self):
