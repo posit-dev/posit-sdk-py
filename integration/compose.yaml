@@ -21,9 +21,11 @@ services:
       - test
   connect:
     image: ${DOCKER_CONNECT_IMAGE}:${DOCKER_CONNECT_IMAGE_TAG}
+    pull_policy: always
     environment:
       - CONNECT_BOOTSTRAP_ENABLED=true
       - CONNECT_BOOTSTRAP_SECRETKEY=${CONNECT_BOOTSTRAP_SECRETKEY}
+      - CONNECT_APPLICATIONS_PACKAGEAUDITINGENABLED=true
     networks:
       - test
     privileged: true

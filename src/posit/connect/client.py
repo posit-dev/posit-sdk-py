@@ -14,6 +14,7 @@ from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
+from .packages import Packages
 from .resources import ResourceParameters
 from .tasks import Tasks
 from .users import User, Users
@@ -155,7 +156,7 @@ class Client(ContextManager):
         session.hooks["response"].append(hooks.handle_errors)
         self.session = session
         self.resource_params = ResourceParameters(session, self.cfg.url)
-        self.ctx = Context(self.session, self.cfg.url)
+        self._ctx = Context(self.session, self.cfg.url)
 
     @property
     def version(self) -> str | None:
@@ -167,7 +168,7 @@ class Client(ContextManager):
         str
             The version of the Posit Connect server.
         """
-        return self.ctx.version
+        return self._ctx.version
 
     @property
     def me(self) -> User:
@@ -268,6 +269,11 @@ class Client(ContextManager):
             The oauth API instance.
         """
         return OAuth(self.resource_params, self.cfg.api_key)
+
+    @property
+    @requires(version="2024.10.0-dev")
+    def packages(self) -> Packages:
+        return Packages(self._ctx, "v1/packages")
 
     @property
     def vanities(self) -> Vanities:

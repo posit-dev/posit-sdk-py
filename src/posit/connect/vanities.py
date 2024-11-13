@@ -1,6 +1,7 @@
 from typing import Callable, List, Optional
 
-from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
+from typing_extensions import NotRequired, Required, TypedDict, Unpack
+
 from .errors import ClientError
 from .resources import Resource, ResourceParameters, Resources
 
