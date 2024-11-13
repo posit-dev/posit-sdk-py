@@ -6,8 +6,8 @@ from typing import (
 )
 
 from ._active import ActiveDict, JsonifiableDict
+from ._types_content_item import ContentItemContext
 from ._typing_extensions import NotRequired, TypedDict, Unpack
-from ._utils import _assert_content_guid
 
 if TYPE_CHECKING:
     from .context import Context
@@ -36,10 +36,8 @@ class ContentItemRepository(ActiveDict):
 
     def __init__(
         self,
-        ctx: Context,
+        ctx: ContentItemContext,
         /,
-        *,
-        content_guid: str,
         # By default, the `attrs` will be retrieved from the API if no `attrs` are supplied.
         **attrs: Unpack[ContentItemRepository._Attrs],
     ) -> None:
@@ -49,18 +47,14 @@ class ContentItemRepository(ActiveDict):
         ----------
         ctx : Context
             The context object containing the session and URL for API interactions.
-        content_guid : str
-            The unique identifier of the content item.
         **attrs : ContentItemRepository._Attrs
             Attributes for the content item repository. If not supplied, the attributes will be
             retrieved from the API upon initialization
         """
-        _assert_content_guid(content_guid)
-
-        path = self._api_path(content_guid)
+        path = self._api_path(ctx.content_guid)
         # Only fetch data if `attrs` are not supplied
         get_data = len(attrs) == 0
-        super().__init__(ctx, path, get_data, **{"content_guid": content_guid, **attrs})
+        super().__init__(ctx, path, get_data, **attrs)
 
     @classmethod
     def _api_path(cls, content_guid: str) -> str:
@@ -76,10 +70,14 @@ class ContentItemRepository(ActiveDict):
         from ._api_call import put_api
 
         result = put_api(ctx, cls._api_path(content_guid), json=cast(JsonifiableDict, attrs))
+        content_ctx = (
+            ctx
+            if isinstance(ctx, ContentItemContext)
+            else ContentItemContext(ctx, content_guid=content_guid)
+        )
 
         return ContentItemRepository(
-            ctx,
-            content_guid=content_guid,
+            content_ctx,
             **result,  # pyright: ignore[reportCallIssue]
         )
 
@@ -122,6 +120,5 @@ class ContentItemRepository(ActiveDict):
         result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
         return ContentItemRepository(
             self._ctx,
-            content_guid=self["content_guid"],
             **result,  # pyright: ignore[reportCallIssue]
         )
