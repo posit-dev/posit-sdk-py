@@ -157,7 +157,7 @@ class ContentItemVanityMixin:
     @property
     def vanity(self: ContentItemVanityP) -> str | None:
         """Get the vanity."""
-        if "_vanity" in self.__dict__ and self._vanity:
+        if hasattr(self, "_vanity") and self._vanity:
             return self._vanity["path"]
 
         try:

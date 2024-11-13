@@ -347,17 +347,17 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
     def permissions(self) -> Permissions:
         return Permissions(context_to_resource_parameters(self._ctx), self["guid"])
 
-    _owner: User
-
     @property
     def owner(self) -> dict:
-        if "_owner" not in self.__dict__:
+        if not hasattr(self, "_owner"):
             # It is possible to get a content item that does not contain owner.
             # "owner" is an optional additional request param.
             # If it's not included, we can retrieve the information by `owner_guid`
             from .users import Users
 
-            self._owner = Users(context_to_resource_parameters(self._ctx)).get(self["owner_guid"])
+            self._owner: User = Users(context_to_resource_parameters(self._ctx)).get(
+                self["owner_guid"]
+            )
         return self._owner
 
     @property

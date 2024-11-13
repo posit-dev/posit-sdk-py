@@ -289,7 +289,7 @@ class JobsMixin:
         """
         # Do not cache result. `content.jobs` should always return the latest jobs.
 
-        # if self.__dict__.get("_jobs") is not None:
+        # if hasattr(self, "_jobs"):
         #     # Early return
         #     return self._jobs
 
