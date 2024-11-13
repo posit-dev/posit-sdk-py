@@ -1,10 +1,14 @@
-import functools
-from typing import Optional, Protocol
+from __future__ import annotations
 
-import requests
+import functools
+from typing import TYPE_CHECKING, Protocol
+
 from packaging.version import Version
 
-from .urls import Url
+if TYPE_CHECKING:
+    import requests
+
+    from .urls import Url
 
 
 def requires(version: str):
@@ -30,10 +34,9 @@ class Context:
         self._version: str | None
 
     @property
-    def version(self) -> Optional[str]:
-        value = self._version
-        if isinstance(value, str):
-            return value
+    def version(self) -> str | None:
+        if "_version" in self.__dict__:
+            return self._version
 
         # Populate version
         endpoint = self.url + "server_settings"
