@@ -6,16 +6,18 @@ import io
 from typing import List
 
 from . import resources, tasks
+from ._active import ReadOnlyDict
 
 
-class BundleMetadata(resources.Resource):
+class BundleMetadata(ReadOnlyDict):
     pass
 
 
+# TODO-barret Inherit from `ActiveDict`
 class Bundle(resources.Resource):
     @property
     def metadata(self) -> BundleMetadata:
-        return BundleMetadata(self.params, **self.get("metadata", {}))
+        return BundleMetadata(**self.get("metadata", {}))
 
     def delete(self) -> None:
         """Delete the bundle."""
