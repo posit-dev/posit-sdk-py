@@ -1,11 +1,14 @@
-from typing import Callable, List, Optional
+from __future__ import annotations
 
+from typing import Callable, Optional, Protocol
+
+from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemP
 from ._typing_extensions import NotRequired, Required, TypedDict, Unpack
 from .errors import ClientError
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Resources, resource_parameters_to_content_item_context
 
 
-class Vanity(Resource):
+class Vanity(ContentItemActiveDict):
     """A vanity resource.
 
     Vanities maintain custom URL paths assigned to content.
@@ -43,20 +46,19 @@ class Vanity(Resource):
 
     AfterDestroyCallback = Callable[[], None]
 
-    class VanityAttributes(TypedDict):
+    class _VanityAttributes(TypedDict):
         """Vanity attributes."""
 
         path: Required[str]
-        content_guid: Required[str]
         created_time: Required[str]
 
     def __init__(
         self,
         /,
-        params: ResourceParameters,
+        ctx: ContentItemContext,
         *,
         after_destroy: Optional[AfterDestroyCallback] = None,
-        **kwargs: Unpack[VanityAttributes],
+        **kwargs: Unpack[_VanityAttributes],
     ):
         """Initialize a Vanity.
 
@@ -66,9 +68,11 @@ class Vanity(Resource):
         after_destroy : AfterDestroyCallback, optional
             Called after the Vanity is successfully destroyed, by default None
         """
-        super().__init__(params, **kwargs)
+        path = f"v1/content/{ctx.content_guid}/vanity"
+        get_data = len(kwargs) == 0
+        super().__init__(ctx, path, get_data, **kwargs)
+
         self._after_destroy = after_destroy
-        self._content_guid = kwargs["content_guid"]
 
     def destroy(self) -> None:
         """Destroy the vanity.
@@ -86,9 +90,7 @@ class Vanity(Resource):
         ----
         This action requires administrator privileges.
         """
-        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
-        self.params.session.delete(endpoint)
-
+        self._delete_api()
         if self._after_destroy:
             self._after_destroy()
 
@@ -96,7 +98,7 @@ class Vanity(Resource):
 class Vanities(Resources):
     """Manages a collection of vanities."""
 
-    def all(self) -> List[Vanity]:
+    def all(self) -> list[Vanity]:
         """Retrieve all vanities.
 
         Returns
@@ -110,26 +112,51 @@ class Vanities(Resources):
         endpoint = self.params.url + "v1/vanities"
         response = self.params.session.get(endpoint)
         results = response.json()
-        return [Vanity(self.params, **result) for result in results]
+        ret: list[Vanity] = []
+        for result in results:
+            assert isinstance(result, dict)
+            assert "content_guid" in result
+
+            ret.append(
+                Vanity(
+                    resource_parameters_to_content_item_context(
+                        self.params,
+                        content_guid=result["content_guid"],
+                    ),
+                    **result,
+                )
+            )
+        return ret
 
 
-class VanityMixin(Resource):
-    """Mixin class to add a vanity attribute to a resource."""
+class ContentItemVanityP(ContentItemP, Protocol):
+    _vanity: Vanity | None
 
-    class HasGuid(TypedDict):
-        """Has a guid."""
+    def find_vanity(self) -> Vanity: ...
 
-        guid: Required[str]
+    def create_vanity(
+        self, **kwargs: Unpack["ContentItemVanityMixin._CreateVanityRequest"]
+    ) -> Vanity: ...
 
-    def __init__(self, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
-        super().__init__(params, **kwargs)
-        self._content_guid = kwargs["guid"]
-        self._vanity: Optional[Vanity] = None
+    def reset_vanity(self) -> None: ...
 
     @property
-    def vanity(self) -> Optional[str]:
+    def vanity(self) -> Optional[str]: ...
+
+    @vanity.setter
+    def vanity(self, value: str) -> None: ...
+
+    @vanity.deleter
+    def vanity(self) -> None: ...
+
+
+class ContentItemVanityMixin:
+    """Class to add a vanity attribute to a resource."""
+
+    @property
+    def vanity(self: ContentItemVanityP) -> str | None:
         """Get the vanity."""
-        if self._vanity:
+        if "_vanity" in self.__dict__ and self._vanity:
             return self._vanity["path"]
 
         try:
@@ -142,7 +169,7 @@ class VanityMixin(Resource):
             raise e
 
     @vanity.setter
-    def vanity(self, value: str) -> None:
+    def vanity(self: ContentItemVanityP, value: str) -> None:
         """Set the vanity.
 
         Parameters
@@ -162,7 +189,7 @@ class VanityMixin(Resource):
         self._vanity._after_destroy = self.reset_vanity
 
     @vanity.deleter
-    def vanity(self) -> None:
+    def vanity(self: ContentItemVanityP) -> None:
         """Destroy the vanity.
 
         Warnings
@@ -184,14 +211,14 @@ class VanityMixin(Resource):
             self._vanity.destroy()
         self.reset_vanity()
 
-    def reset_vanity(self) -> None:
+    def reset_vanity(self: ContentItemVanityP) -> None:
         """Unload the cached vanity.
 
         Forces the next access, if any, to query the vanity from the Connect server.
         """
         self._vanity = None
 
-    class CreateVanityRequest(TypedDict, total=False):
+    class _CreateVanityRequest(TypedDict, total=False):
         """A request schema for creating a vanity."""
 
         path: Required[str]
@@ -200,7 +227,7 @@ class VanityMixin(Resource):
         force: NotRequired[bool]
         """Whether to force creation of the vanity"""
 
-    def create_vanity(self, **kwargs: Unpack[CreateVanityRequest]) -> Vanity:
+    def create_vanity(self: ContentItemVanityP, **kwargs: Unpack[_CreateVanityRequest]) -> Vanity:
         """Create a vanity.
 
         Parameters
@@ -214,19 +241,19 @@ class VanityMixin(Resource):
         --------
         If setting force=True, the destroy operation performed on the other vanity is irreversible.
         """
-        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
-        response = self.params.session.put(endpoint, json=kwargs)
+        endpoint = self._ctx.url + f"v1/content/{self._ctx.content_guid}/vanity"
+        response = self._ctx.session.put(endpoint, json=kwargs)
         result = response.json()
-        return Vanity(self.params, **result)
+        return Vanity(self._ctx, **result)
 
-    def find_vanity(self) -> Vanity:
+    def find_vanity(self: ContentItemVanityP) -> Vanity:
         """Find the vanity.
 
         Returns
         -------
         Vanity
         """
-        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
-        response = self.params.session.get(endpoint)
+        endpoint = self._ctx.url + f"v1/content/{self._ctx.content_guid}/vanity"
+        response = self._ctx.session.get(endpoint)
         result = response.json()
-        return Vanity(self.params, **result)
+        return Vanity(self._ctx, **result)
