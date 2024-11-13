@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar, overload
 
+from ._types_content_item import ContentItemContext
 from .context import Context
 
 if TYPE_CHECKING:
@@ -40,6 +41,15 @@ def context_to_resource_parameters(ctx: Context) -> ResourceParameters:
 def resource_parameters_to_context(params: ResourceParameters) -> Context:
     """Temp method to aid in transitioning from `ResourceParameters` to `Context`."""
     return Context(params.session, params.url)
+
+
+def resource_parameters_to_content_item_context(
+    params: ResourceParameters,
+    content_guid: str,
+) -> ContentItemContext:
+    """Temp method to aid in transitioning from `ResourceParameters` to `Context`."""
+    ctx = Context(params.session, params.url)
+    return ContentItemContext(ctx, content_guid=content_guid)
 
 
 class Resource(dict):
