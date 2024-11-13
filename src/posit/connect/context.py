@@ -31,22 +31,19 @@ class Context:
     def __init__(self, session: requests.Session, url: Url):
         self.session = session
         self.url = url
-        self._version: str | None
 
     @property
     def version(self) -> str | None:
-        if "_version" in self.__dict__:
-            return self._version
+        if not hasattr(self, "_version"):
+            endpoint = self.url + "server_settings"
+            response = self.session.get(endpoint)
+            result = response.json()
+            self._version: str | None = result.get("version")
 
-        # Populate version
-        endpoint = self.url + "server_settings"
-        response = self.session.get(endpoint)
-        result = response.json()
-        value = self._version = result.get("version")
-        return value
+        return self._version
 
     @version.setter
-    def version(self, value):
+    def version(self, value: str | None):
         self._version = value
 
 
