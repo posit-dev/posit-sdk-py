@@ -13,7 +13,7 @@ class TestRequires:
     def test_version_unsupported(self):
         class Stub(ContentManager):
             def __init__(self, ctx):
-                self.ctx = ctx
+                self._ctx = ctx
 
             @requires("1.0.0")
             def fail(self):
@@ -29,7 +29,7 @@ class TestRequires:
     def test_version_supported(self):
         class Stub(ContentManager):
             def __init__(self, ctx):
-                self.ctx = ctx
+                self._ctx = ctx
 
             @requires("1.0.0")
             def success(self):
@@ -44,7 +44,7 @@ class TestRequires:
     def test_version_missing(self):
         class Stub(ContentManager):
             def __init__(self, ctx):
-                self.ctx = ctx
+                self._ctx = ctx
 
             @requires("1.0.0")
             def success(self):
