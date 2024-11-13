@@ -214,10 +214,10 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         --------
         >>> render()
         """
-        self.update()  # pyright: ignore[reportCallIssue]
+        full_content_item: ContentItem = self.update()  # pyright: ignore[reportCallIssue]
 
-        if self.is_rendered:
-            variants = self._variants.find()
+        if full_content_item.is_rendered:
+            variants = full_content_item._variants.find()
             variants = [variant for variant in variants if variant["is_default"]]
             if len(variants) != 1:
                 raise RuntimeError(
@@ -243,16 +243,18 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         --------
         >>> restart()
         """
-        self.update()  # pyright: ignore[reportCallIssue]
+        full_content_item: ContentItem = self.update()  # pyright: ignore[reportCallIssue]
 
-        if self.is_interactive:
+        if full_content_item.is_interactive:
             unix_epoch_in_seconds = str(int(time.time()))
             key = f"_CONNECT_RESTART_TMP_{unix_epoch_in_seconds}"
-            self.environment_variables.create(key, unix_epoch_in_seconds)
-            self.environment_variables.delete(key)
+            full_content_item.environment_variables.create(key, unix_epoch_in_seconds)
+            full_content_item.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = posixpath.join(dirname(self._ctx.url), f"content/{self['guid']}")
-            self._ctx.session.get(url)
+            url = posixpath.join(
+                dirname(full_content_item._ctx.url), f"content/{full_content_item['guid']}"
+            )
+            full_content_item._ctx.session.get(url)
             return None
         else:
             raise ValueError(
