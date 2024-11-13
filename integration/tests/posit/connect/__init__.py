@@ -1,8 +1,8 @@
-from packaging import version
+from packaging.version import parse
 
 from posit import connect
 
 client = connect.Client()
-client_version = client.version
-assert client_version is not None
-CONNECT_VERSION = version.parse(client_version)
+version = client.version
+assert version
+CONNECT_VERSION = parse(version)

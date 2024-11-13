@@ -15,6 +15,8 @@ from typing import (
     overload,
 )
 
+from typing_extensions import NotRequired, Required, TypedDict, Unpack
+
 from . import tasks
 from ._content_repository import ContentItemRepository
 from ._json import JsonifiableDict
@@ -27,6 +29,7 @@ from .env import EnvVars
 from .errors import ClientError
 from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
+from .packages import ContentPackagesMixin as PackagesMixin
 from .permissions import Permissions
 from .resources import ResourceParameters, Resources, context_to_resource_parameters
 from .vanities import ContentItemVanityMixin
@@ -53,7 +56,7 @@ class ContentItemOwner(ContentItemResourceDict):
     pass
 
 
-class ContentItem(JobsMixin, ContentItemVanityMixin, ContentItemActiveDict):
+class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemActiveDict):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str

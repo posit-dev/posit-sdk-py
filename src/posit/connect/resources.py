@@ -4,7 +4,19 @@ import posixpath
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+    overload,
+)
+
+from typing_extensions import Self
 
 from ._types_content_item import ContentItemContext
 from .context import Context
@@ -13,6 +25,7 @@ if TYPE_CHECKING:
     import requests
 
     from ._typing_extensions import Self
+    from .context import Context
     from .urls import Url
 
 
@@ -123,14 +136,14 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         self._ctx = ctx
         self._path = path
         self._uid = uid
-        self._cache = None
+        self._cache: Optional[List[T]] = None
 
     @abstractmethod
     def _create_instance(self, path: str, /, **kwargs: Any) -> T:
         """Create an instance of 'T'."""
         raise NotImplementedError()
 
-    def fetch(self) -> List[T]:
+    def fetch(self, **conditions: Any) -> Iterable[T]:
         """Fetch the collection.
 
         Fetches the collection directly from Connect. This operation does not effect the cache state.
@@ -140,7 +153,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         List[T]
         """
         endpoint = self._ctx.url + self._path
-        response = self._ctx.session.get(endpoint)
+        response = self._ctx.session.get(endpoint, params=conditions)
         results = response.json()
         return [self._to_instance(result) for result in results]
 
@@ -176,7 +189,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         reload
         """
         if self._cache is None:
-            self._cache = self.fetch()
+            self._cache = list(self.fetch())
         return self._cache
 
     @overload
@@ -242,5 +255,5 @@ class ActiveFinderMethods(ActiveSequence[T]):
         Optional[T]
             The first record matching the conditions, or `None` if no match is found.
         """
-        collection = self.fetch()
+        collection = self.fetch(**conditions)
         return next((v for v in collection if v.items() >= conditions.items()), None)

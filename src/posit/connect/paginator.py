@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generator, List
+from typing import TYPE_CHECKING, Generator, List
 
 if TYPE_CHECKING:
     import requests
@@ -45,7 +45,7 @@ class Paginator:
         self,
         session: requests.Session,
         url: str,
-        params: dict[str, Any] | None = None,
+        params: dict | None = None,
     ) -> None:
         if params is None:
             params = {}

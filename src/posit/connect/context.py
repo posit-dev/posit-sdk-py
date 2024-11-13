@@ -11,7 +11,7 @@ def requires(version: str):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(instance: ContextManager, *args, **kwargs):
-            ctx = instance.ctx
+            ctx = instance._ctx
             if ctx.version and Version(ctx.version) < Version(version):
                 raise RuntimeError(
                     f"This API is not available in Connect version {ctx.version}. Please upgrade to version {version} or later.",
@@ -45,4 +45,4 @@ class Context(dict):
 
 
 class ContextManager(Protocol):
-    ctx: Context
+    _ctx: Context
