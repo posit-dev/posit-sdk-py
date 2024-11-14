@@ -232,6 +232,7 @@ class User(ActiveDict[UserContext]):
         >>> user.update(first_name="Jane", last_name="Smith")
         """
         result = self._put_api(json=kwargs)
+        assert result is not None, "User update failed."
 
         return User(self._ctx, **result)
 
@@ -315,6 +316,7 @@ class Users(ApiCallMixin, ContextP[Context]):
         """
         # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
         result = self._post_api(json=attributes)
+        assert result is not None, "User creation failed."
         return User(self._ctx, **result)
 
     class _FindUser(TypedDict):

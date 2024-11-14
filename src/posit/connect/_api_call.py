@@ -16,7 +16,7 @@ class ApiCallProtocol(ContextP, Protocol):
     def _get_api(self, *path) -> Any: ...
     def _delete_api(self, *path) -> Any | None: ...
     def _patch_api(self, *path, json: Any | None) -> Any: ...
-    def _post_api(self, *path, json: Any | None) -> Any: ...
+    def _post_api(self, *path, json: Any | None) -> Any | None: ...
     def _put_api(self, *path, json: Any | None) -> Any: ...
 
 
@@ -68,14 +68,18 @@ class ApiCallMixin:
         self: ApiCallProtocol,
         *path,
         json: Any | None,
-    ) -> Any:
+    ) -> Any | None:
         response = self._ctx.session.post(self._endpoint(*path), json=json)
+        if len(response.content) == 0:
+            return None
         return response.json()
 
     def _put_api(
         self: ApiCallProtocol,
         *path,
         json: Any | None,
-    ) -> Any:
+    ) -> Any | None:
         response = self._ctx.session.put(self._endpoint(*path), json=json)
+        if len(response.content) == 0:
+            return None
         return response.json()

@@ -123,6 +123,7 @@ class Integrations(ApiCallMixin, ContextP[Context]):
         Integration
         """
         result = self._post_api(json=kwargs)
+        assert result is not None, "Integration creation failed"
         return Integration(self._ctx, **result)
 
     def find(self) -> List[Integration]:

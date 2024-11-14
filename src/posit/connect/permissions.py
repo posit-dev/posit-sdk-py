@@ -66,6 +66,7 @@ class Permission(ActiveDict[PermissionContext]):
         body.update(dict(*args))
         body.update(**kwargs)
         result = self._put_api(json=body)
+        assert result is not None, "Permission update failed."
         return Permission(self._ctx, **result)
 
 

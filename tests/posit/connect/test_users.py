@@ -67,7 +67,6 @@ class TestUserLock:
         responses.post(
             "https://connect.example/__api__/v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6/lock",
             match=[responses.matchers.json_params_matcher({"locked": True})],
-            json={},
         )
         locked_user = user.lock()
         assert locked_user["locked"]
@@ -89,7 +88,6 @@ class TestUserLock:
         responses.post(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
             match=[responses.matchers.json_params_matcher({"locked": True})],
-            json={},
         )
         unlocked_user = user.lock(force=True)
         assert unlocked_user["locked"]
@@ -131,7 +129,6 @@ class TestUserUnlock:
         responses.post(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
             match=[responses.matchers.json_params_matcher({"locked": False})],
-            json={},
         )
         unlocked_user = user.unlock()
         assert not unlocked_user["locked"]
