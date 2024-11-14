@@ -82,6 +82,12 @@ class ReadOnlyDict(Mapping_abc):
             "To retrieve updated values, please retrieve the parent object again."
         )
 
+    def __delitem__(self, key: str) -> None:
+        raise NotImplementedError(
+            "Attributes are locked. "
+            "To retrieve updated values, please retrieve the parent object again."
+        )
+
     def __len__(self) -> int:
         return self._dict.__len__()
 
