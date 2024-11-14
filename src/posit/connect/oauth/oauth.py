@@ -4,26 +4,30 @@ from typing import Optional
 
 from typing_extensions import TypedDict
 
-from ..resources import ResourceParameters, Resources, resource_parameters_to_context
+from .._types_context import ContextP
+from ..context import Context
 from .integrations import Integrations
 from .sessions import Sessions
 
 
-class OAuth(Resources):
-    def __init__(self, params: ResourceParameters, api_key: str) -> None:
-        super().__init__(params)
+class OAuth(ContextP[Context]):
+    def __init__(self, ctx: Context, api_key: str) -> None:
+        super().__init__()
+        self._ctx = ctx
+
+        # TODO-barret-q: Is this used?
         self.api_key = api_key
 
     @property
     def integrations(self):
-        return Integrations(resource_parameters_to_context(self.params))
+        return Integrations(self._ctx)
 
     @property
     def sessions(self):
-        return Sessions(resource_parameters_to_context(self.params))
+        return Sessions(self._ctx)
 
     def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
-        url = self.params.url + "v1/oauth/integrations/credentials"
+        url = self._ctx.url + "v1/oauth/integrations/credentials"
 
         # craft a credential exchange request
         data = {}
@@ -32,7 +36,7 @@ class OAuth(Resources):
         if user_session_token:
             data["subject_token"] = user_session_token
 
-        response = self.params.session.post(url, data=data)
+        response = self._ctx.session.post(url, data=data)
         return Credentials(**response.json())
 
 

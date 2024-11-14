@@ -268,7 +268,7 @@ class Client(ContextManager):
         OAuth
             The oauth API instance.
         """
-        return OAuth(self.resource_params, self.cfg.api_key)
+        return OAuth(self._ctx, self.cfg.api_key)
 
     @property
     @requires(version="2024.10.0-dev")

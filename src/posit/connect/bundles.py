@@ -5,11 +5,10 @@ from __future__ import annotations
 import io
 from typing import List
 
-from posit.connect._types_context import ContextP
-
 from ._active import ActiveDict, ReadOnlyDict
 from ._api_call import ApiCallMixin, get_api_stream, post_api
 from ._types_content_item import ContentItemContext
+from ._types_context import ContextP
 from .tasks import Task, Tasks
 
 
