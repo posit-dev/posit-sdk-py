@@ -16,7 +16,7 @@ class OAuth(Resources):
 
     @property
     def integrations(self):
-        return Integrations(self.params)
+        return Integrations(resource_parameters_to_context(self.params))
 
     @property
     def sessions(self):

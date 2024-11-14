@@ -39,9 +39,9 @@ class Association(ResourceDict):
 class IntegrationAssociations(ContextP[IntegrationContext]):
     """IntegrationAssociations resource."""
 
-    def __init__(self, ctx: Context, integration_guid: str) -> None:
+    def __init__(self, ctx: IntegrationContext) -> None:
         super().__init__()
-        self._ctx = IntegrationContext(ctx, integration_guid=integration_guid)
+        self._ctx = ctx
 
     def find(self) -> list[Association]:
         """Find OAuth associations.

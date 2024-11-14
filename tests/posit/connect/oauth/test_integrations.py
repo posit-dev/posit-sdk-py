@@ -47,6 +47,7 @@ class TestIntegrationUpdate:
         c._ctx.version = None
         integration = c.oauth.integrations.get(guid)
         assert integration["guid"] == guid
+        old_name = integration["name"]
 
         new_name = "New Name"
 
@@ -59,9 +60,10 @@ class TestIntegrationUpdate:
             json=fake_integration,
         )
 
-        integration.update(name=new_name)
+        updated_integration = integration.update(name=new_name)
         assert mock_update.call_count == 1
-        assert integration["name"] == new_name
+        assert integration["name"] == old_name
+        assert updated_integration["name"] == new_name
 
 
 class TestIntegrationsCreate:
