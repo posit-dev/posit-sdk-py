@@ -78,12 +78,11 @@ class Task(ActiveDict[TaskContext]):
     def __init__(self, ctx: Context, /, **kwargs: Unpack[_Attrs]) -> None:
         task_id = kwargs.get("id")
         assert isinstance(task_id, str), "Task `id` must be a string."
-        assert len(task_id) > 0, "Task `id` must not be empty."
+        assert task_id, "Task `id` must not be empty."
 
         task_ctx = TaskContext(ctx, task_id=task_id)
         path = self._api_path(task_id)
         get_data = len(kwargs) == 1
-        print("task: ", task_ctx, path, get_data, kwargs)
         super().__init__(task_ctx, path, get_data, **kwargs)
 
     @property
@@ -167,7 +166,6 @@ class Task(ActiveDict[TaskContext]):
         ]
         """
         result = self._get_api(params=kwargs)
-        print("result", result)
         new_task = Task(  # pyright: ignore[reportCallIssue]
             self._ctx,
             **result,  # pyright: ignore[reportArgumentType]
@@ -183,13 +181,8 @@ class Task(ActiveDict[TaskContext]):
         """
         cur_task = self
 
-        print("\nwait_for()!")
-        print("self_task", cur_task)
-
         while not cur_task.is_finished:
-            print("waiting for task to finish")
             cur_task = self.update()
-            print("new cur_task", cur_task)
 
         return cur_task
 
