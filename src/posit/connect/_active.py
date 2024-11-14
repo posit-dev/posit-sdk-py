@@ -207,7 +207,7 @@ class ReadOnlySequence(Sequence_abc[ResourceDictT]):
         self._data = args
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(tuple(self._data))
 
     @overload
     def __getitem__(self, index: int) -> ResourceDictT: ...
