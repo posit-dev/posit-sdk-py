@@ -166,9 +166,9 @@ class Task(ActiveDict[TaskContext]):
         ]
         """
         result = self._get_api(params=kwargs)
-        new_task = Task(  # pyright: ignore[reportCallIssue]
+        new_task = Task(
             self._ctx,
-            **result,  # pyright: ignore[reportArgumentType]
+            **result,
         )
         return new_task
 

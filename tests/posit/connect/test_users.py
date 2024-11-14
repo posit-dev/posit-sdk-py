@@ -67,9 +67,10 @@ class TestUserLock:
         responses.post(
             "https://connect.example/__api__/v1/users/a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6/lock",
             match=[responses.matchers.json_params_matcher({"locked": True})],
+            json={},
         )
-        user.lock()
-        assert user["locked"]
+        locked_user = user.lock()
+        assert locked_user["locked"]
 
     @responses.activate
     def test_lock_self_true(self):
@@ -88,9 +89,10 @@ class TestUserLock:
         responses.post(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
             match=[responses.matchers.json_params_matcher({"locked": True})],
+            json={},
         )
-        user.lock(force=True)
-        assert user["locked"]
+        unlocked_user = user.lock(force=True)
+        assert unlocked_user["locked"]
 
     @responses.activate
     def test_lock_self_false(self):
@@ -129,9 +131,10 @@ class TestUserUnlock:
         responses.post(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4/lock",
             match=[responses.matchers.json_params_matcher({"locked": False})],
+            json={},
         )
-        user.unlock()
-        assert not user["locked"]
+        unlocked_user = user.unlock()
+        assert not unlocked_user["locked"]
 
 
 class TestUsers:
@@ -173,7 +176,7 @@ class TestUsers:
         patch_request = responses.put(
             "https://connect.example/__api__/v1/users/20a79ce3-6e87-4522-9faf-be24228800a4",
             match=[responses.matchers.json_params_matcher({"first_name": "Carlitos"})],
-            json={"first_name": "Carlitos"},
+            json={"first_name": "Carlitos", "guid": "20a79ce3-6e87-4522-9faf-be24228800a4"},
         )
 
         con = Client(api_key="12345", url="https://connect.example/")
@@ -182,10 +185,11 @@ class TestUsers:
         assert patch_request.call_count == 0
         assert carlos["first_name"] == "Carlos"
 
-        carlos.update(first_name="Carlitos")
+        carlitos = carlos.update(first_name="Carlitos")
 
         assert patch_request.call_count == 1
-        assert carlos["first_name"] == "Carlitos"
+        assert carlos["first_name"] == "Carlos"
+        assert carlitos["first_name"] == "Carlitos"
 
     @responses.activate
     def test_user_update_server_error(self):

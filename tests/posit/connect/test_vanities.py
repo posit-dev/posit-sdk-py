@@ -79,9 +79,9 @@ class TestVanityMixin:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
+        ctx = Context(session, url)
         content = ContentItem(
-            params,
+            ctx,
             guid=guid,
             name="testing",  # provide name to avoid request
         )
@@ -103,9 +103,9 @@ class TestVanityMixin:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
+        ctx = Context(session, url)
         content = ContentItem(
-            params=params,
+            ctx,
             guid=guid,
             name="testing",  # provide name to avoid request
         )
@@ -123,9 +123,9 @@ class TestVanityMixin:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
+        ctx = Context(session, url)
         content = ContentItem(
-            params=params,
+            ctx,
             guid=guid,
             name="testing",  # provide name to avoid request
         )

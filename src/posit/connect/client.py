@@ -180,7 +180,7 @@ class Client(ContextManager):
         User
             The currently authenticated user.
         """
-        return me.get(self.resource_params)
+        return me.get(self._ctx)
 
     @property
     def groups(self) -> Groups:
@@ -215,7 +215,7 @@ class Client(ContextManager):
         Users
             The users resource instance.
         """
-        return Users(self.resource_params)
+        return Users(self._ctx)
 
     @property
     def content(self) -> Content:
@@ -227,7 +227,7 @@ class Client(ContextManager):
         Content
             The content resource instance.
         """
-        return Content(self.resource_params)
+        return Content(self._ctx)
 
     @property
     def metrics(self) -> Metrics:

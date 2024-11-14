@@ -66,7 +66,7 @@ class Permission(ActiveDict[PermissionContext]):
         body.update(dict(*args))
         body.update(**kwargs)
         result = self._put_api(json=body)
-        return Permission(self._ctx, **result)  # pyright: ignore[reportCallIssue]
+        return Permission(self._ctx, **result)
 
 
 class Permissions(ContextP[ContentItemContext]):

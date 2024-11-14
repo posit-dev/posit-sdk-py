@@ -7,7 +7,8 @@ from typing import (
 
 from typing_extensions import NotRequired, TypedDict, Unpack
 
-from ._active import ActiveDict, JsonifiableDict
+from ._active import ActiveDict
+from ._json import JsonifiableDict
 from ._types_content_item import ContentItemContext
 
 if TYPE_CHECKING:
@@ -80,7 +81,7 @@ class ContentItemRepository(ActiveDict):
 
         return ContentItemRepository(
             content_ctx,
-            **result,  # pyright: ignore[reportCallIssue]
+            **result,
         )
 
     def destroy(self) -> None:
@@ -122,5 +123,5 @@ class ContentItemRepository(ActiveDict):
         result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
         return ContentItemRepository(
             self._ctx,
-            **result,  # pyright: ignore[reportCallIssue]
+            **result,
         )

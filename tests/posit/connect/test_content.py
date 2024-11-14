@@ -7,7 +7,6 @@ from posit.connect._types_content_item import ContentItemContext
 from posit.connect.client import Client
 from posit.connect.content import ContentItem, ContentItemRepository
 from posit.connect.context import Context
-from posit.connect.resources import ResourceParameters
 from posit.connect.urls import Url
 
 from .api import load_mock, load_mock_dict
@@ -564,7 +563,7 @@ class TestContentRepository:
     @property
     def content_item(self):
         return ContentItem(
-            self.params,
+            self.ctx,
             guid=self.content_guid,
             name="testing",  # provide name to avoid request
         )
@@ -579,10 +578,6 @@ class TestContentRepository:
             Context(requests.Session(), Url(self.base_url)),
             content_guid=self.content_guid,
         )
-
-    @property
-    def params(self):
-        return ResourceParameters(self.ctx.session, self.ctx.url)
 
     def mock_repository_info(self):
         content_item = self.content_item

@@ -60,7 +60,7 @@ class Integration(ActiveDict[IntegrationContext]):
             elements from both options and fields from a given template.
         """
         result = self._patch_api(json=kwargs)
-        return Integration(self._ctx, **result)  # pyright: ignore[reportCallIssue]
+        return Integration(self._ctx, **result)
 
 
 # TODO-barret; Should this auto retrieve? If so, it should inherit from ActiveSequence
@@ -123,7 +123,7 @@ class Integrations(ApiCallMixin, ContextP[Context]):
         Integration
         """
         result = self._post_api(json=kwargs)
-        return Integration(self._ctx, **result)  # pyright: ignore[reportCallIssue]
+        return Integration(self._ctx, **result)
 
     def find(self) -> List[Integration]:
         """Find OAuth integrations.
@@ -155,4 +155,4 @@ class Integrations(ApiCallMixin, ContextP[Context]):
         Integration
         """
         result = self._get_api(guid)
-        return Integration(self._ctx, **result)  # pyright: ignore[reportCallIssue]
+        return Integration(self._ctx, **result)

@@ -19,7 +19,7 @@ from typing import (
 )
 
 from ._api_call import ApiCallMixin, ContextP, get_api
-from ._json import Jsonifiable, JsonifiableDict, JsonifiableList, ResponseAttrs
+from ._json import Jsonifiable, JsonifiableList, ResponseAttrs
 from ._types_context import ContextT
 
 # Design Notes:
@@ -145,16 +145,16 @@ class ActiveDict(ApiCallMixin, ResourceDict[ContextT]):
     _path: str
     """The HTTP path component for the resource endpoint."""
 
-    def _get_api(
-        self,
-        *path,
-        params: Optional[dict[str, object]] = None,
-    ) -> JsonifiableDict | None:
-        result: Jsonifiable = super()._get_api(*path, params=params)
-        if result is None:
-            return None
-        assert isinstance(result, dict), f"Expected dict from server, got {type(result)}"
-        return result
+    # def _get_api(
+    #     self,
+    #     *path,
+    #     params: Optional[dict[str, object]] = None,
+    # ) -> Any | None:
+    #     result: Jsonifiable = super()._get_api(*path, params=params)
+    #     if result is None:
+    #         return None
+    #     assert isinstance(result, dict), f"Expected dict from server, got {type(result)}"
+    #     return result
 
     def __init__(
         self,

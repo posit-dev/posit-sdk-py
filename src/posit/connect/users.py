@@ -2,50 +2,129 @@
 
 from __future__ import annotations
 
-from typing import List, Literal
+from typing import List, Literal, overload
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
 from . import me
+from ._active import ActiveDict
+from ._api_call import ApiCallMixin
+from ._types_context import ContextP
 from .content import Content
+from .context import Context
 from .paginator import Paginator
-from .resources import Resource, ResourceParameters, Resources
-
-# TODO-barret-future; Separate PR for updating User to ActiveDict class
-
-# from typing import cast
-# from ._active import ActiveDict
-# from ._json import JsonifiableDict
-# from .context import Context
-# from .resources import context_to_resource_parameters
-# @classmethod
-# def _api_path(cls) -> str:
-#     return "v1/users"
-
-# @classmethod
-# def _create(
-#     cls,
-#     ctx: Context,
-#     /,
-#     **attrs: Unpack[ContentItemRepository._Attrs],
-# ) -> User:
-#     from ._api_call import put_api
-
-#     # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
-#     result = put_api(ctx, cls._api_path(), json=cast(JsonifiableDict, attrs))
-
-#     return User(
-#         ctx,
-#         **result,  # pyright: ignore[reportCallIssue]
-#     )
 
 
-class User(Resource):
+class UserContext(Context):
+    user_guid: str
+
+    def __init__(self, ctx: Context, /, *, user_guid: str) -> None:
+        super().__init__(ctx.session, ctx.url)
+        self.user_guid = user_guid
+
+
+class User(ActiveDict[UserContext]):
+    # @classmethod
+    # def _api_path(cls) -> str:
+    #     return "v1/users"
+
+    # @classmethod
+    # def _create(
+    #     cls,
+    #     ctx: Context,
+    #     /,
+    #     # **attrs: Unpack[ContentItemRepository._Attrs],
+    #     **attrs,
+    # ) -> User:
+    #     from ._api_call import put_api
+
+    #     # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
+    #     result = put_api(ctx, cls._api_path(), json=cast(JsonifiableDict, attrs))
+
+    #     return User(
+    #         ctx,
+    #         **result,
+    #     )
+
+    class _Attrs(TypedDict, total=False):
+        guid: str
+        """The user's GUID, or unique identifier, in UUID [RFC4122](https://www.rfc-editor.org/rfc/rfc4122) format"""
+        email: str
+        """The user's email"""
+        username: str
+        """The user's username"""
+        first_name: str
+        """The user's first name"""
+        last_name: str
+        """The user's last name"""
+        user_role: Literal["administrator", "publisher", "viewer"]
+        """The user's role"""
+        created_time: str
+        """
+        Timestamp (in [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) format) indicating when
+        the user was created in the Posit Connect server.
+        """
+        updated_time: str
+        """
+        Timestamp (in [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) format) indicating when
+        information about this user was last updated in the Posit Connect server.
+        """
+        active_time: str
+        """
+        Timestamp (in [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) format) indicating
+        approximately when the user was last active. Highly active users only receive periodic updates.
+        """
+        confirmed: bool
+        """
+        When `false`, the created user must confirm their account through an email. This feature is unique to password authentication.
+        """
+        locked: bool
+        """Whether or not the user is locked"""
+
+    @overload
+    def __init__(self, ctx: Context, /, *, guid: str) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        ctx: Context,
+        /,
+        # By default, the `attrs` will be retrieved from the API if no `attrs` are supplied.
+        **attrs: Unpack[_Attrs],
+    ) -> None: ...
+    def __init__(
+        self,
+        ctx: Context,
+        /,
+        **attrs: Unpack[_Attrs],
+    ) -> None:
+        """User resource.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions.
+        guid : str
+            The GUID of the user
+        **attrs : ActiveDict
+            Attributes for the user. If not supplied, the attributes will be
+            retrieved from the API upon initialization
+        """
+        user_guid = attrs.get("guid")
+        assert isinstance(user_guid, str), f"User `guid` must be a string. Got: {user_guid}"
+        assert user_guid, "User `guid` must not be empty."
+
+        user_ctx = UserContext(ctx, user_guid=user_guid)
+        path = f"v1/users/{user_guid}"
+        # Only fetch data if `guid` is the only attr
+        get_data = len(attrs) == 1
+        super().__init__(user_ctx, path, get_data, **attrs)
+
     @property
     def content(self) -> Content:
-        return Content(self.params, owner_guid=self["guid"])
+        return Content(self._ctx, owner_guid=self["guid"])
 
-    def lock(self, *, force: bool = False):
+    def lock(self, *, force: bool = False) -> User:
         """
         Lock the user account.
 
@@ -70,15 +149,19 @@ class User(Resource):
 
         >>> user.lock(force=True)
         """
-        _me = me.get(self.params)
+        _me = me.get(self._ctx)
         if _me["guid"] == self["guid"] and not force:
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior.",
             )
-        url = self.params.url + f"v1/users/{self['guid']}/lock"
-        body = {"locked": True}
-        self.params.session.post(url, json=body)
-        super().update(locked=True)
+        # Ignore result
+        self._post_api("lock", json={"locked": True})
+
+        # Return updated user
+        attrs = dict(self)
+        attrs["locked"] = True
+
+        return User(self._ctx, **attrs)
 
     def unlock(self):
         """
@@ -96,12 +179,16 @@ class User(Resource):
 
         >>> user.unlock()
         """
-        url = self.params.url + f"v1/users/{self['guid']}/lock"
-        body = {"locked": False}
-        self.params.session.post(url, json=body)
-        super().update(locked=False)
+        # Ignore result
+        self._post_api("lock", json={"locked": False})
 
-    class _UpdateUser(TypedDict):
+        # Return updated user
+        attrs = dict(self)
+        attrs["locked"] = False
+
+        return User(self._ctx, **attrs)
+
+    class _UpdateUser(TypedDict, total=False):
         """Update user request."""
 
         email: NotRequired[str]
@@ -113,7 +200,7 @@ class User(Resource):
     def update(
         self,
         **kwargs: Unpack[_UpdateUser],
-    ) -> None:
+    ) -> User:
         """
         Update the user's attributes.
 
@@ -144,16 +231,18 @@ class User(Resource):
 
         >>> user.update(first_name="Jane", last_name="Smith")
         """
-        url = self.params.url + f"v1/users/{self['guid']}"
-        response = self.params.session.put(url, json=kwargs)
-        super().update(**response.json())
+        result = self._put_api(json=kwargs)
+
+        return User(self._ctx, **result)
 
 
-class Users(Resources):
+class Users(ApiCallMixin, ContextP[Context]):
     """Users resource."""
 
-    def __init__(self, params: ResourceParameters) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context) -> None:
+        super().__init__()
+        self._ctx = ctx
+        self._path = "v1/users"
 
     class _CreateUser(TypedDict):
         """Create user request."""
@@ -225,9 +314,8 @@ class Users(Resources):
         ... )
         """
         # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
-        url = self.params.url + "v1/users"
-        response = self.params.session.post(url, json=attributes)
-        return User(self.params, **response.json())
+        result = self._post_api(json=attributes)
+        return User(self._ctx, **result)
 
     class _FindUser(TypedDict):
         """Find user request."""
@@ -268,12 +356,12 @@ class Users(Resources):
 
         >>> users = client.find(account_status="locked|licensed")
         """
-        url = self.params.url + "v1/users"
-        paginator = Paginator(self.params.session, url, params={**conditions})
+        url = self._ctx.url + "v1/users"
+        paginator = Paginator(self._ctx.session, url, params={**conditions})
         results = paginator.fetch_results()
         return [
             User(
-                self.params,
+                self._ctx,
                 **user,
             )
             for user in results
@@ -311,13 +399,13 @@ class Users(Resources):
 
         >>> user = client.find_one(account_status="locked|licensed")
         """
-        url = self.params.url + "v1/users"
-        paginator = Paginator(self.params.session, url, params={**conditions})
+        url = self._ctx.url + self._path
+        paginator = Paginator(self._ctx.session, url, params={**conditions})
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (
             User(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -341,11 +429,10 @@ class Users(Resources):
         --------
         >>> user = client.get("123e4567-e89b-12d3-a456-426614174000")
         """
-        url = self.params.url + f"v1/users/{uid}"
-        response = self.params.session.get(url)
+        result = self._get_api(uid)
         return User(
-            self.params,
-            **response.json(),
+            self._ctx,
+            **result,
         )
 
     def count(self) -> int:
@@ -356,7 +443,5 @@ class Users(Resources):
         -------
         int
         """
-        url = self.params.url + "v1/users"
-        response = self.params.session.get(url, params={"page_size": 1})
-        result: dict = response.json()
+        result: dict = self._get_api(params={"page_size": 1})
         return result["total"]

@@ -18,9 +18,11 @@ from typing import (
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
 from . import tasks
+from ._api_call import ApiCallMixin
 from ._content_repository import ContentItemRepository
 from ._json import JsonifiableDict
 from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemResourceDict
+from ._types_context import ContextP
 from ._utils import assert_guid
 from .bundles import Bundles
 from .context import Context
@@ -30,7 +32,7 @@ from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .packages import ContentPackagesMixin as PackagesMixin
 from .permissions import Permissions
-from .resources import ResourceParameters, Resources, context_to_resource_parameters
+from .resources import context_to_resource_parameters
 from .vanities import ContentItemVanityMixin
 from .variants import Variants
 
@@ -103,7 +105,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
     def __init__(
         self,
         /,
-        params: ResourceParameters,
+        ctx: Context,
         guid: str,
     ) -> None: ...
 
@@ -111,7 +113,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
     def __init__(
         self,
         /,
-        params: ResourceParameters,
+        ctx: Context,
         guid: str,
         **kwargs: Unpack[ContentItem._Attrs],
     ) -> None: ...
@@ -119,13 +121,13 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
     def __init__(
         self,
         /,
-        params: ResourceParameters,
+        ctx: Context,
         guid: str,
         **kwargs: Unpack[ContentItem._AttrsNotRequired],
     ) -> None:
         assert_guid(guid)
 
-        ctx = ContentItemContext(Context(params.session, params.url), content_guid=guid)
+        ctx = ContentItemContext(ctx, content_guid=guid)
         path = f"v1/content/{guid}"
         get_data = len(kwargs) == 0
 
@@ -241,7 +243,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         --------
         >>> restart()
         """
-        full_content_item: ContentItem = self.update()  # pyright: ignore[reportCallIssue]
+        full_content_item = self.update()  # pyright: ignore[reportCallIssue]
 
         if full_content_item.is_interactive:
             unix_epoch_in_seconds = str(int(time.time()))
@@ -326,9 +328,9 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         assert isinstance(result, dict)
         assert "guid" in result
         new_content_item = ContentItem(
-            params=context_to_resource_parameters(self._ctx),
+            self._ctx,
             # `guid=` is contained within the `result` dict
-            **result,  # pyright: ignore[reportArgumentType, reportCallIssue]
+            **result,
         )
         # TODO-barret Update method returns new content item
         return new_content_item
@@ -348,16 +350,14 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         return Permissions(self._ctx)
 
     @property
-    def owner(self) -> dict:
+    def owner(self) -> User:
         if not hasattr(self, "_owner"):
             # It is possible to get a content item that does not contain owner.
             # "owner" is an optional additional request param.
             # If it's not included, we can retrieve the information by `owner_guid`
             from .users import Users
 
-            self._owner: User = Users(context_to_resource_parameters(self._ctx)).get(
-                self["owner_guid"]
-            )
+            self._owner: User = Users(self._ctx).get(self["owner_guid"])
         return self._owner
 
     @property
@@ -390,7 +390,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         }
 
 
-class Content(Resources):
+class Content(ApiCallMixin, ContextP[Context]):
     """Content resource.
 
     Parameters
@@ -405,11 +405,13 @@ class Content(Resources):
 
     def __init__(
         self,
-        params: ResourceParameters,
+        ctx: Context,
         *,
         owner_guid: str | None = None,
     ) -> None:
-        super().__init__(params)
+        super().__init__()
+        self._ctx = ctx
+        self._path = "v1/content"
         self.owner_guid = owner_guid
 
     def count(self) -> int:
@@ -485,9 +487,9 @@ class Content(Resources):
         ContentItem
         """
         path = "v1/content"
-        url = self.params.url + path
-        response = self.params.session.post(url, json=attrs)
-        return ContentItem(self.params, **response.json())
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url, json=attrs)
+        return ContentItem(self._ctx, **response.json())
 
     @overload
     def find(
@@ -573,11 +575,11 @@ class Content(Resources):
             conditions["owner_guid"] = self.owner_guid
 
         path = "v1/content"
-        url = self.params.url + path
-        response = self.params.session.get(url, params=conditions)
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url, params=conditions)
         return [
             ContentItem(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in response.json()
@@ -746,6 +748,6 @@ class Content(Resources):
         ContentItem
         """
         path = f"v1/content/{guid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return ContentItem(self.params, **response.json())
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url)
+        return ContentItem(self._ctx, **response.json())
