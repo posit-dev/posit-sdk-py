@@ -29,6 +29,12 @@ class TestPackagesMixin:
 class TestPackagesFind:
     @responses.activate
     def test(self):
+        # c.packages
+        responses.get(
+            "https://connect.example/__api__/v1/packages?page_number=1&page_size=500",
+            json=load_mock("v1/packages-pagination-1-500.json"),
+        )
+
         c = Client("https://connect.example", "12345")
         c._ctx.version = None
 
@@ -39,6 +45,11 @@ class TestPackagesFind:
 class TestPackagesFindBy:
     @responses.activate
     def test(self):
+        # c.packages
+        responses.get(
+            "https://connect.example/__api__/v1/packages?page_number=1&page_size=500",
+            json=load_mock("v1/packages-pagination-1-500.json"),
+        )
         mock_get = responses.get(
             "https://connect.example/__api__/v1/packages",
             json=load_mock("v1/packages.json"),

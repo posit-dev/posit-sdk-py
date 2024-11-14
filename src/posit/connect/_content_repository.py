@@ -66,6 +66,7 @@ class ContentItemRepository(ActiveDict):
         cls,
         ctx: Context,
         content_guid: str,
+        /,
         **attrs: Unpack[ContentItemRepository._Attrs],
     ) -> ContentItemRepository:
         from ._api_call import put_api

@@ -4,7 +4,7 @@ from typing import Optional
 
 from typing_extensions import TypedDict
 
-from ..resources import ResourceParameters, Resources
+from ..resources import ResourceParameters, Resources, resource_parameters_to_context
 from .integrations import Integrations
 from .sessions import Sessions
 
@@ -20,7 +20,7 @@ class OAuth(Resources):
 
     @property
     def sessions(self):
-        return Sessions(self.params)
+        return Sessions(resource_parameters_to_context(self.params))
 
     def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
         url = self.params.url + "v1/oauth/integrations/credentials"

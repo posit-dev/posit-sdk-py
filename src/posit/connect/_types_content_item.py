@@ -20,6 +20,8 @@ class ContentItemActiveDict(ActiveDict["ContentItemContext"], ContentItemP):
 
 
 class ContentItemContext(Context):
+    """Context object for a ContentItem resource."""
+
     content_guid: str
     """The GUID of the content item"""
     content_path: str

@@ -21,7 +21,7 @@ from . import tasks
 from ._content_repository import ContentItemRepository
 from ._json import JsonifiableDict
 from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemResourceDict
-from ._utils import _assert_guid
+from ._utils import assert_guid
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
@@ -124,7 +124,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         guid: str,
         **kwargs: Unpack[ContentItem._AttrsNotRequired],
     ) -> None:
-        _assert_guid(guid)
+        assert_guid(guid)
 
         ctx = ContentItemContext(Context(params.session, params.url), content_guid=guid)
         path = f"v1/content/{guid}"
@@ -364,7 +364,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
 
     @property
     def _variants(self) -> Variants:
-        return Variants(context_to_resource_parameters(self._ctx), self["guid"])
+        return Variants(self._ctx)
 
     @property
     def is_interactive(self) -> bool:

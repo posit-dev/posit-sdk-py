@@ -40,6 +40,10 @@ class TestJobsFind:
                 "v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx.json",
             ),
         )
+        responses.get(
+            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs.json"),
+        )
 
         c = Client("https://connect.example", "12345")
         content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
@@ -57,6 +61,10 @@ class TestJobsFind:
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/not-found",
             status=404,
+        )
+        responses.get(
+            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs.json"),
         )
 
         c = Client("https://connect.example", "12345")
@@ -104,6 +112,10 @@ class TestJobDestory:
 
         responses.delete(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs/tHawGvHZTosJA2Dx",
+        )
+        responses.get(
+            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs.json"),
         )
 
         c = Client("https://connect.example", "12345")

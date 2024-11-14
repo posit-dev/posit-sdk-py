@@ -26,6 +26,7 @@ from .resources import Resource, ResourceParameters, Resources
 # def _create(
 #     cls,
 #     ctx: Context,
+#     /,
 #     **attrs: Unpack[ContentItemRepository._Attrs],
 # ) -> User:
 #     from ._api_call import put_api
