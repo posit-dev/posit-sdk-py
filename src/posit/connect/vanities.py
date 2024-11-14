@@ -4,11 +4,10 @@ from typing import Callable, Optional, Protocol
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
-from posit.connect._api_call import ApiCallMixin
-from posit.connect._types_context import ContextP
-from posit.connect.context import Context
-
+from ._api_call import ApiCallMixin
 from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemP
+from ._types_context import ContextP
+from .context import Context
 from .errors import ClientError
 
 

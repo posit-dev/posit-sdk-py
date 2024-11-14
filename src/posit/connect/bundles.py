@@ -5,35 +5,59 @@ from __future__ import annotations
 import io
 from typing import List
 
-from . import resources, tasks
-from ._active import ReadOnlyDict
-from .resources import resource_parameters_to_content_item_context
+from posit.connect._types_context import ContextP
+
+from ._active import ActiveDict, ReadOnlyDict
+from ._api_call import ApiCallMixin, get_api_stream, post_api
+from ._types_content_item import ContentItemContext
+from .tasks import Task, Tasks
 
 
 class BundleMetadata(ReadOnlyDict):
     pass
 
 
-# TODO-barret Inherit from `ActiveDict`
-class Bundle(resources.Resource):
+class BundleContext(ContentItemContext):
+    bundle_id: str
+
+    def __init__(
+        self,
+        ctx: ContentItemContext,
+        /,
+        *,
+        bundle_id: str,
+    ) -> None:
+        super().__init__(ctx, content_guid=ctx.content_guid)
+        self.bundle_id = bundle_id
+
+
+class Bundle(ActiveDict[BundleContext]):
+    def __init__(self, ctx: ContentItemContext, /, **kwargs) -> None:
+        bundle_id = kwargs.get("id")
+        assert isinstance(bundle_id, str), f"Bundle 'id' must be a string. Got: {id}"
+        assert bundle_id, "Bundle 'id' must not be an empty string."
+
+        bundle_ctx = BundleContext(ctx, bundle_id=bundle_id)
+        path = f"v1/content/{ctx.content_guid}/bundles/{bundle_id}"
+        get_data = len(kwargs) == 1  # `id` is required
+        super().__init__(bundle_ctx, path, get_data, **kwargs)
+
     @property
     def metadata(self) -> BundleMetadata:
         return BundleMetadata(**self.get("metadata", {}))
 
     def delete(self) -> None:
         """Delete the bundle."""
-        path = f"v1/content/{self['content_guid']}/bundles/{self['id']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._delete_api()
 
-    def deploy(self) -> tasks.Task:
+    def deploy(self) -> Task:
         """Deploy the bundle.
 
         Spawns an asynchronous task, which activates the bundle.
 
         Returns
         -------
-        tasks.Task
+        Task
             The task for the deployment.
 
         Examples
@@ -41,13 +65,15 @@ class Bundle(resources.Resource):
         >>> task = bundle.deploy()
         >>> task.wait_for()
         """
-        path = f"v1/content/{self['content_guid']}/deploy"
-        url = self.params.url + path
-        response = self.params.session.post(url, json={"bundle_id": self["id"]})
-        result = response.json()
-        ts = tasks.Tasks(
-            resource_parameters_to_content_item_context(self.params, self["content_guid"])
+        result = post_api(
+            self._ctx,
+            self._ctx.content_path,
+            "deploy",
+            json={"bundle_id": self["id"]},
         )
+        assert isinstance(result, dict), f"Deploy response must be a dict. Got: {result}"
+        assert "task_id" in result, f"Task ID not found in response: {result}"
+        ts = Tasks(self._ctx)
         return ts.get(result["task_id"])
 
     def download(self, output: io.BufferedWriter | str) -> None:
@@ -81,9 +107,9 @@ class Bundle(resources.Resource):
                 f"download() expected argument type 'io.BufferedWriter` or 'str', but got '{type(output).__name__}'",
             )
 
-        path = f"v1/content/{self['content_guid']}/bundles/{self['id']}/download"
-        url = self.params.url + path
-        response = self.params.session.get(url, stream=True)
+        response = get_api_stream(
+            self._ctx, self._ctx.content_path, "bundles", self._ctx.bundle_id, "download"
+        )
         if isinstance(output, io.BufferedWriter):
             for chunk in response.iter_content():
                 output.write(chunk)
@@ -93,7 +119,7 @@ class Bundle(resources.Resource):
                     file.write(chunk)
 
 
-class Bundles(resources.Resources):
+class Bundles(ApiCallMixin, ContextP[ContentItemContext]):
     """Bundles resource.
 
     Parameters
@@ -113,11 +139,11 @@ class Bundles(resources.Resources):
 
     def __init__(
         self,
-        params: resources.ResourceParameters,
-        content_guid: str,
+        ctx: ContentItemContext,
     ) -> None:
-        super().__init__(params)
-        self.content_guid = content_guid
+        super().__init__()
+        self._ctx = ctx
+        self._path = f"v1/content/{ctx.content_guid}/bundles"
 
     def create(self, archive: io.BufferedReader | bytes | str) -> Bundle:
         """
@@ -167,11 +193,10 @@ class Bundles(resources.Resources):
                 f"create() expected argument type 'io.BufferedReader', 'bytes', or 'str', but got '{type(archive).__name__}'",
             )
 
-        path = f"v1/content/{self.content_guid}/bundles"
-        url = self.params.url + path
-        response = self.params.session.post(url, data=data)
-        result = response.json()
-        return Bundle(self.params, **result)
+        result = self._post_api(data=data)
+        assert result is not None, "Bundle creation failed"
+
+        return Bundle(self._ctx, **result)
 
     def find(self) -> List[Bundle]:
         """Find all bundles.
@@ -181,11 +206,8 @@ class Bundles(resources.Resources):
         list of Bundle
             List of all found bundles.
         """
-        path = f"v1/content/{self.content_guid}/bundles"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        results = response.json()
-        return [Bundle(self.params, **result) for result in results]
+        results = self._get_api()
+        return [Bundle(self._ctx, **result) for result in results]
 
     def find_one(self) -> Bundle | None:
         """Find a bundle.
@@ -211,8 +233,5 @@ class Bundles(resources.Resources):
         Bundle
             The bundle with the specified ID.
         """
-        path = f"v1/content/{self.content_guid}/bundles/{uid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        result = response.json()
-        return Bundle(self.params, **result)
+        result = self._get_api(uid)
+        return Bundle(self._ctx, **result)

@@ -339,7 +339,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(context_to_resource_parameters(self._ctx), self["guid"])
+        return Bundles(self._ctx)
 
     @property
     def environment_variables(self) -> EnvVars:
