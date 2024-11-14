@@ -5,7 +5,7 @@ from typing import Any, Literal, Optional
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
-from ._active import ActiveDict, ActiveFinderMethods, ActiveSequence
+from ._active import ActiveDict, ActiveFinderSequence
 from ._types_content_item import ContentItemContext, ContentItemP
 
 JobTag = Literal[
@@ -122,7 +122,7 @@ class Job(ActiveDict):
         self._delete_api()
 
 
-class Jobs(ActiveFinderMethods[Job, ContentItemContext], ActiveSequence[Job, ContentItemContext]):
+class Jobs(ActiveFinderSequence[Job, ContentItemContext]):
     def __init__(self, ctx: ContentItemContext) -> None:
         """A collection of jobs.
 
@@ -132,7 +132,7 @@ class Jobs(ActiveFinderMethods[Job, ContentItemContext], ActiveSequence[Job, Con
             The context object containing the session and URL for API interactions
         """
         path = posixpath.join(ctx.content_path, "jobs")
-        super().__init__(ctx, path, "key")
+        super().__init__(ctx, path, uid="key")
 
     def _create_instance(self, path: str, /, **attributes: Any) -> Job:
         """Creates a Job instance.
