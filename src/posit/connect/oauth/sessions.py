@@ -65,7 +65,7 @@ class Session(ActiveDict):
 
         super().__init__(ctx, path, get_data, **kwargs)
 
-    # TODO-barret-q: Should this be destroy?
+    # TODO-barret-future-q: Should this be destroy?
     def delete(self) -> None:
         """Destroy the OAuth session."""
         self._delete_api()
@@ -80,7 +80,7 @@ class Sessions:
         super().__init__()
         self._ctx = ctx
 
-    # TODO-barret-q: Should this be `.all()`?
+    # TODO-barret-future-q: Should this be `.all()`?
     @overload
     def find(
         self,
@@ -88,7 +88,7 @@ class Sessions:
         all: Optional[bool] = ...,
     ) -> List[Session]: ...
 
-    # TODO-barret-q: Should this be `.find_by()`?
+    # TODO-barret-future-q: Should this be `.find_by()`?
     @overload
     def find(self, **kwargs) -> List[Session]: ...
 

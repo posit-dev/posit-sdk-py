@@ -7,7 +7,6 @@ from .tasks import Task
 
 class Variant(ResourceDict):
     def render(self) -> Task:
-        # TODO Move to within Task logic?
         path = f"variants/{self['id']}/render"
         url = self._ctx.url + path
         response = self._ctx.session.post(url)

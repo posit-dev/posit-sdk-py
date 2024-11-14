@@ -65,7 +65,7 @@ class Integration(ActiveDict[IntegrationContext]):
         return Integration(self._ctx, **result)
 
 
-# TODO-barret; Should this auto retrieve? If so, it should inherit from ActiveSequence
+# TODO-barret-future-q; Should this auto retrieve? If so, it should inherit from ActiveSequence
 class Integrations(ApiCallMixin, ContextP[Context]):
     """Integrations resource."""
 

@@ -150,7 +150,8 @@ class Jobs(ActiveFinderSequence[Job, ContentItemContext]):
 
     class _FindByRequest(TypedDict, total=False):
         # Identifiers
-        id: NotRequired[str]  # TODO-barret-q: Is this change correct?
+        # TODO-barret-Q: Is this change correct? It use to be required, but the docs say not-required
+        id: NotRequired[str]
         """A unique identifier for the job."""
 
         ppid: NotRequired[Optional[str]]
@@ -287,16 +288,4 @@ class JobsMixin:
         -------
         Jobs
         """
-        # Do not cache result. `content.jobs` should always return the latest jobs.
-
-        # if hasattr(self, "_jobs"):
-        #     # Early return
-        #     return self._jobs
-
-        # # Populate Jobs info
-        # class ContentItemJobsP(ContentItemP, Protocol):
-        #     _jobs: Jobs
-        # self._jobs = Jobs(self._ctx, posixpath.join(self._path, "jobs"))
-        # return self._jobs
-
         return Jobs(self._ctx)

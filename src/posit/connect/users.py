@@ -24,28 +24,6 @@ class UserContext(Context):
 
 
 class User(ActiveDict[UserContext]):
-    # @classmethod
-    # def _api_path(cls) -> str:
-    #     return "v1/users"
-
-    # @classmethod
-    # def _create(
-    #     cls,
-    #     ctx: Context,
-    #     /,
-    #     # **attrs: Unpack[ContentItemRepository._Attrs],
-    #     **attrs,
-    # ) -> User:
-    #     from ._api_call import put_api
-
-    #     # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
-    #     result = put_api(ctx, cls._api_path(), json=attrs)
-
-    #     return User(
-    #         ctx,
-    #         **result,
-    #     )
-
     class _Attrs(TypedDict, total=False):
         guid: str
         """The user's GUID, or unique identifier, in UUID [RFC4122](https://www.rfc-editor.org/rfc/rfc4122) format"""

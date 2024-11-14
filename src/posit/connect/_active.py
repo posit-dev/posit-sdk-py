@@ -1,6 +1,3 @@
-# TODO-barret-future; Piecemeal migrate everything to leverage `ApiDictEndpoint` and `ApiListEndpoint` classes.
-# TODO-barret-future; Merge any trailing behavior of `Active` or `ActiveList` into the new classes.
-
 from __future__ import annotations
 
 import posixpath
@@ -366,7 +363,7 @@ class ActiveSequence(ApiCallMixin, ABC, ResourceSequence[ResourceDictT, ContextT
         path = posixpath.join(self._path, uid)
         return self._create_instance(path, **result)
 
-    # TODO-barret-q: Include params to `._get_api()`?
+    # TODO-barret-future-q: Include params to `._get_api()`?
     def _get_data(self) -> Generator[ResourceDictT, None, None]:
         """Fetch the collection.
 
@@ -400,18 +397,6 @@ class ActiveSequence(ApiCallMixin, ABC, ResourceSequence[ResourceDictT, ContextT
 
     # def __repr__(self) -> str:
     #     return repr(self._data)
-
-
-# class ActiveSequenceP(  # pyright: ignore[reportInvalidTypeVarUse]
-#     Generic[ResourceDictT, ContextT],
-#     Protocol,
-# ):
-#     _ctx: ContextT
-#     _path: str
-
-#     def _get_api(self, *path) -> Jsonifiable | None: ...
-#     def _to_instance(self, result: dict) -> ResourceDictT: ...
-#     def _get_data(self, **conditions: object) -> Generator[ResourceDictT, None, None]: ...
 
 
 class ActiveFinderSequence(ActiveSequence[ResourceDictT, ContextT]):
@@ -475,134 +460,3 @@ class ActiveFinderSequence(ActiveSequence[ResourceDictT, ContextT]):
             # If no item is found, return None
             None,
         )
-
-
-# class ApiListEndpoint(ApiCallMixin, Generic[ReadOnlyDictT], ABC, object):
-#     """A HTTP GET endpoint that can fetch a collection."""
-
-#     def __init__(self, *, ctx: Context, path: str, uid_key: str = "guid") -> None:
-#         """A sequence abstraction for any HTTP GET endpoint that returns a collection.
-
-#         Parameters
-#         ----------
-#         ctx : Context
-#             The context object containing the session and URL for API interactions.
-#         path : str
-#             The HTTP path component for the collection endpoint
-#         uid_key : str, optional
-#             The field name of that uniquely identifiers an instance of T, by default "guid"
-#         """
-#         super().__init__()
-#         self._ctx = ctx
-#         self._path = path
-#         self._uid_key = uid_key
-
-#     @abstractmethod
-#     def _create_instance(self, path: str, /, **kwargs: Any) -> ReadOnlyDictT:
-#         """Create an instance of 'ReadOnlyDictT'."""
-#         raise NotImplementedError()
-
-#     def fetch(self) -> Generator[ReadOnlyDictT, None, None]:
-#         """Fetch the collection.
-
-#         Fetches the collection directly from Connect. This operation does not effect the cache state.
-
-#         Returns
-#         -------
-#         List[ReadOnlyDictT]
-#         """
-#         results: Jsonifiable = self._get_api()
-#         results_list = cast(list[JsonifiableDict], results)
-#         for result in results_list:
-#             yield self._to_instance(result)
-
-#     def __iter__(self) -> Generator[ReadOnlyDictT, None, None]:
-#         return self.fetch()
-
-#     def _to_instance(self, result: dict) -> ReadOnlyDictT:
-#         """Converts a result into an instance of ReadOnlyDictT."""
-#         uid = result[self._uid_key]
-#         path = posixpath.join(self._path, uid)
-#         return self._create_instance(path, **result)
-
-#     @overload
-#     def __getitem__(self, index: int) -> ReadOnlyDictT: ...
-
-#     @overload
-#     def __getitem__(self, index: slice) -> Generator[ReadOnlyDictT, None, None]: ...
-
-#     def __getitem__(
-#         self, index: int | slice
-#     ) -> ReadOnlyDictT | Generator[ReadOnlyDictT, None, None]:
-#         if isinstance(index, slice):
-#             results = itertools.islice(self.fetch(), index.start, index.stop, index.step)
-#             for result in results:
-#                 yield result
-#         else:
-#             return list(itertools.islice(self.fetch(), index, index + 1))[0]
-
-#     # def __len__(self) -> int:
-#     #     return len(self.fetch())
-
-#     def __str__(self) -> str:
-#         return self.__repr__()
-
-#     def __repr__(self) -> str:
-#         # Jobs - 123 items
-#         return repr(
-#             f"{self.__class__.__name__} - { len(list(self.fetch())) } items - {self._path}"
-#         )
-
-#     def find(self, uid: str) -> ReadOnlyDictT | None:
-#         """
-#         Find a record by its unique identifier.
-
-#         Fetches the record from Connect by it's identifier.
-
-#         Parameters
-#         ----------
-#         uid : str
-#             The unique identifier of the record.
-
-#         Returns
-#         -------
-#         :
-#             Single instance of T if found, else None
-#         """
-#         result: Jsonifiable = self._get_api(uid)
-#         result_obj = cast(JsonifiableDict, result)
-
-#         return self._to_instance(result_obj)
-
-#     def find_by(self, **conditions: Any) -> ReadOnlyDictT | None:
-#         """
-#         Find the first record matching the specified conditions.
-
-#         There is no implied ordering, so if order matters, you should specify it yourself.
-
-#         Parameters
-#         ----------
-#         **conditions : Any
-
-#         Returns
-#         -------
-#         ReadOnlyDictT
-#             The first record matching the conditions, or `None` if no match is found.
-#         """
-#         results = self.fetch()
-
-#         conditions_items = conditions.items()
-
-#         # Get the first item of the generator that matches the conditions
-#         # If no item is found, return None
-#         return next(
-#             (
-#                 # Return result
-#                 result
-#                 # Iterate through `results` generator
-#                 for result in results
-#                 # If all `conditions`'s key/values are found in `result`'s key/values...
-#                 if result.items() >= conditions_items
-#             ),
-#             None,
-#         )

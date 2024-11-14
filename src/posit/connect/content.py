@@ -132,7 +132,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
 
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
-        # TODO-barret-Q: Why isn't this a property?
+        # TODO-barret-Q: Why isn't `owner` a property?
         if key == "owner" and isinstance(v, dict):
             return ContentItemOwner(self._ctx, **v)
         return v
@@ -329,7 +329,6 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
             # `guid=` is contained within the `result` dict
             **result,
         )
-        # TODO-barret Update method returns new content item
         return new_content_item
 
     # Relationships

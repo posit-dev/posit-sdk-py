@@ -63,7 +63,6 @@ class IntegrationAssociations(ContextP[IntegrationContext]):
         ]
 
 
-# TODO-barret; Should this auto retrieve? If so, it should inherit from ActiveSequence
 class ContentItemAssociations(ApiCallMixin, ContextP[ContentItemContext]):
     """ContentItemAssociations resource."""
 
@@ -76,7 +75,7 @@ class ContentItemAssociations(ApiCallMixin, ContextP[ContentItemContext]):
         self._ctx = ctx
         self._path = self._api_path(ctx.content_guid)
 
-    # TODO-barret-q: Should this be inherited from ActiveFinderSequence? (It would add find_by)
+    # TODO-barret-future-q: Should this be inherited from ActiveFinderSequence? (It would add find_by)
     def find(self) -> list[Association]:
         """Find OAuth associations.
 
@@ -94,7 +93,7 @@ class ContentItemAssociations(ApiCallMixin, ContextP[ContentItemContext]):
             for result in results_list
         ]
 
-    # TODO-barret-q: Should this be destroy instead of delete?
+    # TODO-barret-future-q: Should this be destroy instead of delete?
     def delete(self) -> None:
         """Delete integration associations."""
         data = []
