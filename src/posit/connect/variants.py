@@ -1,11 +1,9 @@
 from typing import List
 
 from ._active import ResourceDict
+from ._types_content_item import ContentItemContext
 from .resources import (
-    ResourceParameters,
-    Resources,
     context_to_resource_parameters,
-    resource_parameters_to_context,
 )
 from .tasks import Task
 
@@ -19,17 +17,15 @@ class Variant(ResourceDict):
         return Task(context_to_resource_parameters(self._ctx), **response.json())
 
 
-# TODO; Inherit from ActiveList
-class Variants(Resources):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
-        self.content_guid = content_guid
+# No special inheritance as it is a placeholder class
+class Variants:
+    def __init__(self, ctx: ContentItemContext) -> None:
+        super().__init__()
+        self._ctx = ctx
 
     def find(self) -> List[Variant]:
-        path = f"applications/{self.content_guid}/variants"
-        url = self.params.url + path
-        response = self.params.session.get(url)
+        path = f"applications/{self._ctx.content_guid}/variants"
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url)
         results = response.json() or []
-        return [
-            Variant(resource_parameters_to_context(self.params), **result) for result in results
-        ]
+        return [Variant(self._ctx, **result) for result in results]
