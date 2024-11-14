@@ -6,12 +6,12 @@ from __future__ import annotations
 import posixpath
 from abc import ABC, abstractmethod
 from collections.abc import Mapping as Mapping_abc
-from collections.abc import Sequence as Sequence_abc
 from typing import (
     Any,
     Generator,
     Iterator,
     Optional,
+    SupportsIndex,
     Tuple,
     TypeVar,
     cast,
@@ -198,7 +198,7 @@ class ActiveDict(ApiCallMixin, ResourceDict[ContextT]):
         self._path = path
 
 
-class ReadOnlySequence(Sequence_abc[ResourceDictT]):
+class ReadOnlySequence(Tuple[ResourceDictT, ...]):
     """Read only Sequence."""
 
     _data: Tuple[ResourceDictT, ...]
@@ -222,13 +222,17 @@ class ReadOnlySequence(Sequence_abc[ResourceDictT]):
         return len(tuple(self._data))
 
     @overload
-    def __getitem__(self, index: int) -> ResourceDictT: ...
+    def __getitem__(self, key: SupportsIndex, /) -> ResourceDictT: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Tuple[ResourceDictT, ...]: ...
+    def __getitem__(self, key: slice, /) -> tuple[ResourceDictT, ...]: ...
 
-    def __getitem__(self, index: int | slice) -> ResourceDictT | Tuple[ResourceDictT, ...]:
-        return self._data[index]
+    def __getitem__(
+        self,
+        key: SupportsIndex | slice,
+        /,
+    ) -> ResourceDictT | tuple[ResourceDictT, ...]:
+        return self._data[key]
 
     def __iter__(self) -> Iterator[ResourceDictT]:
         return iter(self._data)
