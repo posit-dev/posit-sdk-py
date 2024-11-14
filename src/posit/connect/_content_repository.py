@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from typing import (
-    TYPE_CHECKING,
-    cast,
-)
+from typing import TYPE_CHECKING
 
 from typing_extensions import NotRequired, TypedDict, Unpack
 
 from ._active import ActiveDict
-from ._json import JsonifiableDict
 from ._types_content_item import ContentItemContext
 
 if TYPE_CHECKING:
@@ -72,7 +68,7 @@ class ContentItemRepository(ActiveDict):
     ) -> ContentItemRepository:
         from ._api_call import put_api
 
-        result = put_api(ctx, cls._api_path(content_guid), json=cast(JsonifiableDict, attrs))
+        result = put_api(ctx, cls._api_path(content_guid), json=attrs)
         content_ctx = (
             ctx
             if isinstance(ctx, ContentItemContext)
@@ -120,7 +116,7 @@ class ContentItemRepository(ActiveDict):
         --------
         * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
         """
-        result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
+        result = self._patch_api(json=attrs)
         assert isinstance(result, dict), f"Update response must be a dict. Got: {result}"
         return ContentItemRepository(
             self._ctx,

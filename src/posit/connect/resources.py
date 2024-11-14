@@ -41,11 +41,6 @@ class ResourceParameters:
     url: Url
 
 
-def context_to_resource_parameters(ctx: Context) -> ResourceParameters:
-    """Temp method to aid in transitioning from `Context` to `ResourceParameters`."""
-    return ResourceParameters(ctx.session, ctx.url)
-
-
 class Resource(dict):
     def __init__(self, /, params: ResourceParameters, **kwargs):
         self.params = params

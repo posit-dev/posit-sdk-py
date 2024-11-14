@@ -39,7 +39,7 @@ class User(ActiveDict[UserContext]):
     #     from ._api_call import put_api
 
     #     # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
-    #     result = put_api(ctx, cls._api_path(), json=cast(JsonifiableDict, attrs))
+    #     result = put_api(ctx, cls._api_path(), json=attrs)
 
     #     return User(
     #         ctx,

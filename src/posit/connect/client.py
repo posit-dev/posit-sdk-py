@@ -15,7 +15,6 @@ from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
 from .packages import Packages
-from .resources import ResourceParameters
 from .tasks import Tasks
 from .users import User, Users
 from .vanities import Vanities
@@ -155,7 +154,6 @@ class Client(ContextManager):
         session.hooks["response"].append(hooks.check_for_deprecation_header)
         session.hooks["response"].append(hooks.handle_errors)
         self.session = session
-        self.resource_params = ResourceParameters(session, self.cfg.url)
         self._ctx = Context(self.session, self.cfg.url)
 
     @property
@@ -191,7 +189,7 @@ class Client(ContextManager):
         Groups
             The groups resource interface.
         """
-        return Groups(self.resource_params)
+        return Groups(self._ctx)
 
     @property
     def tasks(self) -> Tasks:

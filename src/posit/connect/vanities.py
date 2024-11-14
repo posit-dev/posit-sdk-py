@@ -67,7 +67,8 @@ class Vanity(ContentItemActiveDict):
 
         Parameters
         ----------
-        params : ResourceParameters
+        ctx : ContentItemContext
+            The content item context object containing the session and URL for API interactions.
         after_destroy : AfterDestroyCallback, optional
             Called after the Vanity is successfully destroyed, by default None
         """

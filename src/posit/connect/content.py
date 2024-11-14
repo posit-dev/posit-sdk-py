@@ -11,7 +11,6 @@ from typing import (
     List,
     Literal,
     Optional,
-    cast,
     overload,
 )
 
@@ -20,7 +19,6 @@ from typing_extensions import NotRequired, Required, TypedDict, Unpack
 from . import tasks
 from ._api_call import ApiCallMixin
 from ._content_repository import ContentItemRepository
-from ._json import JsonifiableDict
 from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemResourceDict
 from ._types_context import ContextP
 from ._utils import assert_guid
@@ -323,7 +321,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         -------
         None
         """
-        result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
+        result = self._patch_api(json=attrs)
         assert isinstance(result, dict)
         assert "guid" in result
         new_content_item = ContentItem(
