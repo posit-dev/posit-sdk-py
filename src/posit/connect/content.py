@@ -46,8 +46,7 @@ class ContentItemOAuth(ContentItemResourceDict):
     @property
     def associations(self) -> ContentItemAssociations:
         return ContentItemAssociations(
-            context_to_resource_parameters(self._ctx),
-            content_guid=self._ctx.content_guid,
+            self._ctx,
         )
 
 

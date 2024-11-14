@@ -2,7 +2,7 @@
 
 from typing import List, Optional, overload
 
-from ..resources import Resource, Resources
+from ..resources import Resource, Resources, resource_parameters_to_context
 from .associations import IntegrationAssociations
 
 
@@ -11,7 +11,9 @@ class Integration(Resource):
 
     @property
     def associations(self) -> IntegrationAssociations:
-        return IntegrationAssociations(self.params, integration_guid=self["guid"])
+        return IntegrationAssociations(
+            resource_parameters_to_context(self.params), integration_guid=self["guid"]
+        )
 
     def delete(self) -> None:
         """Delete the OAuth integration."""
