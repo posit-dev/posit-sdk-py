@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .context import Context
 
 
-class ContentItemRepository(ActiveDict):
+class ContentItemRepository(ActiveDict[ContentItemContext]):
     """
     Content items GitHub repository information.
 

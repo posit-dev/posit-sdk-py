@@ -1,3 +1,9 @@
+# ################################
+# Design Notes
+#
+# Please see the design notes in `src/posit/connect/README.md` for example usages.
+# ################################
+
 from __future__ import annotations
 
 import posixpath
@@ -18,27 +24,6 @@ from typing import (
 from ._api_call import ApiCallMixin, ContextP, get_api
 from ._json import Jsonifiable, JsonifiableList, ResponseAttrs
 from ._types_context import ContextT
-
-# Design Notes:
-# * Perform API calls on property retrieval. e.g. `my_content.repository`
-# * Dictionary endpoints: Retrieve all attributes during init unless provided
-# * List endpoints: Do not retrieve until `.fetch()` is called directly. Avoids cache invalidation issues.
-#   * While slower, all ApiListEndpoint helper methods should `.fetch()` on demand.
-# * Only expose methods needed for `ReadOnlyDict`.
-#   * Ex: When inheriting from `dict`, we'd need to shut down `update`, `pop`, etc.
-# * Use `ApiContextProtocol` to ensure that the class has the necessary attributes for API calls.
-#    * Inherit from `ApiCallMixin` to add all helper methods for API calls.
-# * Classes should write the `path` only once within its init method.
-#    * Through regular interactions, the path should only be written once.
-
-# When making a new class,
-# * Use a class to define the parameters and their types
-#    * If attaching the type info class to the parent class, start with `_`. E.g.: `ContentItemRepository._Attrs`
-# * Document all attributes like normal
-#    * When the time comes that there are multiple attribute types, we can use overloads with full documentation and unpacking of type info class for each overload method.
-# * Inherit from `ApiDictEndpoint` or `ApiListEndpoint` as needed
-#    * Init signature should be `def __init__(self, ctx: Context, path: str, /, **attrs: Jsonifiable) -> None:`
-
 
 ReadOnlyDictT = TypeVar("ReadOnlyDictT", bound="ReadOnlyDict")
 """A type variable that is bound to the `Active` class"""
@@ -84,6 +69,9 @@ class ReadOnlyDict(Mapping_abc):
             "Attributes are locked. "
             "To retrieve updated values, please retrieve the parent object again."
         )
+
+    # * Only expose methods needed for `ReadOnlyDict`.
+    #   * Ex: If inheriting from `dict`, we would need to shut down `update`, `pop`, etc.
 
     def __len__(self) -> int:
         return self._dict.__len__()
@@ -147,17 +135,6 @@ class ActiveDict(ApiCallMixin, ResourceDict[ContextT]):
     """The context object containing the session and URL for API interactions."""
     _path: str
     """The HTTP path component for the resource endpoint."""
-
-    # def _get_api(
-    #     self,
-    #     *path,
-    #     params: Optional[dict[str, object]] = None,
-    # ) -> Any | None:
-    #     result: Jsonifiable = super()._get_api(*path, params=params)
-    #     if result is None:
-    #         return None
-    #     assert isinstance(result, dict), f"Expected dict from server, got {type(result)}"
-    #     return result
 
     def __init__(
         self,
@@ -258,12 +235,6 @@ class ReadOnlySequence(Tuple[ResourceDictT, ...]):
         if not isinstance(other, ReadOnlySequence):
             return NotImplemented
         return self._data != other._data
-
-    # def count(self, value: object) -> int:
-    #     return self._data.count(value)
-
-    # def index(self, value: object, start: int = 0, stop: int = 9223372036854775807) -> int:
-    #     return self._data.index(value, start, stop)
 
     def __setitem__(self, key: int, value: Any) -> None:
         raise NotImplementedError(
@@ -376,27 +347,6 @@ class ActiveSequence(ApiCallMixin, ABC, ResourceSequence[ResourceDictT, ContextT
         results: Jsonifiable = self._get_api()
         results_list = cast(JsonifiableList, results)
         return (self._to_instance(result) for result in results_list)
-
-    # @overload
-    # def __getitem__(self, index: int) -> T: ...
-
-    # @overload
-    # def __getitem__(self, index: slice) -> tuple[T, ...]: ...
-
-    # def __getitem__(self, index):
-    #     return self[index]
-
-    # def __len__(self) -> int:
-    #     return len(self._data)
-
-    # def __iter__(self):
-    #     return iter(self._data)
-
-    # def __str__(self) -> str:
-    #     return str(self._data)
-
-    # def __repr__(self) -> str:
-    #     return repr(self._data)
 
 
 class ActiveFinderSequence(ActiveSequence[ResourceDictT, ContextT]):

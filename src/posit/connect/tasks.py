@@ -64,7 +64,7 @@ class Task(ActiveDict[TaskContext]):
         """
 
     @overload
-    def __init__(self, ctx: Context, /, **kwargs: Unpack[_Attrs]) -> None:
+    def __init__(self, ctx: Context, /, **kwargs: Unpack["Task._Attrs"]) -> None:
         """Task resource.
 
         Parameters
@@ -75,7 +75,7 @@ class Task(ActiveDict[TaskContext]):
             Attributes for the task. If not supplied, the attributes will be retrieved from the API upon initialization.
         """
 
-    def __init__(self, ctx: Context, /, **kwargs: Unpack[_Attrs]) -> None:
+    def __init__(self, ctx: Context, /, **kwargs: Unpack["Task._Attrs"]) -> None:
         task_id = kwargs.get("id")
         assert isinstance(task_id, str), "Task `id` must be a string."
         assert task_id, "Task `id` must not be empty."
@@ -187,7 +187,6 @@ class Task(ActiveDict[TaskContext]):
         return cur_task
 
 
-# No special class for Tasks, just a placeholder for the get method
 class Tasks(ContextP[Context]):
     def __init__(self, ctx: Context) -> None:
         super().__init__()

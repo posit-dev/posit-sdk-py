@@ -2,6 +2,7 @@ from typing import List
 
 from ._active import ResourceDict
 from ._types_content_item import ContentItemContext
+from ._types_context import ContextP
 from .tasks import Task
 
 
@@ -14,7 +15,7 @@ class Variant(ResourceDict):
 
 
 # No special inheritance as it is a placeholder class
-class Variants:
+class Variants(ContextP[ContentItemContext]):
     def __init__(self, ctx: ContentItemContext) -> None:
         super().__init__()
         self._ctx = ctx

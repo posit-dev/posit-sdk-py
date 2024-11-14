@@ -32,7 +32,7 @@ class Association(ResourceDict):
         created_time: str
         """The timestamp (RFC3339) indicating when this association was created."""
 
-    def __init__(self, ctx: Context, /, **kwargs: Unpack[_Attrs]) -> None:
+    def __init__(self, ctx: Context, /, **kwargs: Unpack["Association._Attrs"]) -> None:
         super().__init__(ctx, **kwargs)
 
 
