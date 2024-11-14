@@ -53,8 +53,10 @@ ResourceDictT = TypeVar("ResourceDictT", bound="ResourceDict")
 # for some reason, we _know_ the keys are fixed (as we've moved on to a higher version), we can add
 # `Generic[AttrsT]` to the class.
 class ReadOnlyDict(Mapping_abc):
+    """A read-only dict abstraction."""
+
     _dict: ResponseAttrs
-    """Read only dictionary."""
+    """Data dictionary."""
 
     def __init__(self, **kwargs: Any) -> None:
         """
@@ -90,7 +92,9 @@ class ReadOnlyDict(Mapping_abc):
         return self._dict.__contains__(key)
 
     def __repr__(self) -> str:
-        return repr(self._dict)
+        if hasattr(self, "_dict"):
+            return repr(self._dict)
+        return object.__repr__(self)
 
     def __str__(self) -> str:
         return str(self._dict)
