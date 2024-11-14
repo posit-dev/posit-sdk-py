@@ -1,10 +1,14 @@
-import functools
-from typing import Optional, Protocol
+from __future__ import annotations
 
-import requests
+import functools
+from typing import TYPE_CHECKING, Protocol
+
 from packaging.version import Version
 
-from .urls import Url
+if TYPE_CHECKING:
+    import requests
+
+    from .urls import Url
 
 
 def requires(version: str):
@@ -23,25 +27,24 @@ def requires(version: str):
     return decorator
 
 
-class Context(dict):
+class Context:
     def __init__(self, session: requests.Session, url: Url):
         self.session = session
         self.url = url
 
     @property
-    def version(self) -> Optional[str]:
-        try:
-            value = self["version"]
-        except KeyError:
+    def version(self) -> str | None:
+        if not hasattr(self, "_version"):
             endpoint = self.url + "server_settings"
             response = self.session.get(endpoint)
             result = response.json()
-            value = self["version"] = result.get("version")
-        return value
+            self._version: str | None = result.get("version")
+
+        return self._version
 
     @version.setter
-    def version(self, value):
-        self["version"] = value
+    def version(self, value: str | None):
+        self._version = value
 
 
 class ContextManager(Protocol):
