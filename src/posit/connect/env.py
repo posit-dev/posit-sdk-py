@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Iterator, List, Mapping, MutableMapping, Optional
 
-from posit.connect._api_call import ApiCallMixin
-from posit.connect._types_content_item import ContentItemContext
-from posit.connect._types_context import ContextP
+from ._api_call import ApiCallMixin
+from ._types_content_item import ContentItemContext
+from ._types_context import ContextP
 
 
 class EnvVars(ApiCallMixin, ContextP[ContentItemContext], MutableMapping[str, Optional[str]]):
