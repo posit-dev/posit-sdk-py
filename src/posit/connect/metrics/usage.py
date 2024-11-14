@@ -6,27 +6,30 @@ from typing import List, overload
 
 from requests.sessions import Session as Session
 
-from .. import resources
-from . import shiny_usage, visits
+from .._active import ResourceDict
+from .._types_context import ContextP
+from ..context import Context
+from .shiny_usage import ShinyUsage, ShinyUsageEvent
+from .visits import VisitEvent, Visits
 
 
-class UsageEvent(resources.Resource):
+class UsageEvent(ResourceDict):
     @staticmethod
     def from_event(
-        event: visits.VisitEvent | shiny_usage.ShinyUsageEvent,
+        event: VisitEvent | ShinyUsageEvent,
     ) -> UsageEvent:
-        if isinstance(event, visits.VisitEvent):
+        if isinstance(event, VisitEvent):
             return UsageEvent.from_visit_event(event)
 
-        if isinstance(event, shiny_usage.ShinyUsageEvent):
+        if isinstance(event, ShinyUsageEvent):
             return UsageEvent.from_shiny_usage_event(event)
 
         raise TypeError
 
     @staticmethod
-    def from_visit_event(event: visits.VisitEvent) -> UsageEvent:
+    def from_visit_event(event: VisitEvent) -> UsageEvent:
         return UsageEvent(
-            event.params,
+            event._ctx,
             content_guid=event.content_guid,
             user_guid=event.user_guid,
             variant_key=event.variant_key,
@@ -40,10 +43,10 @@ class UsageEvent(resources.Resource):
 
     @staticmethod
     def from_shiny_usage_event(
-        event: shiny_usage.ShinyUsageEvent,
+        event: ShinyUsageEvent,
     ) -> UsageEvent:
         return UsageEvent(
-            event.params,
+            event._ctx,
             content_guid=event.content_guid,
             user_guid=event.user_guid,
             variant_key=None,
@@ -148,8 +151,12 @@ class UsageEvent(resources.Resource):
         return self["path"]
 
 
-class Usage(resources.Resources):
+class Usage(ContextP[Context]):
     """Usage resource."""
+
+    def __init__(self, ctx: Context):
+        super().__init__()
+        self._ctx = ctx
 
     @overload
     def find(
@@ -195,9 +202,9 @@ class Usage(resources.Resources):
         List[UsageEvent]
         """
         events = []
-        finders = (visits.Visits, shiny_usage.ShinyUsage)
+        finders = (Visits, ShinyUsage)
         for finder in finders:
-            instance = finder(self.params)
+            instance = finder(self._ctx)
             events.extend(
                 [
                     UsageEvent.from_event(event)
@@ -249,9 +256,9 @@ class Usage(resources.Resources):
         -------
         UsageEvent | None
         """
-        finders = (visits.Visits, shiny_usage.ShinyUsage)
+        finders = (Visits, ShinyUsage)
         for finder in finders:
-            instance = finder(self.params)
+            instance = finder(self._ctx)
             event = instance.find_one(**kwargs)  # type: ignore[attr-defined]
             if event:
                 return UsageEvent.from_event(event)

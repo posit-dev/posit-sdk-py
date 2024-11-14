@@ -255,7 +255,7 @@ class Client(ContextManager):
         >>> len(events)
         24
         """
-        return Metrics(self.resource_params)
+        return Metrics(self._ctx)
 
     @property
     @requires(version="2024.08.0")
