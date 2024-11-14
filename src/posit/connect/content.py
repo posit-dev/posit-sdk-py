@@ -32,7 +32,6 @@ from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .packages import ContentPackagesMixin as PackagesMixin
 from .permissions import Permissions
-from .resources import context_to_resource_parameters
 from .vanities import ContentItemVanityMixin
 from .variants import Variants
 
@@ -343,7 +342,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
 
     @property
     def environment_variables(self) -> EnvVars:
-        return EnvVars(context_to_resource_parameters(self._ctx), self["guid"])
+        return EnvVars(self._ctx)
 
     @property
     def permissions(self) -> Permissions:

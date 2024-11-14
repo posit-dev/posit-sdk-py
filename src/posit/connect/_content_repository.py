@@ -121,6 +121,7 @@ class ContentItemRepository(ActiveDict):
         * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
         """
         result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
+        assert isinstance(result, dict), f"Update response must be a dict. Got: {result}"
         return ContentItemRepository(
             self._ctx,
             **result,

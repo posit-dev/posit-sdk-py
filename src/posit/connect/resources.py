@@ -16,12 +16,11 @@ from typing import (
     overload,
 )
 
-from .context import Context
-
 if TYPE_CHECKING:
     import requests
     from typing_extensions import Self
 
+    from .context import Context
     from .urls import Url
 
 
@@ -45,11 +44,6 @@ class ResourceParameters:
 def context_to_resource_parameters(ctx: Context) -> ResourceParameters:
     """Temp method to aid in transitioning from `Context` to `ResourceParameters`."""
     return ResourceParameters(ctx.session, ctx.url)
-
-
-def resource_parameters_to_context(params: ResourceParameters) -> Context:
-    """Temp method to aid in transitioning from `ResourceParameters` to `Context`."""
-    return Context(params.session, params.url)
 
 
 class Resource(dict):

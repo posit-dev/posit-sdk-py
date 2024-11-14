@@ -60,6 +60,8 @@ class Integration(ActiveDict[IntegrationContext]):
             elements from both options and fields from a given template.
         """
         result = self._patch_api(json=kwargs)
+        assert result is not None, "Integration update failed"
+        assert "guid" in result, "Integration update failed. No guid returned."
         return Integration(self._ctx, **result)
 
 

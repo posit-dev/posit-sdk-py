@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from typing import Any, Iterator, List, Mapping, MutableMapping, Optional
 
-from .resources import ResourceParameters, Resources
+from posit.connect._api_call import ApiCallMixin
+from posit.connect._types_content_item import ContentItemContext
+from posit.connect._types_context import ContextP
 
 
-class EnvVars(Resources, MutableMapping[str, Optional[str]]):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
-        self.content_guid = content_guid
+class EnvVars(ApiCallMixin, ContextP[ContentItemContext], MutableMapping[str, Optional[str]]):
+    def __init__(self, ctx: ContentItemContext) -> None:
+        super().__init__()
+        self._ctx = ctx
+        self._path = f"v1/content/{self._ctx.content_guid}/environment"
 
     def __delitem__(self, key: str, /) -> None:
         """Delete the environment variable.
@@ -62,9 +65,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         --------
         >>> clear()
         """
-        path = f"v1/content/{self.content_guid}/environment"
-        url = self.params.url + path
-        self.params.session.put(url, json=[])
+        self._put_api(json=[])
 
     def create(self, key: str, value: str, /) -> None:
         """Create an environment variable.
@@ -120,10 +121,8 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         >>> find()
         ['DATABASE_URL']
         """
-        path = f"v1/content/{self.content_guid}/environment"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return response.json()
+        result = self._get_api()
+        return result
 
     def items(self):
         raise NotImplementedError(
@@ -193,6 +192,4 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
             d[key] = value
 
         body = [{"name": key, "value": value} for key, value in d.items()]
-        path = f"v1/content/{self.content_guid}/environment"
-        url = self.params.url + path
-        self.params.session.patch(url, json=body)
+        self._patch_api(json=body)
