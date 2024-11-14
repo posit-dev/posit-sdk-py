@@ -192,13 +192,12 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
         --------
         >>> task = content.deploy()
         >>> task.wait_for()
-        None
         """
         path = f"v1/content/{self['guid']}/deploy"
         url = self._ctx.url + path
         response = self._ctx.session.post(url, json={"bundle_id": None})
         result = response.json()
-        ts = tasks.Tasks(context_to_resource_parameters(self._ctx))
+        ts = tasks.Tasks(self._ctx)
         return ts.get(result["task_id"])
 
     def render(self) -> Task:

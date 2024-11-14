@@ -12,9 +12,9 @@ from .api import load_mock_dict
 class TestTaskAttributes:
     @classmethod
     def setup_class(cls):
-        cls.task = tasks.Task(
+        cls.task = tasks.Task(  # pyright: ignore[reportCallIssue]
             mock.Mock(),
-            **load_mock_dict("v1/tasks/jXhOhdm5OOSkGhJw.json"),
+            **load_mock_dict("v1/tasks/jXhOhdm5OOSkGhJw-finished.json"),  # pyright: ignore[reportArgumentType]
         )
 
     def test_id(self):
@@ -51,11 +51,11 @@ class TestTaskUpdate:
         mock_tasks_get = [
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
+                json=load_mock_dict(f"v1/tasks/{uid}-unfinished.json"),
             ),
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
+                json=load_mock_dict(f"v1/tasks/{uid}-finished.json"),
             ),
         ]
 
@@ -65,10 +65,11 @@ class TestTaskUpdate:
         assert not task.is_finished
 
         # invoke
-        task.update()
+        finished_task = task.update()
 
         # assert
-        assert task.is_finished
+        assert not task.is_finished
+        assert finished_task.is_finished
         assert mock_tasks_get[0].call_count == 1
         assert mock_tasks_get[1].call_count == 1
 
@@ -81,11 +82,11 @@ class TestTaskUpdate:
         mock_tasks_get = [
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
+                json=load_mock_dict(f"v1/tasks/{uid}-unfinished.json"),
             ),
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
+                json=load_mock_dict(f"v1/tasks/{uid}-finished.json"),
                 match=[matchers.query_param_matcher(params)],
             ),
         ]
@@ -96,10 +97,11 @@ class TestTaskUpdate:
         assert not task.is_finished
 
         # invoke
-        task.update(**params)
+        finished_task = task.update(**params)
 
         # assert
-        assert task.is_finished
+        assert not task.is_finished
+        assert finished_task.is_finished
         assert mock_tasks_get[0].call_count == 1
         assert mock_tasks_get[1].call_count == 1
 
@@ -113,11 +115,11 @@ class TestTaskWaitFor:
         mock_tasks_get = [
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
+                json=load_mock_dict(f"v1/tasks/{uid}-unfinished.json"),
             ),
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
+                json=load_mock_dict(f"v1/tasks/{uid}-finished.json"),
             ),
         ]
 
@@ -127,10 +129,10 @@ class TestTaskWaitFor:
         assert not task.is_finished
 
         # invoke
-        task.wait_for()
+        finished_task = task.wait_for()
 
         # assert
-        assert task.is_finished
+        assert finished_task.is_finished
         assert mock_tasks_get[0].call_count == 1
         assert mock_tasks_get[1].call_count == 1
 
@@ -143,7 +145,7 @@ class TestTasksGet:
         # behavior
         mock_tasks_get: BaseResponse = responses.get(
             f"https://connect.example/__api__/v1/tasks/{uid}",
-            json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
+            json=load_mock_dict(f"v1/tasks/{uid}-finished.json"),
         )
 
         # setup

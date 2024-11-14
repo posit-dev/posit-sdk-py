@@ -2,9 +2,6 @@ from typing import List
 
 from ._active import ResourceDict
 from ._types_content_item import ContentItemContext
-from .resources import (
-    context_to_resource_parameters,
-)
 from .tasks import Task
 
 
@@ -14,7 +11,7 @@ class Variant(ResourceDict):
         path = f"variants/{self['id']}/render"
         url = self._ctx.url + path
         response = self._ctx.session.post(url)
-        return Task(context_to_resource_parameters(self._ctx), **response.json())
+        return Task(self._ctx, **response.json())
 
 
 # No special inheritance as it is a placeholder class

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import posixpath
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Optional, Protocol
 
 from ._types_context import ContextP
 
@@ -46,8 +46,8 @@ class ApiCallMixin:
     def _endpoint(self: ApiCallProtocol, *path) -> str:
         return endpoint(self._ctx, self._path, *path)
 
-    def _get_api(self: ApiCallProtocol, *path) -> Jsonifiable:
-        response = self._ctx.session.get(self._endpoint(*path))
+    def _get_api(self: ApiCallProtocol, *path, params: Optional[dict] = None) -> Jsonifiable:
+        response = self._ctx.session.get(self._endpoint(*path), params=params)
         return response.json()
 
     def _delete_api(self: ApiCallProtocol, *path) -> Jsonifiable | None:

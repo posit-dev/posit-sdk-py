@@ -203,7 +203,7 @@ class Client(ContextManager):
         tasks.Tasks
             The tasks resource instance.
         """
-        return Tasks(self.resource_params)
+        return Tasks(self._ctx)
 
     @property
     def users(self) -> Users:

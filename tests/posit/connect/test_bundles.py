@@ -70,7 +70,7 @@ class TestBundleDeploy:
 
         mock_tasks_get = responses.get(
             f"https://connect.example/__api__/v1/tasks/{task_id}",
-            json=load_mock(f"v1/tasks/{task_id}.json"),
+            json=load_mock(f"v1/tasks/{task_id}-finished.json"),
         )
 
         # setup

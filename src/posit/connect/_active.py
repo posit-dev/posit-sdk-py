@@ -141,8 +141,16 @@ class ActiveDict(ApiCallMixin, ResourceDict[ContextT]):
     _path: str
     """The HTTP path component for the resource endpoint."""
 
-    def _get_api(self, *path) -> JsonifiableDict | None:
-        super()._get_api(*path)
+    def _get_api(
+        self,
+        *path,
+        params: Optional[dict[str, object]] = None,
+    ) -> JsonifiableDict | None:
+        result: Jsonifiable = super()._get_api(*path, params=params)
+        if result is None:
+            return None
+        assert isinstance(result, dict), f"Expected dict from server, got {type(result)}"
+        return result
 
     def __init__(
         self,
@@ -344,6 +352,7 @@ class ActiveSequence(ApiCallMixin, ABC, ResourceSequence[ResourceDictT, ContextT
         path = posixpath.join(self._path, uid)
         return self._create_instance(path, **result)
 
+    # TODO-barret-q: Include params to `._get_api()`?
     def _get_data(self) -> Generator[ResourceDictT, None, None]:
         """Fetch the collection.
 

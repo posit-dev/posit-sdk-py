@@ -4,10 +4,88 @@ from __future__ import annotations
 
 from typing import overload
 
-from . import resources
+from typing_extensions import TypedDict, Unpack
+
+from ._active import ActiveDict
+from ._types_context import ContextP
+from .context import Context
 
 
-class Task(resources.Resource):
+class TaskContext(Context):
+    task_id: str
+
+    def __init__(self, ctx: Context, *, task_id: str) -> None:
+        super().__init__(ctx.session, ctx.url)
+        self.task_id = task_id
+
+
+class Task(ActiveDict[TaskContext]):
+    @classmethod
+    def _api_path(cls, task_uid: str) -> str:
+        return f"v1/tasks/{task_uid}"
+
+    class _AttrResult(TypedDict):
+        type: str
+        data: object
+
+    class _Attrs(TypedDict, total=False):
+        id: str
+        """The identifier for this task."""
+        output: list[str]
+        """An array containing lines of output produced by the task."""
+        finished: bool
+        """Indicates that a task has completed."""
+        code: int
+        """Numeric indication as to the cause of an error. Non-zero when an error has occured."""
+        error: str
+        """Description of the error. An empty string when no error has occurred."""
+        last: int
+        """
+        The total number of output lines produced so far. Use as the value
+        to `first` in the next request to only fetch output lines beyond
+        what you have already received.
+        """
+        result: "Task._AttrResult"
+        """A value representing the result of the operation, if any. For deployment tasks, this
+        value is `null`."""
+
+    @overload
+    def __init__(self, ctx: Context, /, *, id: str) -> None:
+        """Task resource.
+
+        Since the task attributes are not supplied, the attributes will be retrieved from the API upon initialization.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions.
+        id : str
+            The identifier for this task.
+        """
+
+    @overload
+    def __init__(self, ctx: Context, /, **kwargs: Unpack[_Attrs]) -> None:
+        """Task resource.
+
+        Parameters
+        ----------
+        ctx : Context
+            The context object containing the session and URL for API interactions.
+        **kwargs : Task._Attrs
+            Attributes for the task. If not supplied, the attributes will be retrieved from the API upon initialization.
+        """
+
+    def __init__(self, ctx: Context, /, **kwargs: Unpack[_Attrs]) -> None:
+        task_id = kwargs.get("id")
+        assert isinstance(task_id, str), "Task `id` must be a string."
+        assert len(task_id) > 0, "Task `id` must not be empty."
+
+        task_ctx = TaskContext(ctx, task_id=task_id)
+        path = self._api_path(task_id)
+        get_data = len(kwargs) == 1
+        print("task: ", task_ctx, path, get_data, kwargs)
+        super().__init__(task_ctx, path, get_data, **kwargs)
+
     @property
     def is_finished(self) -> bool:
         """The task state.
@@ -50,7 +128,12 @@ class Task(resources.Resource):
     # CRUD Methods
 
     @overload
-    def update(self, *args, first: int, wait: int, **kwargs) -> None:
+    def update(self, /, *, first: int, wait: int, **kwargs) -> Task: ...
+
+    @overload
+    def update(self, /, **kwargs) -> Task: ...
+
+    def update(self, /, **kwargs) -> Task:
         """Update the task.
 
         Parameters
@@ -59,14 +142,8 @@ class Task(resources.Resource):
             Line to start output on.
         wait : int, default 0
             Maximum number of seconds to wait for the task to complete.
-        """
-
-    @overload
-    def update(self, *args, **kwargs) -> None:
-        """Update the task."""
-
-    def update(self, *args, **kwargs) -> None:
-        """Update the task.
+        **kwargs
+            Additional query parameters to pass to the API.
 
         See Also
         --------
@@ -82,33 +159,47 @@ class Task(resources.Resource):
         [
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         ]
-        >>> task.update()
-        >>> task.output
+        >>> updated_task = task.update()
+        >>> updated_task.output
         [
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             "Pretium aenean pharetra magna ac placerat vestibulum lectus mauris."
         ]
         """
-        params = dict(*args, **kwargs)
-        path = f"v1/tasks/{self['id']}"
-        url = self.params.url + path
-        response = self.params.session.get(url, params=kwargs)
-        result = response.json()
-        super().update(**result)
+        result = self._get_api(params=kwargs)
+        print("result", result)
+        new_task = Task(  # pyright: ignore[reportCallIssue]
+            self._ctx,
+            **result,  # pyright: ignore[reportArgumentType]
+        )
+        return new_task
 
-    def wait_for(self) -> None:
+    def wait_for(self) -> Task:
         """Wait for the task to finish.
 
         Examples
         --------
         >>> task.wait_for()
-        None
         """
-        while not self.is_finished:
-            self.update()
+        cur_task = self
+
+        print("\nwait_for()!")
+        print("self_task", cur_task)
+
+        while not cur_task.is_finished:
+            print("waiting for task to finish")
+            cur_task = self.update()
+            print("new cur_task", cur_task)
+
+        return cur_task
 
 
-class Tasks(resources.Resources):
+# No special class for Tasks, just a placeholder for the get method
+class Tasks(ContextP[Context]):
+    def __init__(self, ctx: Context) -> None:
+        super().__init__()
+        self._ctx = ctx
+
     @overload
     def get(self, *, uid: str, first: int, wait: int) -> Task:
         """Get a task.
@@ -153,8 +244,11 @@ class Tasks(resources.Resources):
         -------
         Task
         """
-        path = f"v1/tasks/{uid}"
-        url = self.params.url + path
-        response = self.params.session.get(url, params=kwargs)
-        result = response.json()
-        return Task(self.params, **result)
+        # TODO-barret-future; Find better way to pass through query params to the API calls on init
+        task = Task(
+            self._ctx,
+            id=uid,
+            _placeholder=True,  # pyright: ignore[reportCallIssue]
+        )
+        ret_task = task.update(**kwargs)
+        return ret_task
