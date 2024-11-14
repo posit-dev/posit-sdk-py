@@ -5,7 +5,7 @@ from typing import Generator, Literal, Optional, TypedDict
 
 from typing_extensions import NotRequired, Required, Unpack
 
-from ._active import ActiveFinderMethods, ActiveSequence, ResourceDict
+from ._active import ActiveFinderSequence, ResourceDict
 from ._types_content_item import ContentItemContext, ContentItemP
 from .context import Context, requires
 from .errors import ClientError
@@ -24,24 +24,26 @@ class ContentPackage(ResourceDict):
 
 
 class ContentPackages(
-    ActiveFinderMethods["ContentPackage", ContentItemContext],
-    ActiveSequence["ContentPackage", ContentItemContext],
+    ActiveFinderSequence["ContentPackage", ContentItemContext],
 ):
     """A collection of packages."""
 
     def __init__(self, ctx: ContentItemContext):
         path = posixpath.join(ctx.content_path, "packages")
-        super().__init__(ctx, path, "name")
+        super().__init__(ctx, path, uid="name")
 
     def _create_instance(self, path, /, **attributes):  # noqa: ARG002
         return ContentPackage(self._ctx, **attributes)
 
-    def fetch(self, **conditions):
+    def _get_data(self, **conditions):
         try:
-            return super().fetch(**conditions)
+            return super()._get_data(**conditions)
         except ClientError as e:
             if e.http_status == 204:
-                return []
+                # Work around typing to return an empty generator
+                ret: list[ContentPackage] = []
+                return (_ for _ in ret)
+                # (End workaround)
             raise e
 
     def find(self, uid):
@@ -130,13 +132,10 @@ class Package(ResourceDict):
         super().__init__(ctx, **attributes)
 
 
-class Packages(
-    ActiveFinderMethods["Package", Context],
-    ActiveSequence["Package", Context],
-):
+class Packages(ActiveFinderSequence["Package", Context]):
     def __init__(self, ctx: Context):
         path = "v1/packages"
-        super().__init__(ctx, path, "name")
+        super().__init__(ctx, path, uid="name")
 
     def _create_instance(self, path, /, **attributes):  # noqa: ARG002
         return Package(self._ctx, **attributes)
@@ -151,7 +150,10 @@ class Packages(
         version: Required[str]
         """The package version"""
 
-    def fetch(self, **conditions: Unpack[_Fetch]) -> Generator["Package"]:  # type: ignore
+    def _get_data(
+        self,
+        **conditions,  # : Unpack[_Fetch]
+    ) -> Generator["Package", None, None]:
         # todo - add pagination support to ActiveSequence
         url = self._ctx.url + self._path
         paginator = Paginator(self._ctx.session, url, dict(**conditions))
