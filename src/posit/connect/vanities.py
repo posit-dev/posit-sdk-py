@@ -4,9 +4,12 @@ from typing import Callable, Optional, Protocol
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
+from posit.connect._api_call import ApiCallMixin
+from posit.connect._types_context import ContextP
+from posit.connect.context import Context
+
 from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemP
 from .errors import ClientError
-from .resources import Resources, resource_parameters_to_content_item_context
 
 
 class Vanity(ContentItemActiveDict):
@@ -96,8 +99,13 @@ class Vanity(ContentItemActiveDict):
             self._after_destroy()
 
 
-class Vanities(Resources):
+class Vanities(ApiCallMixin, ContextP[Context]):
     """Manages a collection of vanities."""
+
+    def __init__(self, ctx: Context) -> None:
+        super().__init__()
+        self._ctx = ctx
+        self._path = "v1/vanities"
 
     def all(self) -> list[Vanity]:
         """Retrieve all vanities.
@@ -110,23 +118,17 @@ class Vanities(Resources):
         -----
         This action requires administrator privileges.
         """
-        endpoint = self.params.url + "v1/vanities"
-        response = self.params.session.get(endpoint)
+        endpoint = self._ctx.url + "v1/vanities"
+        response = self._ctx.session.get(endpoint)
         results = response.json()
         ret: list[Vanity] = []
         for result in results:
             assert isinstance(result, dict)
             assert "content_guid" in result
 
-            ret.append(
-                Vanity(
-                    resource_parameters_to_content_item_context(
-                        self.params,
-                        content_guid=result["content_guid"],
-                    ),
-                    **result,
-                )
-            )
+            content_item_ctx = ContentItemContext(self._ctx, content_guid=result["content_guid"])
+
+            ret.append(Vanity(content_item_ctx, **result))
         return ret
 
 

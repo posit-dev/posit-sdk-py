@@ -7,7 +7,6 @@ from responses.matchers import json_params_matcher
 from posit.connect._types_content_item import ContentItemContext
 from posit.connect.content import ContentItem
 from posit.connect.context import Context
-from posit.connect.resources import ResourceParameters
 from posit.connect.urls import Url
 from posit.connect.vanities import Vanities, Vanity
 
@@ -61,8 +60,8 @@ class TestVanitiesAll:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
-        vanities = Vanities(params)
+        ctx = Context(session, url)
+        vanities = Vanities(ctx)
 
         vanities.all()
 

@@ -277,7 +277,7 @@ class Client(ContextManager):
 
     @property
     def vanities(self) -> Vanities:
-        return Vanities(self.resource_params)
+        return Vanities(self._ctx)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
