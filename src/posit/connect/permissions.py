@@ -4,20 +4,46 @@ from __future__ import annotations
 
 from typing import List, overload
 
-from requests.sessions import Session as Session
+from ._active import ActiveDict
+from ._types_content_item import ContentItemContext
+from ._types_context import ContextP
 
-from .resources import Resource, ResourceParameters, Resources
+
+class PermissionContext(ContentItemContext):
+    permission_id: str
+
+    def __init__(self, ctx: ContentItemContext, /, *, permission_id: str) -> None:
+        super().__init__(ctx, content_guid=ctx.content_guid)
+        self.permission_id = permission_id
 
 
-class Permission(Resource):
+class Permission(ActiveDict[PermissionContext]):
+    @classmethod
+    def _api_path(cls, content_guid: str, permission_id: str) -> str:
+        return f"v1/content/{content_guid}/permissions/{permission_id}"
+
+    def __init__(self, ctx: ContentItemContext, /, **kwargs) -> None:
+        permission_id = kwargs.get("id")
+        assert isinstance(
+            permission_id, str
+        ), f"Permission 'id' must be a string. Got: {permission_id}"
+        assert permission_id, "Permission 'id' must not be an empty string."
+
+        permission_ctx = PermissionContext(
+            ctx,
+            permission_id=permission_id,
+        )
+        path = self._api_path(permission_ctx.content_guid, permission_ctx.permission_id)
+        get_data = len(kwargs) == 1  # `id` is required
+
+        super().__init__(permission_ctx, path, get_data, **kwargs)
+
     def delete(self) -> None:
         """Delete the permission."""
-        path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._delete_api()
 
     @overload
-    def update(self, *args, role: str, **kwargs) -> None:
+    def update(self, *args, role: str, **kwargs) -> Permission:
         """Update the permission.
 
         Parameters
@@ -27,10 +53,10 @@ class Permission(Resource):
         """
 
     @overload
-    def update(self, *args, **kwargs) -> None:
+    def update(self, *args, **kwargs) -> Permission:
         """Update the permission."""
 
-    def update(self, *args, **kwargs) -> None:
+    def update(self, *args, **kwargs) -> Permission:
         """Update the permission."""
         body = {
             "principal_guid": self.get("principal_guid"),
@@ -39,19 +65,14 @@ class Permission(Resource):
         }
         body.update(dict(*args))
         body.update(**kwargs)
-        path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
-        url = self.params.url + path
-        response = self.params.session.put(
-            url,
-            json=body,
-        )
-        super().update(**response.json())
+        result = self._put_api(json=body)
+        return Permission(self._ctx, **result)  # pyright: ignore[reportCallIssue]
 
 
-class Permissions(Resources):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
-        self.content_guid = content_guid
+class Permissions(ContextP[ContentItemContext]):
+    def __init__(self, ctx: ContentItemContext) -> None:
+        super().__init__()
+        self._ctx = ctx
 
     def count(self) -> int:
         """Count the number of permissions.
@@ -93,10 +114,10 @@ class Permissions(Resources):
         -------
         Permission
         """
-        path = f"v1/content/{self.content_guid}/permissions"
-        url = self.params.url + path
-        response = self.params.session.post(url, json=kwargs)
-        return Permission(params=self.params, **response.json())
+        path = f"v1/content/{self._ctx.content_guid}/permissions"
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url, json=kwargs)
+        return Permission(self._ctx, **response.json())
 
     def find(self, **kwargs) -> List[Permission]:
         """Find permissions.
@@ -105,11 +126,11 @@ class Permissions(Resources):
         -------
         List[Permission]
         """
-        path = f"v1/content/{self.content_guid}/permissions"
-        url = self.params.url + path
-        response = self.params.session.get(url, json=kwargs)
+        path = f"v1/content/{self._ctx.content_guid}/permissions"
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url, json=kwargs)
         results = response.json()
-        return [Permission(self.params, **result) for result in results]
+        return [Permission(self._ctx, **result) for result in results]
 
     def find_one(self, **kwargs) -> Permission | None:
         """Find a permission.
@@ -133,7 +154,4 @@ class Permissions(Resources):
         -------
         Permission
         """
-        path = f"v1/content/{self.content_guid}/permissions/{uid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return Permission(self.params, **response.json())
+        return Permission(self._ctx, id=uid)

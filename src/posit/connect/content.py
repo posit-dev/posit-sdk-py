@@ -346,7 +346,7 @@ class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemA
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(context_to_resource_parameters(self._ctx), self["guid"])
+        return Permissions(self._ctx)
 
     @property
     def owner(self) -> dict:
