@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import posixpath
-from typing import TYPE_CHECKING, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 from ._types_context import ContextP
 
@@ -16,8 +16,8 @@ class ApiCallProtocol(ContextP, Protocol):
     def _endpoint(self, *path) -> str: ...
     def _get_api(self, *path) -> Jsonifiable: ...
     def _delete_api(self, *path) -> Jsonifiable | None: ...
-    def _patch_api(self, *path, json: Jsonifiable | None) -> Jsonifiable: ...
-    def _put_api(self, *path, json: Jsonifiable | None) -> Jsonifiable: ...
+    def _patch_api(self, *path, json: Any | None) -> Jsonifiable: ...
+    def _put_api(self, *path, json: Any | None) -> Jsonifiable: ...
 
 
 def endpoint(ctx: Context, *path) -> str:
@@ -33,7 +33,7 @@ def get_api(ctx: Context, *path) -> Jsonifiable:
 def put_api(
     ctx: Context,
     *path,
-    json: Jsonifiable | None,
+    json: Any | None,
 ) -> Jsonifiable:
     response = ctx.session.put(endpoint(ctx, *path), json=json)
     return response.json()
@@ -59,7 +59,7 @@ class ApiCallMixin:
     def _patch_api(
         self: ApiCallProtocol,
         *path,
-        json: Jsonifiable | None,
+        json: Any | None,
     ) -> Jsonifiable:
         response = self._ctx.session.patch(self._endpoint(*path), json=json)
         return response.json()
@@ -67,7 +67,7 @@ class ApiCallMixin:
     def _put_api(
         self: ApiCallProtocol,
         *path,
-        json: Jsonifiable | None,
+        json: Any | None,
     ) -> Jsonifiable:
         response = self._ctx.session.put(self._endpoint(*path), json=json)
         return response.json()
