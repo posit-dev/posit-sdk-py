@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Optional, Protocol
 from ._types_context import ContextP
 
 if TYPE_CHECKING:
-    from ._json import Jsonifiable
     from .context import Context
 
 
@@ -14,11 +13,11 @@ class ApiCallProtocol(ContextP, Protocol):
     _path: str
 
     def _endpoint(self, *path) -> str: ...
-    def _get_api(self, *path) -> Jsonifiable: ...
-    def _delete_api(self, *path) -> Jsonifiable | None: ...
-    def _patch_api(self, *path, json: Any | None) -> Jsonifiable: ...
-    def _post_api(self, *path, json: Any | None) -> Jsonifiable: ...
-    def _put_api(self, *path, json: Any | None) -> Jsonifiable: ...
+    def _get_api(self, *path) -> Any: ...
+    def _delete_api(self, *path) -> Any | None: ...
+    def _patch_api(self, *path, json: Any | None) -> Any: ...
+    def _post_api(self, *path, json: Any | None) -> Any: ...
+    def _put_api(self, *path, json: Any | None) -> Any: ...
 
 
 def endpoint(ctx: Context, *path) -> str:
@@ -26,7 +25,7 @@ def endpoint(ctx: Context, *path) -> str:
 
 
 # Helper methods for API interactions
-def get_api(ctx: Context, *path) -> Jsonifiable:
+def get_api(ctx: Context, *path) -> Any:
     response = ctx.session.get(endpoint(ctx, *path))
     return response.json()
 
@@ -35,7 +34,7 @@ def put_api(
     ctx: Context,
     *path,
     json: Any | None,
-) -> Jsonifiable:
+) -> Any:
     response = ctx.session.put(endpoint(ctx, *path), json=json)
     return response.json()
 
@@ -47,11 +46,11 @@ class ApiCallMixin:
     def _endpoint(self: ApiCallProtocol, *path) -> str:
         return endpoint(self._ctx, self._path, *path)
 
-    def _get_api(self: ApiCallProtocol, *path, params: Optional[dict] = None) -> Jsonifiable:
+    def _get_api(self: ApiCallProtocol, *path, params: Optional[dict] = None) -> Any:
         response = self._ctx.session.get(self._endpoint(*path), params=params)
         return response.json()
 
-    def _delete_api(self: ApiCallProtocol, *path) -> Jsonifiable | None:
+    def _delete_api(self: ApiCallProtocol, *path) -> Any | None:
         response = self._ctx.session.delete(self._endpoint(*path))
         if len(response.content) == 0:
             return None
@@ -61,7 +60,7 @@ class ApiCallMixin:
         self: ApiCallProtocol,
         *path,
         json: Any | None,
-    ) -> Jsonifiable:
+    ) -> Any:
         response = self._ctx.session.patch(self._endpoint(*path), json=json)
         return response.json()
 
@@ -69,7 +68,7 @@ class ApiCallMixin:
         self: ApiCallProtocol,
         *path,
         json: Any | None,
-    ) -> Jsonifiable:
+    ) -> Any:
         response = self._ctx.session.post(self._endpoint(*path), json=json)
         return response.json()
 
@@ -77,6 +76,6 @@ class ApiCallMixin:
         self: ApiCallProtocol,
         *path,
         json: Any | None,
-    ) -> Jsonifiable:
+    ) -> Any:
         response = self._ctx.session.put(self._endpoint(*path), json=json)
         return response.json()
