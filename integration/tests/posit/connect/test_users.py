@@ -5,6 +5,10 @@ class TestUser:
     @classmethod
     def setup_class(cls):
         cls.client = client = connect.Client()
+
+        # Play nicely with other tests
+        cls.existing_users = client.users.count()
+
         cls.aron = client.users.create(
             username="aron",
             email="aron@example.com",
@@ -29,8 +33,8 @@ class TestUser:
         assert len(self.client.users.find(account_status="locked")) == 0
 
     def test_count(self):
-        # aron, bill, cole, and me
-        assert self.client.users.count() == 4
+        # aron, bill, cole, and me (and existing user)
+        assert self.client.users.count() == 3 + self.existing_users
 
     def test_find(self):
         assert self.client.users.find(prefix="aron") == [self.aron]

@@ -11,14 +11,14 @@ class TestContentPermissions:
         cls.content = cls.client.content.create(name="example")
 
         cls.user_aron = cls.client.users.create(
-            username="aron",
-            email="aron@example.com",
-            password="s3cur3p@ssword",
+            username="permission_aron",
+            email="permission_aron@example.com",
+            password="permission_s3cur3p@ssword",
         )
         cls.user_bill = cls.client.users.create(
-            username="bill",
-            email="bill@example.com",
-            password="s3cur3p@ssword",
+            username="permission_bill",
+            email="permission_bill@example.com",
+            password="permission_s3cur3p@ssword",
         )
 
         cls.group_friends = cls.client.groups.create(name="Friends")
