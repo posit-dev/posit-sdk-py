@@ -262,3 +262,57 @@ class TestPermissionsGet:
 
         # assert
         assert permission == fake_permission
+
+
+class TestPermissionsDelete:
+    @responses.activate
+    def test_by_guid(self):
+        # data
+        uid = "94"
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_permissions = load_mock_list(f"v1/content/{content_guid}/permissions.json")
+        fake_followup_permissions = fake_permissions.copy()
+        fake_followup_permissions.pop(0)
+        fake_permission = load_mock_dict(f"v1/content/{content_guid}/permissions/{uid}.json")
+
+        # behavior
+
+        # Used in internal for-loop
+        mock_permissions_get = [
+            responses.get(
+                f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+                json=fake_permissions,
+            ),
+            responses.get(
+                f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+                json=fake_followup_permissions,
+            ),
+        ]
+        #
+        mock_permission_delete = responses.delete(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{uid}",
+        )
+
+        # setup
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        permissions = Permissions(params, content_guid=content_guid)
+
+        # invoke
+        print(fake_permission)
+        deleted_permissions = permissions.delete(fake_permission["principal_guid"])
+
+        assert mock_permissions_get[0].call_count == 1
+        assert mock_permissions_get[1].call_count == 0
+        assert mock_permission_delete.call_count == 1
+        assert len(deleted_permissions) == 1
+        assert deleted_permissions[0] == fake_permission
+
+        # invoking again is a no-op
+        deleted_permissions = permissions.delete(fake_permission["principal_guid"])
+
+        assert mock_permissions_get[0].call_count == 1
+        assert mock_permissions_get[1].call_count == 1
+        assert mock_permission_delete.call_count == 1
+        assert len(deleted_permissions) == 0
+
+    # TODO-barret- delete by user, group, permission

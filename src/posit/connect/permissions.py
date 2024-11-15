@@ -191,6 +191,9 @@ class Permissions(Resources):
         client.content.get(content_guid).permissions.delete(*groups)
         ```
         """
+        from .groups import Group
+        from .users import User
+
         principal_guids: set[str] = set()
 
         for arg in permissions:
