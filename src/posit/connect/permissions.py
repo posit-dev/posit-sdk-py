@@ -143,17 +143,17 @@ class Permissions(Resources):
         return Permission(self.params, **response.json())
 
     def destroy(self, *permissions: str | Group | User | Permission) -> list[Permission]:
-        """Delete permissions.
+        """Destroy supplied content item permissions.
 
         Removes all provided permissions from the content item's permissions.
 
         Parameters
         ----------
         *permissions : str | Group | User | Permission
-            The content item permissions to remove. If a `str` is received, it is compared agains
+            The content item permissions to remove. If a `str` is received, it is compared against
             the Permissions' `principal_gruid`. If a `Group`, `User`, or `Permission` is received,
             the `guid` is used and compared against the Permissions' `principal_guid`. If a
-            `Permission` is received, the `principal_guid` is used.
+            `Permission` is received, the `principal_guid` is used. Note, only the associated permissions will be destroyed; Any users or groups provided will remain.
 
         Returns
         -------
