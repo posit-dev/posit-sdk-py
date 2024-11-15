@@ -183,11 +183,11 @@ class Permissions(Resources):
         client = connect.Client()
 
         # Remove a single permission by principal_guid
-        client.content.get(content_guid).permissions.delete(principal_guid)
+        client.content.get(content_guid).permissions.destroy(principal_guid)
 
         # Remove by user (if principal_guid is a user)
         user = client.users.get(principal_guid)
-        client.content.get(content_guid).permissions.delete(user)
+        client.content.get(content_guid).permissions.destroy(user)
 
         # Remove by group (if principal_guid is a group)
         group = client.groups.get(principal_guid)
