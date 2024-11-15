@@ -142,7 +142,7 @@ class Permissions(Resources):
         response = self.params.session.get(url)
         return Permission(self.params, **response.json())
 
-    def delete(self, *permissions: str | Group | User | Permission) -> list[Permission]:
+    def destroy(self, *permissions: str | Group | User | Permission) -> list[Permission]:
         """Delete permissions.
 
         Removes all provided permissions from the content item's permissions.
@@ -184,11 +184,14 @@ class Permissions(Resources):
 
         # Remove by group (if principal_guid is a group)
         group = client.groups.get(principal_guid)
-        client.content.get(content_guid).permissions.delete(group)
+        client.content.get(content_guid).permissions.destroy(group)
 
         # Remove all groups with a matching prefix name
         groups = client.groups.find(prefix=group_name_prefix)
-        client.content.get(content_guid).permissions.delete(*groups)
+        client.content.get(content_guid).permissions.destroy(*groups)
+
+        # Confirm new permissions
+        client.content.get(content_guid).permissions.find()
         ```
         """
         from .groups import Group
@@ -207,14 +210,14 @@ class Permissions(Resources):
                 principal_guid: str = arg["principal_guid"]
             else:
                 raise TypeError(
-                    f"delete() expected argument type 'str', 'Group', 'Permission' or 'User', but got '{type(arg).__name__}'",
+                    f"destroy() expected argument type 'str', 'Group', 'Permission' or 'User', but got '{type(arg).__name__}'",
                 )
             principal_guids.add(principal_guid)
 
-        deleted_permissions: list[Permission] = []
+        destroyed_permissions: list[Permission] = []
         for permission in self.find():
             if permission["principal_guid"] in principal_guids:
-                permission.delete()
-                deleted_permissions.append(permission)
+                permission.destroy()
+                destroyed_permissions.append(permission)
 
-        return deleted_permissions
+        return destroyed_permissions
