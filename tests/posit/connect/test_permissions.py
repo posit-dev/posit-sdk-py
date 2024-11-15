@@ -6,6 +6,7 @@ import requests
 import responses
 from responses import matchers
 
+from posit.connect._deprecated import PositConnectDeprecationWarning
 from posit.connect.groups import Group
 from posit.connect.permissions import Permission, Permissions
 from posit.connect.resources import ResourceParameters
@@ -15,7 +16,7 @@ from posit.connect.users import User
 from .api import load_mock, load_mock_dict, load_mock_list
 
 
-class TestPermissionDelete:
+class TestPermissionDestroy:
     @responses.activate
     def test(self):
         # data
@@ -34,6 +35,29 @@ class TestPermissionDelete:
 
         # invoke
         permission.destroy()
+
+        # assert
+        assert mock_delete.call_count == 1
+
+    @responses.activate
+    def test_destroy_deprecated(self):
+        # data
+        uid = "94"
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # behavior
+        mock_delete = responses.delete(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{uid}",
+        )
+
+        # setup
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        fake_permission = load_mock_dict(f"v1/content/{content_guid}/permissions/{uid}.json")
+        permission = Permission(params, **fake_permission)
+
+        # invoke
+        with pytest.warns(PositConnectDeprecationWarning, match="destroy"):
+            permission.delete()
 
         # assert
         assert mock_delete.call_count == 1
