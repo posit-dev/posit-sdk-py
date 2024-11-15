@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from typing import List, overload
+from typing import TYPE_CHECKING, List, overload
 
 from requests.sessions import Session as Session
 
 from .resources import Resource, ResourceParameters, Resources
+
+if TYPE_CHECKING:
+    from .groups import Group
+    from .users import User
 
 
 class Permission(Resource):
@@ -137,3 +141,77 @@ class Permissions(Resources):
         url = self.params.url + path
         response = self.params.session.get(url)
         return Permission(self.params, **response.json())
+
+    def delete(self, *permissions: str | Group | User | Permission) -> list[Permission]:
+        """Delete permissions.
+
+        Removes all provided permissions from the content item's permissions.
+
+        Parameters
+        ----------
+        *permissions : str | Group | User | Permission
+            The content item permissions to remove. If a `str` is received, it is compared agains
+            the Permissions' `principal_gruid`. If a `Group`, `User`, or `Permission` is received,
+            the `guid` is used and compared against the Permissions' `principal_guid`. If a
+            `Permission` is received, the `principal_guid` is used.
+
+        Returns
+        -------
+        list[Permission]
+            The deleted permissions.
+
+        Examples
+        --------
+        ```python
+        from posit import connect
+
+        #### User-defined inputs ####
+        # 1. specify the guid for the content item
+        content_guid = "CONTENT_GUID_HERE"
+        # 2. specify either the principal_guid or group name prefix
+        principal_guid = "USER_OR_GROUP_GUID_HERE"
+        group_name_prefix = "GROUP_NAME_PREFIX_HERE"
+        ############################
+
+        client = connect.Client()
+
+        # Remove a single permission by principal_guid
+        client.content.get(content_guid).permissions.delete(principal_guid)
+
+        # Remove by user (if principal_guid is a user)
+        user = client.users.get(principal_guid)
+        client.content.get(content_guid).permissions.delete(user)
+
+        # Remove by group (if principal_guid is a group)
+        group = client.groups.get(principal_guid)
+        client.content.get(content_guid).permissions.delete(group)
+
+        # Remove all groups with a matching prefix name
+        groups = client.groups.find(prefix=group_name_prefix)
+        client.content.get(content_guid).permissions.delete(*groups)
+        ```
+        """
+        principal_guids: set[str] = set()
+
+        for arg in permissions:
+            if isinstance(arg, str):
+                principal_guid = arg
+            elif isinstance(arg, Group):
+                principal_guid: str = arg["guid"]
+            elif isinstance(arg, User):
+                principal_guid: str = arg["guid"]
+            elif isinstance(arg, Permission):
+                principal_guid: str = arg["principal_guid"]
+            else:
+                raise TypeError(
+                    f"delete() expected argument type 'str', 'Group', 'Permission' or 'User', but got '{type(arg).__name__}'",
+                )
+            principal_guids.add(principal_guid)
+
+        deleted_permissions: list[Permission] = []
+        for permission in self.find():
+            if permission["principal_guid"] in principal_guids:
+                permission.delete()
+                deleted_permissions.append(permission)
+
+        return deleted_permissions
