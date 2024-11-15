@@ -30,7 +30,7 @@ class TestPermissionDelete:
         permission = Permission(params, **fake_permission)
 
         # invoke
-        permission.delete()
+        permission.destroy()
 
         # assert
         assert mock_delete.call_count == 1

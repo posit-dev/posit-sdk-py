@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class Permission(Resource):
-    def delete(self) -> None:
+    def destroy(self) -> None:
         """Delete the permission."""
         path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
         url = self.params.url + path
