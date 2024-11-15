@@ -326,6 +326,8 @@ class TestPermissionsDestroy:
             permissions.destroy(
                 42  # pyright: ignore[reportArgumentType]
             )
+        with pytest.raises(ValueError):
+            permissions.destroy()
 
         # Assert values
         assert mock_permissions_get[0].call_count == 1

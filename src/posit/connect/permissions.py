@@ -197,6 +197,9 @@ class Permissions(Resources):
         from .groups import Group
         from .users import User
 
+        if len(permissions) == 0:
+            raise ValueError("Expected at least one `permission` to remove")
+
         principal_guids: set[str] = set()
 
         for arg in permissions:
