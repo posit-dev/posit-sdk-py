@@ -31,10 +31,6 @@ class TestContentPermissions:
         cls.group_friends.delete()
         assert cls.client.groups.count() == 0
 
-        # cls.user_aron.delete()
-        # cls.user_bill.delete()
-        # assert cls.client.users.count() == 0
-
     def test_permissions_add_destroy(self):
         assert self.client.groups.count() == 1
         assert self.client.users.count() == 3
