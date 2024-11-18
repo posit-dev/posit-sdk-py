@@ -161,7 +161,7 @@ class TestUserGroups:
                 json=load_mock_dict(f"v1/groups/{guid}/members.json"),
             )
 
-        client = Client("https://connect.example/")
+        client = Client("https://connect.example/", "12345")
         users = client.users.find()
         assert len(users) == 2 + 2
 

@@ -34,7 +34,7 @@ class TestGroupAttributes:
 class TestGroupMembers:
     @classmethod
     def setup_class(cls):
-        cls.client = Client("https://connect.example")
+        cls.client = Client("https://connect.example", "12345")
         guid = "6f300623-1e0c-48e6-a473-ddf630c0c0c3"
         fake_item = load_mock_dict(f"v1/groups/{guid}.json")
         ctx = Context(cls.client)
