@@ -2,20 +2,29 @@
 
 from __future__ import annotations
 
-from typing import List, Literal
+from typing import TYPE_CHECKING, List, Literal
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
 from . import me
 from .content import Content
 from .paginator import Paginator
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Resource, Resources
+
+if TYPE_CHECKING:
+    from posit.connect.context import Context
+
+    from .groups import Group
 
 
 class User(Resource):
+    def __init__(self, ctx: Context, /, **attributes: dict) -> None:
+        super().__init__(ctx.client.resource_params, **attributes)
+        self._ctx: Context = ctx
+
     @property
     def content(self) -> Content:
-        return Content(self.params, owner_guid=self["guid"])
+        return Content(self._ctx, owner_guid=self["guid"])
 
     def lock(self, *, force: bool = False):
         """
@@ -42,7 +51,7 @@ class User(Resource):
 
         >>> user.lock(force=True)
         """
-        _me = me.get(self.params)
+        _me = me.get(self._ctx)
         if _me["guid"] == self["guid"] and not force:
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior.",
@@ -73,7 +82,7 @@ class User(Resource):
         self.params.session.post(url, json=body)
         super().update(locked=False)
 
-    class UpdateUser(TypedDict):
+    class _UpdateUser(TypedDict):
         """Update user request."""
 
         email: NotRequired[str]
@@ -84,7 +93,7 @@ class User(Resource):
 
     def update(
         self,
-        **kwargs: Unpack[UpdateUser],
+        **kwargs: Unpack[_UpdateUser],
     ) -> None:
         """
         Update the user's attributes.
@@ -120,14 +129,39 @@ class User(Resource):
         response = self.params.session.put(url, json=kwargs)
         super().update(**response.json())
 
+    def groups(self) -> List[Group]:
+        """
+        Retrieve the groups to which the user belongs.
+
+        Returns
+        -------
+        List[Group]
+            A list of groups to which the user belongs.
+
+        Examples
+        --------
+        Retrieve the groups to which the user belongs:
+
+        >>> groups = user.groups()
+        """
+        self_groups: list[Group] = []
+        for group in self._ctx.client.groups.find():
+            group_users = group.members.find()
+            for group_user in group_users:
+                if group_user["guid"] == self["guid"]:
+                    self_groups.append(group)
+
+        return self_groups
+
 
 class Users(Resources):
     """Users resource."""
 
-    def __init__(self, params: ResourceParameters) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context) -> None:
+        super().__init__(ctx.client.resource_params)
+        self._ctx: Context = ctx
 
-    class CreateUser(TypedDict):
+    class _CreateUser(TypedDict):
         """Create user request."""
 
         username: Required[str]
@@ -142,7 +176,7 @@ class Users(Resources):
         user_role: NotRequired[Literal["administrator", "publisher", "viewer"]]
         unique_id: NotRequired[str]
 
-    def create(self, **attributes: Unpack[CreateUser]) -> User:
+    def create(self, **attributes: Unpack[_CreateUser]) -> User:
         """
         Create a new user with the specified attributes.
 
@@ -199,16 +233,16 @@ class Users(Resources):
         # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
         url = self.params.url + "v1/users"
         response = self.params.session.post(url, json=attributes)
-        return User(self.params, **response.json())
+        return User(self._ctx, **response.json())
 
-    class FindUser(TypedDict):
+    class _FindUser(TypedDict):
         """Find user request."""
 
         prefix: NotRequired[str]
         user_role: NotRequired[Literal["administrator", "publisher", "viewer"] | str]
         account_status: NotRequired[Literal["locked", "licensed", "inactive"] | str]
 
-    def find(self, **conditions: Unpack[FindUser]) -> List[User]:
+    def find(self, **conditions: Unpack[_FindUser]) -> List[User]:
         """
         Find users matching the specified conditions.
 
@@ -245,13 +279,13 @@ class Users(Resources):
         results = paginator.fetch_results()
         return [
             User(
-                self.params,
+                self._ctx,
                 **user,
             )
             for user in results
         ]
 
-    def find_one(self, **conditions: Unpack[FindUser]) -> User | None:
+    def find_one(self, **conditions: Unpack[_FindUser]) -> User | None:
         """
         Find a user matching the specified conditions.
 
@@ -289,7 +323,7 @@ class Users(Resources):
         results = (result for page in pages for result in page.results)
         users = (
             User(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -316,7 +350,7 @@ class Users(Resources):
         url = self.params.url + f"v1/users/{uid}"
         response = self.params.session.get(url)
         return User(
-            self.params,
+            self._ctx,
             **response.json(),
         )
 
