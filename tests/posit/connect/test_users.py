@@ -7,7 +7,7 @@ from responses import matchers
 
 from posit.connect.client import Client
 
-from .api import load_mock
+from .api import load_mock, load_mock_dict
 
 session = Mock()
 url = Mock()
@@ -132,6 +132,52 @@ class TestUserUnlock:
         )
         user.unlock()
         assert not user["locked"]
+
+
+class TestUserGroups:
+    @responses.activate
+    def test_groups(self):
+        # Get user
+        carlos_guid = "20a79ce3-6e87-4522-9faf-be24228800a4"
+        responses.get(
+            f"https://connect.example/__api__/v1/users/{carlos_guid}",
+            json=load_mock_dict(f"v1/users/{carlos_guid}.json"),
+        )
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json=load_mock("v1/users?page_number=1&page_size=500.jsonc"),
+        )
+        # Get groups
+        responses.get(
+            "https://connect.example/__api__/v1/groups",
+            json=load_mock_dict("v1/groups.json"),
+        )
+        # Get group members
+        group_guid = "6f300623-1e0c-48e6-a473-ddf630c0c0c3"
+        empty_group_guid = "empty-group-guid"
+        for guid in (group_guid, empty_group_guid):
+            responses.get(
+                f"https://connect.example/__api__/v1/groups/{guid}/members",
+                json=load_mock_dict(f"v1/groups/{guid}/members.json"),
+            )
+
+        client = Client("https://connect.example/")
+        users = client.users.find()
+        assert len(users) == 2 + 2
+
+        carlos = client.users.get(carlos_guid)
+        print("carlos.guid", carlos["guid"])
+        no_groups = carlos.groups.find()
+        print("no_groups", no_groups)
+        assert len(no_groups) == 0
+
+        user = users[1]
+        assert user["guid"] == "87c12c08-11cd-4de1-8da3-12a7579c4998"
+
+        groups = user.groups.find()
+        assert len(groups) == 1
+        group = groups[0]
+        assert group["name"] == "Friends"
 
 
 class TestUsers:
