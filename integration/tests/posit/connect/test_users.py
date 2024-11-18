@@ -47,6 +47,23 @@ class TestUser:
         assert self.client.users.get(self.bill["guid"]) == self.bill
         assert self.client.users.get(self.cole["guid"]) == self.cole
 
+    # Also tests Groups.members
+    def test_groups(self):
+        try:
+            unit_friends = self.client.groups.create(name="UnitFriends")
+            self.client.post(
+                f"/v1/groups/{unit_friends['guid']}/members",
+                json={"user_guid": self.bill["guid"]},
+            )
+            bill_groups = self.bill.groups.find()
+            assert len(bill_groups) == 1
+            assert bill_groups[0]["guid"] == unit_friends["guid"]
+        finally:
+            groups = self.client.groups.find(prefix="UnitFriends")
+            if len(groups) > 0:
+                unit_friends = groups[0]
+                unit_friends.delete()
+
 
 class TestUserContent:
     """Checks behavior of the content attribute."""

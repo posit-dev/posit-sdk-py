@@ -166,9 +166,7 @@ class TestUserGroups:
         assert len(users) == 2 + 2
 
         carlos = client.users.get(carlos_guid)
-        print("carlos.guid", carlos["guid"])
         no_groups = carlos.groups.find()
-        print("no_groups", no_groups)
         assert len(no_groups) == 0
 
         user = users[1]
