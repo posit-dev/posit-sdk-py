@@ -35,8 +35,6 @@ class Context:
         self.url: Url = client.cfg.url
         # Since this is a child object of the client, we use a weak reference to avoid circular
         # references (which would prevent garbage collection)
-        # Note, it might need to be a strong reference, but a `del client` test will need to be
-        # updated
         self.client: Client = weakref.proxy(client)
 
     @property

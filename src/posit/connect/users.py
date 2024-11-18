@@ -129,7 +129,35 @@ class User(Resource):
         response = self.params.session.put(url, json=kwargs)
         super().update(**response.json())
 
-    def groups(self) -> List[Group]:
+    @property
+    def groups(self) -> UserGroups:
+        """
+        Retrieve the groups to which the user belongs.
+
+        Returns
+        -------
+        UserGroups
+            Helper class that returns the groups of which the user is a member.
+
+        Examples
+        --------
+        Retrieve the groups to which the user belongs:
+
+        ```python
+        user = client.users.get("USER_GUID_HERE")
+        groups = user.groups.find()
+        ```
+        """
+        return UserGroups(self._ctx, self["guid"])
+
+
+class UserGroups(Resources):
+    def __init__(self, ctx: Context, user_guid: str) -> None:
+        super().__init__(ctx.client.resource_params)
+        self._ctx: Context = ctx
+        self._user_guid: str = user_guid
+
+    def find(self) -> List[Group]:
         """
         Retrieve the groups to which the user belongs.
 
@@ -148,7 +176,7 @@ class User(Resource):
         for group in self._ctx.client.groups.find():
             group_users = group.members.find()
             for group_user in group_users:
-                if group_user["guid"] == self["guid"]:
+                if group_user["guid"] == self._user_guid:
                     self_groups.append(group)
 
         return self_groups
