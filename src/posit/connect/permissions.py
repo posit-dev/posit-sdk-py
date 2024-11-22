@@ -152,20 +152,21 @@ class Permissions(Resources):
     def destroy(self, *permissions: str | Group | User | Permission) -> list[Permission]:
         """Remove supplied content item permissions.
 
-        Removes all provided permissions from the content item's permissions.
+        Removes all provided permissions from the content item's permissions. If a permission isn't
+        found, it is silently ignored.
 
         Parameters
         ----------
         *permissions : str | Group | User | Permission
             The content item permissions to remove. If a `str` is received, it is compared against
-            the Permissions' `principal_guid`. If a `Group`, `User`, or `Permission` is received,
-            the `guid` is used and compared against the Permissions' `principal_guid`. If a
-            `Permission` is received, the `principal_guid` is used. Note, only the associated permissions will be destroyed; Any users or groups provided will remain.
+            the `Permissions`' `principal_guid`. If a `Group` or `User` is received, the associated
+            `Permission` will be removed.
 
         Returns
         -------
         list[Permission]
-            The deleted permissions.
+            The removed permissions. If a permission is not found, it is not included in the
+            returned list.
 
         Examples
         --------
