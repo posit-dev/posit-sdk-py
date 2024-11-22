@@ -150,7 +150,7 @@ class Permissions(Resources):
         return Permission(self.params, **response.json())
 
     def destroy(self, *permissions: str | Group | User | Permission) -> list[Permission]:
-        """Destroy supplied content item permissions.
+        """Remove supplied content item permissions.
 
         Removes all provided permissions from the content item's permissions.
 
@@ -158,7 +158,7 @@ class Permissions(Resources):
         ----------
         *permissions : str | Group | User | Permission
             The content item permissions to remove. If a `str` is received, it is compared against
-            the Permissions' `principal_gruid`. If a `Group`, `User`, or `Permission` is received,
+            the Permissions' `principal_guid`. If a `Group`, `User`, or `Permission` is received,
             the `guid` is used and compared against the Permissions' `principal_guid`. If a
             `Permission` is received, the `principal_guid` is used. Note, only the associated permissions will be destroyed; Any users or groups provided will remain.
 
@@ -220,7 +220,7 @@ class Permissions(Resources):
                 principal_guid: str = arg["principal_guid"]
             else:
                 raise TypeError(
-                    f"destroy() expected argument type 'str', 'Group', 'Permission' or 'User', but got '{type(arg).__name__}'",
+                    f"destroy() expected argument type 'str', 'User', 'Group', or 'Permission' but got '{type(arg).__name__}'",
                 )
             principal_guids.add(principal_guid)
 
