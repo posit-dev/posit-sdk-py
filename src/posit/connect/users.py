@@ -82,7 +82,7 @@ class User(Resource):
         self.params.session.post(url, json=body)
         super().update(locked=False)
 
-    class _UpdateUser(TypedDict):
+    class UpdateUser(TypedDict):
         """Update user request."""
 
         email: NotRequired[str]
@@ -93,7 +93,7 @@ class User(Resource):
 
     def update(
         self,
-        **kwargs: Unpack[_UpdateUser],
+        **kwargs: Unpack[UpdateUser],
     ) -> None:
         """
         Update the user's attributes.
@@ -189,7 +189,7 @@ class Users(Resources):
         super().__init__(ctx.client.resource_params)
         self._ctx: Context = ctx
 
-    class _CreateUser(TypedDict):
+    class CreateUser(TypedDict):
         """Create user request."""
 
         username: Required[str]
@@ -204,7 +204,7 @@ class Users(Resources):
         user_role: NotRequired[Literal["administrator", "publisher", "viewer"]]
         unique_id: NotRequired[str]
 
-    def create(self, **attributes: Unpack[_CreateUser]) -> User:
+    def create(self, **attributes: Unpack[CreateUser]) -> User:
         """
         Create a new user with the specified attributes.
 
@@ -263,14 +263,14 @@ class Users(Resources):
         response = self.params.session.post(url, json=attributes)
         return User(self._ctx, **response.json())
 
-    class _FindUser(TypedDict):
+    class FindUser(TypedDict):
         """Find user request."""
 
         prefix: NotRequired[str]
         user_role: NotRequired[Literal["administrator", "publisher", "viewer"] | str]
         account_status: NotRequired[Literal["locked", "licensed", "inactive"] | str]
 
-    def find(self, **conditions: Unpack[_FindUser]) -> List[User]:
+    def find(self, **conditions: Unpack[FindUser]) -> List[User]:
         """
         Find users matching the specified conditions.
 
@@ -313,7 +313,7 @@ class Users(Resources):
             for user in results
         ]
 
-    def find_one(self, **conditions: Unpack[_FindUser]) -> User | None:
+    def find_one(self, **conditions: Unpack[FindUser]) -> User | None:
         """
         Find a user matching the specified conditions.
 
