@@ -7,7 +7,7 @@ class TestUser:
         cls.client = client = connect.Client()
 
         # Play nicely with other tests
-        cls.existing_users = client.users.count()
+        cls.existing_user_count = client.users.count()
 
         cls.aron = client.users.create(
             username="aron",
@@ -34,7 +34,7 @@ class TestUser:
 
     def test_count(self):
         # aron, bill, cole, and me (and existing user)
-        assert self.client.users.count() == 3 + self.existing_users
+        assert self.client.users.count() == 3 + self.existing_user_count
 
     def test_find(self):
         assert self.client.users.find(prefix="aron") == [self.aron]
