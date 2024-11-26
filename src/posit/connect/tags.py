@@ -1,27 +1,3 @@
-# ## Return all tags
-# client.tags.find() -> list[Tag]
-
-# ## Return all tags with name and parent
-# client.tags.find(name="tag_name", parent="parent_tag_guid" | parent_tag | None)
-
-# # Create Tag
-# mytag = client.tags.create(
-#     name="tag_name",
-#     parent="parent_tag_guid" | parent_tag | None
-# ) -> Tag
-
-# # Delete Tag
-
-# mytag = client.tags.get("tag_guid")
-# mytag.destroy() -> None
-
-
-# # Find content using tags
-# mycontentitems = mytag.content.find() -> list[ContentItem]
-
-# # Get content item's tags
-# mycontentitem: ContentItem = mycontentitems[0]
-# mycontentitem.tags.find() -> list[Tag]
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
@@ -200,80 +176,12 @@ class ChildrenTags(ContextManager):
         return child_tags
 
 
-# def _unique_content_items_for_tags(tags: list[Tag]) -> list[ContentItem]:
-#     tag_content_items: list[ContentItem] = []
-#     content_item_seen = set[str]()
-#     for descendant_tag in tags:
-#         for content_item in descendant_tag.content_items.find():
-#             if content_item["guid"] not in content_item_seen:
-#                 tag_content_items.append(content_item)
-#                 content_item_seen.add(content_item["guid"])
-#     return tag_content_items
-
-
-# class ChildrenTagsContentItems(ContextManager):
-#     def __init__(self, ctx: Context, path: str, /, *, parent_tag: Tag) -> None:
-#         super().__init__()
-#         self._ctx = ctx
-#         self._path = path
-#         self._parent_tag = parent_tag
-
-#     def find(self) -> list[ContentItem]:
-#         """
-#         Find all unique content items that are tagged with a tag or any of the tag's descendants.
-
-#         Returns
-#         -------
-#         list[ContentItem]
-#             List of content items that contain a tag or any of its descendant tags.
-#         """
-#         descendant_tags = ChildrenTags(
-#             self._ctx,
-#             self._path,
-#             parent_tag=self._parent_tag,
-#         ).find()
-#         return _unique_content_items_for_tags([self._parent_tag, *descendant_tags])
-
-
-# class DescendantTagsContentItems(ContextManager):
-#     def __init__(self, ctx: Context, path: str, /, *, parent_tag: Tag) -> None:
-#         super().__init__()
-#         self._ctx = ctx
-#         self._path = path
-#         self._parent_tag = parent_tag
-
-#     def find(self) -> list[ContentItem]:
-#         """
-#         Find all unique content items that are tagged with a tag or any of the tag's descendants.
-
-#         Returns
-#         -------
-#         list[ContentItem]
-#             List of content items that contain a tag or any of its descendant tags.
-#         """
-#         descendant_tags = DescendantTags(self._ctx, parent_tag=self._parent_tag).find()
-#         return _unique_content_items_for_tags([self._parent_tag, *descendant_tags])
-
-
 class DescendantTags(ContextManager):
     def __init__(self, ctx: Context, /, *, parent_tag: Tag) -> None:
         super().__init__()
         self._ctx = ctx
         self._path = "v1/tags"
         self._parent_tag = parent_tag
-
-    # @property
-    # def content_items(self) -> DescendantTagsContentItems:
-    #     """
-    #     Find all unique content items that are tagged with a tag or any of the tag's descendants.
-
-    #     Returns
-    #     -------
-    #     DescendantTagsContentItems
-    #         Helper class that can `.find()` all content items that contain a tag or any of its
-    #         descendant tags.
-    #     """
-    #     return DescendantTagsContentItems(self._ctx, self._path, parent_tag=self._parent_tag)
 
     def find(self) -> list[Tag]:
         """
@@ -295,18 +203,13 @@ class DescendantTags(ContextManager):
         results = response.json()
         all_tags = []
         for result in results:
-            tag = Tag(self._ctx, f"{self._path}/{result['id']}", **result)
+            tag = Tag(
+                self._ctx,
+                # TODO-barret-future: Replace with `self._ctx.client.tags._path`?
+                f"{self._path}/{result['id']}",
+                **result,
+            )
             all_tags.append(tag)
-
-        # all_tags = [
-        #     Tag(
-        #         self._ctx,
-        #         # TODO-barret-future: Replace with `self._ctx.client.tags._path`?
-        #         f"{self._path}/{results['id']}",
-        #         **result,
-        #     )
-        #     for result in results
-        # ]
 
         # O(n^2) algorithm to find all child tags
         # This could be optimized by using a dictionary to store the tags by their parent_id and
@@ -329,38 +232,6 @@ class DescendantTags(ContextManager):
                     child_tag_found = True
 
         return child_tags
-
-        # O(n) algorithm to find all child tags
-        child_tags = []
-        parent_ids = {self._root_id}
-
-        # Construct a d
-        # O(n)
-        tag_by_parent_id: dict[str, list[Tag]] = {}
-        for tag in all_tags:
-            parent_id: str | None = tag.get("parent_id", None)
-            if parent_id is None:
-                continue
-            parent_id = str(parent_id)
-            if parent_id not in tag_by_parent_id:
-                tag_by_parent_id[parent_id] = []
-            tag_by_parent_id[parent_id].append(tag)
-
-        # O(n) compute space
-        ret: list[Tag] = []
-        parent_ids_seen = set[str]()
-        while len(parent_ids) > 0:
-            parent_id = parent_ids.pop()
-            if parent_id in parent_ids_seen:
-                continue
-            parent_ids_seen.add(parent_id)
-            if parent_id in tag_by_parent_id:
-                tags = tag_by_parent_id[parent_id]
-                ret.extend(tags)
-                for tag in tags:
-                    parent_ids.add(tag["id"])
-
-        return ret
 
 
 class Tags(ContextManager):
