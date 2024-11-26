@@ -1,0 +1,198 @@
+[
+    {
+        "id": "3",
+        "name": "Internal Solutions",
+        "parent_id": null,
+        "created_time": "2019-10-08T19:44:49Z",
+        "updated_time": "2019-10-08T19:44:49Z"
+    },
+    {
+        "id": "5",
+        "name": "Life Cycle",
+        "parent_id": null,
+        "created_time": "2019-10-08T19:45:21Z",
+        "updated_time": "2019-10-08T19:45:21Z"
+    },
+    {
+        "id": "6",
+        "name": "Dev",
+        "parent_id": "5",
+        "created_time": "2019-10-08T19:45:22Z",
+        "updated_time": "2019-10-08T19:45:22Z"
+    },
+    {
+        "id": "7",
+        "name": "Prod",
+        "parent_id": "5",
+        "created_time": "2019-10-08T19:45:23Z",
+        "updated_time": "2019-10-08T19:45:23Z"
+    },
+    {
+        "id": "10",
+        "name": "Sales",
+        "parent_id": null,
+        "created_time": "2020-02-19T23:41:40Z",
+        "updated_time": "2020-02-19T23:41:40Z"
+    },
+    {
+        "id": "11",
+        "name": "Tools",
+        "parent_id": "10",
+        "created_time": "2020-02-19T23:41:49Z",
+        "updated_time": "2020-02-19T23:41:49Z"
+    },
+    {
+        "id": "12",
+        "name": "diagnostics",
+        "parent_id": "3",
+        "created_time": "2020-04-30T21:30:22Z",
+        "updated_time": "2020-04-30T21:30:22Z"
+    },
+    {
+        "id": "13",
+        "name": "white-glove",
+        "parent_id": "3",
+        "created_time": "2020-05-22T13:04:35Z",
+        "updated_time": "2020-05-22T13:04:35Z"
+    },
+    {
+        "id": "14",
+        "name": "sol-eng",
+        "parent_id": "3",
+        "created_time": "2020-06-22T16:52:18Z",
+        "updated_time": "2020-06-22T16:52:18Z"
+    },
+    {
+        "id": "15",
+        "name": "colorado",
+        "parent_id": "14",
+        "created_time": "2020-06-22T16:52:29Z",
+        "updated_time": "2020-06-22T16:52:29Z"
+    },
+    {
+        "id": "16",
+        "name": "training-tool",
+        "parent_id": "14",
+        "created_time": "2020-06-22T16:52:32Z",
+        "updated_time": "2020-06-22T16:52:32Z"
+    },
+    {
+        "id": "17",
+        "name": "dashboard",
+        "parent_id": "14",
+        "created_time": "2020-06-22T16:52:39Z",
+        "updated_time": "2020-06-22T16:52:39Z"
+    },
+    {
+        "id": "18",
+        "name": "small-groups",
+        "parent_id": "14",
+        "created_time": "2020-06-22T16:53:28Z",
+        "updated_time": "2020-06-22T16:53:28Z"
+    },
+    {
+        "id": "19",
+        "name": "docs",
+        "parent_id": "14",
+        "created_time": "2020-06-22T17:19:52Z",
+        "updated_time": "2020-06-22T17:19:52Z"
+    },
+    {
+        "id": "20",
+        "name": "quickstart",
+        "parent_id": "14",
+        "created_time": "2020-06-22T17:21:21Z",
+        "updated_time": "2020-06-22T17:21:21Z"
+    },
+    {
+        "id": "21",
+        "name": "ops",
+        "parent_id": "14",
+        "created_time": "2020-06-22T17:21:41Z",
+        "updated_time": "2020-06-22T17:21:41Z"
+    },
+    {
+        "id": "23",
+        "name": "productivity",
+        "parent_id": "14",
+        "created_time": "2020-07-09T01:54:59Z",
+        "updated_time": "2020-07-09T01:54:59Z"
+    },
+    {
+        "id": "24",
+        "name": "slack",
+        "parent_id": "23",
+        "created_time": "2020-07-09T01:55:15Z",
+        "updated_time": "2020-07-09T01:55:15Z"
+    },
+    {
+        "id": "25",
+        "name": "scheduler",
+        "parent_id": "14",
+        "created_time": "2020-07-10T13:48:20Z",
+        "updated_time": "2020-07-10T13:48:20Z"
+    },
+    {
+        "id": "26",
+        "name": "calendar",
+        "parent_id": "17",
+        "created_time": "2020-07-17T11:02:15Z",
+        "updated_time": "2020-07-17T11:02:15Z"
+    },
+    {
+        "id": "27",
+        "name": "data",
+        "parent_id": "26",
+        "created_time": "2020-07-17T11:02:20Z",
+        "updated_time": "2020-07-17T11:02:20Z"
+    },
+    {
+        "id": "28",
+        "name": "data_raw_quarter",
+        "parent_id": "26",
+        "created_time": "2020-07-17T11:02:23Z",
+        "updated_time": "2020-07-17T11:02:31Z"
+    },
+    {
+        "id": "29",
+        "name": "product management",
+        "parent_id": "3",
+        "created_time": "2020-08-17T20:16:24Z",
+        "updated_time": "2020-08-17T20:16:24Z"
+    },
+    {
+        "id": "30",
+        "name": "rsc-state-of-market",
+        "parent_id": "29",
+        "created_time": "2020-08-17T20:16:37Z",
+        "updated_time": "2020-08-17T20:16:37Z"
+    },
+    {
+        "id": "31",
+        "name": "RSC",
+        "parent_id": "3",
+        "created_time": "2020-08-17T20:16:45Z",
+        "updated_time": "2020-08-17T20:16:45Z"
+    },
+    {
+        "id": "32",
+        "name": "Automation",
+        "parent_id": "10",
+        "created_time": "2021-06-09T01:16:53Z",
+        "updated_time": "2021-06-09T01:16:53Z"
+    },
+    {
+        "id": "33",
+        "name": "academy",
+        "parent_id": "3",
+        "created_time": "2021-10-18T18:37:56Z",
+        "updated_time": "2021-10-18T18:37:56Z"
+    },
+    {
+        "id": "34",
+        "name": "Support",
+        "parent_id": "3",
+        "created_time": "2023-05-18T16:41:59Z",
+        "updated_time": "2023-05-18T16:41:59Z"
+    }
+]
