@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, List, overload
 
 from requests.sessions import Session as Session
 
-from ._deprecated import warn_deprecated_and_removed_in_future
 from .resources import Resource, ResourceParameters, Resources
 
 if TYPE_CHECKING:
@@ -15,12 +14,6 @@ if TYPE_CHECKING:
 
 
 class Permission(Resource):
-    def delete(self) -> None:
-        """[Deprecated] Delete the permission."""
-        warn_deprecated_and_removed_in_future("Please use .destroy() instead of .delete().")
-
-        self.destroy()
-
     def destroy(self) -> None:
         """Destroy the permission."""
         path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
