@@ -28,6 +28,46 @@ class CredentialsStrategy(abc.ABC):
     def __call__(self, *args, **kwargs) -> CredentialsProvider:
         raise NotImplementedError
 
+# TODO: Refactor common behavior across different cred providers.
+
+class PositContentCredentialsProvider:
+    def __init__(self, client: Client):
+        self._client = client
+
+    def __call__(self) -> Dict[str, str]:
+        credentials = self._client.oauth.get_content_credentials()
+        access_token = credentials.get("access_token")
+        if access_token is None:
+            raise ValueError("Missing value for field 'access_token' in credentials.")
+        return {"Authorization": f"Bearer {access_token}"}
+
+class PositContentCredentialsStrategy:
+    def __init__(
+        self,
+        local_strategy: CredentialsStrategy,
+        client: Optional[Client] = None,
+    ):
+        self._local_strategy = local_strategy
+        self._client = client
+
+    def sql_credentials_provider(self, *args, **kwargs):
+        return lambda: self.__call__(*args, **kwargs)
+
+    def auth_type(self) -> str:
+        if is_local():
+            return self._local_strategy.auth_type()
+        else:
+            return "posit-oauth-integration"
+
+    def __call__(self, *args, **kwargs) -> CredentialsProvider:
+        if is_local():
+            return self._local_strategy(*args, **kwargs)
+
+        if self._client is None:
+            self._client = Client()
+
+        return PositContentCredentialsProvider(self._client)
+
 
 class PositCredentialsProvider:
     def __init__(self, client: Client, user_session_token: str):
