@@ -321,7 +321,6 @@ class TestPermissionsDestroy:
         )
 
         # Assert bad input value
-
         with pytest.raises(TypeError):
             permissions.destroy(
                 42  # pyright: ignore[reportArgumentType]

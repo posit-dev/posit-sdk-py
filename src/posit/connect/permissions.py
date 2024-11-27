@@ -152,14 +152,14 @@ class Permissions(Resources):
         ----------
         *permissions : str | Group | User | Permission
             The content item permissions to remove. If a `str` is received, it is compared against
-            the `Permissions`' `principal_guid`. If a `Group` or `User` is received, the associated
+            the `Permissions`'s `principal_guid`. If a `Group` or `User` is received, the associated
             `Permission` will be removed.
 
         Returns
         -------
         list[Permission]
-            The removed permissions. If a permission is not found, it is not included in the
-            returned list.
+            The removed permissions. If a permission is not found, there is nothing to remove and 
+            it is not included in the returned list.
 
         Examples
         --------
@@ -206,9 +206,7 @@ class Permissions(Resources):
         for arg in permissions:
             if isinstance(arg, str):
                 principal_guid = arg
-            elif isinstance(arg, Group):
-                principal_guid: str = arg["guid"]
-            elif isinstance(arg, User):
+            elif isinstance(arg, (Group, User)):
                 principal_guid: str = arg["guid"]
             elif isinstance(arg, Permission):
                 principal_guid: str = arg["principal_guid"]
