@@ -36,6 +36,9 @@ class OAuth(Resources):
         super().__init__(params)
         self.api_key = api_key
 
+    def _get_credentials_url(self) -> str: 
+        return self.params.url + "v1/oauth/integrations/credentials"
+
     @property
     def integrations(self):
         return Integrations(self.params)
@@ -45,7 +48,7 @@ class OAuth(Resources):
         return Sessions(self.params)
 
     def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
-        url = self.params.url + "v1/oauth/integrations/credentials"
+        """Perform an oauth credential exchange for a viewer's access token."""
 
         # craft a credential exchange request
         data = {}
@@ -54,19 +57,19 @@ class OAuth(Resources):
         if user_session_token:
             data["subject_token"] = user_session_token
 
-        response = self.params.session.post(url, data=data)
+        response = self.params.session.post(self._get_credentials_url(), data=data)
         return Credentials(**response.json())
 
     def get_content_credentials(self, content_session_token: Optional[str] = None) -> Credentials:
-        url = self.params.url + "v1/oauth/integrations/credentials"
-
+        """Perform an oauth credential exchange for a service account's access token."""
+        
         # craft a credential exchange request
         data = {}
         data["grant_type"] = GRANT_TYPE
         data["subject_token_type"] = CONTENT_SESSION_TOKEN_TYPE
         data["subject_token"] = content_session_token or _get_content_session_token() 
 
-        response = self.params.session.post(url, data=data)
+        response = self.params.session.post(self._get_credentials_url(), data=data)
         return Credentials(**response.json())
 
 class Credentials(TypedDict, total=False):
