@@ -1,3 +1,4 @@
+import pytest
 import responses
 from responses import matchers
 
@@ -116,6 +117,14 @@ class TestTags:
         # invoke
         academy_tag_parent_id = client.tags.create(name="academy", parent=tag["id"])
         academy_tag_parent_tag = client.tags.create(name="academy", parent=tag)
+
+        with pytest.raises(TypeError):
+            client.tags.create(
+                name="academy",
+                parent=123,  # pyright: ignore[reportArgumentType]
+            )
+        with pytest.raises(ValueError):
+            client.tags.create(name="academy", parent="")
 
         # assert
         assert mock_create_tag.call_count == 2
@@ -285,15 +294,105 @@ class TestTag:
 class TestContentItemTags:
     @responses.activate
     def test_find(self):
-        # TODO-barret
-        raise NotImplementedError
+        # behavior
+        content_item_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        mock_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_item_guid}",
+            json=load_mock_dict(f"v1/content/{content_item_guid}.json"),
+        )
+        mock_tags_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_item_guid}/tags",
+            json=load_mock_list(f"v1/content/{content_item_guid}/tags.json"),
+        )
+
+        # setup
+        client = Client("https://connect.example", "12345")
+        content_item = client.content.get(content_item_guid)
+
+        # invoke
+        tags = content_item.tags.find()
+
+        # assert
+        assert mock_get.call_count == 1
+        assert mock_tags_get.call_count == 1
+        assert len(tags) == 2
 
     @responses.activate
     def test_add(self):
-        # TODO-barret
-        raise NotImplementedError
+        # behavior
+        content_item_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        tag_id = "33"
+        mock_content_item_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_item_guid}",
+            json=load_mock_dict(f"v1/content/{content_item_guid}.json"),
+        )
+        mock_tag_get = responses.get(
+            f"https://connect.example/__api__/v1/tags/{tag_id}",
+            json=load_mock_dict(f"v1/tags/{tag_id}.json"),
+        )
+        mock_tags_add = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_item_guid}/tags",
+            json={},  # empty response
+        )
+
+        # setup
+        client = Client("https://connect.example", "12345")
+        content_item = client.content.get(content_item_guid)
+
+        sub_tag = client.tags.get("33")
+
+        # invoke
+        content_item.tags.add(sub_tag["id"])
+        content_item.tags.add(sub_tag)
+
+        with pytest.raises(TypeError):
+            content_item.tags.add(
+                123,  # pyright: ignore[reportArgumentType]
+            )
+        with pytest.raises(ValueError):
+            content_item.tags.add("")
+
+        # assert
+        assert mock_content_item_get.call_count == 1
+        assert mock_tag_get.call_count == 1
+        assert mock_tags_add.call_count == 2
 
     @responses.activate
     def test_delete(self):
-        # TODO-barret
-        raise NotImplementedError
+        # behavior
+        content_item_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        tag_id = "33"
+        mock_content_item_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_item_guid}",
+            json=load_mock_dict(f"v1/content/{content_item_guid}.json"),
+        )
+        mock_tag_get = responses.get(
+            f"https://connect.example/__api__/v1/tags/{tag_id}",
+            json=load_mock_dict(f"v1/tags/{tag_id}.json"),
+        )
+        mock_tags_delete = responses.delete(
+            f"https://connect.example/__api__/v1/content/{content_item_guid}/tags/{tag_id}",
+            json={},  # empty response
+        )
+
+        # setup
+        client = Client("https://connect.example", "12345")
+        content_item = client.content.get(content_item_guid)
+
+        sub_tag = client.tags.get("33")
+
+        # invoke
+        content_item.tags.delete(sub_tag["id"])
+        content_item.tags.delete(sub_tag)
+
+        with pytest.raises(TypeError):
+            content_item.tags.delete(
+                123,  # pyright: ignore[reportArgumentType]
+            )
+        with pytest.raises(ValueError):
+            content_item.tags.delete("")
+
+        # assert
+        assert mock_content_item_get.call_count == 1
+        assert mock_tag_get.call_count == 1
+        assert mock_tags_delete.call_count == 2

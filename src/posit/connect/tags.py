@@ -257,8 +257,10 @@ class Tags(ContextManager):
             The tag object.
         """
         # TODO-barret-future: Replace with `self._ctx.client.tags.find(id=tag_id)`
-        assert isinstance(tag_id, str), "Tag `id` must be a string"
-        assert tag_id != "", "Tag `id` cannot be an empty string"
+        if not isinstance(tag_id, str):
+            raise TypeError("`tag_id` must be a string")
+        if tag_id == "":
+            raise ValueError("`tag_id` cannot be an empty string")
         path = f"{self._path}/{tag_id}"
         url = self._ctx.url + path
         response = self._ctx.session.get(url)
@@ -292,7 +294,8 @@ class Tags(ContextManager):
             parent: str = parent["id"]
 
         if isinstance(parent, str):
-            assert parent != "", "Tag `parent` cannot be an empty string"
+            if parent == "":
+                raise ValueError("Tag `parent` cannot be an empty string")
             ret_kwargs["parent_id"] = parent
             return ret_kwargs
 
@@ -424,8 +427,10 @@ class ContentItemTags(ContextManager):
         tag_ids: list[str] = []
         for i, tag in enumerate(tags):
             tag_id = tag["id"] if isinstance(tag, Tag) else tag
-            assert isinstance(tag_id, str), f"Expected 'tags[{i}]' to be a string. Got: {tag_id}"
-            assert len(tag_id) > 0, "Expected 'tags[{i}]' value to be non-empty"
+            if not isinstance(tag_id, str):
+                raise TypeError(f"Expected 'tags[{i}]' to be a string. Received: {tag_id}")
+            if tag_id == "":
+                raise ValueError(f"Expected 'tags[{i}]' to be non-empty. Received: {tag_id}")
 
             tag_ids.append(tag_id)
 
@@ -474,5 +479,6 @@ class ContentItemTags(ContextManager):
 
         url = self._ctx.url + self._path
         for tag_id in tag_ids:
-            _ = self._ctx.session.delete(url, json={"tag_id": tag_id})
+            tag_url = f"{url}/{tag_id}"
+            self._ctx.session.delete(tag_url, json={"tag_id": tag_id})
         return
