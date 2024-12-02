@@ -108,6 +108,10 @@ class GroupMembers(Resources):
         # Add a user to the group by GUID
         group.members.add(user_guid="USER_GUID_HERE")
         ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/groups/-group_guid-/members
         """
         if len(args) > 0:
             from .users import User
@@ -168,6 +172,9 @@ class GroupMembers(Resources):
         group.members.delete(user_guid="USER_GUID_HERE")
         ```
 
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#delete-/v1/groups/-group_guid-/members/-user_guid-
         """
         if len(args) > 0:
             from .users import User
@@ -212,6 +219,10 @@ class GroupMembers(Resources):
         # Find all users in the group
         group_users = group.members.find()
         ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/groups/-group_guid-/members
         """
         # Avoid circular import
         from .users import User
@@ -244,6 +255,10 @@ class GroupMembers(Resources):
         # Get count of group members
         group_user_count = group.members.count()
         ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/groups/-group_guid-/members
         """
         path = f"v1/groups/{self._group_guid}/members"
         url = self._ctx.url + path
@@ -271,6 +286,10 @@ class Groups(Resources):
         Returns
         -------
         Group
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/groups
         """
 
     @overload
@@ -320,6 +339,10 @@ class Groups(Resources):
         Returns
         -------
         List[Group]
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
         url = self._ctx.url + path
@@ -354,6 +377,10 @@ class Groups(Resources):
         Returns
         -------
         Group | None
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
         url = self._ctx.url + path
@@ -379,6 +406,10 @@ class Groups(Resources):
         Returns
         -------
         Group
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         url = self._ctx.url + f"v1/groups/{guid}"
         response = self._ctx.session.get(url)
@@ -393,6 +424,10 @@ class Groups(Resources):
         Returns
         -------
         int
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
         url = self._ctx.url + path

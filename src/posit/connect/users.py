@@ -50,6 +50,10 @@ class User(Resource):
         Attempt to lock your own account (will raise `RuntimeError` unless `force` is set to `True`):
 
         >>> user.lock(force=True)
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/users/-guid-/lock
         """
         _me = me.get(self._ctx)
         if _me["guid"] == self["guid"] and not force:
@@ -76,6 +80,10 @@ class User(Resource):
         Unlock a user's account:
 
         >>> user.unlock()
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/users/-guid-/lock
         """
         url = self._ctx.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": False}
@@ -124,6 +132,10 @@ class User(Resource):
         Update the user's first and last name:
 
         >>> user.update(first_name="Jane", last_name="Smith")
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#put-/v1/users/-guid-
         """
         url = self._ctx.url + f"v1/users/{self['guid']}"
         response = self._ctx.session.put(url, json=kwargs)
@@ -204,6 +216,10 @@ class UserGroups(Resources):
         # Add the user to a group by GUID
         user.groups.add(group_guid="GROUP_GUID_HERE")
         ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/groups/-group_guid-/members
         """
         if len(args) > 0:
             from .groups import Group
@@ -272,6 +288,10 @@ class UserGroups(Resources):
         # Remove the user from a group by GUID
         user.groups.delete(group_guid="GROUP_GUID_HERE")
         ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#delete-/v1/groups/-group_guid-/members/-user_guid-
         """
         if len(args) > 0:
             from .groups import Group
@@ -307,9 +327,18 @@ class UserGroups(Resources):
 
         Examples
         --------
-        Retrieve the groups to which the user belongs:
+        ```python
+        from posit.connect import Client
 
-        >>> groups = user.groups()
+        client = Client("https://posit.example.com", "API_KEY")
+
+        user = client.users.get("USER_GUID_HERE")
+        groups = user.groups.find()
+        ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/groups/-group_guid-/members
         """
         self_groups: list[Group] = []
         for group in self._ctx.client.groups.find():
@@ -396,6 +425,10 @@ class Users(Resources):
         ...     user_must_set_password=True,
         ...     user_role="viewer",
         ... )
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/users
         """
         # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
         url = self._ctx.url + "v1/users"
@@ -440,6 +473,10 @@ class Users(Resources):
         Find all users who are locked or licensed:
 
         >>> users = client.find(account_status="locked|licensed")
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users
         """
         url = self._ctx.url + "v1/users"
         paginator = Paginator(self._ctx.session, url, params={**conditions})
@@ -483,6 +520,10 @@ class Users(Resources):
         Find a user who is locked or licensed:
 
         >>> user = client.find_one(account_status="locked|licensed")
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users
         """
         url = self._ctx.url + "v1/users"
         paginator = Paginator(self._ctx.session, url, params={**conditions})
@@ -513,6 +554,10 @@ class Users(Resources):
         Examples
         --------
         >>> user = client.get("123e4567-e89b-12d3-a456-426614174000")
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users
         """
         url = self._ctx.url + f"v1/users/{uid}"
         response = self._ctx.session.get(url)
@@ -528,6 +573,10 @@ class Users(Resources):
         Returns
         -------
         int
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users
         """
         url = self._ctx.url + "v1/users"
         response = self._ctx.session.get(url, params={"page_size": 1})
