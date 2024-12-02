@@ -56,9 +56,9 @@ class User(Resource):
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior.",
             )
-        url = self.params.url + f"v1/users/{self['guid']}/lock"
+        url = self._ctx.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": True}
-        self.params.session.post(url, json=body)
+        self._ctx.session.post(url, json=body)
         super().update(locked=True)
 
     def unlock(self):
@@ -77,9 +77,9 @@ class User(Resource):
 
         >>> user.unlock()
         """
-        url = self.params.url + f"v1/users/{self['guid']}/lock"
+        url = self._ctx.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": False}
-        self.params.session.post(url, json=body)
+        self._ctx.session.post(url, json=body)
         super().update(locked=False)
 
     class UpdateUser(TypedDict):
@@ -125,8 +125,8 @@ class User(Resource):
 
         >>> user.update(first_name="Jane", last_name="Smith")
         """
-        url = self.params.url + f"v1/users/{self['guid']}"
-        response = self.params.session.put(url, json=kwargs)
+        url = self._ctx.url + f"v1/users/{self['guid']}"
+        response = self._ctx.session.put(url, json=kwargs)
         super().update(**response.json())
 
     @property
@@ -259,8 +259,8 @@ class Users(Resources):
         ... )
         """
         # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
-        url = self.params.url + "v1/users"
-        response = self.params.session.post(url, json=attributes)
+        url = self._ctx.url + "v1/users"
+        response = self._ctx.session.post(url, json=attributes)
         return User(self._ctx, **response.json())
 
     class FindUser(TypedDict):
@@ -302,8 +302,8 @@ class Users(Resources):
 
         >>> users = client.find(account_status="locked|licensed")
         """
-        url = self.params.url + "v1/users"
-        paginator = Paginator(self.params.session, url, params={**conditions})
+        url = self._ctx.url + "v1/users"
+        paginator = Paginator(self._ctx.session, url, params={**conditions})
         results = paginator.fetch_results()
         return [
             User(
@@ -345,8 +345,8 @@ class Users(Resources):
 
         >>> user = client.find_one(account_status="locked|licensed")
         """
-        url = self.params.url + "v1/users"
-        paginator = Paginator(self.params.session, url, params={**conditions})
+        url = self._ctx.url + "v1/users"
+        paginator = Paginator(self._ctx.session, url, params={**conditions})
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (
@@ -375,8 +375,8 @@ class Users(Resources):
         --------
         >>> user = client.get("123e4567-e89b-12d3-a456-426614174000")
         """
-        url = self.params.url + f"v1/users/{uid}"
-        response = self.params.session.get(url)
+        url = self._ctx.url + f"v1/users/{uid}"
+        response = self._ctx.session.get(url)
         return User(
             self._ctx,
             **response.json(),
@@ -390,7 +390,7 @@ class Users(Resources):
         -------
         int
         """
-        url = self.params.url + "v1/users"
-        response = self.params.session.get(url, params={"page_size": 1})
+        url = self._ctx.url + "v1/users"
+        response = self._ctx.session.get(url, params={"page_size": 1})
         result: dict = response.json()
         return result["total"]

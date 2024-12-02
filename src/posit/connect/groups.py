@@ -43,8 +43,8 @@ class Group(Resource):
     def delete(self) -> None:
         """Delete the group."""
         path = f"v1/groups/{self['guid']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        url = self._ctx.url + path
+        self._ctx.session.delete(url)
 
 
 class GroupMembers(Resources):
@@ -58,8 +58,8 @@ class GroupMembers(Resources):
         from .users import User
 
         path = f"v1/groups/{self._group_guid}/members"
-        url = self.params.url + path
-        paginator = Paginator(self.params.session, url)
+        url = self._ctx.url + path
+        paginator = Paginator(self._ctx.session, url)
         member_dicts = paginator.fetch_results()
 
         # For each member in the group
@@ -74,8 +74,8 @@ class GroupMembers(Resources):
         int
         """
         path = f"v1/groups/{self._group_guid}/members"
-        url = self.params.url + path
-        response = self.params.session.get(url, params={"page_size": 1})
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url, params={"page_size": 1})
         result = response.json()
         return result["total"]
 
@@ -123,8 +123,8 @@ class Groups(Resources):
         Group
         """
         path = "v1/groups"
-        url = self.params.url + path
-        response = self.params.session.post(url, json=kwargs)
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url, json=kwargs)
         return Group(self._ctx, **response.json())
 
     @overload
@@ -150,8 +150,8 @@ class Groups(Resources):
         List[Group]
         """
         path = "v1/groups"
-        url = self.params.url + path
-        paginator = Paginator(self.params.session, url, params=kwargs)
+        url = self._ctx.url + path
+        paginator = Paginator(self._ctx.session, url, params=kwargs)
         results = paginator.fetch_results()
         return [
             Group(
@@ -184,8 +184,8 @@ class Groups(Resources):
         Group | None
         """
         path = "v1/groups"
-        url = self.params.url + path
-        paginator = Paginator(self.params.session, url, params=kwargs)
+        url = self._ctx.url + path
+        paginator = Paginator(self._ctx.session, url, params=kwargs)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         groups = (
@@ -208,8 +208,8 @@ class Groups(Resources):
         -------
         Group
         """
-        url = self.params.url + f"v1/groups/{guid}"
-        response = self.params.session.get(url)
+        url = self._ctx.url + f"v1/groups/{guid}"
+        response = self._ctx.session.get(url)
         return Group(
             self._ctx,
             **response.json(),
@@ -223,7 +223,7 @@ class Groups(Resources):
         int
         """
         path = "v1/groups"
-        url = self.params.url + path
-        response: requests.Response = self.params.session.get(url, params={"page_size": 1})
+        url = self._ctx.url + path
+        response: requests.Response = self._ctx.session.get(url, params={"page_size": 1})
         result: dict = response.json()
         return result["total"]
