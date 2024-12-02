@@ -480,5 +480,5 @@ class ContentItemTags(ContextManager):
         url = self._ctx.url + self._path
         for tag_id in tag_ids:
             tag_url = f"{url}/{tag_id}"
-            self._ctx.session.delete(tag_url, json={"tag_id": tag_id})
+            self._ctx.session.delete(tag_url)
         return
