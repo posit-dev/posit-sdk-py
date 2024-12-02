@@ -48,8 +48,7 @@ class OAuth(Resources):
         return Sessions(self.params)
 
     def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
-        """Perform an oauth credential exchange for a viewer's access token."""
-
+        """Perform an oauth credential exchange with a user-session-token."""
         # craft a credential exchange request
         data = {}
         data["grant_type"] = GRANT_TYPE
@@ -61,8 +60,7 @@ class OAuth(Resources):
         return Credentials(**response.json())
 
     def get_content_credentials(self, content_session_token: Optional[str] = None) -> Credentials:
-        """Perform an oauth credential exchange for a service account's access token."""
-        
+        """Perform an oauth credential exchange with a content-session-token."""
         # craft a credential exchange request
         data = {}
         data["grant_type"] = GRANT_TYPE
