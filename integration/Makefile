@@ -24,7 +24,6 @@ CONNECT_BOOTSTRAP_SECRETKEY ?= $(shell head -c 32 /dev/random | base64)
 # Versions
 CONNECT_VERSIONS := \
 					2024.11.0 \
-					2024.10.0 \
 					2024.09.0 \
 					2024.08.0 \
 					2024.06.0 \
