@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal
+from typing import TYPE_CHECKING, List, Literal, Optional, overload
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
@@ -156,6 +156,145 @@ class UserGroups(Resources):
         super().__init__(ctx.client.resource_params)
         self._ctx: Context = ctx
         self._user_guid: str = user_guid
+
+    @overload
+    def add(self, *args: Group) -> None: ...
+    @overload
+    def add(self, *, group_guid: str) -> None: ...
+
+    def add(
+        self,
+        *args: Group,
+        group_guid: Optional[str] = None,
+    ) -> None:
+        """
+        Add the user to the specified groups.
+
+        Parameters
+        ----------
+        *args : Group
+            The groups to which the user will be added.
+        group_guid : str
+            The unique identifier (guid) of the group to which the user will be added.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+        user = client.users.get("USER_GUID_HERE")
+
+        # Add the user to the group
+        user.groups.add(group)
+
+        # Add the user to multiple groups
+        groups = [
+            client.groups.get("GROUP_GUID_1"),
+            client.groups.get("GROUP_GUID_2"),
+        ]
+        user.groups.add(*groups)
+
+        # Add the user to a group by GUID
+        user.groups.add(group_guid="GROUP_GUID_HERE")
+        ```
+        """
+        if len(args) > 0:
+            from .groups import Group
+
+            if group_guid:
+                raise ValueError("Only one of `*args` or `group_guid` may be be provided.")
+
+            for i, group in enumerate(args):
+                if not isinstance(group, Group):
+                    raise TypeError(
+                        f"`args[{i}]` is not an instance of Group",
+                    )
+            for group in args:
+                group.members.add(user_guid=self._user_guid)
+            return
+
+        if not group_guid:
+            raise ValueError("Only one of `*args` or `group_guid` may be be provided.")
+        group = self._ctx.client.groups.get(group_guid)
+        group.members.add(user_guid=self._user_guid)
+
+    @overload
+    def delete(self, *args: Group) -> None: ...
+    @overload
+    def delete(self, *, group_guid: str) -> None: ...
+
+    def delete(
+        self,
+        *args: Group,
+        group_guid: Optional[str] = None,
+    ) -> None:
+        """
+        Remove the user from the specified groups.
+
+        Parameters
+        ----------
+        *args : Group
+            The groups from which the user will be removed.
+        group_guid : str
+            The unique identifier (guid) of the group from which the user will be removed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+        user = client.users.get("USER_GUID_HERE")
+
+        # Remove the user from the group
+        user.groups.delete(group)
+
+        # Remove the user from multiple groups
+        groups = [
+            client.groups.get("GROUP_GUID_1"),
+            client.groups.get("GROUP_GUID_2"),
+        ]
+        user.groups.delete(*groups)
+
+        # Remove the user from a group by GUID
+        user.groups.delete(group_guid="GROUP_GUID_HERE")
+        ```
+        """
+        if len(args) > 0:
+            from .groups import Group
+
+            if group_guid:
+                raise ValueError("Only one of `*args` or `group_guid=` may be be provided.")
+
+            for i, group in enumerate(args):
+                if not isinstance(group, Group):
+                    raise TypeError(
+                        f"`args[{i}]` is not an instance of Group",
+                    )
+            for group in args:
+                group.members.delete(user_guid=self._user_guid)
+            return
+
+        if not isinstance(group_guid, str):
+            raise TypeError("`group_guid=` must be a string.")
+        if not group_guid:
+            raise ValueError("`group_guid=` must not be empty.")
+
+        group = self._ctx.client.groups.get(group_guid)
+        group.members.delete(user_guid=self._user_guid)
 
     def find(self) -> List[Group]:
         """

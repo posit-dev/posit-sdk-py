@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, overload
+from typing import TYPE_CHECKING, List, Optional, overload
 
 from .paginator import Paginator
 from .resources import Resource, Resources
@@ -32,8 +32,14 @@ class Group(Resource):
         Examples
         --------
         ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
         group = client.groups.get("GROUP_GUID_HERE")
         group_users = group.members.find()
+
+        # Get count of group members
         group_user_count = group.members.count()
         ```
 
@@ -41,7 +47,21 @@ class Group(Resource):
         return GroupMembers(self._ctx, group_guid=self["guid"])
 
     def delete(self) -> None:
-        """Delete the group."""
+        """Delete the group.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+
+        # Delete the group
+        group.delete()
+        ```
+        """
         path = f"v1/groups/{self['guid']}"
         url = self._ctx.url + path
         self._ctx.session.delete(url)
@@ -53,7 +73,146 @@ class GroupMembers(Resources):
         self._group_guid = group_guid
         self._ctx: Context = ctx
 
+    @overload
+    def add(self, *args: User) -> None: ...
+    @overload
+    def add(self, *, user_guid: str) -> None: ...
+
+    def add(self, *args: User, user_guid: Optional[str] = None) -> None:
+        """Add a user to the group.
+
+        Parameters
+        ----------
+        *args : User
+            User objects to add to the group.
+        user_guid : str
+            The user GUID.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+        user = client.users.get("USER_GUID_HERE")
+
+        # Add a user to the group
+        group.members.add(user)
+
+        # Add multiple users to the group
+        users = client.users.find()
+        group.members.add(*users)
+
+        # Add a user to the group by GUID
+        group.members.add(user_guid="USER_GUID_HERE")
+        ```
+        """
+        if len(args) > 0:
+            from .users import User
+
+            if user_guid:
+                raise ValueError("Only one of `*args` or `user_guid=` should be provided.")
+            for i, user in enumerate(args):
+                if not isinstance(user, User):
+                    raise ValueError(f"args[{i}] is not a User object.")
+
+            for user in args:
+                self.add(user_guid=user["guid"])
+
+            return
+
+        if not isinstance(user_guid, str):
+            raise TypeError("`user_guid=` should be a string.")
+        if not user_guid:
+            raise ValueError("`user_guid=` should not be empty")
+
+        path = f"v1/groups/{self._group_guid}/members"
+        url = self._ctx.url + path
+        self._ctx.session.post(url, json={"user_guid": user_guid})
+
+    @overload
+    def delete(self, *args: User) -> None: ...
+    @overload
+    def delete(self, *, user_guid: str) -> None: ...
+
+    def delete(self, *args: User, user_guid: Optional[str] = None) -> None:
+        """Remove a user from the group.
+
+        Parameters
+        ----------
+        *args : User
+            User objects to remove from the group.
+        user_guid : str
+            The user GUID.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+
+        # Remove a user from the group
+        first_user = group.members.find()[0]
+        group.members.delete(first_user)
+
+        # Remove multiple users from the group
+        group_users = group.members.find()[:2]
+        group.members.delete(*group_users)
+
+        # Remove a user from the group by GUID
+        group.members.delete(user_guid="USER_GUID_HERE")
+        ```
+
+        """
+        if len(args) > 0:
+            from .users import User
+
+            if user_guid:
+                raise ValueError("Only one of `*args` or `user_guid=` should be provided.")
+            for i, user in enumerate(args):
+                if not isinstance(user, User):
+                    raise TypeError(f"`args[{i}]` is not a `User` object.")
+
+            for user in args:
+                self.delete(user_guid=user["guid"])
+
+            return
+
+        if not isinstance(user_guid, str):
+            raise TypeError("`user_guid=` should be a string.")
+        if not user_guid:
+            raise ValueError("`user_guid=` should not be empty")
+
+        path = f"v1/groups/{self._group_guid}/members/{user_guid}"
+        url = self._ctx.url + path
+        self._ctx.session.delete(url)
+
     def find(self) -> list[User]:
+        """Find group members.
+
+        Returns
+        -------
+        list[User]
+            All the users in the group.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+
+        # Find all users in the group
+        group_users = group.members.find()
+        ```
+        """
         # Avoid circular import
         from .users import User
 
@@ -72,6 +231,19 @@ class GroupMembers(Resources):
         Returns
         -------
         int
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+
+        # Get count of group members
+        group_user_count = group.members.count()
+        ```
         """
         path = f"v1/groups/{self._group_guid}/members"
         url = self._ctx.url + path
