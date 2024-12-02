@@ -116,7 +116,7 @@ class GroupMembers(Resources):
                 raise ValueError("Only one of `*args` or `user_guid=` should be provided.")
             for i, user in enumerate(args):
                 if not isinstance(user, User):
-                    raise ValueError(f"args[{i}] is not a User object.")
+                    raise TypeError(f"args[{i}] is not a `User` object. Received {user}")
 
             for user in args:
                 self.add(user_guid=user["guid"])
@@ -124,9 +124,9 @@ class GroupMembers(Resources):
             return
 
         if not isinstance(user_guid, str):
-            raise TypeError("`user_guid=` should be a string.")
+            raise TypeError(f"`user_guid=` should be a string. Received {user_guid}")
         if not user_guid:
-            raise ValueError("`user_guid=` should not be empty")
+            raise ValueError("`user_guid=` should not be empty.")
 
         path = f"v1/groups/{self._group_guid}/members"
         url = self._ctx.url + path
@@ -176,7 +176,7 @@ class GroupMembers(Resources):
                 raise ValueError("Only one of `*args` or `user_guid=` should be provided.")
             for i, user in enumerate(args):
                 if not isinstance(user, User):
-                    raise TypeError(f"`args[{i}]` is not a `User` object.")
+                    raise TypeError(f"`args[{i}]` is not a `User` object. Received {user}")
 
             for user in args:
                 self.delete(user_guid=user["guid"])
@@ -184,9 +184,9 @@ class GroupMembers(Resources):
             return
 
         if not isinstance(user_guid, str):
-            raise TypeError("`user_guid=` should be a string.")
+            raise TypeError(f"`user_guid=` should be a string. Received {user_guid}")
         if not user_guid:
-            raise ValueError("`user_guid=` should not be empty")
+            raise ValueError("`user_guid=` should not be empty.")
 
         path = f"v1/groups/{self._group_guid}/members/{user_guid}"
         url = self._ctx.url + path

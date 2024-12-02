@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class User(Resource):
-    def __init__(self, ctx: Context, /, **attributes: dict) -> None:
+    def __init__(self, ctx: Context, /, **attributes) -> None:
         super().__init__(ctx.client.resource_params, **attributes)
         self._ctx: Context = ctx
 
@@ -214,7 +214,7 @@ class UserGroups(Resources):
             for i, group in enumerate(args):
                 if not isinstance(group, Group):
                     raise TypeError(
-                        f"`args[{i}]` is not an instance of Group",
+                        f"`args[{i}]` is not an instance of Group. Received {group}",
                     )
             for group in args:
                 group.members.add(user_guid=self._user_guid)
@@ -282,14 +282,14 @@ class UserGroups(Resources):
             for i, group in enumerate(args):
                 if not isinstance(group, Group):
                     raise TypeError(
-                        f"`args[{i}]` is not an instance of Group",
+                        f"`args[{i}]` is not an instance of Group. Received {group}",
                     )
             for group in args:
                 group.members.delete(user_guid=self._user_guid)
             return
 
         if not isinstance(group_guid, str):
-            raise TypeError("`group_guid=` must be a string.")
+            raise TypeError("`group_guid=` must be a string. Received {user}")
         if not group_guid:
             raise ValueError("`group_guid=` must not be empty.")
 

@@ -48,21 +48,46 @@ class TestUser:
         assert self.client.users.get(self.cole["guid"]) == self.cole
 
     # Also tests Groups.members
-    def test_groups(self):
+    def test_user_group_interactions(self):
         try:
-            unit_friends = self.client.groups.create(name="UnitFriends")
-            self.client.post(
-                f"/v1/groups/{unit_friends['guid']}/members",
-                json={"user_guid": self.bill["guid"]},
-            )
+            test_group = self.client.groups.create(name="UnitFriends")
+
+            # `Group.members.count()`
+            assert test_group.members.count() == 0
+
+            # `Group.members.add()`
+            test_group.members.add(self.bill)
+            # `User.groups.add()`
+            assert test_group.members.count() == 1
+            self.cole.groups.add(test_group)
+            assert test_group.members.count() == 2
+
+            # `Group.members.find()`
+            group_users = test_group.members.find()
+            assert len(group_users) == 2
+            assert group_users[0]["guid"] == self.bill["guid"]
+            assert group_users[1]["guid"] == self.cole["guid"]
+
+            # `User.group.find()`
             bill_groups = self.bill.groups.find()
             assert len(bill_groups) == 1
-            assert bill_groups[0]["guid"] == unit_friends["guid"]
+            assert bill_groups[0]["guid"] == test_group["guid"]
+
+            # `Group.members.delete()`
+            test_group.members.delete(self.bill)
+            assert test_group.members.count() == 1
+
+            # `User.groups.delete()`
+            self.cole.groups.delete(test_group)
+            assert test_group.members.count() == 0
+
         finally:
             groups = self.client.groups.find(prefix="UnitFriends")
             if len(groups) > 0:
-                unit_friends = groups[0]
-                unit_friends.delete()
+                test_group = groups[0]
+                test_group.delete()
+
+            assert len(self.client.groups.find(prefix="UnitFriends")) == 0
 
 
 class TestUserContent:

@@ -1,6 +1,7 @@
 from unittest import mock
 from unittest.mock import Mock
 
+import pytest
 import responses
 
 from posit.connect.client import Client
@@ -43,7 +44,7 @@ class TestGroupMembers:
     @responses.activate
     def test_members_count(self):
         responses.get(
-            "https://connect.example/__api__/v1/groups/6f300623-1e0c-48e6-a473-ddf630c0c0c3/members",
+            f"https://connect.example/__api__/v1/groups/{self.group['guid']}/members",
             json=load_mock_dict(f"v1/groups/{self.group['guid']}/members.json"),
         )
         group_members = self.group.members
@@ -53,7 +54,7 @@ class TestGroupMembers:
     @responses.activate
     def test_members_find(self):
         responses.get(
-            "https://connect.example/__api__/v1/groups/6f300623-1e0c-48e6-a473-ddf630c0c0c3/members",
+            f"https://connect.example/__api__/v1/groups/{self.group['guid']}/members",
             json=load_mock_dict(f"v1/groups/{self.group['guid']}/members.json"),
         )
 
@@ -61,3 +62,57 @@ class TestGroupMembers:
         assert len(group_users) == 2
         for user in group_users:
             assert isinstance(user, User)
+
+    @responses.activate
+    def test_members_add(self):
+        user_guid = "user-guid"
+        responses.post(
+            f"https://connect.example/__api__/v1/groups/{self.group['guid']}/members",
+            json=[],  # No need to return anything
+        )
+
+        user = User(self.client._ctx, guid=user_guid)
+        self.group.members.add(user)
+        self.group.members.add(user, user)
+        self.group.members.add(user_guid=user["guid"])
+
+        with pytest.raises(TypeError):
+            self.group.members.add(
+                "not-a-user",  # pyright: ignore[reportArgumentType]
+            )
+        with pytest.raises(TypeError):
+            self.group.members.add(group_guid=42)  # pyright: ignore[reportCallIssue]
+        with pytest.raises(ValueError):
+            self.group.members.add(user, user_guid=user["guid"])  # pyright: ignore[reportCallIssue]
+        with pytest.raises(ValueError):
+            self.group.members.add(user_guid="")
+
+    @responses.activate
+    def test_members_delete(self):
+        user_guid = "user-guid"
+        responses.get(
+            f"https://connect.example/__api__/v1/groups/{self.group['guid']}",
+            json=dict(self.group),
+        )
+        responses.delete(
+            f"https://connect.example/__api__/v1/groups/{self.group['guid']}/members/{user_guid}",
+            json=[],  # No need to return anything
+        )
+
+        user = User(self.client._ctx, guid=user_guid)
+
+        self.group.members.delete(user)
+        self.group.members.delete(user, user)
+        self.group.members.delete(user_guid=user["guid"])
+
+        with pytest.raises(TypeError):
+            self.group.members.delete(
+                "not-a-user",  # pyright: ignore[reportArgumentType]
+            )
+        with pytest.raises(TypeError):
+            self.group.members.delete(group_guid=42)  # pyright: ignore[reportCallIssue]
+        with pytest.raises(ValueError):
+            self.group.members.delete(user, user_guid=user["guid"])  # pyright: ignore[reportCallIssue]
+
+        with pytest.raises(ValueError):
+            self.group.members.delete(user_guid="")
