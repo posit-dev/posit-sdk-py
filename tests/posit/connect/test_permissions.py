@@ -190,6 +190,21 @@ class TestPermissionsCreate:
             role=role,
         )
 
+        with pytest.raises(TypeError):
+            permissions.create(  # pyright: ignore[reportCallIssue]
+                "not a user or group",
+            )
+        with pytest.raises(ValueError):
+            permissions.create(  # pyright: ignore[reportCallIssue]
+                User(params, guid=principal_guid),
+                principal_guid=principal_guid,
+            )
+        with pytest.raises(ValueError):
+            permissions.create(  # pyright: ignore[reportCallIssue]
+                User(params, guid=principal_guid),
+                principal_type=principal_type,
+            )
+
         # assert
         assert permission == fake_permission
 

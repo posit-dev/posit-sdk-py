@@ -146,6 +146,8 @@ class Permissions(Resources):
                     raise TypeError(f"Invalid argument type: {type(arg)}")
             if "principal_guid" in kwargs:
                 raise ValueError("'principal_guid' can not be defined with `*args` present.")
+            if "principal_type" in kwargs:
+                raise ValueError("'principal_guid' can not be defined with `*args` present.")
 
             perms: list[Permission] = []
             for arg in args:
