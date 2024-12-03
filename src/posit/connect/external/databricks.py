@@ -56,10 +56,12 @@ def _get_auth_type(local_auth_type: str) -> str:
     otherwise, we should return the auth_type of the configured local_strategy instead
     to avoid breaking someone elses attribution.
 
-    https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/config.py#L261-L269
-
     NOTE: The databricks-sql client does not use auth_type to set the user-agent.
     https://github.com/databricks/databricks-sql-python/blob/v3.3.0/src/databricks/sql/client.py#L214-L219
+
+    See Also
+    --------
+    * https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/config.py#L261-L269
     
     Returns
     -------
