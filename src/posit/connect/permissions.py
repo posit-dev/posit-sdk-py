@@ -91,8 +91,8 @@ class Permissions(Resources):
         Returns
         -------
         Permission | List[Permission]
-            Returns a `Permission` when the kwargs: `principal_guid`, `principal_type`, and `role`
-            are used. Returns a `list[Permission]` when `*args` are used.
+            Returns a `Permission` when the kwargs: `principal_guid` and `principal_type` are used.
+            Returns a `list[Permission]` when `*args` are used.
 
         Examples
         --------
