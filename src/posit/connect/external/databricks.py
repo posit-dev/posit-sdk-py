@@ -153,7 +153,9 @@ class PositCredentialsStrategy(CredentialsStrategy):
         This way we can pass in a databricks `Config` object required by most of the SDK's `CredentialsProvider`
         implementations from where `sql.connect` is called.
 
-        https://github.com/databricks/databricks-sql-python/issues/148#issuecomment-2271561365
+        See Also
+        --------
+        * https://github.com/databricks/databricks-sql-python/issues/148#issuecomment-2271561365
         """
         return lambda: self.__call__(*args, **kwargs)
 
