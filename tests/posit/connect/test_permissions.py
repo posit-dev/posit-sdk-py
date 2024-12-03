@@ -190,23 +190,85 @@ class TestPermissionsCreate:
             role=role,
         )
 
-        with pytest.raises(TypeError):
+        # assert
+        assert permission == fake_permission
+
+    def test_assertions(self):
+        # setup
+        principal_guid = "principal_guid"
+        content_guid = "content_guid"
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        permissions = Permissions(params, content_guid=content_guid)
+        user = User(params, guid=principal_guid)
+        group = User(params, guid=principal_guid)
+
+        # behavior
+        with pytest.raises(TypeError, match="str"):
             permissions.create(  # pyright: ignore[reportCallIssue]
+                user,
+                group,
                 "not a user or group",
             )
         with pytest.raises(ValueError):
             permissions.create(  # pyright: ignore[reportCallIssue]
-                User(params, guid=principal_guid),
+                user,
                 principal_guid=principal_guid,
             )
         with pytest.raises(ValueError):
             permissions.create(  # pyright: ignore[reportCallIssue]
-                User(params, guid=principal_guid),
-                principal_type=principal_type,
+                user,
+                principal_type="viewer",
             )
 
+    @responses.activate
+    def test_multiple(self):
+        # data
+        content_guid = "CONTENT_GUID"
+        user_guid = "USER_GUID"
+        group_guid = "GROUP_GUID"
+
+        fake_user = {
+            "principal_guid": user_guid,
+            "principal_type": "user",
+            "role": "viewer",
+        }
+        fake_group = {
+            "principal_guid": group_guid,
+            "principal_type": "group",
+            "role": "viewer",
+        }
+        res_user = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+            json=fake_user,
+            match=[matchers.json_params_matcher(fake_user)],
+        )
+        res_group = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+            json=fake_group,
+            match=[matchers.json_params_matcher(fake_group)],
+        )
+
+        # setup
+        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        permissions = Permissions(params, content_guid=content_guid)
+        user = User(params, guid=user_guid)
+        group = Group(params, guid=group_guid)
+
+        # invoke
+        permissions = permissions.create(user, group, role="viewer")
+
         # assert
-        assert permission == fake_permission
+        assert res_user.call_count == 1
+        assert res_group.call_count == 1
+
+        assert isinstance(permissions, list)
+        for permission in permissions:
+            assert isinstance(permission, Permission)
+
+        assert permissions == [
+            Permission(params, principal_guid=user_guid, principal_type="user", role="viewer"),
+            Permission(params, principal_guid=group_guid, principal_type="group", role="viewer"),
+        ]
 
 
 class TestPermissionsFind:
