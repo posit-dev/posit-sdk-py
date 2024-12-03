@@ -67,11 +67,20 @@ class Permissions(Resources):
         return len(self.find())
 
     @overload
-    def create(self, *, principal_guid: str, principal_type: str, role: str) -> Permission:
+    def create(self, *, principal_guid: str, principal_type: str, role: str) -> Permission: ...
+
+    @overload
+    def create(self, *args: User | Group, role: str) -> list[Permission]: ...
+
+    def create(self, *args: User | Group, **kwargs) -> Permission | list[Permission]:
         """Create a permission.
 
         Parameters
         ----------
+        *args : User | Group
+            The principal users or groups to add.
+        role : str
+            The principal role. Currently only `"viewer"` and `"owner"` are supported.
         principal_guid : str
             User guid or Group guid.
         principal_type : str
@@ -81,23 +90,9 @@ class Permissions(Resources):
 
         Returns
         -------
-        Permission
-        """
-
-    @overload
-    def create(self, *args: User | Group, role: str) -> list[Permission]:
-        """Create a permission.
-
-        Parameters
-        ----------
-        *args : User | Group
-            The principal users or groups to add.
-        role : str
-            The principal role. Currently only `"viewer"` and `"owner"` are supported.
-
-        Returns
-        -------
-        Permission
+        Permission | List[Permission]
+            Returns a `Permission` when the kwargs: `principal_guid`, `principal_type`, and `role`
+            are used. Returns a `list[Permission]` when `*args` are used.
 
         Examples
         --------
@@ -141,8 +136,6 @@ class Permissions(Resources):
         content_item.permissions.find()
         ```
         """
-
-    def create(self, *args: User | Group, **kwargs) -> Permission | list[Permission]:
         if len(args) > 0:
             # Avoid circular imports
             from .groups import Group
@@ -232,7 +225,7 @@ class Permissions(Resources):
         Returns
         -------
         list[Permission]
-            The removed permissions. If a permission is not found, there is nothing to remove and 
+            The removed permissions. If a permission is not found, there is nothing to remove and
             it is not included in the returned list.
 
         Examples
