@@ -5,8 +5,9 @@ import requests
 import responses
 from responses import matchers
 
+from posit.connect._types_content_item import ContentItemContext
+from posit.connect.context import Context
 from posit.connect.permissions import Permission, Permissions
-from posit.connect.resources import ResourceParameters
 from posit.connect.urls import Url
 
 from .api import load_mock, load_mock_dict, load_mock_list
@@ -25,9 +26,12 @@ class TestPermissionDelete:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        ctx = ContentItemContext(
+            Context(requests.Session(), Url("https://connect.example/__api__")),
+            content_guid=content_guid,
+        )
         fake_permission = load_mock_dict(f"v1/content/{content_guid}/permissions/{uid}.json")
-        permission = Permission(params, **fake_permission)
+        permission = Permission(ctx, **fake_permission)
 
         # invoke
         permission.delete()
@@ -40,7 +44,7 @@ class TestPermissionUpdate:
     @responses.activate
     def test_request_shape(self):
         # test data
-        uid = random.randint(0, 100)
+        uid = str(random.randint(0, 100))
         content_guid = str(uuid.uuid4())
         principal_guid = str(uuid.uuid4())
         principal_type = "principal_type"
@@ -51,7 +55,9 @@ class TestPermissionUpdate:
         responses.put(
             f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{uid}",
             json={
-                # doesn't matter for this test
+                # doesn't matter for this test, but something more than `id` is needed to avoid an API call
+                "id": uid,
+                "content_guid": content_guid,
             },
             match=[
                 # assertion
@@ -69,9 +75,13 @@ class TestPermissionUpdate:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        ctx = ContentItemContext(
+            Context(requests.Session(), Url("https://connect.example/__api__")),
+            content_guid=content_guid,
+        )
+
         permission = Permission(
-            params,
+            ctx,
             id=uid,
             content_guid=content_guid,
             principal_guid=principal_guid,
@@ -95,7 +105,7 @@ class TestPermissionUpdate:
         fake_permission.update(role=new_role)
 
         # define api behavior
-        uid = random.randint(0, 100)
+        uid = str(random.randint(0, 100))
         content_guid = str(uuid.uuid4())
         responses.put(
             f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{uid}",
@@ -112,13 +122,17 @@ class TestPermissionUpdate:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permission = Permission(params, id=uid, content_guid=content_guid, role=old_role)
+        ctx = ContentItemContext(
+            Context(requests.Session(), Url("https://connect.example/__api__")),
+            content_guid=content_guid,
+        )
+        permission = Permission(ctx, id=uid, content_guid=content_guid, role=old_role)
 
         # assert role change with respect to api response
         assert permission["role"] == old_role
-        permission.update(role=new_role)
-        assert permission["role"] == new_role
+        updated_permission = permission.update(role=new_role)
+        assert permission["role"] == old_role
+        assert updated_permission["role"] == new_role
 
 
 class TestPermissionsCount:
@@ -135,8 +149,11 @@ class TestPermissionsCount:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        ctx = ContentItemContext(
+            Context(requests.Session(), Url("https://connect.example/__api__")),
+            content_guid=content_guid,
+        )
+        permissions = Permissions(ctx)
 
         # invoke
         count = permissions.count()
@@ -177,8 +194,12 @@ class TestPermissionsCreate:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        ctx = ContentItemContext(
+            Context(requests.Session(), Url("https://connect.example/__api__")),
+            content_guid=content_guid,
+        )
+
+        permissions = Permissions(ctx)
 
         # invoke
         permission = permissions.create(
@@ -205,8 +226,11 @@ class TestPermissionsFind:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        ctx = ContentItemContext(
+            Context(requests.Session(), Url("https://connect.example/__api__")),
+            content_guid=content_guid,
+        )
+        permissions = Permissions(ctx)
 
         # invoke
         permissions = permissions.find()
@@ -229,8 +253,11 @@ class TestPermissionsFindOne:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        ctx = ContentItemContext(
+            Context(requests.Session(), Url("https://connect.example/__api__")),
+            content_guid=content_guid,
+        )
+        permissions = Permissions(ctx)
 
         # invoke
         permission = permissions.find_one()
@@ -254,8 +281,11 @@ class TestPermissionsGet:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        ctx = ContentItemContext(
+            Context(requests.Session(), Url("https://connect.example/__api__")),
+            content_guid=content_guid,
+        )
+        permissions = Permissions(ctx)
 
         # invoke
         permission = permissions.get(uid)

@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from typing import List, overload
 
+from .._active import ResourceDict
+from .._api_call import ApiCallMixin
+from .._types_context import ContextP
+from ..context import Context
 from ..cursors import CursorPaginator
-from ..resources import Resource, Resources
 
 
-class VisitEvent(Resource):
+class VisitEvent(ResourceDict):
     @property
     def content_guid(self) -> str:
         """The associated unique content identifier.
@@ -90,7 +93,12 @@ class VisitEvent(Resource):
         return self["path"]
 
 
-class Visits(Resources):
+class Visits(ApiCallMixin, ContextP[Context]):
+    def __init__(self, ctx: Context) -> None:
+        super().__init__()
+        self._ctx = ctx
+        self._path = "v1/instrumentation/content/visits"
+
     @overload
     def find(
         self,
@@ -136,13 +144,12 @@ class Visits(Resources):
         """
         params = rename_params(kwargs)
 
-        path = "/v1/instrumentation/content/visits"
-        url = self.params.url + path
-        paginator = CursorPaginator(self.params.session, url, params=params)
+        url = self._ctx.url + self._path
+        paginator = CursorPaginator(self._ctx.session, url, params=params)
         results = paginator.fetch_results()
         return [
             VisitEvent(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -192,14 +199,13 @@ class Visits(Resources):
         Visit | None
         """
         params = rename_params(kwargs)
-        path = "/v1/instrumentation/content/visits"
-        url = self.params.url + path
-        paginator = CursorPaginator(self.params.session, url, params=params)
+        url = self._ctx.url + self._path
+        paginator = CursorPaginator(self._ctx.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         visits = (
             VisitEvent(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results

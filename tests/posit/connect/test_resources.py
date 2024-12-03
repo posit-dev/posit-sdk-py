@@ -3,13 +3,15 @@ from typing import Optional
 from unittest import mock
 from unittest.mock import Mock
 
-from posit.connect.resources import Resource
+import pytest
+
+from posit.connect._active import ResourceDict
 
 config = Mock()
 session = Mock()
 
 
-class FakeResource(Resource):
+class FakeResource(ResourceDict):
     @property
     def foo(self) -> Optional[str]:
         return self.get("foo")
@@ -17,12 +19,12 @@ class FakeResource(Resource):
 
 class TestResource:
     def test_init(self):
-        p = mock.Mock()
+        ctx = mock.Mock()
         k = "foo"
         v = "bar"
         d = {k: v}
-        r = FakeResource(p, **d)
-        assert r.params == p
+        r = FakeResource(ctx, **d)
+        assert r._ctx == ctx
 
     def test__getitem__(self):
         warnings.filterwarnings("ignore", category=FutureWarning)
@@ -41,8 +43,8 @@ class TestResource:
         d = {k: v1}
         r = FakeResource(mock.Mock(), **d)
         assert r[k] == v1
-        r[k] = v2
-        assert r[k] == v2
+        with pytest.raises(NotImplementedError):
+            r[k] = v2
 
     def test__delitem__(self):
         warnings.filterwarnings("ignore", category=FutureWarning)
@@ -52,8 +54,8 @@ class TestResource:
         r = FakeResource(mock.Mock(), **d)
         assert k in r
         assert r[k] == v
-        del r[k]
-        assert k not in r
+        with pytest.raises(NotImplementedError):
+            del r[k]
 
     def test_foo(self):
         k = "foo"

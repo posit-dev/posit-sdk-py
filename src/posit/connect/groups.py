@@ -2,25 +2,47 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, overload
+from typing import List, overload
 
+from ._active import ActiveDict
+from ._api_call import ApiCallMixin
+from ._types_context import ContextP
+from .context import Context
 from .paginator import Paginator
-from .resources import Resource, Resources
-
-if TYPE_CHECKING:
-    import requests
 
 
-class Group(Resource):
+class GroupContext(Context):
+    group_guid: str
+
+    def __init__(self, ctx: Context, /, *, group_guid: str):
+        super().__init__(ctx.session, ctx.url)
+        self.group_guid = group_guid
+
+
+class Group(ActiveDict[GroupContext]):
+    """Group resource."""
+
+    def __init__(self, ctx: Context, /, *, guid: str, **kwargs):
+        assert isinstance(guid, str), "guid must be a string"
+        assert guid, "guid must not be empty"
+
+        group_ctx = GroupContext(ctx, group_guid=guid)
+        path = f"v1/groups/{guid}"
+        get_data = len(kwargs) == 0
+        super().__init__(group_ctx, path, get_data, guid=guid, **kwargs)
+
     def delete(self) -> None:
         """Delete the group."""
-        path = f"v1/groups/{self['guid']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._delete_api()
 
 
-class Groups(Resources):
+class Groups(ApiCallMixin, ContextP[Context]):
     """Groups resource."""
+
+    def __init__(self, ctx: Context):
+        super().__init__()
+        self._ctx = ctx
+        self._path = "v1/groups"
 
     @overload
     def create(self, *, name: str, unique_id: str | None) -> Group:
@@ -57,10 +79,9 @@ class Groups(Resources):
         -------
         Group
         """
-        path = "v1/groups"
-        url = self.params.url + path
-        response = self.params.session.post(url, json=kwargs)
-        return Group(self.params, **response.json())
+        result = self._post_api(json=kwargs)
+        assert result is not None, "Group creation failed"
+        return Group(self._ctx, **result)
 
     @overload
     def find(
@@ -84,13 +105,12 @@ class Groups(Resources):
         -------
         List[Group]
         """
-        path = "v1/groups"
-        url = self.params.url + path
-        paginator = Paginator(self.params.session, url, params=kwargs)
+        url = self._ctx.url + self._path
+        paginator = Paginator(self._ctx.session, url, params=kwargs)
         results = paginator.fetch_results()
         return [
             Group(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -118,14 +138,13 @@ class Groups(Resources):
         -------
         Group | None
         """
-        path = "v1/groups"
-        url = self.params.url + path
-        paginator = Paginator(self.params.session, url, params=kwargs)
+        url = self._ctx.url + self._path
+        paginator = Paginator(self._ctx.session, url, params=kwargs)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         groups = (
             Group(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -143,11 +162,9 @@ class Groups(Resources):
         -------
         Group
         """
-        url = self.params.url + f"v1/groups/{guid}"
-        response = self.params.session.get(url)
         return Group(
-            self.params,
-            **response.json(),
+            self._ctx,
+            guid=guid,
         )
 
     def count(self) -> int:
@@ -157,8 +174,7 @@ class Groups(Resources):
         -------
         int
         """
-        path = "v1/groups"
-        url = self.params.url + path
-        response: requests.Response = self.params.session.get(url, params={"page_size": 1})
-        result: dict = response.json()
+        result = self._get_api(params={"page_size": 1})
+        assert result is not None, "Group count failed"
+        assert "total" in result, "`'total'` key not found in Group response"
         return result["total"]

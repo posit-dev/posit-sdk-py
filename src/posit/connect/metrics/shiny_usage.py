@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from typing import List, overload
 
+from .._active import ResourceDict
+from .._api_call import ApiCallMixin
+from .._types_context import ContextP
+from ..context import Context
 from ..cursors import CursorPaginator
-from ..resources import Resource, Resources
 
 
-class ShinyUsageEvent(Resource):
+class ShinyUsageEvent(ResourceDict):
     @property
     def content_guid(self) -> str:
         """The associated unique content identifier.
@@ -58,7 +61,12 @@ class ShinyUsageEvent(Resource):
         return self["data_version"]
 
 
-class ShinyUsage(Resources):
+class ShinyUsage(ApiCallMixin, ContextP[Context]):
+    def __init__(self, ctx: Context) -> None:
+        super().__init__()
+        self._ctx = ctx
+        self._path = "v1/instrumentation/shiny/usage"
+
     @overload
     def find(
         self,
@@ -104,13 +112,12 @@ class ShinyUsage(Resources):
         """
         params = rename_params(kwargs)
 
-        path = "/v1/instrumentation/shiny/usage"
-        url = self.params.url + path
-        paginator = CursorPaginator(self.params.session, url, params=params)
+        url = self._ctx.url + self._path
+        paginator = CursorPaginator(self._ctx.session, url, params=params)
         results = paginator.fetch_results()
         return [
             ShinyUsageEvent(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -160,14 +167,13 @@ class ShinyUsage(Resources):
         ShinyUsageEvent | None
         """
         params = rename_params(kwargs)
-        path = "/v1/instrumentation/shiny/usage"
-        url = self.params.url + path
-        paginator = CursorPaginator(self.params.session, url, params=params)
+        url = self._ctx.url + self._path
+        paginator = CursorPaginator(self._ctx.session, url, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         visits = (
             ShinyUsageEvent(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results

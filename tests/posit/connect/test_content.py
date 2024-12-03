@@ -3,10 +3,10 @@ import requests
 import responses
 from responses import matchers
 
+from posit.connect._types_content_item import ContentItemContext
 from posit.connect.client import Client
 from posit.connect.content import ContentItem, ContentItemRepository
 from posit.connect.context import Context
-from posit.connect.resources import ResourceParameters
 from posit.connect.urls import Url
 
 from .api import load_mock, load_mock_dict
@@ -82,7 +82,7 @@ class TestContentDeploy:
 
         mock_tasks_get = responses.get(
             f"https://connect.example/__api__/v1/tasks/{task_id}",
-            json=load_mock(f"v1/tasks/{task_id}.json"),
+            json=load_mock(f"v1/tasks/{task_id}-finished.json"),
         )
 
         # setup
@@ -119,8 +119,8 @@ class TestContentUpdate:
             json=fake_content,
         )
 
-        content.update(name=new_name)
-        assert content["name"] == new_name
+        new_content = content.update(name=new_name)
+        assert new_content["name"] == new_name
 
 
 class TestContentCreate:
@@ -562,7 +562,11 @@ class TestContentRepository:
 
     @property
     def content_item(self):
-        return ContentItem(self.params, guid=self.content_guid)
+        return ContentItem(
+            self.ctx,
+            guid=self.content_guid,
+            name="testing",  # provide name to avoid request
+        )
 
     @property
     def endpoint(self):
@@ -570,11 +574,10 @@ class TestContentRepository:
 
     @property
     def ctx(self):
-        return Context(requests.Session(), Url(self.base_url))
-
-    @property
-    def params(self):
-        return ResourceParameters(self.ctx.session, self.ctx.url)
+        return ContentItemContext(
+            Context(requests.Session(), Url(self.base_url)),
+            content_guid=self.content_guid,
+        )
 
     def mock_repository_info(self):
         content_item = self.content_item

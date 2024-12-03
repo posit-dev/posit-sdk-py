@@ -11,14 +11,17 @@ from typing import (
     List,
     Literal,
     Optional,
-    cast,
     overload,
 )
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
 from . import tasks
-from ._api import ApiDictEndpoint, JsonifiableDict
+from ._api_call import ApiCallMixin
+from ._content_repository import ContentItemRepository
+from ._types_content_item import ContentItemActiveDict, ContentItemContext, ContentItemResourceDict
+from ._types_context import ContextP
+from ._utils import assert_guid
 from .bundles import Bundles
 from .context import Context
 from .env import EnvVars
@@ -27,153 +30,30 @@ from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .packages import ContentPackagesMixin as PackagesMixin
 from .permissions import Permissions
-from .resources import Resource, ResourceParameters, Resources
-from .vanities import VanityMixin
+from .vanities import ContentItemVanityMixin
 from .variants import Variants
 
 if TYPE_CHECKING:
     from .tasks import Task
+    from .users import User
 
 
-def _assert_guid(guid: str):
-    assert isinstance(guid, str), "Expected 'guid' to be a string"
-    assert len(guid) > 0, "Expected 'guid' to be non-empty"
-
-
-def _assert_content_guid(content_guid: str):
-    assert isinstance(content_guid, str), "Expected 'content_guid' to be a string"
-    assert len(content_guid) > 0, "Expected 'content_guid' to be non-empty"
-
-
-class ContentItemRepository(ApiDictEndpoint):
-    """
-    Content items GitHub repository information.
-
-    See Also
-    --------
-    * Get info: https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
-    * Delete info: https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
-    * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
-    """
-
-    class _Attrs(TypedDict, total=False):
-        repository: str
-        """URL for the repository."""
-        branch: NotRequired[str]
-        """The tracked Git branch."""
-        directory: NotRequired[str]
-        """Directory containing the content."""
-        polling: NotRequired[bool]
-        """Indicates that the Git repository is regularly polled."""
-
-    def __init__(
-        self,
-        ctx: Context,
-        /,
-        *,
-        content_guid: str,
-        # By default, the `attrs` will be retrieved from the API if no `attrs` are supplied.
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> None:
-        """Content items GitHub repository information.
-
-        Parameters
-        ----------
-        ctx : Context
-            The context object containing the session and URL for API interactions.
-        content_guid : str
-            The unique identifier of the content item.
-        **attrs : ContentItemRepository._Attrs
-            Attributes for the content item repository. If not supplied, the attributes will be
-            retrieved from the API upon initialization
-        """
-        _assert_content_guid(content_guid)
-
-        path = self._api_path(content_guid)
-        # Only fetch data if `attrs` are not supplied
-        get_data = len(attrs) == 0
-        super().__init__(ctx, path, get_data, **{"content_guid": content_guid, **attrs})
-
-    @classmethod
-    def _api_path(cls, content_guid: str) -> str:
-        return f"v1/content/{content_guid}/repository"
-
-    @classmethod
-    def _create(
-        cls,
-        ctx: Context,
-        content_guid: str,
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> ContentItemRepository:
-        from ._api_call import put_api
-
-        result = put_api(ctx, cls._api_path(content_guid), json=cast(JsonifiableDict, attrs))
-
-        return ContentItemRepository(
-            ctx,
-            content_guid=content_guid,
-            **result,  # pyright: ignore[reportCallIssue]
-        )
-
-    def destroy(self) -> None:
-        """
-        Delete the content's git repository location.
-
-        See Also
-        --------
-        * https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
-        """
-        self._delete_api()
-
-    def update(
-        self,
-        # *,
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> ContentItemRepository:
-        """Update the content's repository.
-
-        Parameters
-        ----------
-        repository: str, optional
-            URL for the repository. Default is None.
-        branch: str, optional
-            The tracked Git branch. Default is 'main'.
-        directory: str, optional
-            Directory containing the content. Default is '.'
-        polling: bool, optional
-            Indicates that the Git repository is regularly polled. Default is False.
-
-        Returns
-        -------
-        None
-
-        See Also
-        --------
-        * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
-        """
-        result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
-        return ContentItemRepository(
-            self._ctx,
-            content_guid=self["content_guid"],
-            **result,  # pyright: ignore[reportCallIssue]
-        )
-
-
-class ContentItemOAuth(Resource):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
-        self["content_guid"] = content_guid
+class ContentItemOAuth(ContentItemResourceDict):
+    def __init__(self, ctx: ContentItemContext) -> None:
+        super().__init__(ctx)
 
     @property
     def associations(self) -> ContentItemAssociations:
-        return ContentItemAssociations(self.params, content_guid=self["content_guid"])
+        return ContentItemAssociations(
+            self._ctx,
+        )
 
 
-class ContentItemOwner(Resource):
+class ContentItemOwner(ContentItemResourceDict):
     pass
 
 
-class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
+class ContentItem(JobsMixin, PackagesMixin, ContentItemVanityMixin, ContentItemActiveDict):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str
@@ -222,7 +102,7 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
     def __init__(
         self,
         /,
-        params: ResourceParameters,
+        ctx: Context,
         guid: str,
     ) -> None: ...
 
@@ -230,7 +110,7 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
     def __init__(
         self,
         /,
-        params: ResourceParameters,
+        ctx: Context,
         guid: str,
         **kwargs: Unpack[ContentItem._Attrs],
     ) -> None: ...
@@ -238,30 +118,33 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
     def __init__(
         self,
         /,
-        params: ResourceParameters,
+        ctx: Context,
         guid: str,
         **kwargs: Unpack[ContentItem._AttrsNotRequired],
     ) -> None:
-        _assert_guid(guid)
+        assert_guid(guid)
 
-        ctx = Context(params.session, params.url)
+        ctx = ContentItemContext(ctx, content_guid=guid)
         path = f"v1/content/{guid}"
-        super().__init__(ctx, path, guid=guid, **kwargs)
+        get_data = len(kwargs) == 0
+
+        super().__init__(ctx, path, get_data, guid=guid, **kwargs)
 
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
+        # TODO-barret-Q: Why isn't `owner` a property?
         if key == "owner" and isinstance(v, dict):
-            return ContentItemOwner(params=self.params, **v)
+            return ContentItemOwner(self._ctx, **v)
         return v
 
     @property
     def oauth(self) -> ContentItemOAuth:
-        return ContentItemOAuth(self.params, content_guid=self["guid"])
+        return ContentItemOAuth(self._ctx)
 
     @property
     def repository(self) -> ContentItemRepository | None:
         try:
-            return ContentItemRepository(self._ctx, content_guid=self["guid"])
+            return ContentItemRepository(self._ctx)
         except ClientError:
             return None
 
@@ -288,11 +171,10 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
         """
         return ContentItemRepository._create(self._ctx, self["guid"], **attrs)
 
+    # Rename to destroy()?
     def delete(self) -> None:
         """Delete the content item."""
-        path = f"v1/content/{self['guid']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._delete_api()
 
     def deploy(self) -> tasks.Task:
         """Deploy the content.
@@ -308,13 +190,12 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
         --------
         >>> task = content.deploy()
         >>> task.wait_for()
-        None
         """
         path = f"v1/content/{self['guid']}/deploy"
-        url = self.params.url + path
-        response = self.params.session.post(url, json={"bundle_id": None})
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url, json={"bundle_id": None})
         result = response.json()
-        ts = tasks.Tasks(self.params)
+        ts = tasks.Tasks(self._ctx)
         return ts.get(result["task_id"])
 
     def render(self) -> Task:
@@ -330,10 +211,10 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
         --------
         >>> render()
         """
-        self.update()  # pyright: ignore[reportCallIssue]
+        full_content_item: ContentItem = self.update()  # pyright: ignore[reportCallIssue]
 
-        if self.is_rendered:
-            variants = self._variants.find()
+        if full_content_item.is_rendered:
+            variants = full_content_item._variants.find()
             variants = [variant for variant in variants if variant["is_default"]]
             if len(variants) != 1:
                 raise RuntimeError(
@@ -359,16 +240,18 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
         --------
         >>> restart()
         """
-        self.update()  # pyright: ignore[reportCallIssue]
+        full_content_item = self.update()  # pyright: ignore[reportCallIssue]
 
-        if self.is_interactive:
+        if full_content_item.is_interactive:
             unix_epoch_in_seconds = str(int(time.time()))
             key = f"_CONNECT_RESTART_TMP_{unix_epoch_in_seconds}"
-            self.environment_variables.create(key, unix_epoch_in_seconds)
-            self.environment_variables.delete(key)
+            full_content_item.environment_variables.create(key, unix_epoch_in_seconds)
+            full_content_item.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = posixpath.join(dirname(self.params.url), f"content/{self['guid']}")
-            self.params.session.get(url)
+            url = posixpath.join(
+                dirname(full_content_item._ctx.url), f"content/{full_content_item['guid']}"
+            )
+            full_content_item._ctx.session.get(url)
             return None
         else:
             raise ValueError(
@@ -378,7 +261,7 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
     def update(
         self,
         **attrs: Unpack[ContentItem._Attrs],
-    ) -> None:
+    ) -> ContentItem:
         """Update the content item.
 
         Parameters
@@ -438,38 +321,44 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
         -------
         None
         """
-        url = self.params.url + f"v1/content/{self['guid']}"
-        response = self.params.session.patch(url, json=attrs)
-        super().update(**response.json())
+        result = self._patch_api(json=attrs)
+        assert isinstance(result, dict)
+        assert "guid" in result
+        new_content_item = ContentItem(
+            self._ctx,
+            # `guid=` is contained within the `result` dict
+            **result,
+        )
+        return new_content_item
 
     # Relationships
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.params, self["guid"])
+        return Bundles(self._ctx)
 
     @property
     def environment_variables(self) -> EnvVars:
-        return EnvVars(self.params, self["guid"])
+        return EnvVars(self._ctx)
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.params, self["guid"])
+        return Permissions(self._ctx)
 
     @property
-    def owner(self) -> dict:
-        if "owner" not in self:
+    def owner(self) -> User:
+        if not hasattr(self, "_owner"):
             # It is possible to get a content item that does not contain owner.
             # "owner" is an optional additional request param.
             # If it's not included, we can retrieve the information by `owner_guid`
             from .users import Users
 
-            self["owner"] = Users(self.params).get(self["owner_guid"])
-        return self["owner"]
+            self._owner: User = Users(self._ctx).get(self["owner_guid"])
+        return self._owner
 
     @property
     def _variants(self) -> Variants:
-        return Variants(self.params, self["guid"])
+        return Variants(self._ctx)
 
     @property
     def is_interactive(self) -> bool:
@@ -497,7 +386,7 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
         }
 
 
-class Content(Resources):
+class Content(ApiCallMixin, ContextP[Context]):
     """Content resource.
 
     Parameters
@@ -512,11 +401,13 @@ class Content(Resources):
 
     def __init__(
         self,
-        params: ResourceParameters,
+        ctx: Context,
         *,
         owner_guid: str | None = None,
     ) -> None:
-        super().__init__(params)
+        super().__init__()
+        self._ctx = ctx
+        self._path = "v1/content"
         self.owner_guid = owner_guid
 
     def count(self) -> int:
@@ -592,9 +483,9 @@ class Content(Resources):
         ContentItem
         """
         path = "v1/content"
-        url = self.params.url + path
-        response = self.params.session.post(url, json=attrs)
-        return ContentItem(self.params, **response.json())
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url, json=attrs)
+        return ContentItem(self._ctx, **response.json())
 
     @overload
     def find(
@@ -680,11 +571,11 @@ class Content(Resources):
             conditions["owner_guid"] = self.owner_guid
 
         path = "v1/content"
-        url = self.params.url + path
-        response = self.params.session.get(url, params=conditions)
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url, params=conditions)
         return [
             ContentItem(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in response.json()
@@ -853,6 +744,6 @@ class Content(Resources):
         ContentItem
         """
         path = f"v1/content/{guid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return ContentItem(self.params, **response.json())
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url)
+        return ContentItem(self._ctx, **response.json())

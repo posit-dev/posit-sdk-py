@@ -27,7 +27,28 @@ def requires(version: str):
     return decorator
 
 
-class Context:
+# Big mystery: `Context` is a subclass of `dict`. However, this is unnecessary.
+# BUT, when `dict` is removed, the following errors occur:
+# ```
+# uv run pyright
+# /Users/barret/Documents/git/rstudio/posit-sdk-py/posit-sdk-py.nosync/src/posit/connect/client.py
+#   /Users/barret/Documents/git/rstudio/posit-sdk-py/posit-sdk-py.nosync/src/posit/connect/client.py:274:25 - error: Argument of type "Context" cannot be assigned to parameter "iterable" of type "Iterable[Package]" in function "__new__"
+#     "Context" is incompatible with protocol "Iterable[Package]"
+#       "__iter__" is not present (reportArgumentType)
+# /Users/barret/Documents/git/rstudio/posit-sdk-py/posit-sdk-py.nosync/src/posit/connect/jobs.py
+#   /Users/barret/Documents/git/rstudio/posit-sdk-py/posit-sdk-py.nosync/src/posit/connect/jobs.py:302:21 - error: Argument of type "ContentItemContext" cannot be assigned to parameter "iterable" of type "Iterable[Job]" in function "__new__"
+#     "ContentItemContext" is incompatible with protocol "Iterable[Job]"
+#       "__iter__" is not present (reportArgumentType)
+# /Users/barret/Documents/git/rstudio/posit-sdk-py/posit-sdk-py.nosync/src/posit/connect/packages.py
+#   /Users/barret/Documents/git/rstudio/posit-sdk-py/posit-sdk-py.nosync/src/posit/connect/packages.py:102:32 - error: Argument of type "ContentItemContext" cannot be assigned to parameter "iterable" of type "Iterable[ContentPackage]" in function "__new__"
+#     "ContentItemContext" is incompatible with protocol "Iterable[ContentPackage]"
+#       "__iter__" is not present (reportArgumentType)
+# 3 errors, 0 warnings, 0 informations
+# ```
+# This is a mystery because `Context` is not used as an iterable in the codebase.
+
+
+class Context(dict):
     def __init__(self, session: requests.Session, url: Url):
         self.session = session
         self.url = url

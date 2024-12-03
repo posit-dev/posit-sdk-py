@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pyjson5 as json
 
-from posit.connect._json import Jsonifiable, JsonifiableDict, JsonifiableList
+from posit.connect._json import Jsonifiable
 
 
 def load_mock(path: str) -> Jsonifiable:
@@ -33,13 +33,13 @@ def load_mock(path: str) -> Jsonifiable:
     return json.loads((Path(__file__).parent / "__api__" / path).read_text())
 
 
-def load_mock_dict(path: str) -> JsonifiableDict:
+def load_mock_dict(path: str) -> dict:
     result = load_mock(path)
     assert isinstance(result, dict)
     return result
 
 
-def load_mock_list(path: str) -> JsonifiableList:
+def load_mock_list(path: str) -> list:
     result = load_mock(path)
     assert isinstance(result, list)
     return result

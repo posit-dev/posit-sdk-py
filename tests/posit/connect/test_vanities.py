@@ -4,9 +4,11 @@ import requests
 import responses
 from responses.matchers import json_params_matcher
 
-from posit.connect.resources import ResourceParameters
+from posit.connect._types_content_item import ContentItemContext
+from posit.connect.content import ContentItem
+from posit.connect.context import Context
 from posit.connect.urls import Url
-from posit.connect.vanities import Vanities, Vanity, VanityMixin
+from posit.connect.vanities import Vanities, Vanity
 
 
 class TestVanityDestroy:
@@ -19,8 +21,8 @@ class TestVanityDestroy:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
-        vanity = Vanity(params, content_guid=content_guid, path=Mock(), created_time=Mock())
+        ctx = ContentItemContext(Context(session, url), content_guid=content_guid)
+        vanity = Vanity(ctx, path=Mock(), created_time=Mock())
 
         vanity.destroy()
 
@@ -36,11 +38,10 @@ class TestVanityDestroy:
         session = requests.Session()
         url = Url(base_url)
         after_destroy = Mock()
-        params = ResourceParameters(session, url)
+        ctx = ContentItemContext(Context(session, url), content_guid=content_guid)
         vanity = Vanity(
-            params,
+            ctx,
             after_destroy=after_destroy,
-            content_guid=content_guid,
             path=Mock(),
             created_time=Mock(),
         )
@@ -59,8 +60,8 @@ class TestVanitiesAll:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
-        vanities = Vanities(params)
+        ctx = Context(session, url)
+        vanities = Vanities(ctx)
 
         vanities.all()
 
@@ -77,8 +78,12 @@ class TestVanityMixin:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
-        content = VanityMixin(params, guid=guid)
+        ctx = Context(session, url)
+        content = ContentItem(
+            ctx,
+            guid=guid,
+            name="testing",  # provide name to avoid request
+        )
 
         assert content.vanity == "my-dashboard"
         assert mock_get.call_count == 1
@@ -97,8 +102,12 @@ class TestVanityMixin:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
-        content = VanityMixin(params, guid=guid)
+        ctx = Context(session, url)
+        content = ContentItem(
+            ctx,
+            guid=guid,
+            name="testing",  # provide name to avoid request
+        )
         content.vanity = path
         assert content.vanity == path
 
@@ -113,9 +122,14 @@ class TestVanityMixin:
 
         session = requests.Session()
         url = Url(base_url)
-        params = ResourceParameters(session, url)
-        content = VanityMixin(params, guid=guid)
-        content._vanity = Vanity(params, path=Mock(), content_guid=guid, created_time=Mock())
+        ctx = Context(session, url)
+        content = ContentItem(
+            ctx,
+            guid=guid,
+            name="testing",  # provide name to avoid request
+        )
+
+        content._vanity = Vanity(content._ctx, path=Mock(), created_time=Mock())
         del content.vanity
 
         assert content._vanity is None

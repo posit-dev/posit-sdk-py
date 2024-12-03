@@ -15,7 +15,6 @@ from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
 from .packages import Packages
-from .resources import ResourceParameters
 from .tasks import Tasks
 from .users import User, Users
 from .vanities import Vanities
@@ -155,7 +154,6 @@ class Client(ContextManager):
         session.hooks["response"].append(hooks.check_for_deprecation_header)
         session.hooks["response"].append(hooks.handle_errors)
         self.session = session
-        self.resource_params = ResourceParameters(session, self.cfg.url)
         self._ctx = Context(self.session, self.cfg.url)
 
     @property
@@ -180,7 +178,7 @@ class Client(ContextManager):
         User
             The currently authenticated user.
         """
-        return me.get(self.resource_params)
+        return me.get(self._ctx)
 
     @property
     def groups(self) -> Groups:
@@ -191,7 +189,7 @@ class Client(ContextManager):
         Groups
             The groups resource interface.
         """
-        return Groups(self.resource_params)
+        return Groups(self._ctx)
 
     @property
     def tasks(self) -> Tasks:
@@ -203,7 +201,7 @@ class Client(ContextManager):
         tasks.Tasks
             The tasks resource instance.
         """
-        return Tasks(self.resource_params)
+        return Tasks(self._ctx)
 
     @property
     def users(self) -> Users:
@@ -215,7 +213,7 @@ class Client(ContextManager):
         Users
             The users resource instance.
         """
-        return Users(self.resource_params)
+        return Users(self._ctx)
 
     @property
     def content(self) -> Content:
@@ -227,7 +225,7 @@ class Client(ContextManager):
         Content
             The content resource instance.
         """
-        return Content(self.resource_params)
+        return Content(self._ctx)
 
     @property
     def metrics(self) -> Metrics:
@@ -255,7 +253,7 @@ class Client(ContextManager):
         >>> len(events)
         24
         """
-        return Metrics(self.resource_params)
+        return Metrics(self._ctx)
 
     @property
     @requires(version="2024.08.0")
@@ -268,16 +266,16 @@ class Client(ContextManager):
         OAuth
             The oauth API instance.
         """
-        return OAuth(self.resource_params, self.cfg.api_key)
+        return OAuth(self._ctx, self.cfg.api_key)
 
     @property
     @requires(version="2024.10.0-dev")
     def packages(self) -> Packages:
-        return Packages(self._ctx, "v1/packages")
+        return Packages(self._ctx)
 
     @property
     def vanities(self) -> Vanities:
-        return Vanities(self.resource_params)
+        return Vanities(self._ctx)
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""

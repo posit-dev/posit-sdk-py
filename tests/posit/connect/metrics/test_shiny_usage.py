@@ -4,8 +4,8 @@ import requests
 import responses
 from responses import matchers
 
+from posit.connect.context import Context
 from posit.connect.metrics import shiny_usage
-from posit.connect.resources import ResourceParameters
 from posit.connect.urls import Url
 
 from ..api import load_mock, load_mock_dict
@@ -68,10 +68,10 @@ class TestShinyUsageFind:
         ]
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        ctx = Context(requests.Session(), Url("https://connect.example/__api__"))
 
         # invoke
-        events = shiny_usage.ShinyUsage(params).find()
+        events = shiny_usage.ShinyUsage(ctx).find()
 
         # assert
         assert mock_get[0].call_count == 1
@@ -110,10 +110,10 @@ class TestShinyUsageFindOne:
         ]
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        ctx = Context(requests.Session(), Url("https://connect.example/__api__"))
 
         # invoke
-        event = shiny_usage.ShinyUsage(params).find_one()
+        event = shiny_usage.ShinyUsage(ctx).find_one()
 
         # assert
         assert mock_get[0].call_count == 1

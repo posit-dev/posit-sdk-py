@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import posixpath
-from typing import Any, Literal, Optional, overload
+from typing import Any, Literal, Optional
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
-from .context import Context
-from .resources import Active, ActiveFinderMethods, ActiveSequence, Resource
+from ._active import ActiveDict, ActiveFinderSequence
+from ._types_content_item import ContentItemContext, ContentItemP
 
 JobTag = Literal[
     "unknown",
@@ -33,7 +35,7 @@ JobTag = Literal[
 ]
 
 
-class Job(Active):
+class Job(ActiveDict):
     class _Job(TypedDict):
         # Identifiers
         id: Required[str]
@@ -101,7 +103,7 @@ class Job(Active):
         tag: Required[JobTag]
         """A tag categorizing the job type. Options are build_jupyter, build_report, build_site, configure_report, git, packrat_restore, python_restore, render_shiny, run_api, run_app, run_bokeh_app, run_dash_app, run_fastapi_app, run_pyshiny_app, run_python_api, run_streamlit, run_tensorflow, run_voila_app, testing, unknown, val_py_ext_pkg, val_r_ext_pkg, and val_r_install."""
 
-    def __init__(self, ctx: Context, path: str, /, **attributes: Unpack[_Job]):
+    def __init__(self, ctx: ContentItemContext, path: str, /, **attributes: Unpack[_Job]):
         super().__init__(ctx, path, **attributes)
 
     def destroy(self) -> None:
@@ -117,22 +119,20 @@ class Job(Active):
         ----
         This action requires administrator, owner, or collaborator privileges.
         """
-        endpoint = self._ctx.url + self._path
-        self._ctx.session.delete(endpoint)
+        self._delete_api()
 
 
-class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
-    def __init__(self, ctx: Context, path: str):
+class Jobs(ActiveFinderSequence[Job, ContentItemContext]):
+    def __init__(self, ctx: ContentItemContext) -> None:
         """A collection of jobs.
 
         Parameters
         ----------
-        ctx : Context
+        ctx : ContentItemContext
             The context object containing the session and URL for API interactions
-        path : str
-            The HTTP path component for the jobs endpoint (e.g., 'v1/content/544509fc-e4f0-41de-acb4-1fe3a2c1d797/jobs')
         """
-        super().__init__(ctx, path, "key")
+        path = posixpath.join(ctx.content_path, "jobs")
+        super().__init__(ctx, path, uid="key")
 
     def _create_instance(self, path: str, /, **attributes: Any) -> Job:
         """Creates a Job instance.
@@ -150,7 +150,8 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
 
     class _FindByRequest(TypedDict, total=False):
         # Identifiers
-        id: Required[str]
+        # TODO-barret-Q: Is this change correct? It use to be required, but the docs say not-required
+        id: NotRequired[str]
         """A unique identifier for the job."""
 
         ppid: NotRequired[Optional[str]]
@@ -215,8 +216,10 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
         tag: NotRequired[JobTag]
         """A tag categorizing the job type. Options are build_jupyter, build_report, build_site, configure_report, git, packrat_restore, python_restore, render_shiny, run_api, run_app, run_bokeh_app, run_dash_app, run_fastapi_app, run_pyshiny_app, run_python_api, run_streamlit, run_tensorflow, run_voila_app, testing, unknown, val_py_ext_pkg, val_r_ext_pkg, and val_r_install."""
 
-    @overload
-    def find_by(self, **conditions: Unpack[_FindByRequest]) -> Optional[Job]:
+    def find_by(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self,
+        **conditions: Unpack[_FindByRequest],
+    ) -> Job | None:
         """Finds the first record matching the specified conditions.
 
         There is no implied ordering so if order matters, you should specify it yourself.
@@ -268,30 +271,21 @@ class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):
         -------
         Optional[Job]
         """
-
-    @overload
-    def find_by(self, **conditions): ...
-
-    def find_by(self, **conditions) -> Optional[Job]:
         return super().find_by(**conditions)
 
 
-class JobsMixin(Active, Resource):
+class JobsMixin:
     """Mixin class to add a jobs attribute to a resource."""
 
-    def __init__(self, ctx, path, /, **attributes):
-        """Mixin class which adds a `jobs` attribute to the Active Resource.
+    # def __init__(self: ContentItemP, /, **kwargs: Any) -> None:
+    #     super().__init__(**kwargs)
 
-        Parameters
-        ----------
-        ctx : Context
-            The context object containing the session and URL for API interactions
-        path : str
-            The HTTP path component for the resource endpoint
-        **attributes : dict
-            Resource attributes passed
+    @property
+    def jobs(self: ContentItemP) -> Jobs:
+        """Get the jobs.
+
+        Returns
+        -------
+        Jobs
         """
-        super().__init__(ctx, path, **attributes)
-
-        path = posixpath.join(path, "jobs")
-        self.jobs = Jobs(ctx, path)
+        return Jobs(self._ctx)
