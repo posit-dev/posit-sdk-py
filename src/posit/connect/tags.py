@@ -142,7 +142,6 @@ class TagContentItems(ContextManager):
         response = self._ctx.session.get(url)
         results = response.json()
         params = ResourceParameters(self._ctx.session, self._ctx.url)
-        print(results)
         return [ContentItem(params, **result) for result in results]
 
 

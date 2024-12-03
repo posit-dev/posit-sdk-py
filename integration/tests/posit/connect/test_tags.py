@@ -1,34 +1,27 @@
 from typing import TYPE_CHECKING
 
-import pytest
-from packaging import version
-
 from posit import connect
-
-from . import CONNECT_VERSION
 
 if TYPE_CHECKING:
     from posit.connect.content import ContentItem
 
 
 # add integration tests here!
-@pytest.mark.skipif(
-    CONNECT_VERSION < version.parse("2024.10.0-dev"),
-    reason="Packages API unavailable",
-)
 class TestTags:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
-        cls.contentA = cls.client.content.create(name=cls.__name__)
-        cls.contentB = cls.client.content.create(name=cls.__name__)
-        cls.contentC = cls.client.content.create(
-            name=cls.__name__,
-        )
+        cls.contentA = cls.client.content.create(name="Content_A")
+        cls.contentB = cls.client.content.create(name="Content_B")
+        cls.contentC = cls.client.content.create(name="Content_C")
 
     @classmethod
     def teardown_class(cls):
         assert len(cls.client.tags.find()) == 0
+        cls.contentA.delete()
+        cls.contentB.delete()
+        cls.contentC.delete()
+        assert len(cls.client.content.find()) == 0
 
     def test_tags_find(self):
         tags = self.client.tags.find()
@@ -37,7 +30,7 @@ class TestTags:
     def test_tags_create_destroy(self):
         tagA = self.client.tags.create(name="tagA")
         tagB = self.client.tags.create(name="tagB")
-        tagC = self.client.tags.create(name="tagC", parent=self.tagA)
+        tagC = self.client.tags.create(name="tagC", parent=tagA)
 
         assert len(self.client.tags.find()) == 3
 
@@ -49,78 +42,133 @@ class TestTags:
         assert len(self.client.tags.find()) == 0
 
     def test_tag_descendants(self):
-        # Have created tags persist
-        self.tagA = self.client.tags.create(name="tagA")
-        self.tagB = self.client.tags.create(name="tagB")
-        self.tagC = self.client.tags.create(name="tagC", parent=self.tagA)
-        self.tagD = self.client.tags.create(name="tagD", parent=self.tagC)
+        tagA = self.client.tags.create(name="tagA")
+        tagB = self.client.tags.create(name="tagB")
+        tagC = self.client.tags.create(name="tagC", parent=tagA)
+        tagD = self.client.tags.create(name="tagD", parent=tagC)
 
-        assert self.tagA.descendant_tags.find() == [self.tagC, self.tagD]
+        assert tagA.descendant_tags.find() == [tagC, tagD]
 
-        assert len(self.tagB.descendant_tags.find()) == 0
-        assert len(self.tagC.descendant_tags.find()) == [self.tagD]
+        assert len(tagB.descendant_tags.find()) == 0
+        assert tagC.descendant_tags.find() == [tagD]
+
+        # cleanup
+        tagA.destroy()
+        tagB.destroy()
+        assert len(self.client.tags.find()) == 0
 
     def test_tag_children(self):
-        assert self.tagA.children_tags.find() == [self.tagC]
-        assert self.tagB.children_tags.find() == []
-        assert self.tagC.children_tags.find() == [self.tagD]
+        tagA = self.client.tags.create(name="tagA_children")
+        tagB = self.client.tags.create(name="tagB_children")
+        tagC = self.client.tags.create(name="tagC_children", parent=tagA)
+        tagD = self.client.tags.create(name="tagD_children", parent=tagC)
+
+        assert tagA.children_tags.find() == [tagC]
+        assert tagB.children_tags.find() == []
+        assert tagC.children_tags.find() == [tagD]
+
+        # cleanup
+        tagA.destroy()
+        tagB.destroy()
+        assert len(self.client.tags.find()) == 0
 
     def test_tag_parent(self):
-        assert self.tagA.parent_tag is None
-        assert self.tagB.parent_tag is None
-        assert self.tagC.parent_tag == self.tagA
-        assert self.tagD.parent_tag == self.tagC
+        tagA = self.client.tags.create(name="tagA_parent")
+        tagB = self.client.tags.create(name="tagB_parent")
+        tagC = self.client.tags.create(name="tagC_parent", parent=tagA)
+        tagD = self.client.tags.create(name="tagD_parent", parent=tagC)
 
-    def test_content_a_tags(self):
+        assert tagA.parent_tag is None
+        assert tagB.parent_tag is None
+        assert tagC.parent_tag == tagA
+        assert tagD.parent_tag == tagC
+
+        # cleanup
+        tagA.destroy()
+        tagB.destroy()
+        assert len(self.client.tags.find()) == 0
+
+    def test_content_item_tags(self):
+        tagRoot = self.client.tags.create(name="tagRoot_content_item_tags")
+        tagA = self.client.tags.create(name="tagA_content_item_tags", parent=tagRoot)
+        tagB = self.client.tags.create(name="tagB_content_item_tags", parent=tagRoot)
+        tagC = self.client.tags.create(name="tagC_content_item_tags", parent=tagA)
+        tagD = self.client.tags.create(name="tagD_content_item_tags", parent=tagC)
+
         assert len(self.contentA.tags.find()) == 0
 
-        self.contentA.tags.add(self.tagA)
-        self.contentA.tags.add(self.tagB)
+        self.contentA.tags.add(tagD)
+        self.contentA.tags.add(tagB)
 
-        # tagB, tagC, tagA (parent of tagC)
-        assert len(self.contentA.tags.find()) == 3
+        # tagB, tagD, tagC (parent of tagD), tagA (parent of tagC)
+        # tagD + tagC
+        # tagRoot is considered a "category" and is "not a tag"
+        assert len(self.contentA.tags.find()) == 4
 
-        self.contentA.tags.delete(self.tagB)
-        assert len(self.contentA.tags.find()) == 2
+        # Removes tagB
+        self.contentA.tags.delete(tagB)
+        assert len(self.contentA.tags.find()) == 4 - 1
 
-        # Removes tagC and tagA (parent of tagC)
-        self.contentA.tags.delete(self.tagA)
-        assert len(self.contentA.tags.find()) == 0
+        # Removes tagC and tagD (parent of tagC)
+        self.contentA.tags.delete(tagC)
+        assert len(self.contentA.tags.find()) == 4 - 1 - 2
 
-    def test_tags_content_items(self):
-        assert len(self.tagA.content_items.find()) == 0
-        assert len(self.tagB.content_items.find()) == 0
-        assert len(self.tagC.content_items.find()) == 0
+        # cleanup
+        tagRoot.destroy()
+        assert len(self.client.tags.find()) == 0
 
-        self.contentA.tags.add(self.tagA)
-        self.contentA.tags.add(self.tagB)
+    def test_tag_content_items(self):
+        tagRoot = self.client.tags.create(name="tagRoot_tag_content_items")
+        tagA = self.client.tags.create(name="tagA_tag_content_items", parent=tagRoot)
+        tagB = self.client.tags.create(name="tagB_tag_content_items", parent=tagRoot)
+        tagC = self.client.tags.create(name="tagC_tag_content_items", parent=tagA)
+        tagD = self.client.tags.create(name="tagD_tag_content_items", parent=tagC)
 
-        self.contentB.tags.add(self.tagA)
-        self.contentB.tags.add(self.tagC)
+        assert len(tagA.content_items.find()) == 0
+        assert len(tagB.content_items.find()) == 0
+        assert len(tagC.content_items.find()) == 0
+        assert len(tagD.content_items.find()) == 0
 
-        self.contentC.tags.add(self.tagC)
+        self.contentA.tags.add(tagD)
+        self.contentA.tags.add(tagB)
 
-        assert len(self.contentA.tags.find()) == 2
+        self.contentB.tags.add(tagA)
+        self.contentB.tags.add(tagC)
+
+        self.contentC.tags.add(tagC)
+
+        assert len(self.contentA.tags.find()) == 4
         assert len(self.contentB.tags.find()) == 2
-        assert len(self.contentC.tags.find()) == 1
+        assert len(self.contentC.tags.find()) == 2
 
-        assert len(self.tagA.content_items.find()) == 2
-        assert len(self.tagB.content_items.find()) == 1
-        assert len(self.tagC.content_items.find()) == 2
+        assert len(tagA.content_items.find()) == 3
+        assert len(tagB.content_items.find()) == 1
+        assert len(tagC.content_items.find()) == 3
 
         # Make sure unique content items are found
         content_items_list: list[ContentItem] = []
-        for tag in [self.tagA, *self.tagA.descendant_tags.find()]:
+        for tag in [tagA, *tagA.descendant_tags.find()]:
             content_items_list.extend(tag.content_items.find())
-        # Get unique items
-        content_items_list = list(set(content_items_list))
+        # Get unique content_item guids
+        content_item_guids = set[str]()
+        for content_item in content_items_list:
+            if content_item["guid"] not in content_item_guids:
+                content_item_guids.add(content_item["guid"])
 
-        assert content_items_list == [self.contentA, self.contentB, self.contentC]
+        assert content_item_guids == {
+            self.contentA["guid"],
+            self.contentB["guid"],
+            self.contentC["guid"],
+        }
 
-        self.contentA.tags.delete(self.tagA, self.tagB)
-        self.contentB.tags.delete(self.tagA)
-        self.contentC.tags.delete(self.tagC)
+        self.contentA.tags.delete(tagRoot)
+        self.contentB.tags.delete(tagRoot)
+        self.contentC.tags.delete(tagRoot)
 
-        assert len(self.tagA.content_items.find()) == 0
-        assert len(self.tagB.content_items.find()) == 0
-        assert len(self.tagC.content_items.find()) == 0
+        assert len(tagA.content_items.find()) == 0
+        assert len(tagB.content_items.find()) == 0
+        assert len(tagC.content_items.find()) == 0
+
+        # cleanup
+        tagRoot.destroy()
+        assert len(self.client.tags.find()) == 0
