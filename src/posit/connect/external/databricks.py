@@ -98,7 +98,45 @@ class PositCredentialsProvider:
 
 
 class PositContentCredentialsStrategy(CredentialsStrategy):
-    """CredentialsStrategy implementation which returns a PositContentCredentialsProvider when called."""
+    """`CredentialsStrategy` implementation which supports interacting with Service Account OAuth integrations on Connect.
+
+    This strategy callable class returns a `PositContentCredentialsProvider` when hosted on Connect, and 
+    its `local_strategy` strategy otherwise.
+
+    Example 
+    -------
+    from posit.connect.external.databricks import PositContentCredentialsStrategy
+
+    import pandas as pd
+    import requests
+    
+    from databricks import sql
+    from databricks.sdk.core import ApiClient, Config, databricks_cli
+    from databricks.sdk.service.iam import CurrentUserAPI
+
+    # env vars
+    DATABRICKS_HOST = "<REDACTED>"
+    DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
+    SQL_HTTP_PATH = "<REDACTED>"
+
+    posit_strategy = PositContentCredentialsStrategy(local_strategy=databricks_cli)
+
+    cfg = Config(host=DATABRICKS_HOST_URL, credentials_strategy=posit_strategy)
+
+    databricks_user_info = CurrentUserAPI(ApiClient(cfg)).me()
+    print(f"Hello, {databricks_user_info.display_name}!")
+
+    query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"
+    with sql.connect(
+        server_hostname=DATABRICKS_HOST,
+        http_path=SQL_HTTP_PATH,
+        credentials_provider=posit_strategy.sql_credentials_provider(cfg),
+    ) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            print(pd.DataFrame([row.asDict() for row in rows]))
+    """
 
     def __init__(
         self,
@@ -135,7 +173,58 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
 
 
 class PositCredentialsStrategy(CredentialsStrategy):
-    """CredentialsStrategy implementation which returns a PositContentCredentialsProvider when called."""
+    """`CredentialsStrategy` implementation which supports interacting with Viewer OAuth integrations on Connect.
+
+    This strategy callable class returns a `PositCredentialsProvider` when hosted on Connect, and 
+    its `local_strategy` strategy otherwise.
+
+    Example
+    -------
+    import os
+
+    import pandas as pd
+    from databricks import sql
+    from databricks.sdk.core import ApiClient, Config, databricks_cli
+    from databricks.sdk.service.iam import CurrentUserAPI
+    from posit.connect.external.databricks import PositCredentialsStrategy
+    from shiny import App, Inputs, Outputs, Session, render, ui
+
+    # env vars
+    DATABRICKS_HOST = "<REDACTED>"
+    DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
+    SQL_HTTP_PATH = "<REDACTED>"
+
+    app_ui = ui.page_fluid(ui.output_text("text"), ui.output_data_frame("result"))
+
+    def server(i: Inputs, o: Outputs, session: Session):
+        session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
+        posit_strategy = PositCredentialsStrategy(
+            local_strategy=databricks_cli, user_session_token=session_token
+        )
+        cfg = Config(host=DATABRICKS_HOST_URL, credentials_strategy=posit_strategy)
+
+        @render.data_frame
+        def result():
+            query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"
+
+            with sql.connect(
+                server_hostname=DATABRICKS_HOST,
+                http_path=SQL_HTTP_PATH,
+                credentials_provider=posit_strategy.sql_credentials_provider(cfg),
+            ) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(query)
+                    rows = cursor.fetchall()
+                    df = pd.DataFrame(rows, columns=[col[0] for col in cursor.description])
+                    return df
+
+        @render.text
+        def text():
+            databricks_user_info = CurrentUserAPI(ApiClient(cfg)).me()
+            return f"Hello, {databricks_user_info.display_name}!"
+    
+    app = App(app_ui, server)
+    """
 
     def __init__(
         self,
