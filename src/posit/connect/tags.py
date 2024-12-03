@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, overload
 
 from typing_extensions import NotRequired, TypedDict, Unpack
 
@@ -266,23 +266,20 @@ class Tags(ContextManager):
         response = self._ctx.session.get(url)
         return Tag(self._ctx, path, **response.json())
 
-    class _NameParentAttrs(TypedDict, total=False):
-        name: str
-        """
-        The name of the tag.
-
-        Note: tag names are only unique within the scope of a parent, which
-        means that it is possible to have multiple results when querying by
-        name; however, querying by both `name` and `parent` ensures a single
-        result.
-        """
-        parent: NotRequired[str | Tag | None]
-        """The identifier for the parent tag. If there is no parent, the tag is a top-level tag."""
-
     def _update_parent_kwargs(self, kwargs: dict) -> dict:
         parent = kwargs.get("parent", None)
         if parent is None:
+            # No parent to upgrade, return the kwargs as is
             return kwargs
+
+        if not isinstance(parent, Tag):
+            raise TypeError(
+                "`parent=` must be a Tag instance. If using a string, please use `parent_id=`"
+            )
+
+        parent_id = kwargs.get("parent_id", None)
+        if parent_id:
+            raise ValueError("Cannot provide both `parent=` and `parent_id=`")
 
         ret_kwargs = {**kwargs}
 
@@ -290,18 +287,16 @@ class Tags(ContextManager):
         # and store the `parent_id` in the ret_kwargs below
         del ret_kwargs["parent"]
 
-        if isinstance(parent, Tag):
-            parent: str = parent["id"]
+        ret_kwargs["parent_id"] = parent["id"]
+        return ret_kwargs
 
-        if isinstance(parent, str):
-            if parent == "":
-                raise ValueError("Tag `parent` cannot be an empty string")
-            ret_kwargs["parent_id"] = parent
-            return ret_kwargs
+    # Allow for every combination of `name` and (`parent` or `parent_id`)
+    @overload
+    def find(self, /, *, name: str = ..., parent: Tag = ...) -> list[Tag]: ...
+    @overload
+    def find(self, /, *, name: str = ..., parent_id: str = ...) -> list[Tag]: ...
 
-        raise TypeError("`parent=` must be a string or Tag instance")
-
-    def find(self, /, **kwargs: Unpack[Tags._NameParentAttrs]) -> list[Tag]:
+    def find(self, /, **kwargs) -> list[Tag]:
         """
         Find tags by name and/or parent.
 
@@ -313,7 +308,10 @@ class Tags(ContextManager):
         ----------
         name : str, optional
             The name of the tag.
-        parent : str, Tag, optional
+        parent : Tag, optional
+            The parent `Tag` object. If there is no parent, the tag is a top-level tag. Only one of
+            `parent` or `parent_id` can be provided.
+        parent_id : str, optional
             The identifier for the parent tag. If there is no parent, the tag is a top-level tag.
 
         Returns
@@ -348,7 +346,14 @@ class Tags(ContextManager):
         results = response.json()
         return [Tag(self._ctx, f"{self._path}/{result['id']}", **result) for result in results]
 
-    def create(self, /, **kwargs: Unpack[Tags._NameParentAttrs]) -> Tag:
+    @overload
+    def create(self, /, *, name: str) -> Tag: ...
+    @overload
+    def create(self, /, *, name: str, parent: Tag) -> Tag: ...
+    @overload
+    def create(self, /, *, name: str, parent_id: str) -> Tag: ...
+
+    def create(self, /, **kwargs) -> Tag:
         """
         Create a tag.
 
@@ -356,7 +361,10 @@ class Tags(ContextManager):
         ----------
         name : str
             The name of the tag.
-        parent : str, Tag, optional
+        parent : Tag, optional
+            The parent `Tag` object. If there is no parent, the tag is a top-level tag. Only one of
+            `parent` or `parent_id` can be provided.
+        parent_id : str, optional
             The identifier for the parent tag. If there is no parent, the tag is a top-level tag.
 
         Returns
@@ -456,8 +464,7 @@ class ContentItemTags(ContextManager):
 
         url = self._ctx.url + self._path
         for tag_id in tag_ids:
-            _ = self._ctx.session.post(url, json={"tag_id": tag_id})
-        return
+            self._ctx.session.post(url, json={"tag_id": tag_id})
 
     def delete(self, *tags: str | Tag) -> None:
         """
@@ -481,4 +488,3 @@ class ContentItemTags(ContextManager):
         for tag_id in tag_ids:
             tag_url = f"{url}/{tag_id}"
             self._ctx.session.delete(tag_url)
-        return

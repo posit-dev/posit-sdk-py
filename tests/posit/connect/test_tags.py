@@ -70,18 +70,14 @@ class TestTags:
         client = Client(api_key="12345", url="https://connect.example")
 
         # invoke
-        by_str_tags = client.tags.find(parent="3")
+        by_str_tags = client.tags.find(parent_id="3")
         parent_tag = Tag(client._ctx, "/v1/tags/3", id="3", name="Parent")
         by_tag_tags = client.tags.find(parent=parent_tag)
-        by_parent_id_tags = client.tags.find(
-            parent_id=3,  # pyright: ignore[reportCallIssue]
-        )
 
         # assert
-        assert mock_get_tags.call_count == 3
+        assert mock_get_tags.call_count == 2
         assert len(by_str_tags) == 7
         assert len(by_tag_tags) == 7
-        assert len(by_parent_id_tags) == 7
 
     @responses.activate
     def test_get(self):
@@ -115,16 +111,20 @@ class TestTags:
         tag = Tag(client._ctx, "/v1/tags/1", id="3", name="Tag")
 
         # invoke
-        academy_tag_parent_id = client.tags.create(name="academy", parent=tag["id"])
+        academy_tag_parent_id = client.tags.create(name="academy", parent_id=tag["id"])
         academy_tag_parent_tag = client.tags.create(name="academy", parent=tag)
 
         with pytest.raises(TypeError):
             client.tags.create(
                 name="academy",
-                parent=123,  # pyright: ignore[reportArgumentType]
+                parent="not a tag",  # pyright: ignore[reportArgumentType]
             )
         with pytest.raises(ValueError):
-            client.tags.create(name="academy", parent="")
+            client.tags.create(  # pyright: ignore[reportCallIssue]
+                name="academy",
+                parent=tag,
+                parent_id="asdf",
+            )
 
         # assert
         assert mock_create_tag.call_count == 2

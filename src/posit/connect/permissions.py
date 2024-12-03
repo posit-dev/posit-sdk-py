@@ -158,7 +158,7 @@ class Permissions(Resources):
         Returns
         -------
         list[Permission]
-            The removed permissions. If a permission is not found, there is nothing to remove and 
+            The removed permissions. If a permission is not found, there is nothing to remove and
             it is not included in the returned list.
 
         Examples
