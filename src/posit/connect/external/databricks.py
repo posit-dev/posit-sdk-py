@@ -50,7 +50,7 @@ def _new_bearer_authorization_header(credentials: Credentials) -> Dict[str, str]
 def _get_auth_type(local_auth_type: str) -> str: 
     """Returns the auth type currently in use.
 
-    The databricks-sdk client uses the configurated auth_type to create
+    The databricks-sdk client uses the configured auth_type to create
     a user-agent string which is used for attribution. We should only
     overwrite the auth_type if we are using the PositCredentialsStrategy (non-local),
     otherwise, we should return the auth_type of the configured local_strategy instead
