@@ -15,11 +15,14 @@ POSIT_OAUTH_INTEGRATION_AUTH_TYPE = "posit-oauth-integration"
 # The Databricks SDK CredentialsProvider == Databricks SQL HeaderFactory
 CredentialsProvider = Callable[[], Dict[str, str]]
 
+
 class CredentialsStrategy(abc.ABC):
     """Maintain compatibility with the Databricks SQL/SDK client libraries.
 
-    https://github.com/databricks/databricks-sql-python/blob/v3.3.0/src/databricks/sql/auth/authenticators.py#L19-L33
-    https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/credentials_provider.py#L44-L54
+    See Also
+    --------
+    * https://github.com/databricks/databricks-sql-python/blob/v3.3.0/src/databricks/sql/auth/authenticators.py#L19-L33
+    * https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/credentials_provider.py#L44-L54
     """
 
     @abc.abstractmethod
@@ -47,7 +50,8 @@ def _new_bearer_authorization_header(credentials: Credentials) -> Dict[str, str]
         raise ValueError("Missing value for field 'access_token' in credentials.")
     return {"Authorization": f"Bearer {access_token}"}
 
-def _get_auth_type(local_auth_type: str) -> str: 
+
+def _get_auth_type(local_auth_type: str) -> str:
     """Returns the auth type currently in use.
 
     The databricks-sdk client uses the configured auth_type to create
@@ -62,7 +66,7 @@ def _get_auth_type(local_auth_type: str) -> str:
     See Also
     --------
     * https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/config.py#L261-L269
-    
+
     Returns
     -------
         str
@@ -70,8 +74,7 @@ def _get_auth_type(local_auth_type: str) -> str:
     if is_local():
         return local_auth_type
 
-    return POSIT_OAUTH_INTEGRATION_AUTH_TYPE 
-
+    return POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
 
 class PositContentCredentialsProvider:
@@ -117,7 +120,7 @@ class PositCredentialsProvider:
 class PositContentCredentialsStrategy(CredentialsStrategy):
     """`CredentialsStrategy` implementation which supports interacting with Service Account OAuth integrations on Connect.
 
-    This strategy callable class returns a `PositContentCredentialsProvider` when hosted on Connect, and 
+    This strategy callable class returns a `PositContentCredentialsProvider` when hosted on Connect, and
     its `local_strategy` strategy otherwise.
 
     Examples
@@ -130,7 +133,6 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
     from posit.connect.external.databricks import PositContentCredentialsStrategy
 
     import pandas as pd
-    
     from databricks import sql
     from databricks.sdk.core import ApiClient, Config, databricks_cli
     from databricks.sdk.service.iam import CurrentUserAPI
@@ -197,7 +199,7 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
 class PositCredentialsStrategy(CredentialsStrategy):
     """`CredentialsStrategy` implementation which supports interacting with Viewer OAuth integrations on Connect.
 
-    This strategy callable class returns a `PositCredentialsProvider` when hosted on Connect, and 
+    This strategy callable class returns a `PositCredentialsProvider` when hosted on Connect, and
     its `local_strategy` strategy otherwise.
 
     Examples
@@ -221,6 +223,7 @@ class PositCredentialsStrategy(CredentialsStrategy):
     SQL_HTTP_PATH = "<REDACTED>"
 
     app_ui = ui.page_fluid(ui.output_text("text"), ui.output_data_frame("result"))
+
 
     def server(i: Inputs, o: Outputs, session: Session):
 
@@ -250,7 +253,8 @@ class PositCredentialsStrategy(CredentialsStrategy):
         def text():
             databricks_user_info = CurrentUserAPI(ApiClient(cfg)).me()
             return f"Hello, {databricks_user_info.display_name}!"
-    
+
+
     app = App(app_ui, server)
     ```
     """
