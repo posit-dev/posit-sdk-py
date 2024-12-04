@@ -1,14 +1,16 @@
+"""
+Databricks SDK credentials implementations which support interacting with Posit OAuth integrations on Connect.
+
+NOTE: These APIs are provided as a convenience and are subject to breaking changes:
+https://github.com/databricks/databricks-sdk-py#interface-stability
+"""
+
 import abc
 from typing import Callable, Dict, Optional
 
 from ..client import Client
 from ..oauth import Credentials
 from .external import is_local
-
-"""
-NOTE: These APIs are provided as a convenience and are subject to breaking changes:
-https://github.com/databricks/databricks-sdk-py#interface-stability
-"""
 
 POSIT_OAUTH_INTEGRATION_AUTH_TYPE = "posit-oauth-integration"
 
