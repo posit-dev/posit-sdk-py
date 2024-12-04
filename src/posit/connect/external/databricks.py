@@ -125,7 +125,6 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
 
     Examples
     --------
-
     NOTE: in the example below, the PositContentCredentialsStrategy can be initialized anywhere that 
     the Python process can read environment variables.
 
@@ -204,7 +203,6 @@ class PositCredentialsStrategy(CredentialsStrategy):
 
     Examples
     --------
-    
     NOTE: In the example below, the PositCredentialsProvider *must* be initialized within the context of the 
     shiny `server` function, which provides access to the HTTP session headers.
 
