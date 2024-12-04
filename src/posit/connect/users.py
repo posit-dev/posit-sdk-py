@@ -170,22 +170,19 @@ class UserGroups(Resources):
         self._user_guid: str = user_guid
 
     @overload
-    def add(self, *args: Group) -> None: ...
+    def add(self, group: Group, /) -> None: ...
     @overload
-    def add(self, *, group_guid: str) -> None: ...
+    def add(self, /, *, group_guid: str) -> None: ...
 
-    def add(
-        self,
-        *args: Group,
-        group_guid: Optional[str] = None,
-    ) -> None:
+    def add(self, group: Optional[Group] = None, /, *, group_guid: Optional[str] = None) -> None:
         """
-        Add the user to the specified groups.
+        Add the user to the specified group.
 
         Parameters
         ----------
-        *args : Group
-            The groups to which the user will be added.
+        group : Group
+            The groups to which the user will be added. Only one of `group=` or `group_guid=` can
+            be provided.
         group_guid : str
             The unique identifier (guid) of the group to which the user will be added.
 
@@ -211,7 +208,8 @@ class UserGroups(Resources):
             client.groups.get("GROUP_GUID_1"),
             client.groups.get("GROUP_GUID_2"),
         ]
-        user.groups.add(*groups)
+        for group in groups:
+            user.groups.add(group)
 
         # Add the user to a group by GUID
         user.groups.add(group_guid="GROUP_GUID_HERE")
@@ -221,43 +219,44 @@ class UserGroups(Resources):
         --------
         * https://docs.posit.co/connect/api/#post-/v1/groups/-group_guid-/members
         """
-        if len(args) > 0:
+        if group is not None:
             from .groups import Group
 
             if group_guid:
-                raise ValueError("Only one of `*args` or `group_guid` may be be provided.")
+                raise ValueError("Only one of `group=` or `group_guid` may be be provided.")
 
-            for i, group in enumerate(args):
-                if not isinstance(group, Group):
-                    raise TypeError(
-                        f"`args[{i}]` is not an instance of Group. Received {group}",
-                    )
-            for group in args:
-                group.members.add(user_guid=self._user_guid)
+            if not isinstance(group, Group):
+                raise TypeError(
+                    f"`group=` is not an instance of Group. Received {group}",
+                )
+            group.members.add(user_guid=self._user_guid)
             return
 
         if not group_guid:
-            raise ValueError("Only one of `*args` or `group_guid` may be be provided.")
+            raise ValueError("Only one of `group=` or `group_guid` may be be provided.")
         group = self._ctx.client.groups.get(group_guid)
         group.members.add(user_guid=self._user_guid)
 
     @overload
-    def delete(self, *args: Group) -> None: ...
+    def delete(self, group: Group, /) -> None: ...
     @overload
-    def delete(self, *, group_guid: str) -> None: ...
+    def delete(self, /, *, group_guid: str) -> None: ...
 
     def delete(
         self,
-        *args: Group,
+        group: Optional[Group] = None,
+        /,
+        *,
         group_guid: Optional[str] = None,
     ) -> None:
         """
-        Remove the user from the specified groups.
+        Remove the user from the specified group.
 
         Parameters
         ----------
-        *args : Group
-            The groups from which the user will be removed.
+        group : Group
+            The groups to which the user will be added. Only one of `group=` or `group_guid=` can
+            be provided.
         group_guid : str
             The unique identifier (guid) of the group from which the user will be removed.
 
@@ -283,7 +282,8 @@ class UserGroups(Resources):
             client.groups.get("GROUP_GUID_1"),
             client.groups.get("GROUP_GUID_2"),
         ]
-        user.groups.delete(*groups)
+        for group in groups:
+            user.groups.delete(group)
 
         # Remove the user from a group by GUID
         user.groups.delete(group_guid="GROUP_GUID_HERE")
@@ -293,19 +293,17 @@ class UserGroups(Resources):
         --------
         * https://docs.posit.co/connect/api/#delete-/v1/groups/-group_guid-/members/-user_guid-
         """
-        if len(args) > 0:
+        if group is not None:
             from .groups import Group
 
             if group_guid:
-                raise ValueError("Only one of `*args` or `group_guid=` may be be provided.")
+                raise ValueError("Only one of `group=` or `group_guid=` may be be provided.")
 
-            for i, group in enumerate(args):
-                if not isinstance(group, Group):
-                    raise TypeError(
-                        f"`args[{i}]` is not an instance of Group. Received {group}",
-                    )
-            for group in args:
-                group.members.delete(user_guid=self._user_guid)
+            if not isinstance(group, Group):
+                raise TypeError(
+                    f"`group=` is not an instance of Group. Received {group}",
+                )
+            group.members.delete(user_guid=self._user_guid)
             return
 
         if not isinstance(group_guid, str):

@@ -73,7 +73,6 @@ class TestGroupMembers:
 
         user = User(self.client._ctx, guid=user_guid)
         self.group.members.add(user)
-        self.group.members.add(user, user)
         self.group.members.add(user_guid=user["guid"])
 
         with pytest.raises(TypeError):
@@ -102,7 +101,6 @@ class TestGroupMembers:
         user = User(self.client._ctx, guid=user_guid)
 
         self.group.members.delete(user)
-        self.group.members.delete(user, user)
         self.group.members.delete(user_guid=user["guid"])
 
         with pytest.raises(TypeError):

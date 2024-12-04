@@ -74,17 +74,17 @@ class GroupMembers(Resources):
         self._ctx: Context = ctx
 
     @overload
-    def add(self, *args: User) -> None: ...
+    def add(self, user: User, /) -> None: ...
     @overload
-    def add(self, *, user_guid: str) -> None: ...
+    def add(self, /, *, user_guid: str) -> None: ...
 
-    def add(self, *args: User, user_guid: Optional[str] = None) -> None:
+    def add(self, user: Optional[User] = None, /, *, user_guid: Optional[str] = None) -> None:
         """Add a user to the group.
 
         Parameters
         ----------
-        *args : User
-            User objects to add to the group.
+        user : User
+            User object to add to the group. Only one of `user=` or `user_guid=` can be provided.
         user_guid : str
             The user GUID.
 
@@ -103,7 +103,8 @@ class GroupMembers(Resources):
 
         # Add multiple users to the group
         users = client.users.find()
-        group.members.add(*users)
+        for user in users:
+            group.members.add(user)
 
         # Add a user to the group by GUID
         group.members.add(user_guid="USER_GUID_HERE")
@@ -113,19 +114,15 @@ class GroupMembers(Resources):
         --------
         * https://docs.posit.co/connect/api/#post-/v1/groups/-group_guid-/members
         """
-        if len(args) > 0:
+        if user is not None:
             from .users import User
 
             if user_guid:
-                raise ValueError("Only one of `*args` or `user_guid=` should be provided.")
-            for i, user in enumerate(args):
-                if not isinstance(user, User):
-                    raise TypeError(f"args[{i}] is not a `User` object. Received {user}")
+                raise ValueError("Only one of `user=` or `user_guid=` should be provided.")
+            if not isinstance(user, User):
+                raise TypeError(f"`user=` is not a `User` object. Received {user}")
 
-            for user in args:
-                self.add(user_guid=user["guid"])
-
-            return
+            user_guid = user["guid"]
 
         if not isinstance(user_guid, str):
             raise TypeError(f"`user_guid=` should be a string. Received {user_guid}")
@@ -137,17 +134,17 @@ class GroupMembers(Resources):
         self._ctx.session.post(url, json={"user_guid": user_guid})
 
     @overload
-    def delete(self, *args: User) -> None: ...
+    def delete(self, user: User, /) -> None: ...
     @overload
-    def delete(self, *, user_guid: str) -> None: ...
+    def delete(self, /, *, user_guid: str) -> None: ...
 
-    def delete(self, *args: User, user_guid: Optional[str] = None) -> None:
+    def delete(self, user: Optional[User] = None, /, *, user_guid: Optional[str] = None) -> None:
         """Remove a user from the group.
 
         Parameters
         ----------
-        *args : User
-            User objects to remove from the group.
+        user : User
+            User object to add to the group. Only one of `user=` or `user_guid=` can be provided.
         user_guid : str
             The user GUID.
 
@@ -166,7 +163,8 @@ class GroupMembers(Resources):
 
         # Remove multiple users from the group
         group_users = group.members.find()[:2]
-        group.members.delete(*group_users)
+        for group_user in group_users:
+            group.members.delete(group_user)
 
         # Remove a user from the group by GUID
         group.members.delete(user_guid="USER_GUID_HERE")
@@ -176,19 +174,15 @@ class GroupMembers(Resources):
         --------
         * https://docs.posit.co/connect/api/#delete-/v1/groups/-group_guid-/members/-user_guid-
         """
-        if len(args) > 0:
+        if user is not None:
             from .users import User
 
             if user_guid:
-                raise ValueError("Only one of `*args` or `user_guid=` should be provided.")
-            for i, user in enumerate(args):
-                if not isinstance(user, User):
-                    raise TypeError(f"`args[{i}]` is not a `User` object. Received {user}")
+                raise ValueError("Only one of `user=` or `user_guid=` should be provided.")
+            if not isinstance(user, User):
+                raise TypeError(f"`user=` is not a `User` object. Received {user}")
 
-            for user in args:
-                self.delete(user_guid=user["guid"])
-
-            return
+            user_guid = user["guid"]
 
         if not isinstance(user_guid, str):
             raise TypeError(f"`user_guid=` should be a string. Received {user_guid}")
