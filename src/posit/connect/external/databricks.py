@@ -78,7 +78,7 @@ def _get_auth_type(local_auth_type: str) -> str:
 
 
 class PositContentCredentialsProvider:
-    """CredentialsProvider implementation which initiates a credential exchange using a content-session-token.
+    """`CredentialsProvider` implementation which initiates a credential exchange using a content-session-token.
 
     The content-session-token is provided by Connect through the environment variable `CONNECT_CONTENT_SESSION_TOKEN`.
 
@@ -97,7 +97,7 @@ class PositContentCredentialsProvider:
 
 
 class PositCredentialsProvider:
-    """CredentialsProvider implementation which initiates a credential exchange using a user-session-token.
+    """`CredentialsProvider` implementation which initiates a credential exchange using a user-session-token.
     
     The user-session-token is provided by Connect through the HTTP session header 
     `Posit-Connect-User-Session-Token`.
