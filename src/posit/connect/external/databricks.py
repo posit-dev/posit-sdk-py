@@ -75,7 +75,15 @@ def _get_auth_type(local_auth_type: str) -> str:
 
 
 class PositContentCredentialsProvider:
-    """CredentialsProvider implementation which initiates a credential exchange using a content-session-token."""
+    """CredentialsProvider implementation which initiates a credential exchange using a content-session-token.
+
+    The content-session-token is provided by Connect through the environment variable `CONNECT_CONTENT_SESSION_TOKEN`.
+
+    See Also
+    --------
+    * https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/oauth/oauth.py
+
+    """
 
     def __init__(self, client: Client):
         self._client = client
@@ -86,7 +94,16 @@ class PositContentCredentialsProvider:
 
 
 class PositCredentialsProvider:
-    """CredentialsProvider implementation which initiates a credential exchange using a user-session-token."""
+    """CredentialsProvider implementation which initiates a credential exchange using a user-session-token.
+    
+    The user-session-token is provided by Connect through the HTTP session header 
+    `Posit-Connect-User-Session-Token`.
+    
+    See Also
+    --------
+    * https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/oauth/oauth.py
+
+    """
 
     def __init__(self, client: Client, user_session_token: str):
         self._client = client
@@ -103,22 +120,26 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
     This strategy callable class returns a `PositContentCredentialsProvider` when hosted on Connect, and 
     its `local_strategy` strategy otherwise.
 
-    Example 
-    -------
+    Examples
+    --------
+
+    NOTE: in the example below, the PositContentCredentialsStrategy can be initialized anywhere that 
+    the Python process can read environment variables.
+
+    ```python
     from posit.connect.external.databricks import PositContentCredentialsStrategy
 
     import pandas as pd
-    import requests
     
     from databricks import sql
     from databricks.sdk.core import ApiClient, Config, databricks_cli
     from databricks.sdk.service.iam import CurrentUserAPI
 
-    # env vars
     DATABRICKS_HOST = "<REDACTED>"
     DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
     SQL_HTTP_PATH = "<REDACTED>"
 
+    # reads `CONNECT_CONTENT_SESSION_TOKEN` environment variable if hosted on Connect 
     posit_strategy = PositContentCredentialsStrategy(local_strategy=databricks_cli)
 
     cfg = Config(host=DATABRICKS_HOST_URL, credentials_strategy=posit_strategy)
@@ -136,6 +157,7 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
             cursor.execute(query)
             rows = cursor.fetchall()
             print(pd.DataFrame([row.asDict() for row in rows]))
+    ```
     """
 
     def __init__(
@@ -178,8 +200,13 @@ class PositCredentialsStrategy(CredentialsStrategy):
     This strategy callable class returns a `PositCredentialsProvider` when hosted on Connect, and 
     its `local_strategy` strategy otherwise.
 
-    Example
-    -------
+    Examples
+    --------
+    
+    NOTE: In the example below, the PositCredentialsProvider *must* be initialized within the context of the 
+    shiny `server` function, which provides access to the HTTP session headers.
+
+    ```python
     import os
 
     import pandas as pd
@@ -188,8 +215,7 @@ class PositCredentialsStrategy(CredentialsStrategy):
     from databricks.sdk.service.iam import CurrentUserAPI
     from posit.connect.external.databricks import PositCredentialsStrategy
     from shiny import App, Inputs, Outputs, Session, render, ui
-
-    # env vars
+    
     DATABRICKS_HOST = "<REDACTED>"
     DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
     SQL_HTTP_PATH = "<REDACTED>"
@@ -197,6 +223,8 @@ class PositCredentialsStrategy(CredentialsStrategy):
     app_ui = ui.page_fluid(ui.output_text("text"), ui.output_data_frame("result"))
 
     def server(i: Inputs, o: Outputs, session: Session):
+
+        # HTTP session headers are available in this context.
         session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
         posit_strategy = PositCredentialsStrategy(
             local_strategy=databricks_cli, user_session_token=session_token
@@ -224,6 +252,7 @@ class PositCredentialsStrategy(CredentialsStrategy):
             return f"Hello, {databricks_user_info.display_name}!"
     
     app = App(app_ui, server)
+    ```
     """
 
     def __init__(
