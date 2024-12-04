@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from typing import List, overload
+from typing import TYPE_CHECKING, List, overload
 
 from requests.sessions import Session as Session
 
 from .resources import Resource, ResourceParameters, Resources
 
+if TYPE_CHECKING:
+    from .groups import Group
+    from .users import User
+
 
 class Permission(Resource):
-    def delete(self) -> None:
-        """Delete the permission."""
+    def destroy(self) -> None:
+        """Destroy the permission."""
         path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
         url = self.params.url + path
         self.params.session.delete(url)
@@ -137,3 +141,85 @@ class Permissions(Resources):
         url = self.params.url + path
         response = self.params.session.get(url)
         return Permission(self.params, **response.json())
+
+    def destroy(self, *permissions: str | Group | User | Permission) -> list[Permission]:
+        """Remove supplied content item permissions.
+
+        Removes all provided permissions from the content item's permissions. If a permission isn't
+        found, it is silently ignored.
+
+        Parameters
+        ----------
+        *permissions : str | Group | User | Permission
+            The content item permissions to remove. If a `str` is received, it is compared against
+            the `Permissions`'s `principal_guid`. If a `Group` or `User` is received, the associated
+            `Permission` will be removed.
+
+        Returns
+        -------
+        list[Permission]
+            The removed permissions. If a permission is not found, there is nothing to remove and 
+            it is not included in the returned list.
+
+        Examples
+        --------
+        ```python
+        from posit import connect
+
+        #### User-defined inputs ####
+        # 1. specify the guid for the content item
+        content_guid = "CONTENT_GUID_HERE"
+        # 2. specify either the principal_guid or group name prefix
+        principal_guid = "USER_OR_GROUP_GUID_HERE"
+        group_name_prefix = "GROUP_NAME_PREFIX_HERE"
+        ############################
+
+        client = connect.Client()
+
+        # Remove a single permission by principal_guid
+        client.content.get(content_guid).permissions.destroy(principal_guid)
+
+        # Remove by user (if principal_guid is a user)
+        user = client.users.get(principal_guid)
+        client.content.get(content_guid).permissions.destroy(user)
+
+        # Remove by group (if principal_guid is a group)
+        group = client.groups.get(principal_guid)
+        client.content.get(content_guid).permissions.destroy(group)
+
+        # Remove all groups with a matching prefix name
+        groups = client.groups.find(prefix=group_name_prefix)
+        client.content.get(content_guid).permissions.destroy(*groups)
+
+        # Confirm new permissions
+        client.content.get(content_guid).permissions.find()
+        ```
+        """
+        from .groups import Group
+        from .users import User
+
+        if len(permissions) == 0:
+            raise ValueError("Expected at least one `permission` to remove")
+
+        principal_guids: set[str] = set()
+
+        for arg in permissions:
+            if isinstance(arg, str):
+                principal_guid = arg
+            elif isinstance(arg, (Group, User)):
+                principal_guid: str = arg["guid"]
+            elif isinstance(arg, Permission):
+                principal_guid: str = arg["principal_guid"]
+            else:
+                raise TypeError(
+                    f"destroy() expected argument type 'str', 'User', 'Group', or 'Permission' but got '{type(arg).__name__}'",
+                )
+            principal_guids.add(principal_guid)
+
+        destroyed_permissions: list[Permission] = []
+        for permission in self.find():
+            if permission["principal_guid"] in principal_guids:
+                permission.destroy()
+                destroyed_permissions.append(permission)
+
+        return destroyed_permissions
