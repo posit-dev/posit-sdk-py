@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, overload
+from typing import TYPE_CHECKING, List, Optional, overload
 
 from requests.sessions import Session as Session
 
@@ -67,18 +67,23 @@ class Permissions(Resources):
         return len(self.find())
 
     @overload
-    def create(self, *, principal_guid: str, principal_type: str, role: str) -> Permission: ...
+    def create(self, /, *, principal_guid: str, principal_type: str, role: str) -> Permission: ...
 
     @overload
-    def create(self, *args: User | Group, role: str) -> list[Permission]: ...
+    def create(self, principal: User | Group, /, *, role: str) -> Permission: ...
 
-    def create(self, *args: User | Group, **kwargs) -> Permission | list[Permission]:
+    def create(
+        self,
+        principal: Optional[User | Group] = None,
+        /,
+        **kwargs,
+    ) -> Permission:
         """Create a permission.
 
         Parameters
         ----------
-        *args : User | Group
-            The principal users or groups to add.
+        principal : User | Group
+            The principal user or group to add.
         role : str
             The principal role. Currently only `"viewer"` and `"owner"` are supported.
         principal_guid : str
@@ -90,9 +95,8 @@ class Permissions(Resources):
 
         Returns
         -------
-        Permission | List[Permission]
-            Returns a `Permission` when the kwargs: `principal_guid` and `principal_type` are used.
-            Returns a `list[Permission]` when `*args` are used.
+        Permission
+            The created permission.
 
         Examples
         --------
@@ -107,17 +111,18 @@ class Permissions(Resources):
 
         # Example groups and users
         groups = client.groups.find(prefix="GROUP_NAME_PREFIX_HERE")
+        group = groups[0]
         user = client.users.get("USER_GUID_HERE")
-        users = [user]
-
-        # Add many group and user permissions with the same role
-        content_item.permissions.create(*groups, *users, role=role)
+        users_and_groups = [user, *groups]
 
         # Add a group permission
-        group = groups[0]
         content_item.permissions.create(group, role=role)
         # Add a user permission
         content_item.permissions.create(user, role=role)
+
+        # Add many group and user permissions with the same role
+        for principal in users_and_groups:
+            content_item.permissions.create(principal, role=role)
 
         # Add a group permission manually
         content_item.permissions.create(
@@ -136,35 +141,26 @@ class Permissions(Resources):
         content_item.permissions.find()
         ```
         """
-        if len(args) > 0:
+        if principal is not None:
             # Avoid circular imports
             from .groups import Group
             from .users import User
 
-            for arg in args:
-                if not isinstance(arg, (User, Group)):
-                    raise TypeError(f"Invalid argument type: {type(arg)}")
+            if isinstance(principal, User):
+                principal_type = "user"
+            elif isinstance(principal, Group):
+                principal_type = "group"
+            else:
+                raise TypeError(f"Invalid argument type: {type(principal).__name__}")
+
             if "principal_guid" in kwargs:
-                raise ValueError("'principal_guid' can not be defined with `*args` present.")
+                raise ValueError("'principal_guid' can not be defined with `principal` present.")
             if "principal_type" in kwargs:
-                raise ValueError("'principal_guid' can not be defined with `*args` present.")
+                raise ValueError("'principal_guid' can not be defined with `principal` present.")
 
-            perms: list[Permission] = []
-            for arg in args:
-                if isinstance(arg, User):
-                    principal_type = "user"
-                elif isinstance(arg, Group):
-                    principal_type = "group"
-                else:
-                    raise TypeError(f"Invalid argument type: {type(arg)}")
-
-                perm = self.create(
-                    principal_guid=arg["guid"],
-                    principal_type=principal_type,
-                    role=kwargs["role"],
-                )
-                perms.append(perm)
-            return perms
+            # Set the corresponding kwargs
+            kwargs["principal_guid"] = principal["guid"]
+            kwargs["principal_type"] = principal_type
 
         path = f"v1/content/{self.content_guid}/permissions"
         url = self.params.url + path

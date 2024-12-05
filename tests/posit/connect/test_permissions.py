@@ -199,16 +199,14 @@ class TestPermissionsCreate:
         # setup
         principal_guid = "principal_guid"
         content_guid = "content_guid"
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
-        user = User(params, guid=principal_guid)
-        group = User(params, guid=principal_guid)
+        client = Client("https://connect.example/__api__", "12345")
+        permissions = Permissions(client.resource_params, content_guid=content_guid)
+        user = User(client._ctx, guid=principal_guid)
+        group = User(client._ctx, guid=principal_guid)
 
         # behavior
         with pytest.raises(TypeError, match="str"):
             permissions.create(  # pyright: ignore[reportCallIssue]
-                user,
-                group,
                 "not a user or group",
             )
         with pytest.raises(ValueError):
@@ -223,7 +221,7 @@ class TestPermissionsCreate:
             )
 
     @responses.activate
-    def test_multiple(self):
+    def test_user_group(self):
         # data
         content_guid = "CONTENT_GUID"
         user_guid = "USER_GUID"
@@ -251,25 +249,37 @@ class TestPermissionsCreate:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
-        user = User(params, guid=user_guid)
-        group = Group(params, guid=group_guid)
+        client = Client("https://connect.example/__api__", "12345")
+        permissions = Permissions(client.resource_params, content_guid=content_guid)
+        user = User(client._ctx, guid=user_guid)
+        group = Group(client._ctx, guid=group_guid)
 
         # invoke
-        permissions = permissions.create(user, group, role="viewer")
+        user_perm = permissions.create(user, role="viewer")
+        group_perm = permissions.create(group, role="viewer")
+
+        created_permissions = [user_perm, group_perm]
 
         # assert
         assert res_user.call_count == 1
         assert res_group.call_count == 1
 
-        assert isinstance(permissions, list)
-        for permission in permissions:
+        for permission in created_permissions:
             assert isinstance(permission, Permission)
 
-        assert permissions == [
-            Permission(params, principal_guid=user_guid, principal_type="user", role="viewer"),
-            Permission(params, principal_guid=group_guid, principal_type="group", role="viewer"),
+        assert created_permissions == [
+            Permission(
+                client.resource_params,
+                principal_guid=user_guid,
+                principal_type="user",
+                role="viewer",
+            ),
+            Permission(
+                client.resource_params,
+                principal_guid=group_guid,
+                principal_type="group",
+                role="viewer",
+            ),
         ]
 
 
