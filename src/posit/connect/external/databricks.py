@@ -12,6 +12,8 @@ from ..client import Client
 from ..oauth import Credentials
 from .external import is_local
 
+import requests
+
 POSIT_OAUTH_INTEGRATION_AUTH_TYPE = "posit-oauth-integration"
 
 # The Databricks SDK CredentialsProvider == Databricks SQL HeaderFactory
@@ -78,6 +80,24 @@ def _get_auth_type(local_auth_type: str) -> str:
 
     return POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
+class PositLocalContentCredentialsProvider:
+
+    def __init__(self, token_endpoint_url: str, client_id: str, client_secret: str):
+        self._token_endpoint_url = token_endpoint_url
+        self._client_id = client_id
+        self._client_secret = client_secret
+
+    def __call__(self) -> Dict[str, str]:
+        response = requests.post(
+            self._token_endpoint_url, 
+            auth=(self._client_id, self._client_secret),
+            data={
+                "grant_type": "client_credentials",
+                "scope": "all-apis",
+            },
+        )
+        credentials = Credentials(**response.json())
+        return _new_bearer_authorization_header(credentials)
 
 class PositContentCredentialsProvider:
     """`CredentialsProvider` implementation which initiates a credential exchange using a content-session-token.
