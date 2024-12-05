@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, overload
+from typing import TYPE_CHECKING, List, Optional, overload
 
 from requests.sessions import Session as Session
 
@@ -67,36 +67,101 @@ class Permissions(Resources):
         return len(self.find())
 
     @overload
-    def create(self, *, principal_guid: str, principal_type: str, role: str) -> Permission:
+    def create(self, /, *, principal_guid: str, principal_type: str, role: str) -> Permission: ...
+
+    @overload
+    def create(self, principal: User | Group, /, *, role: str) -> Permission: ...
+
+    def create(
+        self,
+        principal: Optional[User | Group] = None,
+        /,
+        **kwargs,
+    ) -> Permission:
         """Create a permission.
 
         Parameters
         ----------
-        principal_guid : str
-        principal_type : str
+        principal : User | Group
+            The principal user or group to add.
         role : str
+            The principal role. Currently only `"viewer"` and `"owner"` are supported.
+        principal_guid : str
+            User guid or Group guid.
+        principal_type : str
+            The principal type. Either `"user"` or `"group"`.
+        role : str
+            The principal role. Currently only `"viewer"` and `"owner"` are supported
 
         Returns
         -------
         Permission
+            The created permission.
+
+        Examples
+        --------
+        ```python
+        from posit import connect
+
+        client = connect.Client()
+        content_item = client.content.get(content_guid)
+
+        # New permission role
+        role = "viewer"  # Or "owner"
+
+        # Example groups and users
+        groups = client.groups.find(prefix="GROUP_NAME_PREFIX_HERE")
+        group = groups[0]
+        user = client.users.get("USER_GUID_HERE")
+        users_and_groups = [user, *groups]
+
+        # Add a group permission
+        content_item.permissions.create(group, role=role)
+        # Add a user permission
+        content_item.permissions.create(user, role=role)
+
+        # Add many group and user permissions with the same role
+        for principal in users_and_groups:
+            content_item.permissions.create(principal, role=role)
+
+        # Add a group permission manually
+        content_item.permissions.create(
+            principal_guid=group["guid"],
+            principal_type="group",
+            role=role,
+        )
+        # Add a user permission manually
+        content_item.permissions.create(
+            principal_guid=user["guid"],
+            principal_type="user",
+            role=role,
+        )
+
+        # Confirm new permissions
+        content_item.permissions.find()
+        ```
         """
+        if principal is not None:
+            # Avoid circular imports
+            from .groups import Group
+            from .users import User
 
-    @overload
-    def create(self, **kwargs) -> Permission:
-        """Create a permission.
+            if isinstance(principal, User):
+                principal_type = "user"
+            elif isinstance(principal, Group):
+                principal_type = "group"
+            else:
+                raise TypeError(f"Invalid argument type: {type(principal).__name__}")
 
-        Returns
-        -------
-        Permission
-        """
+            if "principal_guid" in kwargs:
+                raise ValueError("'principal_guid' can not be defined with `principal` present.")
+            if "principal_type" in kwargs:
+                raise ValueError("'principal_guid' can not be defined with `principal` present.")
 
-    def create(self, **kwargs) -> Permission:
-        """Create a permission.
+            # Set the corresponding kwargs
+            kwargs["principal_guid"] = principal["guid"]
+            kwargs["principal_type"] = principal_type
 
-        Returns
-        -------
-        Permission
-        """
         path = f"v1/content/{self.content_guid}/permissions"
         url = self.params.url + path
         response = self.params.session.post(url, json=kwargs)

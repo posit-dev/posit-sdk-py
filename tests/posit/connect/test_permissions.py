@@ -195,6 +195,93 @@ class TestPermissionsCreate:
         # assert
         assert permission == fake_permission
 
+    def test_assertions(self):
+        # setup
+        principal_guid = "principal_guid"
+        content_guid = "content_guid"
+        client = Client("https://connect.example/__api__", "12345")
+        permissions = Permissions(client.resource_params, content_guid=content_guid)
+        user = User(client._ctx, guid=principal_guid)
+        group = User(client._ctx, guid=principal_guid)
+
+        # behavior
+        with pytest.raises(TypeError, match="str"):
+            permissions.create(  # pyright: ignore[reportCallIssue]
+                "not a user or group",
+            )
+        with pytest.raises(ValueError):
+            permissions.create(  # pyright: ignore[reportCallIssue]
+                user,
+                principal_guid=principal_guid,
+            )
+        with pytest.raises(ValueError):
+            permissions.create(  # pyright: ignore[reportCallIssue]
+                user,
+                principal_type="viewer",
+            )
+
+    @responses.activate
+    def test_user_group(self):
+        # data
+        content_guid = "CONTENT_GUID"
+        user_guid = "USER_GUID"
+        group_guid = "GROUP_GUID"
+
+        fake_user = {
+            "principal_guid": user_guid,
+            "principal_type": "user",
+            "role": "viewer",
+        }
+        fake_group = {
+            "principal_guid": group_guid,
+            "principal_type": "group",
+            "role": "viewer",
+        }
+        res_user = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+            json=fake_user,
+            match=[matchers.json_params_matcher(fake_user)],
+        )
+        res_group = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+            json=fake_group,
+            match=[matchers.json_params_matcher(fake_group)],
+        )
+
+        # setup
+        client = Client("https://connect.example/__api__", "12345")
+        permissions = Permissions(client.resource_params, content_guid=content_guid)
+        user = User(client._ctx, guid=user_guid)
+        group = Group(client._ctx, guid=group_guid)
+
+        # invoke
+        user_perm = permissions.create(user, role="viewer")
+        group_perm = permissions.create(group, role="viewer")
+
+        created_permissions = [user_perm, group_perm]
+
+        # assert
+        assert res_user.call_count == 1
+        assert res_group.call_count == 1
+
+        for permission in created_permissions:
+            assert isinstance(permission, Permission)
+
+        assert created_permissions == [
+            Permission(
+                client.resource_params,
+                principal_guid=user_guid,
+                principal_type="user",
+                role="viewer",
+            ),
+            Permission(
+                client.resource_params,
+                principal_guid=group_guid,
+                principal_type="group",
+                role="viewer",
+            ),
+        ]
+
 
 class TestPermissionsFind:
     @responses.activate
