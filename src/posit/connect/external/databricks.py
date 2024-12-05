@@ -15,6 +15,7 @@ from .external import is_local
 import requests
 
 POSIT_OAUTH_INTEGRATION_AUTH_TYPE = "posit-oauth-integration"
+POSIT_LOCAL_CLIENT_CREDENTIALS_AUTH_TYPE = "posit-local-client-credentials"
 
 # The Databricks SDK CredentialsProvider == Databricks SQL HeaderFactory
 CredentialsProvider = Callable[[], Dict[str, str]]
@@ -137,6 +138,26 @@ class PositCredentialsProvider:
     def __call__(self) -> Dict[str, str]:
         credentials = self._client.oauth.get_credentials(self._user_session_token)
         return _new_bearer_authorization_header(credentials)
+
+class PositLocalContentCredentialsStrategy(CredentialsStrategy):
+    def __init__(self, token_endpoint_url: str, client_id: str, client_secret: str):
+        self._token_endpoint_url = token_endpoint_url 
+        self._client_id = client_id
+        self._client_secret = client_secret
+
+    def sql_credentials_provider(self, *args, **kwargs): 
+        return lambda: self.__call__(*args, **kwargs)
+
+    def auth_type(self) -> str:
+        return POSIT_LOCAL_CLIENT_CREDENTIALS_AUTH_TYPE 
+
+    def __call__(self) -> CredentialsProvider:
+
+        return PositLocalContentCredentialsProvider(
+            self._token_endpoint_url, 
+            self._client_id, 
+            self._client_secret,
+        )
 
 
 class PositContentCredentialsStrategy(CredentialsStrategy):
