@@ -1,5 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
+
 from posit import connect
-from posit.connect.content import ContentItem
+
+if TYPE_CHECKING:
+    from posit.connect.content import ContentItem
+    from posit.connect.permissions import Permission
 
 
 class TestContentPermissions:
@@ -48,7 +57,7 @@ class TestContentPermissions:
             role="owner",
         )
 
-        def assert_permissions_match_guids(permissions, objs_with_guid):
+        def assert_permissions_match_guids(permissions: list[Permission], objs_with_guid):
             for permission, obj_with_guid in zip(permissions, objs_with_guid):
                 assert permission["principal_guid"] == obj_with_guid["guid"]
 
@@ -59,11 +68,9 @@ class TestContentPermissions:
         )
 
         # Remove permissions (and from some that isn't an owner)
-        destroyed_permissions = self.content.permissions.destroy(self.user_aron, self.user_bill)
-        assert_permissions_match_guids(
-            destroyed_permissions,
-            [self.user_aron],
-        )
+        self.content.permissions.destroy(self.user_aron)
+        with pytest.raises(ValueError):
+            self.content.permissions.destroy(self.user_bill)
 
         # Prove they have been removed
         assert_permissions_match_guids(
@@ -72,11 +79,7 @@ class TestContentPermissions:
         )
 
         # Remove the last permission
-        destroyed_permissions = self.content.permissions.destroy(self.group_friends)
-        assert_permissions_match_guids(
-            destroyed_permissions,
-            [self.group_friends],
-        )
+        self.content.permissions.destroy(self.group_friends)
 
         # Prove they have been removed
         assert self.content.permissions.find() == []

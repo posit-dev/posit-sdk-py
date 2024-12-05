@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import weakref
 from typing import TYPE_CHECKING, Protocol
 
 from packaging.version import Version
@@ -8,6 +9,7 @@ from packaging.version import Version
 if TYPE_CHECKING:
     import requests
 
+    from .client import Client
     from .urls import Url
 
 
@@ -28,9 +30,12 @@ def requires(version: str):
 
 
 class Context:
-    def __init__(self, session: requests.Session, url: Url):
-        self.session = session
-        self.url = url
+    def __init__(self, client: Client):
+        self.session: requests.Session = client.session
+        self.url: Url = client.cfg.url
+        # Since this is a child object of the client, we use a weak reference to avoid circular
+        # references (which would prevent garbage collection)
+        self.client: Client = weakref.proxy(client)
 
     @property
     def version(self) -> str | None:

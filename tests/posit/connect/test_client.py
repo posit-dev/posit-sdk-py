@@ -84,7 +84,12 @@ class TestClient:
         MockConfig.assert_called_once_with(api_key=api_key, url=url)
         MockSession.assert_called_once()
 
-    def test__del__(self, MockAuth, MockConfig, MockSession):
+    def test__del__(
+        self,
+        MockAuth: MagicMock,
+        MockConfig: MagicMock,
+        MockSession: MagicMock,
+    ):
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)

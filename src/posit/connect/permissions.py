@@ -111,8 +111,15 @@ class Permissions(Resources):
         """
         path = f"v1/content/{self.content_guid}/permissions"
         url = self.params.url + path
-        response = self.params.session.get(url, json=kwargs)
+        response = self.params.session.get(url)
+        kwargs_items = kwargs.items()
         results = response.json()
+        if len(kwargs_items) > 0:
+            results = [
+                result
+                for result in results
+                if isinstance(result, dict) and (result.items() >= kwargs_items)
+            ]
         return [Permission(self.params, **result) for result in results]
 
     def find_one(self, **kwargs) -> Permission | None:
@@ -142,24 +149,17 @@ class Permissions(Resources):
         response = self.params.session.get(url)
         return Permission(self.params, **response.json())
 
-    def destroy(self, *permissions: str | Group | User | Permission) -> list[Permission]:
-        """Remove supplied content item permissions.
+    def destroy(self, permission: str | Group | User | Permission, /) -> None:
+        """Remove supplied content item permission.
 
-        Removes all provided permissions from the content item's permissions. If a permission isn't
-        found, it is silently ignored.
+        Removes provided permission from the content item's permissions.
 
         Parameters
         ----------
-        *permissions : str | Group | User | Permission
-            The content item permissions to remove. If a `str` is received, it is compared against
+        permission : str | Group | User | Permission
+            The content item permission to remove. If a `str` is received, it is compared against
             the `Permissions`'s `principal_guid`. If a `Group` or `User` is received, the associated
             `Permission` will be removed.
-
-        Returns
-        -------
-        list[Permission]
-            The removed permissions. If a permission is not found, there is nothing to remove and
-            it is not included in the returned list.
 
         Examples
         --------
@@ -175,51 +175,46 @@ class Permissions(Resources):
         ############################
 
         client = connect.Client()
+        content_item = client.content.get(content_guid)
 
         # Remove a single permission by principal_guid
-        client.content.get(content_guid).permissions.destroy(principal_guid)
+        content_item.permissions.destroy(principal_guid)
 
         # Remove by user (if principal_guid is a user)
         user = client.users.get(principal_guid)
-        client.content.get(content_guid).permissions.destroy(user)
+        content_item.permissions.destroy(user)
 
         # Remove by group (if principal_guid is a group)
         group = client.groups.get(principal_guid)
-        client.content.get(content_guid).permissions.destroy(group)
+        content_item.permissions.destroy(group)
 
         # Remove all groups with a matching prefix name
         groups = client.groups.find(prefix=group_name_prefix)
-        client.content.get(content_guid).permissions.destroy(*groups)
+        for group in groups:
+            content_item.permissions.destroy(group)
 
         # Confirm new permissions
-        client.content.get(content_guid).permissions.find()
+        content_item.permissions.find()
         ```
         """
         from .groups import Group
         from .users import User
 
-        if len(permissions) == 0:
-            raise ValueError("Expected at least one `permission` to remove")
+        if isinstance(permission, str):
+            permission_obj = self.get(permission)
+        elif isinstance(permission, (Group, User)):
+            principal_guid: str = permission["guid"]
+            permission_obj = self.find_one(
+                principal_guid=principal_guid,
+            )
+            print("Barret!", permission, principal_guid, permission_obj)
+            if permission_obj is None:
+                raise ValueError(f"Permission with principal_guid '{principal_guid}' not found.")
+        elif isinstance(permission, Permission):
+            permission_obj = permission
+        else:
+            raise TypeError(
+                f"destroy() expected `permission=` to have type `str | User | Group | Permission`. Received `{permission}` of type `{type(permission)}`.",
+            )
 
-        principal_guids: set[str] = set()
-
-        for arg in permissions:
-            if isinstance(arg, str):
-                principal_guid = arg
-            elif isinstance(arg, (Group, User)):
-                principal_guid: str = arg["guid"]
-            elif isinstance(arg, Permission):
-                principal_guid: str = arg["principal_guid"]
-            else:
-                raise TypeError(
-                    f"destroy() expected argument type 'str', 'User', 'Group', or 'Permission' but got '{type(arg).__name__}'",
-                )
-            principal_guids.add(principal_guid)
-
-        destroyed_permissions: list[Permission] = []
-        for permission in self.find():
-            if permission["principal_guid"] in principal_guids:
-                permission.destroy()
-                destroyed_permissions.append(permission)
-
-        return destroyed_permissions
+        permission_obj.destroy()

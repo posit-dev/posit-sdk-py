@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "guid": "empty-group-guid",
+      "name": "Empty Friends",
+      "owner_guid": "empty-owner-guid"
+    },
+    {
+      "guid": "6f300623-1e0c-48e6-a473-ddf630c0c0c3",
+      "name": "Friends",
+      "owner_guid": "20a79ce3-6e87-4522-9faf-be24228800a4"
+    }
+  ],
+  "current_page": 1,
+  "total": 2
+}

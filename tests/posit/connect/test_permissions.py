@@ -6,6 +6,8 @@ import requests
 import responses
 from responses import matchers
 
+from posit.connect.client import Client
+from posit.connect.context import Context
 from posit.connect.groups import Group
 from posit.connect.permissions import Permission, Permissions
 from posit.connect.resources import ResourceParameters
@@ -271,14 +273,19 @@ class TestPermissionsDestroy:
     @responses.activate
     def test_destroy(self):
         # data
-        permission_uid = "94"
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         fake_permissions = load_mock_list(f"v1/content/{content_guid}/permissions.json")
-        fake_followup_permissions = fake_permissions.copy()
-        fake_followup_permissions.pop(0)
-        fake_permission = load_mock_dict(
-            f"v1/content/{content_guid}/permissions/{permission_uid}.json"
+
+        assert fake_permissions[0]["principal_type"] == "user"
+        user_permission_id = fake_permissions[0]["id"]
+        assert fake_permissions[1]["principal_type"] == "group"
+        group_permission_id = fake_permissions[1]["id"]
+        assert user_permission_id != group_permission_id
+
+        fake_manual_user_permission = load_mock_dict(
+            f"v1/content/{content_guid}/permissions/{user_permission_id}.json"
         )
+
         fake_user = load_mock_dict("v1/user.json")
         fake_group = load_mock_dict("v1/groups/6f300623-1e0c-48e6-a473-ddf630c0c0c3.json")
 
@@ -286,59 +293,58 @@ class TestPermissionsDestroy:
 
         # Used in internal for-loop
         mock_permissions_get = [
+            # Used to find all permissions when searching for user and group
             responses.get(
                 f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
                 json=fake_permissions,
             ),
+            # Retrieve permissions object for permission id
             responses.get(
-                f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
-                json=fake_followup_permissions,
+                f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{user_permission_id}",
+                json=fake_manual_user_permission,
             ),
         ]
         # permission delete
-        mock_permission_delete = responses.delete(
-            f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{permission_uid}",
-        )
+        mock_permission_deletes = [
+            responses.delete(
+                f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{user_permission_id}",
+            ),
+            responses.delete(
+                f"https://connect.example/__api__/v1/content/{content_guid}/permissions/{group_permission_id}",
+            ),
+        ]
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        c = Client(api_key="12345", url="https://connect.example/")
+        ctx = Context(c)
+        permissions = Permissions(ctx.client.resource_params, content_guid=content_guid)
 
         # (Doesn't match any permissions, but that's okay)
-        user_to_remove = User(params, **fake_user)
-        group_to_remove = Group(params, **fake_group)
-        permission_to_remove = Permission(params, **fake_permission)
+        user_to_remove = User(ctx, **fake_user)
+        group_to_remove = Group(ctx, **fake_group)
+        permission_to_remove = Permission(
+            ctx.client.resource_params, **fake_manual_user_permission
+        )
 
         # invoke
-        destroyed_permission = permissions.destroy(
-            fake_permission["principal_guid"],
-            # Make sure duplicates are dropped
-            fake_permission["principal_guid"],
-            # Extract info from User, Group, Permission
-            user_to_remove,
-            group_to_remove,
-            permission_to_remove,
-        )
+        permissions.destroy(permission_to_remove["id"])
+        permissions.destroy(permission_to_remove)
+        permissions.destroy(user_to_remove)
+
+        permissions.destroy(group_to_remove)
+
+        # Assert values
+        assert mock_permissions_get[0].call_count == 2
+        assert mock_permissions_get[1].call_count == 1
+
+        # permission_id, user -> permission_id, permission -> permission_id
+        assert mock_permission_deletes[0].call_count == 3
+        # group -> permission_id
+        assert mock_permission_deletes[1].call_count == 1
+        # assert mock_permission_deletes[2].call_count == 1
 
         # Assert bad input value
         with pytest.raises(TypeError):
             permissions.destroy(
                 42  # pyright: ignore[reportArgumentType]
             )
-        with pytest.raises(ValueError):
-            permissions.destroy()
-
-        # Assert values
-        assert mock_permissions_get[0].call_count == 1
-        assert mock_permissions_get[1].call_count == 0
-        assert mock_permission_delete.call_count == 1
-        assert len(destroyed_permission) == 1
-        assert destroyed_permission[0] == fake_permission
-
-        # Invoking again is a no-op
-        destroyed_permission = permissions.destroy(fake_permission["principal_guid"])
-
-        assert mock_permissions_get[0].call_count == 1
-        assert mock_permissions_get[1].call_count == 1
-        assert mock_permission_delete.call_count == 1
-        assert len(destroyed_permission) == 0

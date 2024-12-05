@@ -6,8 +6,10 @@ import responses
 from responses import matchers
 
 from posit.connect.client import Client
+from posit.connect.groups import Group
+from posit.connect.users import User
 
-from .api import load_mock
+from .api import load_mock, load_mock_dict
 
 session = Mock()
 url = Mock()
@@ -132,6 +134,104 @@ class TestUserUnlock:
         )
         user.unlock()
         assert not user["locked"]
+
+
+class TestUserGroups:
+    @responses.activate
+    def test_groups(self):
+        # Get user
+        carlos_guid = "20a79ce3-6e87-4522-9faf-be24228800a4"
+        carlos_empty_group_guid = "empty-group-guid"
+        responses.get(
+            f"https://connect.example/__api__/v1/users/{carlos_guid}",
+            json=load_mock_dict(f"v1/users/{carlos_guid}.json"),
+        )
+        responses.get(
+            f"https://connect.example/__api__/v1/groups/{carlos_empty_group_guid}/members?page_number=1&page_size=500",
+            json=load_mock_dict(f"v1/groups/{carlos_empty_group_guid}/members.json"),
+        )
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json=load_mock_dict("v1/users?page_number=1&page_size=500.jsonc"),
+        )
+        # Get groups
+        responses.get(
+            "https://connect.example/__api__/v1/groups",
+            json=load_mock_dict("v1/groups.json"),
+        )
+        # Get group members
+        group_guid = "6f300623-1e0c-48e6-a473-ddf630c0c0c3"
+        responses.get(
+            f"https://connect.example/__api__/v1/groups/{group_guid}/members",
+            json=load_mock_dict(f"v1/groups/{group_guid}/members.json"),
+        )
+
+        client = Client("https://connect.example/", "12345")
+
+        carlos = client.users.get(carlos_guid)
+        no_groups = carlos.groups.find()
+        assert len(no_groups) == 0
+
+        user = client.users.find()[1]
+        assert user["guid"] == "87c12c08-11cd-4de1-8da3-12a7579c4998"
+
+        groups = user.groups.find()
+        assert isinstance(groups, list)
+        assert len(groups) == 1
+        group = groups[0]
+        assert isinstance(group, Group)
+        assert group["name"] == "Friends"
+
+    @responses.activate
+    def test_groups_add(self):
+        group_guid = "new-group-guid"
+        user_guid = "user-guid"
+        responses.get(
+            f"https://connect.example/__api__/v1/groups/{group_guid}",
+            json={"guid": group_guid},
+        )
+        responses.post(
+            f"https://connect.example/__api__/v1/groups/{group_guid}/members",
+            json=[],
+        )
+
+        client = Client("https://connect.example/", "12345")
+
+        user = User(client._ctx, guid=user_guid)
+        new_group = Group(client._ctx, guid=group_guid)
+        # Add via Group
+        user.groups.add(new_group)
+        # Add via guid
+        user.groups.add(new_group["guid"])
+
+        with pytest.raises(ValueError):
+            user.groups.add("")
+
+    @responses.activate
+    def test_groups_delete(self):
+        group_guid = "new-group-guid"
+        user_guid = "user-guid"
+        responses.get(
+            f"https://connect.example/__api__/v1/groups/{group_guid}",
+            json={"guid": group_guid},
+        )
+        responses.delete(
+            f"https://connect.example/__api__/v1/groups/{group_guid}/members/{user_guid}",
+            json=[],
+        )
+
+        client = Client("https://connect.example/", "12345")
+
+        user = User(client._ctx, guid=user_guid)
+        group = Group(client._ctx, guid=group_guid)
+
+        # Delete via Group
+        user.groups.delete(group)
+        # Delete via guid
+        user.groups.delete(group["guid"])
+
+        with pytest.raises(ValueError):
+            user.groups.delete("")
 
 
 class TestUsers:

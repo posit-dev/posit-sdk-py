@@ -158,7 +158,7 @@ class Client(ContextManager):
         session.hooks["response"].append(hooks.handle_errors)
         self.session = session
         self.resource_params = ResourceParameters(session, self.cfg.url)
-        self._ctx = Context(self.session, self.cfg.url)
+        self._ctx = Context(self)
 
     @property
     def version(self) -> str | None:
@@ -182,7 +182,7 @@ class Client(ContextManager):
         User
             The currently authenticated user.
         """
-        return me.get(self.resource_params)
+        return me.get(self._ctx)
 
     @property
     def groups(self) -> Groups:
@@ -193,7 +193,7 @@ class Client(ContextManager):
         Groups
             The groups resource interface.
         """
-        return Groups(self.resource_params)
+        return Groups(self._ctx)
 
     @property
     def tasks(self) -> Tasks:
@@ -217,7 +217,7 @@ class Client(ContextManager):
         Users
             The users resource instance.
         """
-        return Users(self.resource_params)
+        return Users(self._ctx)
 
     @property
     def content(self) -> Content:
@@ -229,7 +229,7 @@ class Client(ContextManager):
         Content
             The content resource instance.
         """
-        return Content(self.resource_params)
+        return Content(self._ctx)
 
     @property
     def tags(self) -> Tags:

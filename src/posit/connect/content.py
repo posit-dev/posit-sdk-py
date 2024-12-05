@@ -20,7 +20,6 @@ from typing_extensions import NotRequired, Required, TypedDict, Unpack
 from . import tasks
 from ._api import ApiDictEndpoint, JsonifiableDict
 from .bundles import Bundles
-from .context import Context
 from .env import EnvVars
 from .errors import ClientError
 from .jobs import JobsMixin
@@ -33,6 +32,7 @@ from .vanities import VanityMixin
 from .variants import Variants
 
 if TYPE_CHECKING:
+    from .context import Context
     from .tasks import Task
 
 
@@ -222,30 +222,32 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
     @overload
     def __init__(
         self,
+        ctx: Context,
         /,
-        params: ResourceParameters,
+        *,
         guid: str,
     ) -> None: ...
 
     @overload
     def __init__(
         self,
+        ctx: Context,
         /,
-        params: ResourceParameters,
+        *,
         guid: str,
         **kwargs: Unpack[ContentItem._Attrs],
     ) -> None: ...
 
     def __init__(
         self,
+        ctx: Context,
         /,
-        params: ResourceParameters,
+        *,
         guid: str,
         **kwargs: Unpack[ContentItem._AttrsNotRequired],
     ) -> None:
         _assert_guid(guid)
 
-        ctx = Context(params.session, params.url)
         path = f"v1/content/{guid}"
         super().__init__(ctx, path, guid=guid, **kwargs)
 
@@ -292,8 +294,8 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
     def delete(self) -> None:
         """Delete the content item."""
         path = f"v1/content/{self['guid']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        url = self._ctx.url + path
+        self._ctx.session.delete(url)
 
     def deploy(self) -> tasks.Task:
         """Deploy the content.
@@ -312,8 +314,8 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
         None
         """
         path = f"v1/content/{self['guid']}/deploy"
-        url = self.params.url + path
-        response = self.params.session.post(url, json={"bundle_id": None})
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url, json={"bundle_id": None})
         result = response.json()
         ts = tasks.Tasks(self.params)
         return ts.get(result["task_id"])
@@ -368,8 +370,8 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
             self.environment_variables.create(key, unix_epoch_in_seconds)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = posixpath.join(dirname(self.params.url), f"content/{self['guid']}")
-            self.params.session.get(url)
+            url = posixpath.join(dirname(self._ctx.url), f"content/{self['guid']}")
+            self._ctx.session.get(url)
             return None
         else:
             raise ValueError(
@@ -439,8 +441,8 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
         -------
         None
         """
-        url = self.params.url + f"v1/content/{self['guid']}"
-        response = self.params.session.patch(url, json=attrs)
+        url = self._ctx.url + f"v1/content/{self['guid']}"
+        response = self._ctx.session.patch(url, json=attrs)
         super().update(**response.json())
 
     # Relationships
@@ -465,7 +467,9 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
             # If it's not included, we can retrieve the information by `owner_guid`
             from .users import Users
 
-            self["owner"] = Users(self.params).get(self["owner_guid"])
+            self["owner"] = Users(
+                self._ctx,
+            ).get(self["owner_guid"])
         return self["owner"]
 
     @property
@@ -523,12 +527,13 @@ class Content(Resources):
 
     def __init__(
         self,
-        params: ResourceParameters,
+        ctx: Context,
         *,
         owner_guid: str | None = None,
     ) -> None:
-        super().__init__(params)
+        super().__init__(ctx.client.resource_params)
         self.owner_guid = owner_guid
+        self._ctx = ctx
 
     def count(self) -> int:
         """Count the number of content items.
@@ -603,9 +608,9 @@ class Content(Resources):
         ContentItem
         """
         path = "v1/content"
-        url = self.params.url + path
-        response = self.params.session.post(url, json=attrs)
-        return ContentItem(self.params, **response.json())
+        url = self._ctx.url + path
+        response = self._ctx.session.post(url, json=attrs)
+        return ContentItem(self._ctx, **response.json())
 
     @overload
     def find(
@@ -691,11 +696,11 @@ class Content(Resources):
             conditions["owner_guid"] = self.owner_guid
 
         path = "v1/content"
-        url = self.params.url + path
-        response = self.params.session.get(url, params=conditions)
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url, params=conditions)
         return [
             ContentItem(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in response.json()
@@ -864,6 +869,6 @@ class Content(Resources):
         ContentItem
         """
         path = f"v1/content/{guid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return ContentItem(self.params, **response.json())
+        url = self._ctx.url + path
+        response = self._ctx.session.get(url)
+        return ContentItem(self._ctx, **response.json())
