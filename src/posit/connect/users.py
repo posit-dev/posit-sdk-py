@@ -2,20 +2,29 @@
 
 from __future__ import annotations
 
-from typing import List, Literal
+from typing import TYPE_CHECKING, List, Literal
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
 from . import me
 from .content import Content
 from .paginator import Paginator
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Resource, Resources
+
+if TYPE_CHECKING:
+    from posit.connect.context import Context
+
+    from .groups import Group
 
 
 class User(Resource):
+    def __init__(self, ctx: Context, /, **attributes) -> None:
+        super().__init__(ctx.client.resource_params, **attributes)
+        self._ctx: Context = ctx
+
     @property
     def content(self) -> Content:
-        return Content(self.params, owner_guid=self["guid"])
+        return Content(self._ctx, owner_guid=self["guid"])
 
     def lock(self, *, force: bool = False):
         """
@@ -41,15 +50,19 @@ class User(Resource):
         Attempt to lock your own account (will raise `RuntimeError` unless `force` is set to `True`):
 
         >>> user.lock(force=True)
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/users/-guid-/lock
         """
-        _me = me.get(self.params)
+        _me = me.get(self._ctx)
         if _me["guid"] == self["guid"] and not force:
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior.",
             )
-        url = self.params.url + f"v1/users/{self['guid']}/lock"
+        url = self._ctx.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": True}
-        self.params.session.post(url, json=body)
+        self._ctx.session.post(url, json=body)
         super().update(locked=True)
 
     def unlock(self):
@@ -67,10 +80,14 @@ class User(Resource):
         Unlock a user's account:
 
         >>> user.unlock()
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/users/-guid-/lock
         """
-        url = self.params.url + f"v1/users/{self['guid']}/lock"
+        url = self._ctx.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": False}
-        self.params.session.post(url, json=body)
+        self._ctx.session.post(url, json=body)
         super().update(locked=False)
 
     class UpdateUser(TypedDict):
@@ -115,17 +132,187 @@ class User(Resource):
         Update the user's first and last name:
 
         >>> user.update(first_name="Jane", last_name="Smith")
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#put-/v1/users/-guid-
         """
-        url = self.params.url + f"v1/users/{self['guid']}"
-        response = self.params.session.put(url, json=kwargs)
+        url = self._ctx.url + f"v1/users/{self['guid']}"
+        response = self._ctx.session.put(url, json=kwargs)
         super().update(**response.json())
+
+    @property
+    def groups(self) -> UserGroups:
+        """
+        Retrieve the groups to which the user belongs.
+
+        Returns
+        -------
+        UserGroups
+            Helper class that returns the groups of which the user is a member.
+
+        Examples
+        --------
+        Retrieve the groups to which the user belongs:
+
+        ```python
+        user = client.users.get("USER_GUID_HERE")
+        groups = user.groups.find()
+        ```
+        """
+        return UserGroups(self._ctx, self["guid"])
+
+
+class UserGroups(Resources):
+    def __init__(self, ctx: Context, user_guid: str) -> None:
+        super().__init__(ctx.client.resource_params)
+        self._ctx: Context = ctx
+        self._user_guid: str = user_guid
+
+    def add(self, group: str | Group) -> None:
+        """
+        Add the user to the specified group.
+
+        Parameters
+        ----------
+        group : str | Group
+            The group guid or `Group` object to which the user will be added.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+        user = client.users.get("USER_GUID_HERE")
+
+        # Add the user to the group
+        user.groups.add(group)
+
+        # Add the user to multiple groups
+        groups = [
+            client.groups.get("GROUP_GUID_1"),
+            client.groups.get("GROUP_GUID_2"),
+        ]
+        for group in groups:
+            user.groups.add(group)
+
+        # Add the user to a group by GUID
+        user.groups.add("GROUP_GUID_HERE")
+        ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/groups/-group_guid-/members
+        """
+        from .groups import Group
+
+        if isinstance(group, Group):
+            group.members.add(user_guid=self._user_guid)
+            return
+
+        if not isinstance(group, str):
+            raise TypeError(f"`group=` must be a `str | Group`. Received {group}")
+        if not group:
+            raise ValueError("`group=` must not be empty.")
+
+        group_obj = self._ctx.client.groups.get(group)
+        group_obj.members.add(user_guid=self._user_guid)
+
+    def delete(self, group: str | Group) -> None:
+        """
+        Remove the user from the specified group.
+
+        Parameters
+        ----------
+        group : str | Group
+            The group to which the user will be added.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        group = client.groups.get("GROUP_GUID_HERE")
+        user = client.users.get("USER_GUID_HERE")
+
+        # Remove the user from the group
+        user.groups.delete(group)
+
+        # Remove the user from multiple groups
+        groups = [
+            client.groups.get("GROUP_GUID_1"),
+            client.groups.get("GROUP_GUID_2"),
+        ]
+        for group in groups:
+            user.groups.delete(group)
+
+        # Remove the user from a group by GUID
+        user.groups.delete("GROUP_GUID_HERE")
+        ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#delete-/v1/groups/-group_guid-/members/-user_guid-
+        """
+        from .groups import Group
+
+        if isinstance(group, Group):
+            group.members.delete(user_guid=self._user_guid)
+            return
+
+        if not isinstance(group, str):
+            raise TypeError(f"`group=` must be a `str | Group`. Received {group}")
+        if not group:
+            raise ValueError("`group=` must not be empty.")
+
+        group_obj = self._ctx.client.groups.get(group)
+        group_obj.members.delete(user_guid=self._user_guid)
+
+    def find(self) -> List[Group]:
+        """
+        Retrieve the groups to which the user belongs.
+
+        Returns
+        -------
+        List[Group]
+            A list of groups to which the user belongs.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client("https://posit.example.com", "API_KEY")
+
+        user = client.users.get("USER_GUID_HERE")
+        groups = user.groups.find()
+        ```
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/groups/-group_guid-/members
+        """
+        self_groups: list[Group] = []
+        for group in self._ctx.client.groups.find():
+            group_users = group.members.find()
+            for group_user in group_users:
+                if group_user["guid"] == self._user_guid:
+                    self_groups.append(group)
+
+        return self_groups
 
 
 class Users(Resources):
     """Users resource."""
 
-    def __init__(self, params: ResourceParameters) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context) -> None:
+        super().__init__(ctx.client.resource_params)
+        self._ctx: Context = ctx
 
     class CreateUser(TypedDict):
         """Create user request."""
@@ -195,11 +382,15 @@ class Users(Resources):
         ...     user_must_set_password=True,
         ...     user_role="viewer",
         ... )
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#post-/v1/users
         """
         # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
-        url = self.params.url + "v1/users"
-        response = self.params.session.post(url, json=attributes)
-        return User(self.params, **response.json())
+        url = self._ctx.url + "v1/users"
+        response = self._ctx.session.post(url, json=attributes)
+        return User(self._ctx, **response.json())
 
     class FindUser(TypedDict):
         """Find user request."""
@@ -239,13 +430,17 @@ class Users(Resources):
         Find all users who are locked or licensed:
 
         >>> users = client.find(account_status="locked|licensed")
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self.params.url + "v1/users"
-        paginator = Paginator(self.params.session, url, params={**conditions})
+        url = self._ctx.url + "v1/users"
+        paginator = Paginator(self._ctx.session, url, params={**conditions})
         results = paginator.fetch_results()
         return [
             User(
-                self.params,
+                self._ctx,
                 **user,
             )
             for user in results
@@ -282,14 +477,18 @@ class Users(Resources):
         Find a user who is locked or licensed:
 
         >>> user = client.find_one(account_status="locked|licensed")
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self.params.url + "v1/users"
-        paginator = Paginator(self.params.session, url, params={**conditions})
+        url = self._ctx.url + "v1/users"
+        paginator = Paginator(self._ctx.session, url, params={**conditions})
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (
             User(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -312,11 +511,15 @@ class Users(Resources):
         Examples
         --------
         >>> user = client.get("123e4567-e89b-12d3-a456-426614174000")
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self.params.url + f"v1/users/{uid}"
-        response = self.params.session.get(url)
+        url = self._ctx.url + f"v1/users/{uid}"
+        response = self._ctx.session.get(url)
         return User(
-            self.params,
+            self._ctx,
             **response.json(),
         )
 
@@ -327,8 +530,12 @@ class Users(Resources):
         Returns
         -------
         int
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self.params.url + "v1/users"
-        response = self.params.session.get(url, params={"page_size": 1})
+        url = self._ctx.url + "v1/users"
+        response = self._ctx.session.get(url, params={"page_size": 1})
         result: dict = response.json()
         return result["total"]

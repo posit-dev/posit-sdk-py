@@ -1,5 +1,4 @@
 import pytest
-import requests
 import responses
 from responses import matchers
 
@@ -7,7 +6,6 @@ from posit.connect.client import Client
 from posit.connect.content import ContentItem, ContentItemRepository
 from posit.connect.context import Context
 from posit.connect.resources import ResourceParameters
-from posit.connect.urls import Url
 
 from .api import load_mock, load_mock_dict
 
@@ -562,15 +560,19 @@ class TestContentRepository:
 
     @property
     def content_item(self):
-        return ContentItem(self.params, guid=self.content_guid)
+        return ContentItem(self.ctx, guid=self.content_guid)
 
     @property
     def endpoint(self):
         return f"{self.base_url}/__api__/v1/content/{self.content_guid}/repository"
 
     @property
+    def client(self):
+        return Client(self.base_url, "12345")
+
+    @property
     def ctx(self):
-        return Context(requests.Session(), Url(self.base_url))
+        return Context(self.client)
 
     @property
     def params(self):

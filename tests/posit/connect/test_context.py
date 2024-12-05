@@ -2,11 +2,10 @@ from email.contentmanager import ContentManager
 from unittest.mock import MagicMock, Mock
 
 import pytest
-import requests
 import responses
 
+from posit.connect.client import Client
 from posit.connect.context import Context, requires
-from posit.connect.urls import Url
 
 
 class TestRequires:
@@ -65,9 +64,7 @@ class TestContextVersion:
             json={},
         )
 
-        session = requests.Session()
-        url = Url("http://connect.example")
-        ctx = Context(session, url)
+        ctx = Context(Client("http://connect.example", "12345"))
 
         assert ctx.version is None
 
@@ -78,13 +75,11 @@ class TestContextVersion:
             json={"version": "2024.09.24"},
         )
 
-        session = requests.Session()
-        url = Url("http://connect.example")
-        ctx = Context(session, url)
+        ctx = Context(Client("http://connect.example", "12345"))
 
         assert ctx.version == "2024.09.24"
 
     def test_setter(self):
-        ctx = Context(Mock(), Mock())
+        ctx = Context(Mock())
         ctx.version = "2024.09.24"
         assert ctx.version == "2024.09.24"
