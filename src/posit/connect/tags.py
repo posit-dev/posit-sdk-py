@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, overload
 from typing_extensions import NotRequired, TypedDict, Unpack
 
 from .context import Context, ContextManager
-from .resources import Active, ResourceParameters
+from .resources import Active
 
 if TYPE_CHECKING:
     from .content import ContentItem
@@ -34,11 +34,8 @@ class Tag(Active):
         if self.get("parent_id", None) is None:
             return None
 
-        # TODO-barret-future: Replace with `self._ctx.client.tags.get(self["parent_id"])`
-        path = "v1/tags/" + self["parent_id"]
-        url = self._ctx.url + path
-        response = self._ctx.session.get(url)
-        return Tag(self._ctx, path, **response.json())
+        parent = self._ctx.client.tags.get(self["parent_id"])
+        return parent
 
     @property
     def children_tags(self) -> ChildrenTags:
@@ -141,8 +138,7 @@ class TagContentItems(ContextManager):
         url = self._ctx.url + self._path
         response = self._ctx.session.get(url)
         results = response.json()
-        params = ResourceParameters(self._ctx.session, self._ctx.url)
-        return [ContentItem(params, **result) for result in results]
+        return [ContentItem(self._ctx, **result) for result in results]
 
 
 class ChildrenTags(ContextManager):
@@ -161,10 +157,7 @@ class ChildrenTags(ContextManager):
         list[Tag]
             List of child tags. (Does not include the parent tag.)
         """
-        # TODO-future-barret;
-        # This method could be done with `self._ctx.client.tags.find(parent=self)`
-        # For now, use DescendantTags and filter the results
-        descendant_tags = DescendantTags(self._ctx, parent_tag=self._parent_tag).find()
+        descendant_tags = self._ctx.client.tags.find(parent=self._parent_tag)
 
         # Filter out tags that are not direct children
         child_tags: list[Tag] = []
@@ -196,19 +189,7 @@ class DescendantTags(ContextManager):
         # By using the `/v1/tags` endpoint, we can get all tags in a single request
         # and filter them in Python.
 
-        # TODO-barret-future: Replace with `self._ctx.client.tags.find(parent=self._root_id)`
-        url = self._ctx.url + self._path
-        response = self._ctx.session.get(url)
-        results = response.json()
-        all_tags = []
-        for result in results:
-            tag = Tag(
-                self._ctx,
-                # TODO-barret-future: Replace with `self._ctx.client.tags._path`?
-                f"{self._path}/{result['id']}",
-                **result,
-            )
-            all_tags.append(tag)
+        all_tags = self._ctx.client.tags.find()
 
         # O(n^2) algorithm to find all child tags
         # This could be optimized by using a dictionary to store the tags by their parent_id and
