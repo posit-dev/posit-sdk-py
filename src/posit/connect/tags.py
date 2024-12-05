@@ -38,7 +38,7 @@ class Tag(Active):
         return parent
 
     @property
-    def children_tags(self) -> ChildrenTags:
+    def child_tags(self) -> ChildTags:
         """
         Find all child tags that are direct children of this tag.
 
@@ -60,8 +60,6 @@ class Tag(Active):
         """
         return ChildrenTags(self._ctx, self._path, parent_tag=self)
 
-    # TODO-barret-Q: Should this be `.descendant_tags` or `.descendants`?
-    # TODO-barret-Q: Should this be `.find_descendants() -> list[Tag]`?
     @property
     def descendant_tags(self) -> DescendantTags:
         """
@@ -80,7 +78,7 @@ class Tag(Active):
         client = posit.connect.Client(...)
 
         mytag = client.tags.find(id="TAG_ID_HERE")
-        descendant_tags = mytag.descendant_tags().find()
+        descendant_tags = mytag.descendant_tags.find()
         ```
         """
         return DescendantTags(self._ctx, parent_tag=self)
@@ -141,7 +139,7 @@ class TagContentItems(ContextManager):
         return [ContentItem(self._ctx, **result) for result in results]
 
 
-class ChildrenTags(ContextManager):
+class ChildTags(ContextManager):
     def __init__(self, ctx: Context, path: str, /, *, parent_tag: Tag) -> None:
         super().__init__()
         self._ctx = ctx
