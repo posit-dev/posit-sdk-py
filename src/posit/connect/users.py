@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, Optional, overload
+from typing import TYPE_CHECKING, List, Literal
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
@@ -169,26 +169,14 @@ class UserGroups(Resources):
         self._ctx: Context = ctx
         self._user_guid: str = user_guid
 
-    @overload
-    def add(self, group: Group, /) -> None: ...
-    @overload
-    def add(self, /, *, group_guid: str) -> None: ...
-
-    def add(self, group: Optional[Group] = None, /, *, group_guid: Optional[str] = None) -> None:
+    def add(self, group: str | Group) -> None:
         """
         Add the user to the specified group.
 
         Parameters
         ----------
-        group : Group
-            The groups to which the user will be added. Only one of `group=` or `group_guid=` can
-            be provided.
-        group_guid : str
-            The unique identifier (guid) of the group to which the user will be added.
-
-        Returns
-        -------
-        None
+        group : str | Group
+            The group guid or `Group` object to which the user will be added.
 
         Examples
         --------
@@ -212,57 +200,35 @@ class UserGroups(Resources):
             user.groups.add(group)
 
         # Add the user to a group by GUID
-        user.groups.add(group_guid="GROUP_GUID_HERE")
+        user.groups.add("GROUP_GUID_HERE")
         ```
 
         See Also
         --------
         * https://docs.posit.co/connect/api/#post-/v1/groups/-group_guid-/members
         """
-        if group is not None:
-            from .groups import Group
+        from .groups import Group
 
-            if group_guid:
-                raise ValueError("Only one of `group=` or `group_guid` may be be provided.")
-
-            if not isinstance(group, Group):
-                raise TypeError(
-                    f"`group=` is not an instance of Group. Received {group}",
-                )
+        if isinstance(group, Group):
             group.members.add(user_guid=self._user_guid)
             return
 
-        if not group_guid:
-            raise ValueError("Only one of `group=` or `group_guid` may be be provided.")
-        group = self._ctx.client.groups.get(group_guid)
-        group.members.add(user_guid=self._user_guid)
+        if not isinstance(group, str):
+            raise TypeError(f"`group=` must be a `str | Group`. Received {group}")
+        if not group:
+            raise ValueError("`group=` must not be empty.")
 
-    @overload
-    def delete(self, group: Group, /) -> None: ...
-    @overload
-    def delete(self, /, *, group_guid: str) -> None: ...
+        group_obj = self._ctx.client.groups.get(group)
+        group_obj.members.add(user_guid=self._user_guid)
 
-    def delete(
-        self,
-        group: Optional[Group] = None,
-        /,
-        *,
-        group_guid: Optional[str] = None,
-    ) -> None:
+    def delete(self, group: str | Group) -> None:
         """
         Remove the user from the specified group.
 
         Parameters
         ----------
-        group : Group
-            The groups to which the user will be added. Only one of `group=` or `group_guid=` can
-            be provided.
-        group_guid : str
-            The unique identifier (guid) of the group from which the user will be removed.
-
-        Returns
-        -------
-        None
+        group : str | Group
+            The group to which the user will be added.
 
         Examples
         --------
@@ -286,33 +252,26 @@ class UserGroups(Resources):
             user.groups.delete(group)
 
         # Remove the user from a group by GUID
-        user.groups.delete(group_guid="GROUP_GUID_HERE")
+        user.groups.delete("GROUP_GUID_HERE")
         ```
 
         See Also
         --------
         * https://docs.posit.co/connect/api/#delete-/v1/groups/-group_guid-/members/-user_guid-
         """
-        if group is not None:
-            from .groups import Group
+        from .groups import Group
 
-            if group_guid:
-                raise ValueError("Only one of `group=` or `group_guid=` may be be provided.")
-
-            if not isinstance(group, Group):
-                raise TypeError(
-                    f"`group=` is not an instance of Group. Received {group}",
-                )
+        if isinstance(group, Group):
             group.members.delete(user_guid=self._user_guid)
             return
 
-        if not isinstance(group_guid, str):
-            raise TypeError("`group_guid=` must be a string. Received {user}")
-        if not group_guid:
-            raise ValueError("`group_guid=` must not be empty.")
+        if not isinstance(group, str):
+            raise TypeError(f"`group=` must be a `str | Group`. Received {group}")
+        if not group:
+            raise ValueError("`group=` must not be empty.")
 
-        group = self._ctx.client.groups.get(group_guid)
-        group.members.delete(user_guid=self._user_guid)
+        group_obj = self._ctx.client.groups.get(group)
+        group_obj.members.delete(user_guid=self._user_guid)
 
     def find(self) -> List[Group]:
         """

@@ -1,3 +1,5 @@
+import pytest
+
 from posit import connect
 from posit.connect.content import ContentItem
 
@@ -59,11 +61,9 @@ class TestContentPermissions:
         )
 
         # Remove permissions (and from some that isn't an owner)
-        destroyed_permissions = self.content.permissions.destroy(self.user_aron, self.user_bill)
-        assert_permissions_match_guids(
-            destroyed_permissions,
-            [self.user_aron],
-        )
+        self.content.permissions.destroy(self.user_aron)
+        with pytest.raises(ValueError):
+            self.content.permissions.destroy(self.user_bill)
 
         # Prove they have been removed
         assert_permissions_match_guids(

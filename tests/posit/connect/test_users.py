@@ -202,16 +202,10 @@ class TestUserGroups:
         # Add via Group
         user.groups.add(new_group)
         # Add via guid
-        user.groups.add(group_guid=new_group["guid"])
+        user.groups.add(new_group["guid"])
 
-        with pytest.raises(TypeError):
-            user.groups.add(
-                "not a group",  # pyright: ignore[reportArgumentType]
-            )
         with pytest.raises(ValueError):
-            user.groups.add(group_guid="")
-        with pytest.raises(ValueError):
-            user.groups.add(new_group, group_guid=new_group["guid"])  # pyright: ignore[reportCallIssue]
+            user.groups.add("")
 
     @responses.activate
     def test_groups_delete(self):
@@ -234,16 +228,10 @@ class TestUserGroups:
         # Delete via Group
         user.groups.delete(group)
         # Delete via guid
-        user.groups.delete(group_guid=group["guid"])
+        user.groups.delete(group["guid"])
 
-        with pytest.raises(TypeError):
-            user.groups.delete(
-                "not a group",  # pyright: ignore[reportArgumentType]
-            )
         with pytest.raises(ValueError):
-            user.groups.delete(group_guid="")
-        with pytest.raises(ValueError):
-            user.groups.delete(group, group_guid=group["guid"])  # pyright: ignore[reportCallIssue]
+            user.groups.delete("")
 
 
 class TestUsers:
