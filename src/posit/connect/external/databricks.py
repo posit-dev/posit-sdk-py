@@ -152,7 +152,6 @@ class PositLocalContentCredentialsStrategy(CredentialsStrategy):
         return POSIT_LOCAL_CLIENT_CREDENTIALS_AUTH_TYPE 
 
     def __call__(self, *args, **kwargs) -> CredentialsProvider:
-
         return PositLocalContentCredentialsProvider(
             self._token_endpoint_url, 
             self._client_id, 
