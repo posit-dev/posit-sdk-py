@@ -97,6 +97,8 @@ class PositLocalContentCredentialsProvider:
                 "scope": "all-apis",
             },
         )
+        response.raise_for_status()
+
         credentials = Credentials(**response.json())
         return _new_bearer_authorization_header(credentials)
 
