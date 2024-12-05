@@ -192,24 +192,30 @@ class DescendantTags(ContextManager):
         all_tags = self._ctx.client.tags.find()
 
         # O(n^2) algorithm to find all child tags
+        #
         # This could be optimized by using a dictionary to store the tags by their parent_id and
         # then recursively traverse the dictionary to find all child tags. O(2 * n) = O(n) but the
         # code is more complex
         #
-        # If the tags are always ordered, it could be performed in a single pass (O(n)) as parents
-        # always appear before any children
+        # If the tags are always ordered (which they seem to be ordered by creation date - parents are first),
+        # this algo be performed in a two passes (one to add all tags, one to confirm no more additions)
         child_tags = []
         parent_ids = {self._parent_tag["id"]}
-        child_tag_found: bool = True
-        while child_tag_found:
-            child_tag_found = False
-
+        tag_found: bool = True
+        while tag_found:
+            tag_found = False
             for tag in [*all_tags]:
-                if tag.get("parent_id") in parent_ids:
+                parent_id = tag.get("parent_id")
+                if not parent_id:
+                    # Skip top-level tags
+                    all_tags.remove(tag)
+                    continue
+                if parent_id in parent_ids:
                     child_tags.append(tag)
                     parent_ids.add(tag["id"])
+                    # Child found, remove from search list
                     all_tags.remove(tag)
-                    child_tag_found = True
+                    tag_found = True
 
         return child_tags
 
@@ -236,7 +242,6 @@ class Tags(ContextManager):
         Tag
             The tag object.
         """
-        # TODO-barret-future: Replace with `self._ctx.client.tags.find(id=tag_id)`
         if not isinstance(tag_id, str):
             raise TypeError("`tag_id` must be a string")
         if tag_id == "":
