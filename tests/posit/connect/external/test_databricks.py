@@ -1,3 +1,5 @@
+import base64
+
 from typing import Dict
 from unittest.mock import patch
 
@@ -13,6 +15,8 @@ from posit.connect.external.databricks import (
     PositContentCredentialsStrategy,
     PositCredentialsProvider,
     PositCredentialsStrategy,
+    PositLocalContentCredentialsProvider,
+    PositLocalContentCredentialsStrategy,
     _get_auth_type,
     _new_bearer_authorization_header,
 )
@@ -92,6 +96,36 @@ class TestPositCredentialsHelpers:
     def test_get_auth_type_connect(self):
         assert _get_auth_type("local-auth") == POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
+    @responses.activate
+    def test_local_content_credentials_provider(self):
+
+        token_url = "https://my-token/url"
+        client_id = "client_id"
+        client_secret = "client_secret_123"
+        basic_auth = f"{client_id}:{client_secret}"
+        b64_basic_auth = base64.b64encode(basic_auth.encode('utf-8')).decode('utf-8')
+
+        responses.post(
+            token_url,
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "client_credentials",
+                        "scope": "all-apis",
+                    },
+                ),
+                responses.matchers.header_matcher({"Authorization": f"Basic {b64_basic_auth}"})
+            ],
+            json={
+                "access_token": "oauth2-m2m-access-token",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+            },
+        )
+
+        cp = PositLocalContentCredentialsProvider(token_url, client_id, client_secret)
+        assert cp() == {"Authorization": "Bearer oauth2-m2m-access-token"}
+
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
     @responses.activate
     def test_posit_content_credentials_provider(self):
@@ -110,6 +144,46 @@ class TestPositCredentialsHelpers:
         client._ctx.version = None
         cp = PositCredentialsProvider(client=client, user_session_token="cit")
         assert cp() == {"Authorization": "Bearer dynamic-viewer-access-token"}
+
+
+    @responses.activate
+    def test_local_content_credentials_strategy(self):
+
+        token_url = "https://my-token/url"
+        client_id = "client_id"
+        client_secret = "client_secret_123"
+        basic_auth = f"{client_id}:{client_secret}"
+        b64_basic_auth = base64.b64encode(basic_auth.encode('utf-8')).decode('utf-8')
+
+
+        responses.post(
+            token_url,
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "client_credentials",
+                        "scope": "all-apis",
+                    },
+                ),
+                responses.matchers.header_matcher({"Authorization": f"Basic {b64_basic_auth}"})
+            ],
+            json={
+                "access_token": "oauth2-m2m-access-token",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+            },
+        )
+
+        cs = PositLocalContentCredentialsStrategy(
+            token_url,
+            client_id,
+            client_secret,
+        )
+        cp = cs()
+        assert cs.auth_type() == "posit-local-client-credentials"
+        assert cp() == {"Authorization": "Bearer oauth2-m2m-access-token"}
+
+
 
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
     @responses.activate
