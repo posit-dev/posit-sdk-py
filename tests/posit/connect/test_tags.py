@@ -179,7 +179,7 @@ class TestTag:
 
         # invoke
         tag = client.tags.get("3")
-        tag_children = tag.children_tags.find()
+        tag_children = tag.child_tags.find()
 
         # assert
         assert mock_get_3_tag.call_count == 1

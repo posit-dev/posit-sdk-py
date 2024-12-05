@@ -63,9 +63,9 @@ class TestTags:
         tagC = self.client.tags.create(name="tagC_children", parent=tagA)
         tagD = self.client.tags.create(name="tagD_children", parent=tagC)
 
-        assert tagA.children_tags.find() == [tagC]
-        assert tagB.children_tags.find() == []
-        assert tagC.children_tags.find() == [tagD]
+        assert tagA.child_tags.find() == [tagC]
+        assert tagB.child_tags.find() == []
+        assert tagC.child_tags.find() == [tagD]
 
         # cleanup
         tagA.destroy()

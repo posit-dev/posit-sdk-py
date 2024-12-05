@@ -55,10 +55,10 @@ class Tag(Active):
         client = posit.connect.Client(...)
 
         mytag = client.tags.find(id="TAG_ID_HERE")
-        children = mytag.children_tags().find()
+        children = mytag.child_tags.find()
         ```
         """
-        return ChildrenTags(self._ctx, self._path, parent_tag=self)
+        return ChildTags(self._ctx, self._path, parent_tag=self)
 
     @property
     def descendant_tags(self) -> DescendantTags:
