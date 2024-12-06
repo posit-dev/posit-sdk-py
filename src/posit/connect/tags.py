@@ -611,60 +611,60 @@ class ContentItemTags(ContextManager):
 
         return tags
 
-    def _to_tag_ids(self, tags: tuple[str | Tag, ...]) -> list[str]:
-        tag_ids: list[str] = []
-        for i, tag in enumerate(tags):
-            tag_id = tag["id"] if isinstance(tag, Tag) else tag
+    def _to_tag_id(self, tag: str | Tag) -> str:
+        if isinstance(tag, Tag):
+            tag_id = tag["id"]
             if not isinstance(tag_id, str):
-                raise TypeError(f"Expected 'tags[{i}]' to be a string. Received: {tag_id}")
-            if tag_id == "":
-                raise ValueError(f"Expected 'tags[{i}]' to be non-empty. Received: {tag_id}")
+                raise TypeError(f'Expected `tag=` `"id"` to be a string. Received: {tag}')
 
-            tag_ids.append(tag_id)
+        elif isinstance(tag, str):
+            tag_id = tag
+        else:
+            raise TypeError(f"Expected `tag=` to be a string or Tag object. Received: {tag}")
 
-        return tag_ids
+        if tag_id == "":
+            raise ValueError(f"Expected 'tag=' ID to be non-empty. Received: {tag_id}")
 
-    def add(self, *tags: str | Tag) -> None:
+        return tag_id
+
+    def add(self, tag: str | Tag) -> None:
         """
-        Add the specified tags to an individual content item.
+        Add the specified tag to an individual content item.
 
         When adding a tag, all tags above the specified tag in the tag tree are also added to the
         content item.
 
         Parameters
         ----------
-        tags : str | Tag
-            The tags id or tag object to add to the content item.
+        tag : str | Tag
+            The tag id or tag object to add to the content item.
 
         Returns
         -------
         None
         """
-        tag_ids = self._to_tag_ids(tags)
+        tag_id = self._to_tag_id(tag)
 
         url = self._ctx.url + self._path
-        for tag_id in tag_ids:
-            self._ctx.session.post(url, json={"tag_id": tag_id})
+        self._ctx.session.post(url, json={"tag_id": tag_id})
 
-    def delete(self, *tags: str | Tag) -> None:
+    def delete(self, tag: str | Tag) -> None:
         """
-        Remove the specified tags from an individual content item.
+        Remove the specified tag from an individual content item.
 
         When removing a tag, all tags above the specified tag in the tag tree are also removed from
         the content item.
 
         Parameters
         ----------
-        tags : str | Tag
-            The tags id or tag object to remove from the content item.
+        tag : str | Tag
+            The tag id or tag object to remove from the content item.
 
         Returns
         -------
         None
         """
-        tag_ids = self._to_tag_ids(tags)
+        tag_id = self._to_tag_id(tag)
 
-        url = self._ctx.url + self._path
-        for tag_id in tag_ids:
-            tag_url = f"{url}/{tag_id}"
-            self._ctx.session.delete(tag_url)
+        url = self._ctx.url + self._path + tag_id
+        self._ctx.session.delete(url)
