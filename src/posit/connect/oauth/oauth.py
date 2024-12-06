@@ -13,6 +13,7 @@ GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange"
 USER_SESSION_TOKEN_TYPE = "urn:posit:connect:user-session-token"
 CONTENT_SESSION_TOKEN_TYPE = "urn:posit:connect:content-session-token"
 
+
 def _get_content_session_token() -> str:
     """Return the content session token.
 
@@ -28,15 +29,18 @@ def _get_content_session_token() -> str:
     """
     value = os.environ.get("CONNECT_CONTENT_SESSION_TOKEN")
     if not value:
-        raise ValueError("Invalid value for 'CONNECT_CONTENT_SESSION_TOKEN': Must be a non-empty string.")
+        raise ValueError(
+            "Invalid value for 'CONNECT_CONTENT_SESSION_TOKEN': Must be a non-empty string."
+        )
     return value
+
 
 class OAuth(Resources):
     def __init__(self, params: ResourceParameters, api_key: str) -> None:
         super().__init__(params)
         self.api_key = api_key
 
-    def _get_credentials_url(self) -> str: 
+    def _get_credentials_url(self) -> str:
         return self.params.url + "v1/oauth/integrations/credentials"
 
     @property
@@ -65,10 +69,11 @@ class OAuth(Resources):
         data = {}
         data["grant_type"] = GRANT_TYPE
         data["subject_token_type"] = CONTENT_SESSION_TOKEN_TYPE
-        data["subject_token"] = content_session_token or _get_content_session_token() 
+        data["subject_token"] = content_session_token or _get_content_session_token()
 
         response = self.params.session.post(self._get_credentials_url(), data=data)
         return Credentials(**response.json())
+
 
 class Credentials(TypedDict, total=False):
     access_token: str

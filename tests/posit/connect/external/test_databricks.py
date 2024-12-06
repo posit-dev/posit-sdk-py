@@ -1,5 +1,4 @@
 import base64
-
 from typing import Dict
 from unittest.mock import patch
 
@@ -72,10 +71,7 @@ def register_mocks():
     )
 
 
-
-
 class TestPositCredentialsHelpers:
-
     def test_new_bearer_authorization_header(self):
         credential = Credentials()
         credential["token_type"] = "token_type"
@@ -91,19 +87,17 @@ class TestPositCredentialsHelpers:
     def test_get_auth_type_local(self):
         assert _get_auth_type("local-auth") == "local-auth"
 
-
     @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
     def test_get_auth_type_connect(self):
         assert _get_auth_type("local-auth") == POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
     @responses.activate
     def test_local_content_credentials_provider(self):
-
         token_url = "https://my-token/url"
         client_id = "client_id"
         client_secret = "client_secret_123"
         basic_auth = f"{client_id}:{client_secret}"
-        b64_basic_auth = base64.b64encode(basic_auth.encode('utf-8')).decode('utf-8')
+        b64_basic_auth = base64.b64encode(basic_auth.encode("utf-8")).decode("utf-8")
 
         responses.post(
             token_url,
@@ -114,7 +108,7 @@ class TestPositCredentialsHelpers:
                         "scope": "all-apis",
                     },
                 ),
-                responses.matchers.header_matcher({"Authorization": f"Basic {b64_basic_auth}"})
+                responses.matchers.header_matcher({"Authorization": f"Basic {b64_basic_auth}"}),
             ],
             json={
                 "access_token": "oauth2-m2m-access-token",
@@ -145,16 +139,13 @@ class TestPositCredentialsHelpers:
         cp = PositCredentialsProvider(client=client, user_session_token="cit")
         assert cp() == {"Authorization": "Bearer dynamic-viewer-access-token"}
 
-
     @responses.activate
     def test_local_content_credentials_strategy(self):
-
         token_url = "https://my-token/url"
         client_id = "client_id"
         client_secret = "client_secret_123"
         basic_auth = f"{client_id}:{client_secret}"
-        b64_basic_auth = base64.b64encode(basic_auth.encode('utf-8')).decode('utf-8')
-
+        b64_basic_auth = base64.b64encode(basic_auth.encode("utf-8")).decode("utf-8")
 
         responses.post(
             token_url,
@@ -165,7 +156,7 @@ class TestPositCredentialsHelpers:
                         "scope": "all-apis",
                     },
                 ),
-                responses.matchers.header_matcher({"Authorization": f"Basic {b64_basic_auth}"})
+                responses.matchers.header_matcher({"Authorization": f"Basic {b64_basic_auth}"}),
             ],
             json={
                 "access_token": "oauth2-m2m-access-token",
@@ -183,8 +174,6 @@ class TestPositCredentialsHelpers:
         assert cs.auth_type() == "posit-local-client-credentials"
         assert cp() == {"Authorization": "Bearer oauth2-m2m-access-token"}
 
-
-
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
     @responses.activate
     @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
@@ -200,7 +189,6 @@ class TestPositCredentialsHelpers:
         cp = cs()
         assert cs.auth_type() == "posit-oauth-integration"
         assert cp() == {"Authorization": "Bearer content-access-token"}
-
 
     @responses.activate
     @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})

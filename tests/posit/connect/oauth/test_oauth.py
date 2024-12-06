@@ -8,9 +8,8 @@ from posit.connect.oauth.oauth import _get_content_session_token
 
 
 class TestOAuthIntegrations:
-
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
-    def test_get_content_session_token_success(self): 
+    def test_get_content_session_token_success(self):
         assert _get_content_session_token() == "cit"
 
     def test_get_content_session_token_failure(self):

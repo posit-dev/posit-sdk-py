@@ -8,11 +8,11 @@ https://github.com/databricks/databricks-sdk-py#interface-stability
 import abc
 from typing import Callable, Dict, Optional
 
+import requests
+
 from ..client import Client
 from ..oauth import Credentials
 from .external import is_local
-
-import requests
 
 POSIT_OAUTH_INTEGRATION_AUTH_TYPE = "posit-oauth-integration"
 POSIT_LOCAL_CLIENT_CREDENTIALS_AUTH_TYPE = "posit-local-client-credentials"
@@ -81,14 +81,15 @@ def _get_auth_type(local_auth_type: str) -> str:
 
     return POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
+
 class PositLocalContentCredentialsProvider:
     """`CredentialsProvider` implementation which provides a fallback for local development using a client credentials flow.
 
-    There is an open issue against the Databricks CLI which prevents it from returning service principal access tokens. 
+    There is an open issue against the Databricks CLI which prevents it from returning service principal access tokens.
     https://github.com/databricks/cli/issues/1939
 
     Until the CLI issue is resolved, this CredentialsProvider implements the approach described in the Databricks documentation
-    for manually generating a workspace-level access token using OAuth M2M authentication. Once it has acquired an access token, 
+    for manually generating a workspace-level access token using OAuth M2M authentication. Once it has acquired an access token,
     it returns it as a Bearer authorization header like other `CredentialsProvider` implementations.
 
     See Also
@@ -103,7 +104,7 @@ class PositLocalContentCredentialsProvider:
 
     def __call__(self) -> Dict[str, str]:
         response = requests.post(
-            self._token_endpoint_url, 
+            self._token_endpoint_url,
             auth=(self._client_id, self._client_secret),
             data={
                 "grant_type": "client_credentials",
@@ -114,6 +115,7 @@ class PositLocalContentCredentialsProvider:
 
         credentials = Credentials(**response.json())
         return _new_bearer_authorization_header(credentials)
+
 
 class PositContentCredentialsProvider:
     """`CredentialsProvider` implementation which initiates a credential exchange using a content-session-token.
@@ -136,10 +138,10 @@ class PositContentCredentialsProvider:
 
 class PositCredentialsProvider:
     """`CredentialsProvider` implementation which initiates a credential exchange using a user-session-token.
-    
-    The user-session-token is provided by Connect through the HTTP session header 
+
+    The user-session-token is provided by Connect through the HTTP session header
     `Posit-Connect-User-Session-Token`.
-    
+
     See Also
     --------
     * https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/oauth/oauth.py
@@ -154,10 +156,11 @@ class PositCredentialsProvider:
         credentials = self._client.oauth.get_credentials(self._user_session_token)
         return _new_bearer_authorization_header(credentials)
 
+
 class PositLocalContentCredentialsStrategy(CredentialsStrategy):
     """`CredentialsStrategy` implementation which supports local development using OAuth M2M authentication against Databricks.
 
-    There is an open issue against the Databricks CLI which prevents it from returning service principal access tokens. 
+    There is an open issue against the Databricks CLI which prevents it from returning service principal access tokens.
     https://github.com/databricks/cli/issues/1939
 
     Until the CLI issue is resolved, this CredentialsStrategy provides a drop-in replacement as a local_strategy that can be used
@@ -165,17 +168,20 @@ class PositLocalContentCredentialsStrategy(CredentialsStrategy):
 
     Examples
     --------
-    In the example below, the `PositContentCredentialsStrategy` can be initialized anywhere that 
+    In the example below, the `PositContentCredentialsStrategy` can be initialized anywhere that
     the Python process can read environment variables.
 
     CLIENT_ID and CLIENT_SECRET are credentials associated with the Databricks service principal.
 
     ```python
-    from posit.connect.external.databricks import PositContentCredentialsStrategy, PositLocalContentCredentialsStrategy
+    from posit.connect.external.databricks import (
+        PositContentCredentialsStrategy,
+        PositLocalContentCredentialsStrategy,
+    )
 
     import pandas as pd
     from databricks import sql
-    from databricks.sdk.core import ApiClient, Config 
+    from databricks.sdk.core import ApiClient, Config
     from databricks.sdk.service.iam import CurrentUserAPI
 
     DATABRICKS_HOST = "<REDACTED>"
@@ -183,18 +189,18 @@ class PositLocalContentCredentialsStrategy(CredentialsStrategy):
     SQL_HTTP_PATH = "<REDACTED>"
     TOKEN_ENDPOINT_URL = f"https://{DATABRICKS_HOST}/oidc/v1/token"
 
-    CLIENT_ID = "<REDACTED>" 
-    CLIENT_SECRET = "<REDACTED>" 
+    CLIENT_ID = "<REDACTED>"
+    CLIENT_SECRET = "<REDACTED>"
 
-    # Rather than relying on the Databricks CLI as a local strategy, we use 
+    # Rather than relying on the Databricks CLI as a local strategy, we use
     # PositLocalContentCredentialsStrategy as a drop-in replacement.
-    # Can be replaced with the Databricks CLI implementation when 
+    # Can be replaced with the Databricks CLI implementation when
     # https://github.com/databricks/cli/issues/1939 is resolved.
     local_strategy = PositLocalContentCredentialsStrategy(
         token_endpoint_url=TOKEN_ENDPOINT_URL,
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
-    ) 
+    )
 
     posit_strategy = PositContentCredentialsStrategy(local_strategy=local_strategy)
 
@@ -214,27 +220,27 @@ class PositLocalContentCredentialsStrategy(CredentialsStrategy):
             rows = cursor.fetchall()
             print(pd.DataFrame([row.asDict() for row in rows]))
     ```
- 
+
     See Also
     --------
     * https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html#manually-generate-a-workspace-level-access-token
     """
 
     def __init__(self, token_endpoint_url: str, client_id: str, client_secret: str):
-        self._token_endpoint_url = token_endpoint_url 
+        self._token_endpoint_url = token_endpoint_url
         self._client_id = client_id
         self._client_secret = client_secret
 
-    def sql_credentials_provider(self, *args, **kwargs): 
+    def sql_credentials_provider(self, *args, **kwargs):
         return lambda: self.__call__(*args, **kwargs)
 
     def auth_type(self) -> str:
-        return POSIT_LOCAL_CLIENT_CREDENTIALS_AUTH_TYPE 
+        return POSIT_LOCAL_CLIENT_CREDENTIALS_AUTH_TYPE
 
-    def __call__(self, *args, **kwargs) -> CredentialsProvider:
+    def __call__(self, *args, **kwargs) -> CredentialsProvider:  # noqa: ARG002
         return PositLocalContentCredentialsProvider(
-            self._token_endpoint_url, 
-            self._client_id, 
+            self._token_endpoint_url,
+            self._client_id,
             self._client_secret,
         )
 
@@ -247,7 +253,7 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
 
     Examples
     --------
-    NOTE: in the example below, the `PositContentCredentialsStrategy` can be initialized anywhere that 
+    NOTE: in the example below, the `PositContentCredentialsStrategy` can be initialized anywhere that
     the Python process can read environment variables.
 
     ```python
@@ -265,9 +271,9 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
     # NOTE: currently the databricks_cli local strategy only supports auth code OAuth flows.
     # https://github.com/databricks/cli/issues/1939
     #
-    # This means that the databricks_cli supports local development using the developer's 
-    # databricks credentials, but not the credentials for a service principal. 
-    # To fallback to service principal credentials in local development, use 
+    # This means that the databricks_cli supports local development using the developer's
+    # databricks credentials, but not the credentials for a service principal.
+    # To fallback to service principal credentials in local development, use
     # `PositLocalContentCredentialsStrategy` as a drop-in replacement.
     posit_strategy = PositContentCredentialsStrategy(local_strategy=databricks_cli)
 
@@ -331,7 +337,7 @@ class PositCredentialsStrategy(CredentialsStrategy):
 
     Examples
     --------
-    NOTE: In the example below, the PositCredentialsProvider *must* be initialized within the context of the 
+    NOTE: In the example below, the PositCredentialsProvider *must* be initialized within the context of the
     shiny `server` function, which provides access to the HTTP session headers.
 
     ```python
@@ -343,7 +349,7 @@ class PositCredentialsStrategy(CredentialsStrategy):
     from databricks.sdk.service.iam import CurrentUserAPI
     from posit.connect.external.databricks import PositCredentialsStrategy
     from shiny import App, Inputs, Outputs, Session, render, ui
-    
+
     DATABRICKS_HOST = "<REDACTED>"
     DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
     SQL_HTTP_PATH = "<REDACTED>"
@@ -352,7 +358,6 @@ class PositCredentialsStrategy(CredentialsStrategy):
 
 
     def server(i: Inputs, o: Outputs, session: Session):
-
         # HTTP session headers are available in this context.
         session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
         posit_strategy = PositCredentialsStrategy(
