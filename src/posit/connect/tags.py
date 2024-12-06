@@ -522,7 +522,6 @@ class Tags(ContextManager):
             kwargs,  # pyright: ignore[reportArgumentType]
         )
         url = self._ctx.url + self._path
-        print("barret", url, updated_kwargs)
 
         response = self._ctx.session.get(url, params=updated_kwargs)
         results = response.json()

@@ -140,22 +140,27 @@ class TestTags:
         assert len(tagC.content_items.find()) == 3
 
         # Make sure unique content items are found
-        child_content_items = tagA.child_tags.content_items.find()
-        assert len(child_content_items) == 2
-        child_content_item_guids = [content_item["guid"] for content_item in child_content_items]
-        assert child_content_item_guids == [self.contentB["guid"], self.contentC["guid"]]
+        assert len(tagB.child_tags.content_items.find()) == 0
+        assert len(tagD.child_tags.content_items.find()) == 0
+        assert len(tagB.descendant_tags.content_items.find()) == 0
+        assert len(tagD.descendant_tags.content_items.find()) == 0
+
+        child_content_items = tagC.child_tags.content_items.find()
+        assert len(child_content_items) == 1
+        child_content_item_guids = {content_item["guid"] for content_item in child_content_items}
+        assert child_content_item_guids == {self.contentA["guid"]}
 
         descendant_content_items = tagA.descendant_tags.content_items.find()
         assert len(descendant_content_items) == 3
 
-        descendant_content_item_guids = [
+        descendant_content_item_guids = {
             content_item["guid"] for content_item in descendant_content_items
-        ]
-        assert descendant_content_item_guids == [
+        }
+        assert descendant_content_item_guids == {
             self.contentA["guid"],
             self.contentB["guid"],
             self.contentC["guid"],
-        ]
+        }
 
         self.contentA.tags.delete(tagRoot)
         self.contentB.tags.delete(tagRoot)
