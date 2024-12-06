@@ -272,7 +272,6 @@ class Permissions(Resources):
             permission_obj = self.find_one(
                 principal_guid=principal_guid,
             )
-            print("Barret!", permission, principal_guid, permission_obj)
             if permission_obj is None:
                 raise ValueError(f"Permission with principal_guid '{principal_guid}' not found.")
         elif isinstance(permission, Permission):
