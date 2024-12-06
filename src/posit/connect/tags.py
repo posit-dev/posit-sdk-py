@@ -558,8 +558,8 @@ class Tags(ContextManager):
 
         client = posit.connect.Client()
 
-        mytag = client.tags.create(name="tag_name")
-        subtag = client.tags.create(name="subtag_name", parent=mytag)
+        category_tag = client.tags.create(name="category_name")
+        tag = client.tags.create(name="tag_name", parent=category_tag)
         ```
         """
         updated_kwargs = self._update_parent_kwargs(
@@ -585,7 +585,6 @@ class ContentItemTags(ContextManager):
 
         self._content_guid = content_guid
 
-    # TODO-barret; Example
     def find(self) -> list[Tag]:
         """
         Find all tags that are associated with a single content item.
@@ -594,6 +593,18 @@ class ContentItemTags(ContextManager):
         -------
         list[Tag]
             List of tags associated with the content item.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+        content_item = client.content.find_one()
+
+        # Find all tags associated with the content item
+        content_item_tags = content_item.tags.find()
+        ```
         """
         url = self._ctx.url + self._path
         response = self._ctx.session.get(url)
@@ -639,9 +650,19 @@ class ContentItemTags(ContextManager):
         tag : str | Tag
             The tag id or tag object to add to the content item.
 
-        Returns
-        -------
-        None
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+
+        content_item = client.content.find_one()
+        tag = client.tags.find()[0]
+
+        # Add a tag
+        content_item.tags.add(tag)
+        ```
         """
         tag_id = self._to_tag_id(tag)
 
@@ -660,9 +681,19 @@ class ContentItemTags(ContextManager):
         tag : str | Tag
             The tag id or tag object to remove from the content item.
 
-        Returns
-        -------
-        None
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+
+        content_item = client.content.find_one()
+        content_item_first_tag = content_item.tags.find()[0]
+
+        # Remove a tag
+        content_item.tags.delete(content_item_first_tag)
+        ```
         """
         tag_id = self._to_tag_id(tag)
 
