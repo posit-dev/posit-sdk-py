@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 
 class _RelatedTagsBase(ContextManager, ABC):
+    @property
     @abstractmethod
     def content_items(self) -> _TagContentItemsBase:
         pass
@@ -204,6 +205,7 @@ class ChildTags(_RelatedTagsBase):
 
         self._parent_tag = parent_tag
 
+    @property
     def content_items(self) -> ChildTagContentItems:
         """
         Find all content items from the child tags.
@@ -319,6 +321,7 @@ class DescendantTags(_RelatedTagsBase):
         self._ctx = ctx
         self._parent_tag = parent_tag
 
+    @property
     def content_items(self) -> DescendantTagContentItems:
         """
         Find all content items from the descendant tags.
