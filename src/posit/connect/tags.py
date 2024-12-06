@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, overload
 
 from typing_extensions import NotRequired, TypedDict, Unpack
@@ -9,6 +10,38 @@ from .resources import Active
 
 if TYPE_CHECKING:
     from .content import ContentItem
+
+
+class _RelatedTagsBase(ContextManager, ABC):
+    @abstractmethod
+    def content_items(self) -> _TagContentItemsBase:
+        pass
+
+    @abstractmethod
+    def find(self) -> list[Tag]:
+        pass
+
+
+class _TagContentItemsBase(ContextManager, ABC):
+    @staticmethod
+    def _unique_content_items(tags: list[Tag]) -> list[ContentItem]:
+        content_items: list[ContentItem] = []
+        content_items_seen: set[str] = set()
+
+        for tag in tags:
+            tag_content_items = tag.content_items.find()
+
+            for content_item in tag_content_items:
+                content_item_guid = content_item["guid"]
+
+                if content_item_guid not in content_items_seen:
+                    content_items.append(content_item)
+                    content_items_seen.add(content_item_guid)
+
+        return content_items
+
+    @abstractmethod
+    def find(self) -> list[ContentItem]: ...
 
 
 class Tag(Active):
@@ -52,9 +85,9 @@ class Tag(Active):
         ```python
         import posit
 
-        client = posit.connect.Client(...)
-
+        client = posit.connect.Client()
         mytag = client.tags.find(id="TAG_ID_HERE")
+
         children = mytag.child_tags.find()
         ```
         """
@@ -75,9 +108,9 @@ class Tag(Active):
         ```python
         import posit
 
-        client = posit.connect.Client(...)
-
+        client = posit.connect.Client()
         mytag = client.tags.find(id="TAG_ID_HERE")
+
         descendant_tags = mytag.descendant_tags.find()
         ```
         """
@@ -86,7 +119,7 @@ class Tag(Active):
     @property
     def content_items(self) -> TagContentItems:
         """
-        Find all content items using this tag.
+        Find all content items that are tagged with this tag.
 
         Returns
         -------
@@ -98,8 +131,9 @@ class Tag(Active):
         ```python
         import posit
 
-        client = posit.connect.Client(...)
+        client = posit.connect.Client()
         first_tag = client.tags.find()[0]
+
         first_tag_content_items = first_tag.content_items.find()
         ```
         """
@@ -111,12 +145,24 @@ class Tag(Active):
         Removes the tag.
 
         Deletes a tag, including all descendants in its own tag hierarchy.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+        first_tag = client.tags.find()[0]
+
+        # Remove the tag
+        first_tag.destroy()
+        ```
         """
         url = self._ctx.url + self._path
         self._ctx.session.delete(url)
 
 
-class TagContentItems(ContextManager):
+class TagContentItems(_TagContentItemsBase):
     def __init__(self, ctx: Context, path: str) -> None:
         super().__init__()
         self._ctx = ctx
@@ -130,6 +176,17 @@ class TagContentItems(ContextManager):
         -------
         list[ContentItem]
             List of content items that are tagged with this tag.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+        first_tag = client.tags.find()[0]
+
+        first_tag_content_items = first_tag.content_items.find()
+        ```
         """
         from .content import ContentItem
 
@@ -139,11 +196,12 @@ class TagContentItems(ContextManager):
         return [ContentItem(self._ctx, **result) for result in results]
 
 
-class ChildTags(ContextManager):
+class ChildTags(_RelatedTagsBase):
     def __init__(self, ctx: Context, path: str, /, *, parent_tag: Tag) -> None:
         super().__init__()
-        self._ctx = ctx
-        self._path = path
+        self._ctx: Context = ctx
+        self._path: str = path
+
         self._parent_tag = parent_tag
 
     def content_items(self) -> ChildTagContentItems:
@@ -160,9 +218,9 @@ class ChildTags(ContextManager):
         ```python
         import posit
 
-        client = posit.connect.Client(...)
+        client = posit.connect.Client()
+        mytag = client.tags.get("TAG_ID_HERE")
 
-        mytag = client.tags.find(id="TAG_ID_HERE")
         tagged_content_items = mytag.child_tags.content_items.find()
         ```
         """
@@ -176,19 +234,23 @@ class ChildTags(ContextManager):
         -------
         list[Tag]
             List of child tags. (Does not include the parent tag.)
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+        mytag = client.tags.get("TAG_ID_HERE")
+
+        child_tags = mytag.child_tags.find()
+        ```
         """
-        descendant_tags = self._ctx.client.tags.find(parent=self._parent_tag)
-
-        # Filter out tags that are not direct children
-        child_tags: list[Tag] = []
-        for tag in descendant_tags:
-            if tag.get("parent_id") == self._parent_tag["id"]:
-                child_tags.append(tag)
-
+        child_tags = self._ctx.client.tags.find(parent=self._parent_tag)
         return child_tags
 
 
-class ChildTagContentItems(ContextManager):
+class ChildTagContentItems(_TagContentItemsBase):
     def __init__(self, ctx: Context, path: str, /, *, parent_tag: Tag) -> None:
         super().__init__()
         self._ctx = ctx
@@ -203,17 +265,58 @@ class ChildTagContentItems(ContextManager):
         -------
         list[ContentItem]
             List of content items that are tagged with a child tag.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+        mytag = client.tags.get("TAG_ID_HERE")
+
+        tagged_content_items = mytag.child_tags.content_items.find()
+        ```
         """
         child_tags = self._parent_tag.child_tags.find()
-        content_items = DescendantTagContentItems._unique_content_items(child_tags)
+        content_items = self._unique_content_items(child_tags)
         return content_items
 
 
-class DescendantTags(ContextManager):
+class DescendantTagContentItems(_TagContentItemsBase):
     def __init__(self, ctx: Context, /, *, parent_tag: Tag) -> None:
         super().__init__()
         self._ctx = ctx
-        self._path = "v1/tags"
+        self._parent_tag = parent_tag
+
+    def find(self) -> list[ContentItem]:
+        """
+        Find all content items that are tagged with a descendant tag.
+
+        Returns
+        -------
+        list[ContentItem]
+            List of content items that are tagged with a descendant tag.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+        mytag = client.tags.get("TAG_ID_HERE")
+
+        tagged_content_items = mytag.descendant_tags.content_items.find()
+        ```
+        """
+        descendant_tags = self._parent_tag.descendant_tags.find()
+        content_items = self._unique_content_items(descendant_tags)
+        return content_items
+
+
+class DescendantTags(_RelatedTagsBase):
+    def __init__(self, ctx: Context, /, *, parent_tag: Tag) -> None:
+        super().__init__()
+        self._ctx = ctx
         self._parent_tag = parent_tag
 
     def content_items(self) -> DescendantTagContentItems:
@@ -230,13 +333,16 @@ class DescendantTags(ContextManager):
         ```python
         import posit
 
-        client = posit.connect.Client(...)
-
+        client = posit.connect.Client()
         mytag = client.tags.find(id="TAG_ID_HERE")
+
         tagged_content_items = mytag.descendant_tags.content_items.find()
         ```
         """
-        return DescendantTagContentItems(self._ctx, self._path, parent_tag=self._parent_tag)
+        return DescendantTagContentItems(
+            self._ctx,
+            parent_tag=self._parent_tag,
+        )
 
     def find(self) -> list[Tag]:
         """
@@ -245,16 +351,16 @@ class DescendantTags(ContextManager):
         Returns
         -------
         list[Tag]
-            List of tags that desc
+            List of tags that descend from the parent tag.
         """
-        # This method could be done with `tags.find(parent=self._root_id)` but it would require
-        # a request for every child tag recursively.
+        # This method could be done using `tags.find(parent=self._root_id)` but it would require
+        # a request for every child tag recursively. (O(n) requests)
         # By using the `/v1/tags` endpoint, we can get all tags in a single request
-        # and filter them in Python.
+        # and filter them in Python. (1 request)
 
         all_tags = self._ctx.client.tags.find()
 
-        # O(n^2) algorithm to find all child tags
+        # O(n^2) algorithm to find all child tags. O(n) in practice.
         #
         # This could be optimized by using a dictionary to store the tags by their parent_id and
         # then recursively traverse the dictionary to find all child tags. O(2 * n) = O(n) but the
@@ -270,55 +376,18 @@ class DescendantTags(ContextManager):
             for tag in [*all_tags]:
                 parent_id = tag.get("parent_id")
                 if not parent_id:
-                    # Skip top-level tags
+                    # Skip tags with no parent
                     all_tags.remove(tag)
                     continue
                 if parent_id in parent_ids:
+                    # Child found, remove from search list
                     child_tags.append(tag)
                     parent_ids.add(tag["id"])
-                    # Child found, remove from search list
+                    # Remove from search list
                     all_tags.remove(tag)
                     tag_found = True
 
         return child_tags
-
-
-class DescendantTagContentItems(ContextManager):
-    def __init__(self, ctx: Context, path: str, /, *, parent_tag: Tag) -> None:
-        super().__init__()
-        self._ctx = ctx
-        self._path = path
-        self._parent_tag = parent_tag
-
-    @staticmethod
-    def _unique_content_items(tags: list[Tag]) -> list[ContentItem]:
-        content_items: list[ContentItem] = []
-        content_items_seen: set[str] = set()
-
-        for tag in tags:
-            tag_content_items = tag.content_items.find()
-
-            for content_item in tag_content_items:
-                content_item_guid = content_item["guid"]
-
-                if content_item_guid not in content_items_seen:
-                    content_items.append(content_item)
-                    content_items_seen.add(content_item_guid)
-
-        return content_items
-
-    def find(self) -> list[ContentItem]:
-        """
-        Find all content items that are tagged with a descendant tag.
-
-        Returns
-        -------
-        list[ContentItem]
-            List of content items that are tagged with a descendant tag.
-        """
-        descendant_tags = self._parent_tag.descendant_tags.find()
-        content_items = self._unique_content_items(descendant_tags)
-        return content_items
 
 
 class Tags(ContextManager):
@@ -328,6 +397,14 @@ class Tags(ContextManager):
         super().__init__()
         self._ctx = ctx
         self._path = path
+
+    def _tag_path(self, tag_id: str) -> str:
+        if not isinstance(tag_id, str):
+            raise TypeError('Tag `"id"` must be a string')
+        if tag_id == "":
+            raise ValueError('Tag `"id"` cannot be an empty string')
+
+        return f"{self._path}/{tag_id}"
 
     def get(self, tag_id: str) -> Tag:
         """
@@ -342,17 +419,32 @@ class Tags(ContextManager):
         -------
         Tag
             The tag object.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+        mytag = client.tags.get("TAG_ID_HERE")
+        ```
         """
         if not isinstance(tag_id, str):
             raise TypeError("`tag_id` must be a string")
+
         if tag_id == "":
             raise ValueError("`tag_id` cannot be an empty string")
-        path = f"{self._path}/{tag_id}"
+        path = self._tag_path(tag_id)
         url = self._ctx.url + path
         response = self._ctx.session.get(url)
         return Tag(self._ctx, path, **response.json())
 
     def _update_parent_kwargs(self, kwargs: dict) -> dict:
+        """
+        Sets the `parent_id` key in the kwargs if `parent` is provided.
+
+        Asserts that the `parent=` and `parent_id=` keys are not both provided.
+        """
         parent = kwargs.get("parent", None)
         if parent is None:
             # No parent to upgrade, return the kwargs as is
@@ -410,7 +502,7 @@ class Tags(ContextManager):
         ```python
         import posit
 
-        client = posit.connect.Client(...)
+        client = posit.connect.Client()
 
         # Find all tags
         all_tags = client.tags.find()
@@ -427,10 +519,11 @@ class Tags(ContextManager):
             kwargs,  # pyright: ignore[reportArgumentType]
         )
         url = self._ctx.url + self._path
+        print("barret", url, updated_kwargs)
 
         response = self._ctx.session.get(url, params=updated_kwargs)
         results = response.json()
-        return [Tag(self._ctx, f"{self._path}/{result['id']}", **result) for result in results]
+        return [Tag(self._ctx, self._tag_path(result["id"]), **result) for result in results]
 
     @overload
     def create(self, /, *, name: str) -> Tag: ...
@@ -463,7 +556,7 @@ class Tags(ContextManager):
         ```python
         import posit
 
-        client = posit.connect.Client(...)
+        client = posit.connect.Client()
 
         mytag = client.tags.create(name="tag_name")
         subtag = client.tags.create(name="subtag_name", parent=mytag)
@@ -476,7 +569,7 @@ class Tags(ContextManager):
         url = self._ctx.url + self._path
         response = self._ctx.session.post(url, json=updated_kwargs)
         result = response.json()
-        return Tag(self._ctx, f"{self._path}/{result['id']}", **result)
+        return Tag(self._ctx, self._tag_path(result["id"]), **result)
 
 
 class ContentItemTags(ContextManager):
@@ -492,6 +585,7 @@ class ContentItemTags(ContextManager):
 
         self._content_guid = content_guid
 
+    # TODO-barret; Example
     def find(self) -> list[Tag]:
         """
         Find all tags that are associated with a single content item.
