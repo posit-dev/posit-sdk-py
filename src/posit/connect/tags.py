@@ -13,36 +13,9 @@ if TYPE_CHECKING:
 
 
 class _RelatedTagsBase(ContextManager, ABC):
-    @property
-    @abstractmethod
-    def content_items(self) -> _TagContentItemsBase:
-        pass
-
     @abstractmethod
     def find(self) -> list[Tag]:
         pass
-
-
-class _TagContentItemsBase(ContextManager, ABC):
-    @staticmethod
-    def _unique_content_items(tags: list[Tag]) -> list[ContentItem]:
-        content_items: list[ContentItem] = []
-        content_items_seen: set[str] = set()
-
-        for tag in tags:
-            tag_content_items = tag.content_items.find()
-
-            for content_item in tag_content_items:
-                content_item_guid = content_item["guid"]
-
-                if content_item_guid not in content_items_seen:
-                    content_items.append(content_item)
-                    content_items_seen.add(content_item_guid)
-
-        return content_items
-
-    @abstractmethod
-    def find(self) -> list[ContentItem]: ...
 
 
 class Tag(Active):
@@ -163,7 +136,7 @@ class Tag(Active):
         self._ctx.session.delete(url)
 
 
-class TagContentItems(_TagContentItemsBase):
+class TagContentItems(ContextManager):
     def __init__(self, ctx: Context, path: str) -> None:
         super().__init__()
         self._ctx = ctx
@@ -205,29 +178,6 @@ class ChildTags(_RelatedTagsBase):
 
         self._parent_tag = parent_tag
 
-    @property
-    def content_items(self) -> ChildTagContentItems:
-        """
-        Find all content items from the child tags.
-
-        Returns
-        -------
-        ChildTagContentItems
-            Helper class that can `.find()` all content items that are tagged with a child tag.
-
-        Examples
-        --------
-        ```python
-        import posit
-
-        client = posit.connect.Client()
-        mytag = client.tags.get("TAG_ID_HERE")
-
-        tagged_content_items = mytag.child_tags.content_items.find()
-        ```
-        """
-        return ChildTagContentItems(self._ctx, self._path, parent_tag=self._parent_tag)
-
     def find(self) -> list[Tag]:
         """
         Find all child tags that are direct children of a single tag.
@@ -252,100 +202,11 @@ class ChildTags(_RelatedTagsBase):
         return child_tags
 
 
-class ChildTagContentItems(_TagContentItemsBase):
-    def __init__(self, ctx: Context, path: str, /, *, parent_tag: Tag) -> None:
-        super().__init__()
-        self._ctx = ctx
-        self._path = path
-        self._parent_tag = parent_tag
-
-    def find(self) -> list[ContentItem]:
-        """
-        Find all content items that are tagged with a child tag.
-
-        Returns
-        -------
-        list[ContentItem]
-            List of content items that are tagged with a child tag.
-
-        Examples
-        --------
-        ```python
-        import posit
-
-        client = posit.connect.Client()
-        mytag = client.tags.get("TAG_ID_HERE")
-
-        tagged_content_items = mytag.child_tags.content_items.find()
-        ```
-        """
-        child_tags = self._parent_tag.child_tags.find()
-        content_items = self._unique_content_items(child_tags)
-        return content_items
-
-
-class DescendantTagContentItems(_TagContentItemsBase):
-    def __init__(self, ctx: Context, /, *, parent_tag: Tag) -> None:
-        super().__init__()
-        self._ctx = ctx
-        self._parent_tag = parent_tag
-
-    def find(self) -> list[ContentItem]:
-        """
-        Find all content items that are tagged with a descendant tag.
-
-        Returns
-        -------
-        list[ContentItem]
-            List of content items that are tagged with a descendant tag.
-
-        Examples
-        --------
-        ```python
-        import posit
-
-        client = posit.connect.Client()
-        mytag = client.tags.get("TAG_ID_HERE")
-
-        tagged_content_items = mytag.descendant_tags.content_items.find()
-        ```
-        """
-        descendant_tags = self._parent_tag.descendant_tags.find()
-        content_items = self._unique_content_items(descendant_tags)
-        return content_items
-
-
 class DescendantTags(_RelatedTagsBase):
     def __init__(self, ctx: Context, /, *, parent_tag: Tag) -> None:
         super().__init__()
         self._ctx = ctx
         self._parent_tag = parent_tag
-
-    @property
-    def content_items(self) -> DescendantTagContentItems:
-        """
-        Find all content items from the descendant tags.
-
-        Returns
-        -------
-        DescendantTagContentItems
-            Helper class that can `.find()` all content items that are tagged with a descendant tag.
-
-        Examples
-        --------
-        ```python
-        import posit
-
-        client = posit.connect.Client()
-        mytag = client.tags.find(id="TAG_ID_HERE")
-
-        tagged_content_items = mytag.descendant_tags.content_items.find()
-        ```
-        """
-        return DescendantTagContentItems(
-            self._ctx,
-            parent_tag=self._parent_tag,
-        )
 
     def find(self) -> list[Tag]:
         """
