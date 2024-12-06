@@ -169,9 +169,10 @@ class TestTag:
             "https://connect.example/__api__/v1/tags/3",
             json=load_mock_dict("v1/tags/3.json"),
         )
-        mock_all_tags = responses.get(
+        mock_parent_3_tags = responses.get(
             "https://connect.example/__api__/v1/tags",
-            json=load_mock_list("v1/tags.json"),
+            json=load_mock_list("v1/tags?parent_id=3.json"),
+            match=[matchers.query_param_matcher({"parent_id": "3"})],
         )
 
         # setup
@@ -183,7 +184,7 @@ class TestTag:
 
         # assert
         assert mock_get_3_tag.call_count == 1
-        assert mock_all_tags.call_count == 1
+        assert mock_parent_3_tags.call_count == 1
 
         assert len(tag_children) == 7
 
