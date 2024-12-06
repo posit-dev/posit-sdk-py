@@ -107,3 +107,7 @@ quartodoc:
       contents:
         - connect.metrics
         - connect.metrics.usage
+    - title: External Integrations
+      contents:
+        - connect.external.databricks
+        - connect.external.snowflake

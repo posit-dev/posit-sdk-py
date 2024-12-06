@@ -771,8 +771,8 @@ class Content(Resources):
         -------
         Optional[ContentItem]
 
-        Example
-        -------
+        Examples
+        --------
         >>> find_by(name="example-content-name")
         """
         attr_items = attrs.items()
