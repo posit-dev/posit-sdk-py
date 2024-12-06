@@ -1,12 +1,6 @@
-from typing import TYPE_CHECKING
-
 from posit import connect
 
-if TYPE_CHECKING:
-    from posit.connect.content import ContentItem
 
-
-# add integration tests here!
 class TestTags:
     @classmethod
     def setup_class(cls):
@@ -146,20 +140,22 @@ class TestTags:
         assert len(tagC.content_items.find()) == 3
 
         # Make sure unique content items are found
-        content_items_list: list[ContentItem] = []
-        for tag in [tagA, *tagA.descendant_tags.find()]:
-            content_items_list.extend(tag.content_items.find())
-        # Get unique content_item guids
-        content_item_guids = set[str]()
-        for content_item in content_items_list:
-            if content_item["guid"] not in content_item_guids:
-                content_item_guids.add(content_item["guid"])
+        child_content_items = tagA.child_tags.content_items.find()
+        assert len(child_content_items) == 2
+        child_content_item_guids = [content_item["guid"] for content_item in child_content_items]
+        assert child_content_item_guids == [self.contentB["guid"], self.contentC["guid"]]
 
-        assert content_item_guids == {
+        descendant_content_items = tagA.descendant_tags.content_items.find()
+        assert len(descendant_content_items) == 3
+
+        descendant_content_item_guids = [
+            content_item["guid"] for content_item in descendant_content_items
+        ]
+        assert descendant_content_item_guids == [
             self.contentA["guid"],
             self.contentB["guid"],
             self.contentC["guid"],
-        }
+        ]
 
         self.contentA.tags.delete(tagRoot)
         self.contentB.tags.delete(tagRoot)
