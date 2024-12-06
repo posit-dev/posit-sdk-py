@@ -6,6 +6,8 @@ from typing import overload
 
 from requests import Response, Session
 
+from posit.connect.tags import Tags
+
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -228,6 +230,28 @@ class Client(ContextManager):
             The content resource instance.
         """
         return Content(self._ctx)
+
+    @property
+    def tags(self) -> Tags:
+        """
+        The tags resource interface.
+
+        Returns
+        -------
+        Tags
+            The tags resource instance.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+
+        tags = client.tags.find()
+        ```
+        """
+        return Tags(self._ctx, "v1/tags")
 
     @property
     def metrics(self) -> Metrics:

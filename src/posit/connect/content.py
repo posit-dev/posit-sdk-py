@@ -27,6 +27,7 @@ from .oauth.associations import ContentItemAssociations
 from .packages import ContentPackagesMixin as PackagesMixin
 from .permissions import Permissions
 from .resources import Resource, ResourceParameters, Resources
+from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
 
@@ -499,6 +500,16 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
             "jupyter-static",
             "quarto-static",
         }
+
+    @property
+    def tags(self) -> ContentItemTags:
+        path = f"v1/content/{self['guid']}/tags"
+        return ContentItemTags(
+            self._ctx,
+            path,
+            tags_path="v1/tags",
+            content_guid=self["guid"],
+        )
 
 
 class Content(Resources):
