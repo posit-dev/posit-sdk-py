@@ -155,7 +155,7 @@ class PositCredentialsProvider:
         return _new_bearer_authorization_header(credentials)
 
 class PositLocalContentCredentialsStrategy(CredentialsStrategy):
-    """`CredentialsStrategy` implementation which supports local development using OAuth M2M authentication against databricks.
+    """`CredentialsStrategy` implementation which supports local development using OAuth M2M authentication against Databricks.
 
     There is an open issue against the Databricks CLI which prevents it from returning service principal access tokens. 
     https://github.com/databricks/cli/issues/1939
@@ -165,14 +165,12 @@ class PositLocalContentCredentialsStrategy(CredentialsStrategy):
 
     Examples
     --------
-    In the example below, the PositContentCredentialsStrategy can be initialized anywhere that 
+    In the example below, the `PositContentCredentialsStrategy` can be initialized anywhere that 
     the Python process can read environment variables.
 
-    CLIENT_ID and CLIENT_SECRET credentials associated with the Databricks Service Principal.
+    CLIENT_ID and CLIENT_SECRET are credentials associated with the Databricks service principal.
 
     ```python
-    import os
-
     from posit.connect.external.databricks import PositContentCredentialsStrategy, PositLocalContentCredentialsStrategy
 
     import pandas as pd
@@ -189,7 +187,7 @@ class PositLocalContentCredentialsStrategy(CredentialsStrategy):
     CLIENT_SECRET = "<REDACTED>" 
 
     # Rather than relying on the Databricks CLI as a local strategy, we use 
-    # PositLocalContentCredentialsStragtegy as a drop-in replacement.
+    # PositLocalContentCredentialsStrategy as a drop-in replacement.
     # Can be replaced with the Databricks CLI implementation when 
     # https://github.com/databricks/cli/issues/1939 is resolved.
     local_strategy = PositLocalContentCredentialsStrategy(
@@ -249,7 +247,7 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
 
     Examples
     --------
-    NOTE: in the example below, the PositContentCredentialsStrategy can be initialized anywhere that 
+    NOTE: in the example below, the `PositContentCredentialsStrategy` can be initialized anywhere that 
     the Python process can read environment variables.
 
     ```python
@@ -264,7 +262,13 @@ class PositContentCredentialsStrategy(CredentialsStrategy):
     DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
     SQL_HTTP_PATH = "<REDACTED>"
 
-    # reads `CONNECT_CONTENT_SESSION_TOKEN` environment variable if hosted on Connect 
+    # NOTE: currently the databricks_cli local strategy only supports auth code OAuth flows.
+    # https://github.com/databricks/cli/issues/1939
+    #
+    # This means that the databricks_cli supports local development using the developer's 
+    # databricks credentials, but not the credentials for a service principal. 
+    # To fallback to service principal credentials in local development, use 
+    # `PositLocalContentCredentialsStrategy` as a drop-in replacement.
     posit_strategy = PositContentCredentialsStrategy(local_strategy=databricks_cli)
 
     cfg = Config(host=DATABRICKS_HOST_URL, credentials_strategy=posit_strategy)
