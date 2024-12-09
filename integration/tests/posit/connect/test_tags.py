@@ -150,6 +150,16 @@ class TestTags:
             self.contentC["guid"],
         }
 
+        # Update tag
+        tagDName = tagD.update(name="tagD_updated")
+        assert tagDName["name"] == "tagD_updated"
+        assert self.client.tags.get(tagD["id"])["name"] == "tagD_updated"
+
+        tagDParent = tagDName.update(parent=tagB)
+        assert tagDParent["parent_id"] == tagB["id"]
+        assert self.client.tags.get(tagD["id"])["parent_id"] == tagB["id"]
+
+        # Cleanup
         self.contentA.tags.delete(tagRoot)
         self.contentB.tags.delete(tagRoot)
         self.contentC.tags.delete(tagRoot)
@@ -159,6 +169,5 @@ class TestTags:
         assert len(tagC.content_items.find()) == 0
         assert len(tagD.content_items.find()) == 0
 
-        # cleanup
         tagRoot.destroy()
         assert len(self.client.tags.find()) == 0
