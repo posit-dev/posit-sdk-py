@@ -18,6 +18,36 @@ class _RelatedTagsBase(ContextManager, ABC):
         pass
 
 
+def _update_parent_kwargs(kwargs: dict) -> dict:
+    """
+    Sets the `parent_id` key in the kwargs if `parent` is provided.
+
+    Asserts that the `parent=` and `parent_id=` keys are not both provided.
+    """
+    parent = kwargs.get("parent", None)
+    if parent is None:
+        # No parent to upgrade, return the kwargs as is
+        return kwargs
+
+    if not isinstance(parent, Tag):
+        raise TypeError(
+            "`parent=` must be a Tag instance. If using a string, please use `parent_id=`"
+        )
+
+    parent_id = kwargs.get("parent_id", None)
+    if parent_id:
+        raise ValueError("Cannot provide both `parent=` and `parent_id=`")
+
+    ret_kwargs = {**kwargs}
+
+    # Remove `parent` from ret_kwargs
+    # and store the `parent_id` in the ret_kwargs below
+    del ret_kwargs["parent"]
+
+    ret_kwargs["parent_id"] = parent["id"]
+    return ret_kwargs
+
+
 class Tag(Active):
     """Tag resource."""
 
@@ -134,6 +164,63 @@ class Tag(Active):
         """
         url = self._ctx.url + self._path
         self._ctx.session.delete(url)
+
+    # Allow for every combination of `name` and (`parent` or `parent_id`)
+    @overload
+    def update(self, /, *, name: str = ..., parent: Tag | None = ...) -> Tag: ...
+    @overload
+    def update(self, /, *, name: str = ..., parent_id: str | None = ...) -> Tag: ...
+
+    def update(  # pyright: ignore[reportIncompatibleMethodOverride] ; This method returns `Tag`. Parent method returns `None`
+        self,
+        **kwargs,
+    ) -> Tag:
+        """
+        Update the tag.
+
+        Parameters
+        ----------
+        name : str
+            The name of the tag.
+        parent : Tag | None, optional
+            The parent `Tag` object. If there is no parent, the tag is a top-level tag. To remove
+            the parent tag, set the value to `None`. Only one of `parent` or `parent_id` can be
+            provided.
+        parent_id : str | None, optional
+            The identifier for the parent tag. If there is no parent, the tag is a top-level tag.
+            To remove the parent tag, set the value to `None`.
+
+        Returns
+        -------
+        Tag
+            Updated tag object.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+        last_tag = client.tags.find()[-1]
+
+        # Update the tag's name
+        updated_tag = last_tag.update(name="new_name")
+
+        # Remove the tag's parent
+        updated_tag = last_tag.update(parent=None)
+        updated_tag = last_tag.update(parent_id=None)
+
+        # Update the tag's parent
+        parent_tag = client.tags.find()[0]
+        updated_tag = last_tag.update(parent=parent_tag)
+        updated_tag = last_tag.update(parent_id=parent_tag["id"])
+        ```
+        """
+        updated_kwargs = _update_parent_kwargs(kwargs)
+        url = self._ctx.url + self._path
+        response = self._ctx.session.patch(url, json=updated_kwargs)
+        result = response.json()
+        return Tag(self._ctx, self._path, **result)
 
 
 class TagContentItems(ContextManager):
@@ -303,35 +390,6 @@ class Tags(ContextManager):
         response = self._ctx.session.get(url)
         return Tag(self._ctx, path, **response.json())
 
-    def _update_parent_kwargs(self, kwargs: dict) -> dict:
-        """
-        Sets the `parent_id` key in the kwargs if `parent` is provided.
-
-        Asserts that the `parent=` and `parent_id=` keys are not both provided.
-        """
-        parent = kwargs.get("parent", None)
-        if parent is None:
-            # No parent to upgrade, return the kwargs as is
-            return kwargs
-
-        if not isinstance(parent, Tag):
-            raise TypeError(
-                "`parent=` must be a Tag instance. If using a string, please use `parent_id=`"
-            )
-
-        parent_id = kwargs.get("parent_id", None)
-        if parent_id:
-            raise ValueError("Cannot provide both `parent=` and `parent_id=`")
-
-        ret_kwargs = {**kwargs}
-
-        # Remove `parent` from ret_kwargs
-        # and store the `parent_id` in the ret_kwargs below
-        del ret_kwargs["parent"]
-
-        ret_kwargs["parent_id"] = parent["id"]
-        return ret_kwargs
-
     # Allow for every combination of `name` and (`parent` or `parent_id`)
     @overload
     def find(self, /, *, name: str = ..., parent: Tag = ...) -> list[Tag]: ...
@@ -379,7 +437,7 @@ class Tags(ContextManager):
         subtags = client.tags.find(name="sub_name", parent=mytag["id"])
         ```
         """
-        updated_kwargs = self._update_parent_kwargs(
+        updated_kwargs = _update_parent_kwargs(
             kwargs,  # pyright: ignore[reportArgumentType]
         )
         url = self._ctx.url + self._path
@@ -425,7 +483,7 @@ class Tags(ContextManager):
         tag = client.tags.create(name="tag_name", parent=category_tag)
         ```
         """
-        updated_kwargs = self._update_parent_kwargs(
+        updated_kwargs = _update_parent_kwargs(
             kwargs,  # pyright: ignore[reportArgumentType]
         )
 

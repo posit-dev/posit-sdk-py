@@ -252,10 +252,6 @@ class TestTag:
     @responses.activate
     def test_destroy(self):
         # behavior
-        # mock_all_tags = responses.get(
-        #     "https://connect.example/__api__/v1/tags",
-        #     json=load_mock_list("v1/tags.json"),
-        # )
         mock_29_tag = responses.get(
             "https://connect.example/__api__/v1/tags/29",
             json=load_mock_dict("v1/tags/29.json"),
@@ -264,32 +260,51 @@ class TestTag:
             "https://connect.example/__api__/v1/tags/29",
             json={},  # empty response
         )
-        # post_destroy_json = load_mock_list("v1/tags.json")
-        # for tag in post_destroy_json:
-        #     if tag["id"] in {"29", "30"}:
-        #         post_destroy_json.remove(tag)
-        # mock_all_tags_after_destroy = responses.get(
-        #     "https://connect.example/__api__/v1/tags",
-        #     json=post_destroy_json,
-        # )
 
         # setup
         client = Client(api_key="12345", url="https://connect.example")
 
         # invoke
-        # tags = client.tags.find()
-        # assert len(tags) == 28
         tag29 = client.tags.get("29")
         tag29.destroy()
-        # tags = client.tags.find()
-        # # All children tags are removed
-        # assert len(tags) == 26
 
         # assert
-        # assert mock_all_tags.call_count == 1
         assert mock_29_tag.call_count == 1
         assert mock_29_destroy.call_count == 1
-        # assert mock_all_tags_after_destroy.call_count == 1
+
+    @responses.activate
+    def test_update(self):
+        # behavior
+        mock_get_33_tag = responses.get(
+            "https://connect.example/__api__/v1/tags/33",
+            json=load_mock_dict("v1/tags/33.json"),
+        )
+        mock_update_33_tag = responses.patch(
+            "https://connect.example/__api__/v1/tags/33",
+            json=load_mock_dict("v1/tags/33-patched.json"),
+        )
+
+        # setup
+        client = Client(api_key="12345", url="https://connect.example")
+        tag33 = client.tags.get("33")
+
+        # invoke
+        updated_tag33_0 = tag33.update(name="academy-updated", parent_id=None)
+        updated_tag33_1 = tag33.update(name="academy-updated", parent=None)
+
+        parent_tag = Tag(client._ctx, "/v1/tags/1", id="42", name="Parent")
+        updated_tag33_2 = tag33.update(name="academy-updated", parent=parent_tag)
+        updated_tag33_3 = tag33.update(name="academy-updated", parent_id=parent_tag["id"])
+
+        # assert
+        assert mock_get_33_tag.call_count == 1
+        assert mock_update_33_tag.call_count == 4
+
+        for tag in [updated_tag33_0, updated_tag33_1, updated_tag33_2, updated_tag33_3]:
+            assert isinstance(tag, Tag)
+
+        # Asserting updated values are deferred to integration testing
+        # to avoid agreening with the mocked data
 
 
 class TestContentItemTags:
