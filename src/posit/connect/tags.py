@@ -25,26 +25,22 @@ def _update_parent_kwargs(kwargs: dict) -> dict:
     Asserts that the `parent=` and `parent_id=` keys are not both provided.
     """
     parent = kwargs.get("parent", None)
+    parent_id = kwargs.get("parent_id", None)
     if parent is None:
         # No parent to upgrade, return the kwargs as is
         return kwargs
-
+    if parent and parent_id:
+        raise ValueError("Cannot provide both `parent=` and `parent_id=`")
     if not isinstance(parent, Tag):
         raise TypeError(
             "`parent=` must be a Tag instance. If using a string, please use `parent_id=`"
         )
 
-    parent_id = kwargs.get("parent_id", None)
-    if parent_id:
-        raise ValueError("Cannot provide both `parent=` and `parent_id=`")
-
+    # Remove `parent` from a copy of `kwargs` and replace it with `parent_id`
     ret_kwargs = {**kwargs}
-
-    # Remove `parent` from ret_kwargs
-    # and store the `parent_id` in the ret_kwargs below
     del ret_kwargs["parent"]
-
     ret_kwargs["parent_id"] = parent["id"]
+
     return ret_kwargs
 
 
