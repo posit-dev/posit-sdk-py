@@ -88,6 +88,20 @@ class Active(ABC, Resource):
         self._path = path
 
 
+class ActiveDestroyer(Active, ABC):
+    def destroy(self):
+        endpoint = self._ctx.url + self._path
+        self._ctx.session.delete(endpoint)
+
+
+class ActiveUpdater(Active, ABC):
+    def update(self, /, **attributes):
+        endpoint = self._ctx.url + self._path
+        response = self._ctx.session.put(endpoint, json=attributes)
+        result = response.json()
+        super().update(**result)
+
+
 T = TypeVar("T", bound="Active")
 """A type variable that is bound to the `Active` class"""
 
@@ -234,3 +248,12 @@ class ActiveFinderMethods(ActiveSequence[T]):
         """
         collection = self.fetch(**conditions)
         return next((v for v in collection if v.items() >= conditions.items()), None)
+
+
+class ActiveSequenceCreator(ActiveSequence[T], ABC):
+    def create(self, **attributes) -> T:
+        endpoint = self._ctx.url + self._path
+        response = self._ctx.session.post(endpoint, json=attributes)
+        result = response.json()
+        print(result)
+        return self._to_instance(result)
