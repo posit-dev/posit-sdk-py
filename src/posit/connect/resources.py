@@ -95,7 +95,7 @@ class ActiveDestroyer(Active, ABC):
 
 
 class ActiveUpdater(Active, ABC):
-    def update(self, /, **attributes):
+    def update(self, /, **attributes: Any):
         endpoint = self._ctx.url + self._path
         response = self._ctx.session.put(endpoint, json=attributes)
         result = response.json()
