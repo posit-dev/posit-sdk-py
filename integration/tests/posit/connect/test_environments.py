@@ -14,29 +14,25 @@ class TestEnvironments:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
+        cls.environment = cls.client.environments.create(
+            title="title", name="name", cluster_name="Kubernetes"
+        )
 
     @classmethod
     def teardown_class(cls):
-        pass
+        cls.environment.destroy()
+        assert len(cls.client.environments.reload()) == 0
 
-    def test(self):
-        environment = self.client.environments.create(
-            title="original-title", name="test", cluster_name="Kubernetes"
-        )
+    def test_find(self):
+        uid = self.environment["guid"]
+        environment = self.client.environments.find(uid)
+        assert environment == self.environment
 
-        assert environment["title"] == "original-title"
+    def test_find_by(self):
+        environment = self.client.environments.find_by(name="name")
+        assert environment == self.environment
 
-        assert len(self.client.environments.reload()) == 1
-
-        environment.update(title="new-title")
-        assert environment["title"] == "new-title"
-
-        environment = self.client.environments.find_by(title="new-title")
-        assert environment
-        assert environment["title"] == "new-title"
-
-        environment.destroy()
-        environment = self.client.environments.find_by(title="new-title")
-        assert environment is None
-
-        assert len(self.client.environments.reload()) == 0
+    def test_update(self):
+        assert self.environment["title"] == "title"
+        self.environment.update(title="new-title")
+        assert self.environment["title"] == "new-title"

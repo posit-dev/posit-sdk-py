@@ -255,5 +255,4 @@ class ActiveSequenceCreator(ActiveSequence[T], ABC):
         endpoint = self._ctx.url + self._path
         response = self._ctx.session.post(endpoint, json=attributes)
         result = response.json()
-        print(result)
         return self._to_instance(result)
