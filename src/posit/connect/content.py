@@ -22,17 +22,17 @@ from ._api import ApiDictEndpoint, JsonifiableDict
 from .bundles import Bundles
 from .env import EnvVars
 from .errors import ClientError
-from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
 from .packages import ContentPackagesMixin as PackagesMixin
 from .permissions import Permissions
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Resource, ResourceParameters, Resources, _ResourceSequence
 from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
 
 if TYPE_CHECKING:
     from .context import Context
+    from .jobs import Jobs
     from .tasks import Task
 
 
@@ -174,7 +174,7 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
+class ContentItem(PackagesMixin, VanityMixin, Resource):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str
@@ -510,6 +510,11 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
             tags_path="v1/tags",
             content_guid=self["guid"],
         )
+
+    @property
+    def jobs(self) -> Jobs:
+        path = posixpath.join(self._path, "jobs")
+        return _ResourceSequence(self._ctx, path, uid="key")
 
 
 class Content(Resources):

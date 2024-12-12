@@ -7,7 +7,9 @@ from typing import (
     List,
     Literal,
     Protocol,
+    SupportsIndex,
     TypedDict,
+    overload,
     runtime_checkable,
 )
 
@@ -93,6 +95,12 @@ class Environment(Mapping[str, Any]):
 
 @runtime_checkable
 class Environments(Sized, Protocol):
+    @overload
+    def __getitem__(self, index: SupportsIndex) -> Environment: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> List[Environment]: ...
+
     def create(
         self,
         *,

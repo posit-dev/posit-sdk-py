@@ -18,6 +18,8 @@ from typing import (
 
 from typing_extensions import Self
 
+from .context import Context
+
 if TYPE_CHECKING:
     import requests
 
