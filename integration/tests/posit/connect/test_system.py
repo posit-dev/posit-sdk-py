@@ -1,6 +1,7 @@
 import time
 from pathlib import Path
 
+import pytest
 from packaging import version
 
 from posit.connect import Client
@@ -10,6 +11,12 @@ from posit.connect.tasks import Task
 from . import CONNECT_VERSION
 
 
+@pytest.mark.skipif(
+    # Added to the v2023.05.0 milestone
+    # https://github.com/rstudio/connect/pull/23148
+    CONNECT_VERSION < version.parse("2023.05.0"),
+    reason="Cache runtimes not implemented",
+)
 class TestSystem:
     @classmethod
     def setup_class(cls):
@@ -70,8 +77,4 @@ class TestSystem:
         # Check if the cache is deployed
         caches = self.client.system.caches.runtime.find()
 
-        # https://github.com/rstudio/connect/pull/23148
-        # Caches were added in v2023.05.0
-        # Only assert cache length if the version is >= v2023.05.0
-        if CONNECT_VERSION >= version.parse("2023.05.0"):
-            assert len(caches) > 0
+        assert len(caches) > 0
