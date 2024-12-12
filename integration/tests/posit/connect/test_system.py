@@ -74,4 +74,6 @@ class TestSystem:
         # Check if the cache is deployed
         caches = self.client.system.caches.runtime.find()
 
-        assert len(caches) > 0
+        # Caches only added in Connect versions >= 2024.05.0
+        if CONNECT_VERSION >= version.parse("2024.05.0"):
+            assert len(caches) > 0
