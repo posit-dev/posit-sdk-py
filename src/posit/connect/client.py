@@ -6,6 +6,7 @@ from typing import overload
 
 from requests import Response, Session
 
+from posit.connect.system import System
 from posit.connect.tags import Tags
 
 from . import hooks, me
@@ -302,6 +303,10 @@ class Client(ContextManager):
     @property
     def vanities(self) -> Vanities:
         return Vanities(self.resource_params)
+
+    @property
+    def system(self) -> System:
+        return System(self._ctx, "v1/system")
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
