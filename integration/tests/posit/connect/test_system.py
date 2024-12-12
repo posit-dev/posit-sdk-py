@@ -1,9 +1,13 @@
 import time
 from pathlib import Path
 
+from packaging import version
+
 from posit.connect import Client
 from posit.connect.system import SystemRuntimeCache
 from posit.connect.tasks import Task
+
+from . import CONNECT_VERSION
 
 
 class TestSystem:
@@ -53,9 +57,7 @@ class TestSystem:
                 raise TimeoutError("Timeout while waiting for cache to deploy")
 
             jobs = self.content_item.jobs.fetch()
-            print("jobs:", jobs)
             for job in jobs:
-                print("job:", job)
                 if str(job["status"]) == "0":
                     # Stop for loop and restart while loop
                     break
@@ -67,5 +69,9 @@ class TestSystem:
 
         # Check if the cache is deployed
         caches = self.client.system.caches.runtime.find()
-        print("caches:", caches)
-        assert len(caches) > 0
+
+        # https://github.com/rstudio/connect/pull/23148
+        # Caches were added in v2023.05.0
+        # Only assert cache length if the version is >= v2023.05.0
+        if CONNECT_VERSION >= version.parse("2023.05.0"):
+            assert len(caches) > 0
