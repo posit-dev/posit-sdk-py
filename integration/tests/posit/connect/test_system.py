@@ -22,10 +22,7 @@ class TestSystem:
     def setup_class(cls):
         cls.client = Client()
         assert cls.client.content.count() == 0
-        cls.content_item = cls.client.content.create(
-            name="Content_A",
-            default_r_environment_management=True,
-        )
+        cls.content_item = cls.client.content.create(name="Content_A")
 
     # Copied from from integration/tests/posit/connect/test_packages.py
     def _deploy_python_bundle(self):
