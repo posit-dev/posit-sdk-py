@@ -88,20 +88,6 @@ class Active(ABC, Resource):
         self._path = path
 
 
-class ActiveDestroyer(Active, ABC):
-    def destroy(self):
-        endpoint = self._ctx.url + self._path
-        self._ctx.session.delete(endpoint)
-
-
-class ActiveUpdater(Active, ABC):
-    def update(self, /, **attributes: Any):
-        endpoint = self._ctx.url + self._path
-        response = self._ctx.session.put(endpoint, json=attributes)
-        result = response.json()
-        super().update(**result)
-
-
 T = TypeVar("T", bound="Active")
 """A type variable that is bound to the `Active` class"""
 
@@ -250,9 +236,81 @@ class ActiveFinderMethods(ActiveSequence[T]):
         return next((v for v in collection if v.items() >= conditions.items()), None)
 
 
-class ActiveSequenceCreator(ActiveSequence[T], ABC):
-    def create(self, **attributes) -> T:
-        endpoint = self._ctx.url + self._path
-        response = self._ctx.session.post(endpoint, json=attributes)
+class _Resource(dict):
+    def __init__(self, ctx: Context, path: str, **attributes):
+        self._ctx = ctx
+        self._path = path
+        super().__init__(**attributes)
+
+    def destroy(self) -> None:
+        self._ctx.client.delete(self._path)
+
+    def update(self, **attributes):  # type: ignore
+        response = self._ctx.client.put(self._path, json=attributes)
         result = response.json()
-        return self._to_instance(result)
+        super().update(**result)
+
+
+class _ResourceSequence(Sequence):
+    def __init__(self, ctx: Context, path: str, *, uid: str = "guid"):
+        self._ctx = ctx
+        self._path = path
+        self._uid = uid
+
+    def __getitem__(self, index):
+        return self.fetch()[index]
+
+    def __len__(self) -> int:
+        return len(self.fetch())
+
+    def __iter__(self):
+        return iter(self.fetch())
+
+    def __str__(self) -> str:
+        return str(self.fetch())
+
+    def __repr__(self) -> str:
+        return repr(self.fetch())
+
+    def create(self, **attributes: Any) -> Any:
+        response = self._ctx.client.post(self._path, json=attributes)
+        result = response.json()
+        uid = result[self._uid]
+        path = posixpath.join(self._path, uid)
+        return _Resource(self._ctx, path, **result)
+
+    def fetch(self, **conditions) -> List[Any]:
+        response = self._ctx.client.get(self._path, params=conditions)
+        results = response.json()
+        resources = []
+        for result in results:
+            uid = result[self._uid]
+            path = posixpath.join(self._path, uid)
+            resource = _Resource(self._ctx, path, **result)
+            resources.append(resource)
+
+        return resources
+
+    def find(self, *args: str) -> Any:
+        path = posixpath.join(self._path, *args)
+        response = self._ctx.client.get(path)
+        result = response.json()
+        return _Resource(self._ctx, path, **result)
+
+    def find_by(self, **conditions) -> Any | None:
+        """
+        Find the first record matching the specified conditions.
+
+        There is no implied ordering, so if order matters, you should specify it yourself.
+
+        Parameters
+        ----------
+        **conditions : Any
+
+        Returns
+        -------
+        Optional[T]
+            The first record matching the conditions, or `None` if no match is found.
+        """
+        collection = self.fetch(**conditions)
+        return next((v for v in collection if v.items() >= conditions.items()), None)

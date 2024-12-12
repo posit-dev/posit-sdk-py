@@ -47,7 +47,9 @@ class TestEnvironmentsCreate:
         )
         c = Client("https://connect.example", "12345")
         c._ctx.version = None
-        environment = c.environments.create(title="Project Alpha (R 4.1.1, Python 3.10)")
+        environment = c.environments.create(
+            title="Project Alpha (R 4.1.1, Python 3.10)", name="", cluster_name=""
+        )
         assert environment
         assert environment["id"] == "314"
 

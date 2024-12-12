@@ -21,7 +21,7 @@ class TestEnvironments:
     @classmethod
     def teardown_class(cls):
         cls.environment.destroy()
-        assert len(cls.client.environments.reload()) == 0
+        assert len(cls.client.environments) == 0
 
     def test_find(self):
         uid = self.environment["guid"]
