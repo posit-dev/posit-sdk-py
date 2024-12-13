@@ -32,27 +32,18 @@ class TestSystem:
         task = bundle.deploy()
         task.wait_for()
 
-    @classmethod
-    def teardown_class(cls):
-        cls.content_item.delete()
-        assert cls.client.content.count() == 0
-
-    def test_runtime_caches(self):
-        # Get current caches
+    def _remove_all_caches(self):
         caches: list[SystemRuntimeCache] = self.client.system.caches.runtime.find()
-        assert isinstance(caches, list)
-
-        # Remove all caches
         for cache in caches:
             assert isinstance(cache, SystemRuntimeCache)
+            none_val = cache.destroy(dry_run=True)
+            assert none_val is None
             task: Task = cache.destroy()
             assert isinstance(task, Task)
             task.wait_for()
         assert len(self.client.system.caches.runtime.find()) == 0
 
-        # Deploy a new cache
-        self._deploy_python_bundle()
-
+    def _wait_for_cache_jobs(self):
         start_time = time.time()
         continue_while = True
         while continue_while:
@@ -71,9 +62,31 @@ class TestSystem:
                 # Break the while loop
                 continue_while = False
 
+    @classmethod
+    def teardown_class(cls):
+        cls.content_item.delete()
+        assert cls.client.content.count() == 0
+
+    def test_runtime_caches(self):
+        # Get current caches
+        caches: list[SystemRuntimeCache] = self.client.system.caches.runtime.find()
+        assert isinstance(caches, list)
+
+        # Remove all caches
+        self._remove_all_caches()
+
+        # Deploy a new cache
+        self._deploy_python_bundle()
+
+        # Wait for the cache jobs to finish
+        self._wait_for_cache_jobs()
+
         # Check if the cache is deployed
         caches = self.client.system.caches.runtime.find()
 
         # Caches only added in Connect versions >= 2024.05.0
         if CONNECT_VERSION >= version.parse("2024.05.0"):
             assert len(caches) > 0
+
+        # Remove all caches
+        self._remove_all_caches()
