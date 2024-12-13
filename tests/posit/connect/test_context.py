@@ -64,7 +64,8 @@ class TestContextVersion:
             json={},
         )
 
-        ctx = Context(Client("http://connect.example", "12345"))
+        c = Client("http://connect.example", "12345")
+        ctx = c._ctx
 
         assert ctx.version is None
 
@@ -75,7 +76,8 @@ class TestContextVersion:
             json={"version": "2024.09.24"},
         )
 
-        ctx = Context(Client("http://connect.example", "12345"))
+        c = Client("http://connect.example", "12345")
+        ctx = c._ctx
 
         assert ctx.version == "2024.09.24"
 

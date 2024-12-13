@@ -11,13 +11,12 @@ class Integration(Resource):
 
     @property
     def associations(self) -> IntegrationAssociations:
-        return IntegrationAssociations(self.params, integration_guid=self["guid"])
+        return IntegrationAssociations(self._ctx, integration_guid=self["guid"])
 
     def delete(self) -> None:
         """Delete the OAuth integration."""
         path = f"v1/oauth/integrations/{self['guid']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._ctx.client.delete(path)
 
     @overload
     def update(
@@ -44,8 +43,8 @@ class Integration(Resource):
     def update(self, *args, **kwargs) -> None:
         """Update the OAuth integration."""
         body = dict(*args, **kwargs)
-        url = self.params.url + f"v1/oauth/integrations/{self['guid']}"
-        response = self.params.session.patch(url, json=body)
+        path = f"v1/oauth/integrations/{self['guid']}"
+        response = self._ctx.client.patch(path, json=body)
         super().update(**response.json())
 
 
@@ -99,9 +98,8 @@ class Integrations(Resources):
         Integration
         """
         path = "v1/oauth/integrations"
-        url = self.params.url + path
-        response = self.params.session.post(url, json=kwargs)
-        return Integration(self.params, **response.json())
+        response = self._ctx.client.post(path, json=kwargs)
+        return Integration(self._ctx, **response.json())
 
     def find(self) -> List[Integration]:
         """Find OAuth integrations.
@@ -111,12 +109,10 @@ class Integrations(Resources):
         List[Integration]
         """
         path = "v1/oauth/integrations"
-        url = self.params.url + path
-
-        response = self.params.session.get(url)
+        response = self._ctx.client.get(path)
         return [
             Integration(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in response.json()
@@ -134,6 +130,5 @@ class Integrations(Resources):
         Integration
         """
         path = f"v1/oauth/integrations/{guid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return Integration(self.params, **response.json())
+        response = self._ctx.client.get(path)
+        return Integration(self._ctx, **response.json())

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 class User(Resource):
     def __init__(self, ctx: Context, /, **attributes) -> None:
-        super().__init__(ctx.client.resource_params, **attributes)
+        super().__init__(ctx, **attributes)
         self._ctx: Context = ctx
 
     @property
@@ -161,7 +161,7 @@ class User(Resource):
 
 class UserGroups(Resources):
     def __init__(self, ctx: Context, user_guid: str) -> None:
-        super().__init__(ctx.client.resource_params)
+        super().__init__(ctx)
         self._ctx: Context = ctx
         self._user_guid: str = user_guid
 
@@ -307,7 +307,7 @@ class Users(Resources):
     """Users resource."""
 
     def __init__(self, ctx: Context) -> None:
-        super().__init__(ctx.client.resource_params)
+        super().__init__(ctx)
         self._ctx: Context = ctx
 
     class CreateUser(TypedDict):

@@ -2,7 +2,8 @@
 
 from typing import List
 
-from ..resources import Resource, ResourceParameters, Resources
+from ..context import Context
+from ..resources import Resource, Resources
 
 
 class Association(Resource):
@@ -12,8 +13,8 @@ class Association(Resource):
 class IntegrationAssociations(Resources):
     """IntegrationAssociations resource."""
 
-    def __init__(self, params: ResourceParameters, integration_guid: str) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context, integration_guid: str) -> None:
+        super().__init__(ctx)
         self.integration_guid = integration_guid
 
     def find(self) -> List[Association]:
@@ -24,12 +25,10 @@ class IntegrationAssociations(Resources):
         List[Association]
         """
         path = f"v1/oauth/integrations/{self.integration_guid}/associations"
-        url = self.params.url + path
-
-        response = self.params.session.get(url)
+        response = self._ctx.client.get(path)
         return [
             Association(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in response.json()
@@ -39,8 +38,8 @@ class IntegrationAssociations(Resources):
 class ContentItemAssociations(Resources):
     """ContentItemAssociations resource."""
 
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
+    def __init__(self, ctx, content_guid: str):
+        super().__init__(ctx)
         self.content_guid = content_guid
 
     def find(self) -> List[Association]:
@@ -51,11 +50,10 @@ class ContentItemAssociations(Resources):
         List[Association]
         """
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
-        url = self.params.url + path
-        response = self.params.session.get(url)
+        response = self._ctx.client.get(path)
         return [
             Association(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in response.json()
@@ -66,13 +64,11 @@ class ContentItemAssociations(Resources):
         data = []
 
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
-        url = self.params.url + path
-        self.params.session.put(url, json=data)
+        self._ctx.client.put(path, json=data)
 
     def update(self, integration_guid: str) -> None:
         """Set integration associations."""
         data = [{"oauth_integration_guid": integration_guid}]
 
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
-        url = self.params.url + path
-        self.params.session.put(url, json=data)
+        self._ctx.client.put(path, json=data)

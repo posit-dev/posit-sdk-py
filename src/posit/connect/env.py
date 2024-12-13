@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Iterator, List, Mapping, MutableMapping, Optional
+from typing import TYPE_CHECKING, Any, Iterator, List, Mapping, MutableMapping, Optional
 
-from .resources import ResourceParameters, Resources
+from .resources import Resources
+
+if TYPE_CHECKING:
+    from .context import Context
 
 
 class EnvVars(Resources, MutableMapping[str, Optional[str]]):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context, content_guid: str) -> None:
+        super().__init__(ctx)
         self.content_guid = content_guid
 
     def __delitem__(self, key: str, /) -> None:
@@ -63,8 +66,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         >>> clear()
         """
         path = f"v1/content/{self.content_guid}/environment"
-        url = self.params.url + path
-        self.params.session.put(url, json=[])
+        self._ctx.client.put(path, json=[])
 
     def create(self, key: str, value: str, /) -> None:
         """Create an environment variable.
@@ -121,8 +123,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
         ['DATABASE_URL']
         """
         path = f"v1/content/{self.content_guid}/environment"
-        url = self.params.url + path
-        response = self.params.session.get(url)
+        response = self._ctx.client.get(path)
         return response.json()
 
     def items(self):
@@ -194,5 +195,4 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
 
         body = [{"name": key, "value": value} for key, value in d.items()]
         path = f"v1/content/{self.content_guid}/environment"
-        url = self.params.url + path
-        self.params.session.patch(url, json=body)
+        self._ctx.client.patch(path, json=body)

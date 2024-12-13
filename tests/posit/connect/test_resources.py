@@ -22,7 +22,7 @@ class TestResource:
         v = "bar"
         d = {k: v}
         r = FakeResource(p, **d)
-        assert r.params == p
+        assert r._ctx == p
 
     def test__getitem__(self):
         warnings.filterwarnings("ignore", category=FutureWarning)
