@@ -43,29 +43,6 @@ class TestSystem:
             task.wait_for()
         assert len(self.client.system.caches.runtime.find()) == 0
 
-    def _wait_for_cache_jobs(self):
-        start_time = time.time()
-        continue_while = True
-        while continue_while:
-            now_time = time.time()
-            if now_time - start_time > 30:
-                raise TimeoutError("Timeout while waiting for cache to deploy")
-
-            jobs = self.content_item.jobs.fetch()
-            if len(list(jobs)) == 0:
-                # No jobs found, restart while loop
-                continue
-
-            for job in jobs:
-                if str(job["status"]) == "0":
-                    # Stop for loop and restart while loop
-                    break
-            else:
-                # Only executed if the for loop did NOT break
-
-                # Break the while loop
-                continue_while = False
-
     @classmethod
     def teardown_class(cls):
         cls.content_item.delete()
@@ -81,9 +58,6 @@ class TestSystem:
 
         # Deploy a new cache
         self._deploy_python_bundle()
-
-        # Wait for the cache jobs to finish
-        self._wait_for_cache_jobs()
 
         # Check if the cache is deployed
         caches = self.client.system.caches.runtime.find()
