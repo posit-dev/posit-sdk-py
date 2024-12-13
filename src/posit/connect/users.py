@@ -12,8 +12,7 @@ from .paginator import Paginator
 from .resources import Resource, Resources
 
 if TYPE_CHECKING:
-    from posit.connect.context import Context
-
+    from .context import Context
     from .groups import Group
 
 

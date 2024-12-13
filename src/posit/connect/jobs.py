@@ -4,6 +4,7 @@ from abc import abstractmethod
 from collections.abc import Mapping, Sized
 from typing import (
     Any,
+    Iterable,
     List,
     Literal,
     Protocol,
@@ -64,6 +65,17 @@ class Jobs(Sized, Protocol):
 
     @overload
     def __getitem__(self, index: slice) -> List[Job]: ...
+
+    def fetch(self) -> Iterable[Job]:
+        """Fetch all jobs.
+
+        Fetches all jobs from Connect.
+
+        Returns
+        -------
+        List[Job]
+        """
+        ...
 
     def find(self, key: str, /) -> Job:
         """

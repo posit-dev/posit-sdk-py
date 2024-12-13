@@ -15,6 +15,7 @@ from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
 from .resources import ResourceParameters, _PaginatedResourceSequence, _ResourceSequence
+from .system import System
 from .tags import Tags
 from .tasks import Tasks
 from .users import User, Users
@@ -304,6 +305,10 @@ class Client(ContextManager):
     @property
     def vanities(self) -> Vanities:
         return Vanities(self.resource_params)
+
+    @property
+    def system(self) -> System:
+        return System(self._ctx, "v1/system")
 
     @property
     @requires(version="2023.05.0")

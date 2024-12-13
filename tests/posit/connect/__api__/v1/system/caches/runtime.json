@@ -1,0 +1,5 @@
+{
+  "caches": [
+    { "language": "python", "version": "3.12.0", "image_name": "Local" }
+  ]
+}
