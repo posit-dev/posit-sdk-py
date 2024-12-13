@@ -140,9 +140,8 @@ class SystemRuntimeCache(Active):
         task.wait_for()
         ```
         """
-        url = self._ctx.url + self._path
-        data = dict(self)
-        response = self._ctx.session.delete(url, json={**data, **kwargs})
+        body = {**self, **kwargs}
+        response = self._ctx.client.delete(self._path, json=body)
 
         task_id = response.json().get("task_id")
         if not task_id:
@@ -191,8 +190,7 @@ class SystemRuntimeCaches(ContextManager):
         runtime_caches = client.system.caches.runtime.find()
         ```
         """
-        url = self._ctx.url + self._path
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(self._path)
         results = response.json()
         if not isinstance(results, dict) and "caches" not in results:
             raise RuntimeError("`caches=` not found in response.")
