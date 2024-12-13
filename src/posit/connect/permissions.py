@@ -6,9 +6,10 @@ from typing import TYPE_CHECKING, List, Optional, overload
 
 from requests.sessions import Session as Session
 
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Resource, Resources
 
 if TYPE_CHECKING:
+    from .context import Context
     from .groups import Group
     from .users import User
 
@@ -17,8 +18,7 @@ class Permission(Resource):
     def destroy(self) -> None:
         """Destroy the permission."""
         path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._ctx.client.delete(path)
 
     @overload
     def update(self, *args, role: str, **kwargs) -> None:
@@ -44,17 +44,13 @@ class Permission(Resource):
         body.update(dict(*args))
         body.update(**kwargs)
         path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
-        url = self.params.url + path
-        response = self.params.session.put(
-            url,
-            json=body,
-        )
+        response = self._ctx.client.put(path, json=body)
         super().update(**response.json())
 
 
 class Permissions(Resources):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context, content_guid: str) -> None:
+        super().__init__(ctx)
         self.content_guid = content_guid
 
     def count(self) -> int:
@@ -163,9 +159,8 @@ class Permissions(Resources):
             kwargs["principal_type"] = principal_type
 
         path = f"v1/content/{self.content_guid}/permissions"
-        url = self.params.url + path
-        response = self.params.session.post(url, json=kwargs)
-        return Permission(params=self.params, **response.json())
+        response = self._ctx.client.post(path, json=kwargs)
+        return Permission(self._ctx, **response.json())
 
     def find(self, **kwargs) -> List[Permission]:
         """Find permissions.
@@ -175,8 +170,7 @@ class Permissions(Resources):
         List[Permission]
         """
         path = f"v1/content/{self.content_guid}/permissions"
-        url = self.params.url + path
-        response = self.params.session.get(url)
+        response = self._ctx.client.get(path)
         kwargs_items = kwargs.items()
         results = response.json()
         if len(kwargs_items) > 0:
@@ -185,7 +179,7 @@ class Permissions(Resources):
                 for result in results
                 if isinstance(result, dict) and (result.items() >= kwargs_items)
             ]
-        return [Permission(self.params, **result) for result in results]
+        return [Permission(self._ctx, **result) for result in results]
 
     def find_one(self, **kwargs) -> Permission | None:
         """Find a permission.
@@ -210,9 +204,8 @@ class Permissions(Resources):
         Permission
         """
         path = f"v1/content/{self.content_guid}/permissions/{uid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return Permission(self.params, **response.json())
+        response = self._ctx.client.get(path)
+        return Permission(self._ctx, **response.json())
 
     def destroy(self, permission: str | Group | User | Permission, /) -> None:
         """Remove supplied content item permission.

@@ -91,8 +91,7 @@ class Task(resources.Resource):
         """
         params = dict(*args, **kwargs)
         path = f"v1/tasks/{self['id']}"
-        url = self.params.url + path
-        response = self.params.session.get(url, params=kwargs)
+        response = self._ctx.client.get(path, params=params)
         result = response.json()
         super().update(**result)
 
@@ -154,7 +153,6 @@ class Tasks(resources.Resources):
         Task
         """
         path = f"v1/tasks/{uid}"
-        url = self.params.url + path
-        response = self.params.session.get(url, params=kwargs)
+        response = self._ctx.client.get(path, params=kwargs)
         result = response.json()
-        return Task(self.params, **result)
+        return Task(self._ctx, **result)

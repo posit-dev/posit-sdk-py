@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class Group(Resource):
     def __init__(self, ctx: Context, **kwargs) -> None:
-        super().__init__(ctx.client.resource_params, **kwargs)
+        super().__init__(ctx, **kwargs)
         self._ctx: Context = ctx
 
     @property
@@ -67,9 +67,8 @@ class Group(Resource):
 
 class GroupMembers(Resources):
     def __init__(self, ctx: Context, group_guid: str) -> None:
-        super().__init__(ctx.client.resource_params)
+        super().__init__(ctx)
         self._group_guid = group_guid
-        self._ctx: Context = ctx
 
     @overload
     def add(self, user: User, /) -> None: ...
@@ -261,10 +260,6 @@ class GroupMembers(Resources):
 class Groups(Resources):
     """Groups resource."""
 
-    def __init__(self, ctx: Context) -> None:
-        super().__init__(ctx.client.resource_params)
-        self._ctx: Context = ctx
-
     @overload
     def create(self, *, name: str, unique_id: str | None) -> Group:
         """Create a group.
@@ -416,7 +411,6 @@ class Groups(Resources):
         * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
-        url = self._ctx.url + path
-        response: requests.Response = self._ctx.session.get(url, params={"page_size": 1})
+        response: requests.Response = self._ctx.client.get(path, params={"page_size": 1})
         result: dict = response.json()
         return result["total"]

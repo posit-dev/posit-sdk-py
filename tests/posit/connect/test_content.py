@@ -4,8 +4,6 @@ from responses import matchers
 
 from posit.connect.client import Client
 from posit.connect.content import ContentItem, ContentItemRepository
-from posit.connect.context import Context
-from posit.connect.resources import ResourceParameters
 
 from .api import load_mock, load_mock_dict
 
@@ -550,9 +548,8 @@ class TestRestart:
 
 
 class TestContentRepository:
-    @property
-    def base_url(self):
-        return "http://connect.example"
+    base_url = "http://connect.example"
+    client = Client(base_url, "12345")
 
     @property
     def content_guid(self):
@@ -567,16 +564,8 @@ class TestContentRepository:
         return f"{self.base_url}/__api__/v1/content/{self.content_guid}/repository"
 
     @property
-    def client(self):
-        return Client(self.base_url, "12345")
-
-    @property
     def ctx(self):
-        return Context(self.client)
-
-    @property
-    def params(self):
-        return ResourceParameters(self.ctx.session, self.ctx.url)
+        return self.client._ctx
 
     def mock_repository_info(self):
         content_item = self.content_item

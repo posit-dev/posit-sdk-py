@@ -19,13 +19,13 @@ class ApiCallProtocol(Protocol):
     def _put_api(self, *path, json: Jsonifiable | None) -> Jsonifiable: ...
 
 
-def endpoint(ctx: Context, *path) -> str:
-    return ctx.url + posixpath.join(*path)
+def endpoint(*path) -> str:
+    return posixpath.join(*path)
 
 
 # Helper methods for API interactions
 def get_api(ctx: Context, *path) -> Jsonifiable:
-    response = ctx.session.get(endpoint(ctx, *path))
+    response = ctx.client.get(*path)
     return response.json()
 
 
@@ -34,7 +34,7 @@ def put_api(
     *path,
     json: Jsonifiable | None,
 ) -> Jsonifiable:
-    response = ctx.session.put(endpoint(ctx, *path), json=json)
+    response = ctx.client.put(*path, json=json)
     return response.json()
 
 
@@ -43,14 +43,14 @@ def put_api(
 
 class ApiCallMixin:
     def _endpoint(self: ApiCallProtocol, *path) -> str:
-        return endpoint(self._ctx, self._path, *path)
+        return endpoint(self._path, *path)
 
     def _get_api(self: ApiCallProtocol, *path) -> Jsonifiable:
-        response = self._ctx.session.get(self._endpoint(*path))
+        response = self._ctx.client.get(self._endpoint(*path))
         return response.json()
 
     def _delete_api(self: ApiCallProtocol, *path) -> Jsonifiable | None:
-        response = self._ctx.session.delete(self._endpoint(*path))
+        response = self._ctx.client.delete(self._endpoint(*path))
         if len(response.content) == 0:
             return None
         return response.json()
@@ -60,7 +60,7 @@ class ApiCallMixin:
         *path,
         json: Jsonifiable | None,
     ) -> Jsonifiable:
-        response = self._ctx.session.patch(self._endpoint(*path), json=json)
+        response = self._ctx.client.patch(self._endpoint(*path), json=json)
         return response.json()
 
     def _put_api(
@@ -68,5 +68,5 @@ class ApiCallMixin:
         *path,
         json: Jsonifiable | None,
     ) -> Jsonifiable:
-        response = self._ctx.session.put(self._endpoint(*path), json=json)
+        response = self._ctx.client.put(self._endpoint(*path), json=json)
         return response.json()

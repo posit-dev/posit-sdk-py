@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import posixpath
 import time
-from posixpath import dirname
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -25,7 +24,7 @@ from .env import EnvVars
 from .errors import ClientError
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
-from .resources import Active, Resource, ResourceParameters, Resources, _ResourceSequence
+from .resources import Active, Resource, Resources, _ResourceSequence
 from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
@@ -162,13 +161,13 @@ class ContentItemRepository(ApiDictEndpoint):
 
 
 class ContentItemOAuth(Resource):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context, content_guid: str) -> None:
+        super().__init__(ctx)
         self["content_guid"] = content_guid
 
     @property
     def associations(self) -> ContentItemAssociations:
-        return ContentItemAssociations(self.params, content_guid=self["content_guid"])
+        return ContentItemAssociations(self._ctx, content_guid=self["content_guid"])
 
 
 class ContentItemOwner(Resource):
@@ -255,12 +254,12 @@ class ContentItem(Active, VanityMixin, Resource):
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
         if key == "owner" and isinstance(v, dict):
-            return ContentItemOwner(params=self.params, **v)
+            return ContentItemOwner(self._ctx, **v)
         return v
 
     @property
     def oauth(self) -> ContentItemOAuth:
-        return ContentItemOAuth(self.params, content_guid=self["guid"])
+        return ContentItemOAuth(self._ctx, content_guid=self["guid"])
 
     @property
     def repository(self) -> ContentItemRepository | None:
@@ -316,7 +315,7 @@ class ContentItem(Active, VanityMixin, Resource):
         path = f"v1/content/{self['guid']}/deploy"
         response = self._ctx.client.post(path, json={"bundle_id": None})
         result = response.json()
-        ts = tasks.Tasks(self.params)
+        ts = tasks.Tasks(self._ctx)
         return ts.get(result["task_id"])
 
     def render(self) -> Task:
@@ -369,8 +368,8 @@ class ContentItem(Active, VanityMixin, Resource):
             self.environment_variables.create(key, unix_epoch_in_seconds)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = posixpath.join(dirname(self._ctx.url), f"content/{self['guid']}")
-            self._ctx.session.get(url)
+            path = f"../content/{self['guid']}"
+            self._ctx.client.get(path)
             return None
         else:
             raise ValueError(
@@ -447,15 +446,15 @@ class ContentItem(Active, VanityMixin, Resource):
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.params, self["guid"])
+        return Bundles(self._ctx, self["guid"])
 
     @property
     def environment_variables(self) -> EnvVars:
-        return EnvVars(self.params, self["guid"])
+        return EnvVars(self._ctx, self["guid"])
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.params, self["guid"])
+        return Permissions(self._ctx, self["guid"])
 
     @property
     def owner(self) -> dict:
@@ -472,7 +471,7 @@ class ContentItem(Active, VanityMixin, Resource):
 
     @property
     def _variants(self) -> Variants:
-        return Variants(self.params, self["guid"])
+        return Variants(self._ctx, self["guid"])
 
     @property
     def is_interactive(self) -> bool:
@@ -540,7 +539,7 @@ class Content(Resources):
         *,
         owner_guid: str | None = None,
     ) -> None:
-        super().__init__(ctx.client.resource_params)
+        super().__init__(ctx)
         self.owner_guid = owner_guid
         self._ctx = ctx
 
