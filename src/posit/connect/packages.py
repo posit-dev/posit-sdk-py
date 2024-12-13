@@ -148,8 +148,7 @@ class Packages(ActiveFinderMethods["Package"], ActiveSequence["Package"]):
 
     def fetch(self, **conditions: Unpack[_Fetch]) -> Generator["Package"]:  # type: ignore
         # todo - add pagination support to ActiveSequence
-        url = self._ctx.url + self._path
-        paginator = Paginator(self._ctx.session, url, dict(**conditions))
+        paginator = Paginator(self._ctx, self._path, dict(**conditions))
         for page in paginator.fetch_pages():
             results = page.results
             yield from (self._create_instance("", **result) for result in results)

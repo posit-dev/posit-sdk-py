@@ -431,8 +431,8 @@ class Users(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self._ctx.url + "v1/users"
-        paginator = Paginator(self._ctx.session, url, params={**conditions})
+        path = "v1/users"
+        paginator = Paginator(self._ctx, path, params={**conditions})
         results = paginator.fetch_results()
         return [
             User(
@@ -478,8 +478,8 @@ class Users(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self._ctx.url + "v1/users"
-        paginator = Paginator(self._ctx.session, url, params={**conditions})
+        path = "v1/users"
+        paginator = Paginator(self._ctx, path, params={**conditions})
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (

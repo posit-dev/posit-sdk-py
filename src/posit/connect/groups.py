@@ -219,8 +219,7 @@ class GroupMembers(Resources):
         from .users import User
 
         path = f"v1/groups/{self._group_guid}/members"
-        url = self._ctx.url + path
-        paginator = Paginator(self._ctx.session, url)
+        paginator = Paginator(self._ctx, path)
         member_dicts = paginator.fetch_results()
 
         # For each member in the group
@@ -335,8 +334,7 @@ class Groups(Resources):
         * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
-        url = self._ctx.url + path
-        paginator = Paginator(self._ctx.session, url, params=kwargs)
+        paginator = Paginator(self._ctx, path, params=kwargs)
         results = paginator.fetch_results()
         return [
             Group(
@@ -373,8 +371,7 @@ class Groups(Resources):
         * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
-        url = self._ctx.url + path
-        paginator = Paginator(self._ctx.session, url, params=kwargs)
+        paginator = Paginator(self._ctx, path, params=kwargs)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         groups = (
