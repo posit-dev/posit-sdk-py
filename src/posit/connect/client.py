@@ -6,9 +6,6 @@ from typing import overload
 
 from requests import Response, Session
 
-from posit.connect.system import System
-from posit.connect.tags import Tags
-
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -19,6 +16,8 @@ from .metrics import Metrics
 from .oauth import OAuth
 from .packages import Packages
 from .resources import ResourceParameters
+from .system import System
+from .tags import Tags
 from .tasks import Tasks
 from .users import User, Users
 from .vanities import Vanities

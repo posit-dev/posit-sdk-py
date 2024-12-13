@@ -5,10 +5,9 @@ from typing import Generator, Literal, Optional, TypedDict
 
 from typing_extensions import NotRequired, Required, Unpack
 
-from posit.connect.context import requires
-from posit.connect.errors import ClientError
-from posit.connect.paginator import Paginator
-
+from .context import requires
+from .errors import ClientError
+from .paginator import Paginator
 from .resources import Active, ActiveFinderMethods, ActiveSequence
 
 

@@ -10,8 +10,7 @@ from .context import ContextManager
 from .resources import Active
 
 if TYPE_CHECKING:
-    from posit.connect.context import Context
-
+    from .context import Context
     from .tasks import Task
 
 

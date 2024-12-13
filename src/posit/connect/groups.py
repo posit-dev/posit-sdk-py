@@ -10,8 +10,7 @@ from .resources import Resource, Resources
 if TYPE_CHECKING:
     import requests
 
-    from posit.connect.context import Context
-
+    from .context import Context
     from .users import User
 
 
