@@ -1,0 +1,17 @@
+{
+    "id": "314",
+    "guid": "25438b83-ea6d-4839-ae8e-53c52ac5f9ce",
+    "created_time": "2006-01-02T15:04:05-07:00",
+    "updated_time": "2006-01-02T15:04:05-07:00",
+    "title": "Project Alpha (R 4.1.1, Python 3.10)",
+    "description": "This is my description of the environment",
+    "cluster_name": "Kubernetes",
+    "name": "ghcr.io/rstudio/content-base:r4.1.3-py3.10.4-ubuntu1804",
+    "environment_type": "Kubernetes",
+    "matching": "any",
+    "supervisor": "/usr/local/bin/supervisor.sh",
+    "python": null,
+    "quarto": null,
+    "r": null,
+    "tensorflow": null
+}

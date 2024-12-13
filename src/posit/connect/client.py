@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import overload
+from typing import TYPE_CHECKING, overload
 
 from requests import Response, Session
 
@@ -14,13 +14,16 @@ from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
-from .packages import Packages
-from .resources import ResourceParameters
+from .resources import ResourceParameters, _PaginatedResourceSequence, _ResourceSequence
 from .system import System
 from .tags import Tags
 from .tasks import Tasks
 from .users import User, Users
 from .vanities import Vanities
+
+if TYPE_CHECKING:
+    from .environments import Environments
+    from .packages import _Packages
 
 
 class Client(ContextManager):
@@ -295,9 +298,9 @@ class Client(ContextManager):
         return OAuth(self.resource_params, self.cfg.api_key)
 
     @property
-    @requires(version="2024.10.0-dev")
-    def packages(self) -> Packages:
-        return Packages(self._ctx, "v1/packages")
+    @requires(version="2024.11.0")
+    def packages(self) -> _Packages:
+        return _PaginatedResourceSequence(self._ctx, "v1/packages", uid="name")
 
     @property
     def vanities(self) -> Vanities:
@@ -306,6 +309,11 @@ class Client(ContextManager):
     @property
     def system(self) -> System:
         return System(self._ctx, "v1/system")
+
+    @property
+    @requires(version="2023.05.0")
+    def environments(self) -> Environments:
+        return _ResourceSequence(self._ctx, "v1/environments")
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
