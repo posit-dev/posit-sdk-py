@@ -192,10 +192,7 @@ class SystemRuntimeCaches(ContextManager):
         """
         response = self._ctx.client.get(self._path)
         results = response.json()
-        if not isinstance(results, dict) and "caches" not in results:
-            raise RuntimeError("`caches=` not found in response.")
-        caches = results["caches"]
-        return [SystemRuntimeCache(self._ctx, self._path, **cache) for cache in caches]
+        return [SystemRuntimeCache(self._ctx, self._path, **cache) for cache in results["caches"]]
 
     @overload
     def destroy(
