@@ -137,7 +137,7 @@ class Tag(Active):
         first_tag_content_items = first_tag.content_items.find()
         ```
         """
-        path = self._path + "/content"
+        path = f"{self._path}/content"
         return TagContentItems(self._ctx, path)
 
     def destroy(self) -> None:
@@ -158,8 +158,7 @@ class Tag(Active):
         first_tag.destroy()
         ```
         """
-        url = self._ctx.url + self._path
-        self._ctx.session.delete(url)
+        self._ctx.client.delete(self._path)
 
     # Allow for every combination of `name` and (`parent` or `parent_id`)
     @overload
@@ -213,8 +212,7 @@ class Tag(Active):
         ```
         """
         updated_kwargs = _update_parent_kwargs(kwargs)
-        url = self._ctx.url + self._path
-        response = self._ctx.session.patch(url, json=updated_kwargs)
+        response = self._ctx.client.patch(self._path, json=updated_kwargs)
         result = response.json()
         return Tag(self._ctx, self._path, **result)
 
@@ -247,8 +245,7 @@ class TagContentItems(ContextManager):
         """
         from .content import ContentItem
 
-        url = self._ctx.url + self._path
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(self._path)
         results = response.json()
         return [ContentItem(self._ctx, **result) for result in results]
 
@@ -382,8 +379,7 @@ class Tags(ContextManager):
         if tag_id == "":
             raise ValueError("`tag_id` cannot be an empty string")
         path = self._tag_path(tag_id)
-        url = self._ctx.url + path
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(path)
         return Tag(self._ctx, path, **response.json())
 
     # Allow for every combination of `name` and (`parent` or `parent_id`)
@@ -436,9 +432,7 @@ class Tags(ContextManager):
         updated_kwargs = _update_parent_kwargs(
             kwargs,  # pyright: ignore[reportArgumentType]
         )
-        url = self._ctx.url + self._path
-
-        response = self._ctx.session.get(url, params=updated_kwargs)
+        response = self._ctx.client.get(self._path, params=updated_kwargs)
         results = response.json()
         return [Tag(self._ctx, self._tag_path(result["id"]), **result) for result in results]
 
@@ -483,8 +477,7 @@ class Tags(ContextManager):
             kwargs,  # pyright: ignore[reportArgumentType]
         )
 
-        url = self._ctx.url + self._path
-        response = self._ctx.session.post(url, json=updated_kwargs)
+        response = self._ctx.client.post(self._path, json=updated_kwargs)
         result = response.json()
         return Tag(self._ctx, self._tag_path(result["id"]), **result)
 
@@ -523,8 +516,7 @@ class ContentItemTags(ContextManager):
         content_item_tags = content_item.tags.find()
         ```
         """
-        url = self._ctx.url + self._path
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(self._path)
         results = response.json()
 
         tags: list[Tag] = []
@@ -583,8 +575,7 @@ class ContentItemTags(ContextManager):
         """
         tag_id = self._to_tag_id(tag)
 
-        url = self._ctx.url + self._path
-        self._ctx.session.post(url, json={"tag_id": tag_id})
+        self._ctx.client.post(self._path, json={"tag_id": tag_id})
 
     def delete(self, tag: str | Tag) -> None:
         """
@@ -614,5 +605,4 @@ class ContentItemTags(ContextManager):
         """
         tag_id = self._to_tag_id(tag)
 
-        url = self._ctx.url + self._path + tag_id
-        self._ctx.session.delete(url)
+        self._ctx.client.delete(f"{self._path}/{tag_id}")

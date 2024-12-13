@@ -62,9 +62,7 @@ class Group(Resource):
         group.delete()
         ```
         """
-        path = f"v1/groups/{self['guid']}"
-        url = self._ctx.url + path
-        self._ctx.session.delete(url)
+        self._ctx.client.delete(f"v1/groups/{self['guid']}")
 
 
 class GroupMembers(Resources):
@@ -129,9 +127,10 @@ class GroupMembers(Resources):
         if not user_guid:
             raise ValueError("`user_guid=` should not be empty.")
 
-        path = f"v1/groups/{self._group_guid}/members"
-        url = self._ctx.url + path
-        self._ctx.session.post(url, json={"user_guid": user_guid})
+        self._ctx.client.post(
+            f"v1/groups/{self._group_guid}/members",
+            json={"user_guid": user_guid},
+        )
 
     @overload
     def delete(self, user: User, /) -> None: ...
@@ -189,9 +188,7 @@ class GroupMembers(Resources):
         if not user_guid:
             raise ValueError("`user_guid=` should not be empty.")
 
-        path = f"v1/groups/{self._group_guid}/members/{user_guid}"
-        url = self._ctx.url + path
-        self._ctx.session.delete(url)
+        self._ctx.client.delete(f"v1/groups/{self._group_guid}/members/{user_guid}")
 
     def find(self) -> list[User]:
         """Find group members.
@@ -254,9 +251,10 @@ class GroupMembers(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/groups/-group_guid-/members
         """
-        path = f"v1/groups/{self._group_guid}/members"
-        url = self._ctx.url + path
-        response = self._ctx.session.get(url, params={"page_size": 1})
+        response = self._ctx.client.get(
+            f"v1/groups/{self._group_guid}/members",
+            params={"page_size": 1},
+        )
         result = response.json()
         return result["total"]
 
@@ -307,9 +305,7 @@ class Groups(Resources):
         -------
         Group
         """
-        path = "v1/groups"
-        url = self._ctx.url + path
-        response = self._ctx.session.post(url, json=kwargs)
+        response = self._ctx.client.post("v1/groups", json=kwargs)
         return Group(self._ctx, **response.json())
 
     @overload
@@ -405,8 +401,7 @@ class Groups(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/groups
         """
-        url = self._ctx.url + f"v1/groups/{guid}"
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(f"v1/groups/{guid}")
         return Group(
             self._ctx,
             **response.json(),

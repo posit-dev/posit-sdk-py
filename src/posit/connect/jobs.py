@@ -117,8 +117,7 @@ class Job(Active):
         ----
         This action requires administrator, owner, or collaborator privileges.
         """
-        endpoint = self._ctx.url + self._path
-        self._ctx.session.delete(endpoint)
+        self._ctx.client.delete(self._path)
 
 
 class Jobs(ActiveFinderMethods[Job], ActiveSequence[Job]):

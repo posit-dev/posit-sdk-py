@@ -129,8 +129,7 @@ class ActiveSequence(ABC, Generic[T], Sequence[T]):
         -------
         List[T]
         """
-        endpoint = self._ctx.url + self._path
-        response = self._ctx.session.get(endpoint, params=conditions)
+        response = self._ctx.client.get(self._path, params=conditions)
         results = response.json()
         return [self._to_instance(result) for result in results]
 
@@ -212,8 +211,7 @@ class ActiveFinderMethods(ActiveSequence[T]):
         -------
         T
         """
-        endpoint = self._ctx.url + self._path + uid
-        response = self._ctx.session.get(endpoint)
+        response = self._ctx.client.get(f"{self._path}/{uid}")
         result = response.json()
         return self._to_instance(result)
 
