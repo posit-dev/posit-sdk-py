@@ -2,21 +2,18 @@ from __future__ import annotations
 
 import posixpath
 import warnings
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
     Iterable,
-    List,
-    Optional,
     Sequence,
-    TypeVar,
-    overload,
 )
 
-from typing_extensions import Self
+from posit.connect.paginator import Paginator
+
+from .context import Context
 
 if TYPE_CHECKING:
     import requests
@@ -88,134 +85,68 @@ class Active(ABC, Resource):
         self._path = path
 
 
-T = TypeVar("T", bound="Active")
-"""A type variable that is bound to the `Active` class"""
+class _Resource(dict):
+    def __init__(self, ctx: Context, path: str, **attributes):
+        self._ctx = ctx
+        self._path = path
+        super().__init__(**attributes)
+
+    def destroy(self) -> None:
+        self._ctx.client.delete(self._path)
+
+    def update(self, **attributes):  # type: ignore[reportIncompatibleMethodOverride]
+        response = self._ctx.client.put(self._path, json=attributes)
+        result = response.json()
+        super().update(**result)
 
 
-class ActiveSequence(ABC, Generic[T], Sequence[T]):
-    """A sequence for any HTTP GET endpoint that returns a collection."""
-
-    _cache: Optional[List[T]]
-
-    def __init__(self, ctx: Context, path: str, uid: str = "guid"):
-        """A sequence abstraction for any HTTP GET endpoint that returns a collection.
-
-        Parameters
-        ----------
-        ctx : Context
-            The context object containing the session and URL for API interactions.
-        path : str
-            The HTTP path component for the collection endpoint
-        uid : str, optional
-            The field name of that uniquely identifiers an instance of T, by default "guid"
-        """
-        super().__init__()
+class _ResourceSequence(Sequence):
+    def __init__(self, ctx: Context, path: str, *, uid: str = "guid"):
         self._ctx = ctx
         self._path = path
         self._uid = uid
-        self._cache: Optional[List[T]] = None
-
-    @abstractmethod
-    def _create_instance(self, path: str, /, **kwargs: Any) -> T:
-        """Create an instance of 'T'."""
-        raise NotImplementedError()
-
-    def fetch(self, **conditions: Any) -> Iterable[T]:
-        """Fetch the collection.
-
-        Fetches the collection directly from Connect. This operation does not effect the cache state.
-
-        Returns
-        -------
-        List[T]
-        """
-        response = self._ctx.client.get(self._path, params=conditions)
-        results = response.json()
-        return [self._to_instance(result) for result in results]
-
-    def reload(self) -> Self:
-        """Reloads the collection from Connect.
-
-        Returns
-        -------
-        Self
-        """
-        self._cache = None
-        return self
-
-    def _to_instance(self, result: dict) -> T:
-        """Converts a result into an instance of T."""
-        uid = result[self._uid]
-        path = posixpath.join(self._path, uid)
-        return self._create_instance(path, **result)
-
-    @property
-    def _data(self) -> List[T]:
-        """Get the collection.
-
-        Fetches the collection from Connect and caches the result. Subsequent invocations return the cached results unless the cache is explicitly reset.
-
-        Returns
-        -------
-        List[T]
-
-        See Also
-        --------
-        cached
-        reload
-        """
-        if self._cache is None:
-            self._cache = list(self.fetch())
-        return self._cache
-
-    @overload
-    def __getitem__(self, index: int) -> T: ...
-
-    @overload
-    def __getitem__(self, index: slice) -> Sequence[T]: ...
 
     def __getitem__(self, index):
-        return self._data[index]
+        return list(self.fetch())[index]
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(list(self.fetch()))
 
     def __iter__(self):
-        return iter(self._data)
+        return iter(self.fetch())
 
     def __str__(self) -> str:
-        return str(self._data)
+        return str(self.fetch())
 
     def __repr__(self) -> str:
-        return repr(self._data)
+        return repr(self.fetch())
 
-
-class ActiveFinderMethods(ActiveSequence[T]):
-    """Finder methods.
-
-    Provides various finder methods for locating records in any endpoint supporting HTTP GET requests.
-    """
-
-    def find(self, uid) -> T:
-        """
-        Find a record by its unique identifier.
-
-        Fetches the record from Connect by it's identifier.
-
-        Parameters
-        ----------
-        uid : Any
-            The unique identifier of the record.
-
-        Returns
-        -------
-        T
-        """
-        response = self._ctx.client.get(f"{self._path}/{uid}")
+    def create(self, **attributes: Any) -> Any:
+        response = self._ctx.client.post(self._path, json=attributes)
         result = response.json()
-        return self._to_instance(result)
+        uid = result[self._uid]
+        path = posixpath.join(self._path, uid)
+        return _Resource(self._ctx, path, **result)
 
-    def find_by(self, **conditions: Any) -> T | None:
+    def fetch(self, **conditions) -> Iterable[Any]:
+        response = self._ctx.client.get(self._path, params=conditions)
+        results = response.json()
+        resources = []
+        for result in results:
+            uid = result[self._uid]
+            path = posixpath.join(self._path, uid)
+            resource = _Resource(self._ctx, path, **result)
+            resources.append(resource)
+
+        return resources
+
+    def find(self, *args: str) -> Any:
+        path = posixpath.join(self._path, *args)
+        response = self._ctx.client.get(path)
+        result = response.json()
+        return _Resource(self._ctx, path, **result)
+
+    def find_by(self, **conditions) -> Any | None:
         """
         Find the first record matching the specified conditions.
 
@@ -232,3 +163,18 @@ class ActiveFinderMethods(ActiveSequence[T]):
         """
         collection = self.fetch(**conditions)
         return next((v for v in collection if v.items() >= conditions.items()), None)
+
+
+class _PaginatedResourceSequence(_ResourceSequence):
+    def fetch(self, **conditions):
+        url = self._ctx.url + self._path
+        paginator = Paginator(self._ctx.session, url, dict(**conditions))
+        for page in paginator.fetch_pages():
+            resources = []
+            results = page.results
+            for result in results:
+                uid = result[self._uid]
+                path = posixpath.join(self._path, uid)
+                resource = _Resource(self._ctx, path, **result)
+                resources.append(resource)
+            yield from resources

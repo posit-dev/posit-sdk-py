@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import pytest
 import responses
 from requests.exceptions import HTTPError
@@ -5,6 +7,9 @@ from requests.exceptions import HTTPError
 from posit.connect.client import Client
 
 from .api import load_mock
+
+if TYPE_CHECKING:
+    from posit.connect.jobs import Job, Jobs
 
 
 class TestJobsMixin:
@@ -22,8 +27,8 @@ class TestJobsMixin:
 
         c = Client("https://connect.example", "12345")
         content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
-
-        assert len(content.jobs) == 1
+        jobs: Jobs = content.jobs
+        assert len(jobs) == 1
 
 
 class TestJobsFind:
@@ -44,7 +49,7 @@ class TestJobsFind:
         c = Client("https://connect.example", "12345")
         content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
 
-        job = content.jobs.find("tHawGvHZTosJA2Dx")
+        job: Job = content.jobs.find("tHawGvHZTosJA2Dx")
         assert job["key"] == "tHawGvHZTosJA2Dx"
 
     @responses.activate

@@ -51,3 +51,7 @@ class TestJobs:
 
         jobs = content.jobs
         assert len(jobs) != 0
+
+        job = jobs[0]
+        key = job["key"]
+        assert content.jobs.find_by(key=key) == job

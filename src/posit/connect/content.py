@@ -20,19 +20,20 @@ from typing_extensions import NotRequired, Required, TypedDict, Unpack
 from . import tasks
 from ._api import ApiDictEndpoint, JsonifiableDict
 from .bundles import Bundles
+from .context import requires
 from .env import EnvVars
 from .errors import ClientError
-from .jobs import JobsMixin
 from .oauth.associations import ContentItemAssociations
-from .packages import ContentPackagesMixin as PackagesMixin
 from .permissions import Permissions
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Active, Resource, ResourceParameters, Resources, _ResourceSequence
 from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
 
 if TYPE_CHECKING:
     from .context import Context
+    from .jobs import Jobs
+    from .packages import _ContentPackages
     from .tasks import Task
 
 
@@ -174,7 +175,7 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
+class ContentItem(Active, VanityMixin, Resource):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str
@@ -507,6 +508,17 @@ class ContentItem(JobsMixin, PackagesMixin, VanityMixin, Resource):
             tags_path="v1/tags",
             content_guid=self["guid"],
         )
+
+    @property
+    def jobs(self) -> Jobs:
+        path = posixpath.join(self._path, "jobs")
+        return _ResourceSequence(self._ctx, path, uid="key")
+
+    @property
+    @requires(version="2024.11.0")
+    def packages(self) -> _ContentPackages:
+        path = posixpath.join(self._path, "packages")
+        return _ResourceSequence(self._ctx, path, uid="name")
 
 
 class Content(Resources):
