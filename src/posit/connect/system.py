@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, overload
+from typing import TYPE_CHECKING, List, Literal, Optional, overload
 
 from typing_extensions import TypedDict, Unpack
 
@@ -104,7 +104,11 @@ class SystemRuntimeCache(Active):
         dry_run: bool
         """If `True`, the cache will not be destroyed, only the operation will be simulated."""
 
-    def destroy(self, **kwargs: Unpack[SystemRuntimeCache._DestroyAttrs]) -> Task:
+    @overload
+    def destroy(self, *, dry_run: Literal[True]) -> None: ...
+    @overload
+    def destroy(self, *, dry_run: Literal[False] = False) -> Task: ...
+    def destroy(self, **kwargs) -> Task | None:
         """
         Remove a content runtime package cache.
 
@@ -114,6 +118,11 @@ class SystemRuntimeCache(Active):
         ----------
         dry_run : bool, optional
             If `True`, the cache will not be destroyed, only the operation will be simulated.
+
+        Returns
+        -------
+        Task | None
+            The task object if the operation was successful. If `dry_run=True`, `None` is returned.
 
         Examples
         --------
@@ -126,7 +135,7 @@ class SystemRuntimeCache(Active):
         first_runtime_cache = runtime_caches[0]
 
         # Remove the cache
-        task = first_runtime_cache.destroy(dry_run=True)
+        task = first_runtime_cache.destroy(dry_run=False)
 
         # Wait for the task to finish
         task.wait_for()
@@ -138,7 +147,7 @@ class SystemRuntimeCache(Active):
 
         task_id = response.json().get("task_id")
         if not task_id:
-            raise RuntimeError("`task_id` not found in response.")
+            return None
         task = self._ctx.client.tasks.get(task_id)
         return task
 
@@ -192,7 +201,11 @@ class SystemRuntimeCaches(ContextManager):
         return [SystemRuntimeCache(self._ctx, self._path, **cache) for cache in caches]
 
     @overload
-    def destroy(self, cache: SystemRuntimeCache, /) -> Task: ...
+    def destroy(
+        self, cache: SystemRuntimeCache, /, *, dry_run: Literal[False] = False
+    ) -> Task: ...
+    @overload
+    def destroy(self, cache: SystemRuntimeCache, /, *, dry_run: Literal[True]) -> None: ...
     @overload
     def destroy(
         self,
@@ -201,15 +214,25 @@ class SystemRuntimeCaches(ContextManager):
         language: str,
         version: str,
         image_name: str,
-        dry_run: bool = False,
+        dry_run: Literal[False] = False,
     ) -> Task: ...
+    @overload
+    def destroy(
+        self,
+        /,
+        *,
+        language: str,
+        version: str,
+        image_name: str,
+        dry_run: Literal[True] = True,
+    ) -> None: ...
 
     def destroy(
         self,
         cache: Optional[SystemRuntimeCache] = None,
         /,
         **kwargs,
-    ) -> Task:
+    ) -> Task | None:
         """
         Delete a content runtime package cache.
 
@@ -231,6 +254,11 @@ class SystemRuntimeCaches(ContextManager):
         dry_run : bool, optional
             If `True`, the cache will not be destroyed, only the operation will be simulated.
 
+        Returns
+        -------
+        Task | None
+            The task object if the operation was successful. If `dry_run=True`, `None` is returned.
+
         Examples
         --------
         ```python
@@ -242,14 +270,14 @@ class SystemRuntimeCaches(ContextManager):
         first_runtime_cache = runtime_caches[0]
 
         # Remove the cache
-        task = client.system.caches.runtime.destroy(first_runtime_cache, dry_run=True)
+        task = client.system.caches.runtime.destroy(first_runtime_cache, dry_run=False)
 
         # Or, remove the cache by specifying the cache's attributes
         task = client.system.caches.runtime.destroy(
             language="Python",
             version="3.12.5",
             image_name="Local",
-            dry_run=True,
+            dry_run=False,
         )
         ```
         """
