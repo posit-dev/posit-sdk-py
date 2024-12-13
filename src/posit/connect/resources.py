@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class Resource(dict):
-    def __init__(self, /, ctx: Context, **kwargs):
+    def __init__(self, ctx: Context, /, **kwargs):
         super().__init__(**kwargs)
         self._ctx = ctx
 
