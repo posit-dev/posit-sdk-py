@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sized
-from typing import Any, Literal, Protocol, SupportsIndex, overload
+from typing_extensions import Any, Literal, Mapping, Protocol, Sized, SupportsIndex, overload
 
 
-class _ContentPackage(Mapping[str, Any]):
+class ContentPackage(Mapping[str, Any]):
     pass
 
 
-class _ContentPackages(Sized, Protocol):
+class ContentPackages(Sized, Protocol):
     @overload
-    def __getitem__(self, index: SupportsIndex) -> _ContentPackage: ...
+    def __getitem__(self, index: SupportsIndex) -> ContentPackage: ...
 
     @overload
-    def __getitem__(self, index: slice) -> _ContentPackage: ...
+    def __getitem__(self, index: slice) -> ContentPackage: ...
 
     def find_by(
         self,
@@ -22,7 +21,7 @@ class _ContentPackages(Sized, Protocol):
         name: str = ...,
         version: str = ...,
         hash: str | None = ...,  # noqa: A002
-    ) -> _ContentPackage | None:
+    ) -> ContentPackage | None:
         """
         Find the first record matching the specified conditions.
 
@@ -41,22 +40,22 @@ class _ContentPackages(Sized, Protocol):
 
         Returns
         -------
-        _ContentPackage | None
+        ContentPackage | None
             The first record matching the specified conditions, or `None` if no such record exists.
         """
         ...
 
 
-class _Package(Mapping[str, Any]):
+class Package(Mapping[str, Any]):
     pass
 
 
-class _Packages(Sized, Protocol):
+class Packages(Sized, Protocol):
     @overload
-    def __getitem__(self, index: SupportsIndex) -> _ContentPackage: ...
+    def __getitem__(self, index: SupportsIndex) -> ContentPackage: ...
 
     @overload
-    def __getitem__(self, index: slice) -> _ContentPackage: ...
+    def __getitem__(self, index: slice) -> ContentPackage: ...
 
     def find_by(
         self,
@@ -68,7 +67,7 @@ class _Packages(Sized, Protocol):
         bundle_id: str = ...,
         app_id: str = ...,
         app_guid: str = ...,
-    ) -> _ContentPackage | None:
+    ) -> ContentPackage | None:
         """
         Find the first record matching the specified conditions.
 
@@ -93,7 +92,7 @@ class _Packages(Sized, Protocol):
 
         Returns
         -------
-        _Package | None
+        Package | None
             The first record matching the specified conditions, or `None` if no such record exists.
         """
         ...

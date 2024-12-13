@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Mapping, Sized
-from typing import (
+
+from typing_extensions import (
     Any,
     List,
     Literal,
+    Mapping,
     Protocol,
+    Sized,
     SupportsIndex,
     TypedDict,
     overload,

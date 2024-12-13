@@ -5,17 +5,20 @@ from __future__ import annotations
 import posixpath
 import time
 from posixpath import dirname
-from typing import (
+
+from typing_extensions import (
     TYPE_CHECKING,
     Any,
     List,
     Literal,
+    NotRequired,
     Optional,
+    Required,
+    TypedDict,
+    Unpack,
     cast,
     overload,
 )
-
-from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
 from . import tasks
 from ._api import ApiDictEndpoint, JsonifiableDict
@@ -33,7 +36,7 @@ from .variants import Variants
 if TYPE_CHECKING:
     from .context import Context
     from .jobs import Jobs
-    from .packages import _ContentPackages
+    from .packages import ContentPackages
     from .tasks import Task
 
 
@@ -519,7 +522,7 @@ class ContentItem(Active, VanityMixin, Resource):
 
     @property
     @requires(version="2024.11.0")
-    def packages(self) -> _ContentPackages:
+    def packages(self) -> ContentPackages:
         path = posixpath.join(self._path, "packages")
         return _ResourceSequence(self._ctx, path, uid="name")
 
