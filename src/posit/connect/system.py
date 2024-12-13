@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, Optional, overload
+from typing import TYPE_CHECKING, List, Literal, overload
 
 from typing_extensions import TypedDict, Unpack
 
@@ -196,12 +196,6 @@ class SystemRuntimeCaches(ContextManager):
 
     @overload
     def destroy(
-        self, cache: SystemRuntimeCache, /, *, dry_run: Literal[False] = False
-    ) -> Task: ...
-    @overload
-    def destroy(self, cache: SystemRuntimeCache, /, *, dry_run: Literal[True]) -> None: ...
-    @overload
-    def destroy(
         self,
         /,
         *,
@@ -223,7 +217,6 @@ class SystemRuntimeCaches(ContextManager):
 
     def destroy(
         self,
-        cache: Optional[SystemRuntimeCache] = None,
         /,
         **kwargs,
     ) -> Task | None:
@@ -237,8 +230,6 @@ class SystemRuntimeCaches(ContextManager):
 
         Parameters
         ----------
-        cache : SystemRuntimeCache
-            The system runtime cache object to destroy.
         language : str
             The runtime language of the cache.
         version : str
@@ -264,7 +255,7 @@ class SystemRuntimeCaches(ContextManager):
         first_runtime_cache = runtime_caches[0]
 
         # Remove the cache
-        task = client.system.caches.runtime.destroy(first_runtime_cache, dry_run=False)
+        task = first_runtime_cache.destroy(dry_run=False)
 
         # Or, remove the cache by specifying the cache's attributes
         task = client.system.caches.runtime.destroy(
@@ -275,12 +266,11 @@ class SystemRuntimeCaches(ContextManager):
         )
         ```
         """
-        if cache is None:
-            cache = SystemRuntimeCache(self._ctx, self._path, **kwargs)
-        else:
-            if not isinstance(cache, SystemRuntimeCache):
-                raise TypeError(
-                    f"Expected `cache` to be of type `SystemRuntimeCache`. Received {type(cache)}"
-                )
+        dry_run: bool | None = kwargs.pop("dry_run", None)
+        runtime_cache = SystemRuntimeCache(self._ctx, self._path, **kwargs)
 
-        return cache.destroy(**kwargs)
+        # Only add `dry_run=` argument if it is provided by user
+        dry_run_args = {}
+        if dry_run is not None:
+            dry_run_args["dry_run"] = dry_run
+        return runtime_cache.destroy(**dry_run_args)

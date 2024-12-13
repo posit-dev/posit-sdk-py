@@ -1,4 +1,3 @@
-import pytest
 import responses
 
 from posit.connect.client import Client
@@ -31,18 +30,13 @@ class TestSystemCacheRuntime:
         # invoke
         runtimes = client.system.caches.runtime.find()
 
-        with pytest.raises(TypeError):
-            client.system.caches.runtime.destroy(
-                "Not a SystemRuntimeCache",  # pyright: ignore[reportArgumentType]
-            )
-
         for runtime in runtimes:
             assert isinstance(runtime, SystemRuntimeCache)
             task = runtime.destroy()
             assert isinstance(task, Task)
 
         first_runtime = runtimes[0]
-        task = client.system.caches.runtime.destroy(first_runtime)
+        task = first_runtime.destroy()
         assert isinstance(task, Task)
         task = client.system.caches.runtime.destroy(
             language=first_runtime["language"],
