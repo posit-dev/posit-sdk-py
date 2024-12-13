@@ -84,7 +84,10 @@ class TestSystem:
         # Check if the cache is deployed
         caches = self.client.system.caches.runtime.find()
 
-        # Caches only added in Connect versions >= 2024.05.0
+        # Barret 2024/12:
+        # Caches only showing up in Connect versions >= 2024.05.0
+        # I do not know why.
+        # Since we are not logic testing Connect, we can confirm our code works given more recent versions of Connect.
         if CONNECT_VERSION >= version.parse("2024.05.0"):
             assert len(caches) > 0
 
