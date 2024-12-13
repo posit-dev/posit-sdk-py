@@ -52,6 +52,10 @@ class TestSystem:
                 raise TimeoutError("Timeout while waiting for cache to deploy")
 
             jobs = self.content_item.jobs.fetch()
+            if len(list(jobs)) == 0:
+                # No jobs found, restart while loop
+                continue
+
             for job in jobs:
                 if str(job["status"]) == "0":
                     # Stop for loop and restart while loop
