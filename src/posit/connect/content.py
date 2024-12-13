@@ -33,7 +33,7 @@ from .variants import Variants
 if TYPE_CHECKING:
     from .context import Context
     from .jobs import Jobs
-    from .packages import _ContentPackages
+    from .packages import ContentPackages
     from .tasks import Task
 
 
@@ -519,7 +519,7 @@ class ContentItem(Active, VanityMixin, Resource):
 
     @property
     @requires(version="2024.11.0")
-    def packages(self) -> _ContentPackages:
+    def packages(self) -> ContentPackages:
         path = posixpath.join(self._path, "packages")
         return _ResourceSequence(self._ctx, path, uid="name")
 
