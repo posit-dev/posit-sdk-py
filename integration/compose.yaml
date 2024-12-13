@@ -12,6 +12,7 @@ services:
         # Port 3939 is the default port for Connect
         - CONNECT_SERVER=http://connect:3939
         - CONNECT_VERSION=${CONNECT_VERSION}
+        - PYTEST_ARGS=${PYTEST_ARGS}
     volumes:
       - .:/sdk/integration
     depends_on:

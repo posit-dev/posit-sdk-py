@@ -8,54 +8,50 @@ DOCKER_PROJECT_IMAGE_TAG ?= $(PROJECT_NAME):latest
 # Connect settings
 CONNECT_BOOTSTRAP_SECRETKEY ?= $(shell head -c 32 /dev/random | base64)
 
+# pytest settings
+PYTEST_ARGS ?= "-s"
+
 .DEFAULT_GOAL := latest
 
 .PHONY: $(CONNECT_VERSIONS) \
-		all \
-		build \
-		down \
-		down-% \
-		latest \
-		test \
-		up \
-		up-% \
-		help
+	all \
+	build \
+	down \
+	down-% \
+	latest \
+	test \
+	up \
+	up-% \
+	help
 
 # Versions
 CONNECT_VERSIONS := \
-					2024.11.0 \
-					2024.09.0 \
-					2024.08.0 \
-					2024.06.0 \
-					2024.05.0 \
-					2024.04.1 \
-					2024.04.0 \
-					2024.03.0 \
-					2024.02.0 \
-					2024.01.0 \
-					2023.12.0 \
-					2023.10.0 \
-					2023.09.0 \
-					2023.07.0 \
-					2023.06.0 \
-					2023.05.0 \
-					2023.01.1 \
-					2023.01.0 \
-					2022.12.0 \
-					2022.11.0
+	2024.11.0 \
+	2024.09.0 \
+	2024.08.0 \
+	2024.06.0 \
+	2024.05.0 \
+	2024.04.1 \
+	2024.04.0 \
+	2024.03.0 \
+	2024.02.0 \
+	2024.01.0 \
+	2023.12.0 \
+	2023.10.0 \
+	2023.09.0 \
+	2023.07.0 \
+	2023.06.0 \
+	2023.05.0 \
+	2023.01.1 \
+	2023.01.0 \
+	2022.12.0 \
+	2022.11.0
 
 clean:
 	rm -rf logs reports
 	find . -type d -empty -delete
 
 # Run test suite for a specific Connect version.
-#
-# Matches any version defined in CONNECT_VERSIONS.
-#
-# Examples:
-# ---------
-#   make 2024.05.1
-#   make 2023.01.0
 $(CONNECT_VERSIONS): %: down-% up-%
 
 # Run test suite against all Connect versions.
@@ -78,39 +74,29 @@ build:
 	docker build -t $(DOCKER_PROJECT_IMAGE_TAG) ..
 
 # Tear down resources.
-#
-# Destroy Docker resources for Connect version.
-#
-# Examples:
-# ---------
-#   make down
-#   make down-2024.05.0
 down: $(CONNECT_VERSIONS:%=down-%)
 down-%: DOCKER_CONNECT_IMAGE_TAG=jammy-$*
 down-%: CONNECT_VERSION=$*
 down-%:
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
-	DOCKER_CONNECT_IMAGE=$(DOCKER_CONNECT_IMAGE) \
-	DOCKER_CONNECT_IMAGE_TAG=$(DOCKER_CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
+	DOCKER_CONNECT_IMAGE_TAG=$(DOCKER_CONNECT_IMAGE_TAG) \
+	DOCKER_CONNECT_IMAGE=$(DOCKER_CONNECT_IMAGE) \
 	DOCKER_PROJECT_IMAGE_TAG=$(DOCKER_PROJECT_IMAGE_TAG) \
+	PYTEST_ARGS="$(PYTEST_ARGS)" \
 	$(DOCKER_COMPOSE) -p $(PROJECT_NAME)-$(subst .,-,$(CONNECT_VERSION)) down -v
 
 # Create, start, and run Docker Compose.
-#
-# Examples:
-# ---------
-#   make up
-#   make up-2024.05.0
 up: $(CONNECT_VERSIONS:%=up-%)
 up-%: CONNECT_VERSION=$*
 up-%: DOCKER_CONNECT_IMAGE_TAG=jammy-$*
 up-%: build
 	CONNECT_BOOTSTRAP_SECRETKEY=$(CONNECT_BOOTSTRAP_SECRETKEY) \
-	DOCKER_CONNECT_IMAGE=$(DOCKER_CONNECT_IMAGE) \
-	DOCKER_CONNECT_IMAGE_TAG=$(DOCKER_CONNECT_IMAGE_TAG) \
 	CONNECT_VERSION=$* \
+	DOCKER_CONNECT_IMAGE_TAG=$(DOCKER_CONNECT_IMAGE_TAG) \
+	DOCKER_CONNECT_IMAGE=$(DOCKER_CONNECT_IMAGE) \
 	DOCKER_PROJECT_IMAGE_TAG=$(DOCKER_PROJECT_IMAGE_TAG) \
+	PYTEST_ARGS="$(PYTEST_ARGS)" \
 	$(DOCKER_COMPOSE) -p $(PROJECT_NAME)-$(subst .,-,$(CONNECT_VERSION)) up -V --abort-on-container-exit --no-build
 
 # Show help message.
@@ -120,7 +106,7 @@ help:
 	@echo "  latest           Run test suite for latest Connect version."
 	@echo "  preview          Run test suite for preview Connect version."
 	@echo "  <version>        Run test suite for the specified Connect version. (e.g., make 2024.05.0)"
-	@echo "  up               Start Docker Compose for all Connect version."
+	@echo "  up               Start Docker Compose for all Connect versions."
 	@echo "  down             Tear down Docker resources for all Connect versions."
 	@echo "  clean            Clean up the project directory."
 	@echo "  help             Show this help message."
@@ -130,15 +116,18 @@ help:
 	@echo "  make latest      Run test suite for latest Connect version."
 	@echo "  make preview     Run test suite for preview Connect version."
 	@echo "  make 2024.05.0   Run test suite for specific Connect version."
+	@echo
+	@echo "Environment Variables:"
+	@echo "  DOCKER_COMPOSE           Command to invoke Docker Compose. Default: docker compose"
+	@echo "  DOCKER_CONNECT_IMAGE     Docker image name for Connect. Default: rstudio/rstudio-connect"
+	@echo "  DOCKER_PROJECT_IMAGE_TAG Docker image name and tag for the project image. Default: $(PROJECT_NAME):latest"
+	@echo "  PYTEST_ARGS              Arguments to pass to pytest. Default: \"-s\""
 
 # Run tests.
-#
-# Typically call from docker-compose.yaml. Assumes Connect server is running
-# on local network.
 test:
 	mkdir -p logs
 	set -o pipefail; \
-		CONNECT_VERSION=${CONNECT_VERSION} \
+	CONNECT_VERSION=${CONNECT_VERSION} \
 		CONNECT_API_KEY="$(shell $(UV) run rsconnect bootstrap -i -s http://connect:3939 --raw)" \
-		$(UV) run pytest -s --junit-xml=./reports/$(CONNECT_VERSION).xml | \
+		$(UV) run pytest $(PYTEST_ARGS) --junit-xml=./reports/$(CONNECT_VERSION).xml | \
 		tee ./logs/$(CONNECT_VERSION).log;
