@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Mapping, Sized
-from typing import (
+
+from typing_extensions import (
     Any,
     List,
     Literal,
     Protocol,
+    SupportsIndex,
     TypedDict,
+    overload,
     runtime_checkable,
 )
 
@@ -93,6 +96,12 @@ class Environment(Mapping[str, Any]):
 
 @runtime_checkable
 class Environments(Sized, Protocol):
+    @overload
+    def __getitem__(self, index: SupportsIndex) -> Environment: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> List[Environment]: ...
+
     def create(
         self,
         *,

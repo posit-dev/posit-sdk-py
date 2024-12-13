@@ -15,7 +15,9 @@ class TestEnvironments:
     def setup_class(cls):
         cls.client = connect.Client()
         cls.environment = cls.client.environments.create(
-            title="title", name="name", cluster_name="Kubernetes"
+            title="title",
+            name="name",
+            cluster_name="Kubernetes",
         )
 
     @classmethod
