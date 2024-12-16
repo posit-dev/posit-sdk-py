@@ -1,9 +1,9 @@
 import base64
-from typing import Dict
 from unittest.mock import patch
 
 import pytest
 import responses
+from typing_extensions import Dict
 
 from posit.connect import Client
 from posit.connect.external.databricks import (

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, overload
+from typing_extensions import TYPE_CHECKING, List, Optional, overload
 
 from .paginator import Paginator
 from .resources import BaseResource, Resources

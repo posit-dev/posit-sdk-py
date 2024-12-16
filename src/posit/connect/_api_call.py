@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import posixpath
-from typing import TYPE_CHECKING, Protocol
+
+from typing_extensions import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from ._json import Jsonifiable

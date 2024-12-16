@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, overload
-
 from requests.sessions import Session as Session
+from typing_extensions import TYPE_CHECKING, List, Optional, overload
 
 from .resources import BaseResource, Resources
 

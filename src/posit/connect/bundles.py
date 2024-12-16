@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING, List
+
+from typing_extensions import TYPE_CHECKING, List
 
 from . import resources, tasks
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing_extensions import Any
 
 
 def drop_none(x: dict[str, Any]) -> dict[str, Any]:

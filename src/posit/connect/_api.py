@@ -4,7 +4,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Optional, cast
+
+from typing_extensions import TYPE_CHECKING, Any, Optional, cast
 
 from ._api_call import ApiCallMixin, get_api
 from ._json import Jsonifiable, JsonifiableDict, ResponseAttrs
