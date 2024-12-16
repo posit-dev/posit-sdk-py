@@ -295,8 +295,7 @@ class ContentItem(Active, VanityMixin, Resource):
     def delete(self) -> None:
         """Delete the content item."""
         path = f"v1/content/{self['guid']}"
-        url = self._ctx.url + path
-        self._ctx.session.delete(url)
+        self._ctx.client.delete(path)
 
     def deploy(self) -> tasks.Task:
         """Deploy the content.
@@ -315,8 +314,7 @@ class ContentItem(Active, VanityMixin, Resource):
         None
         """
         path = f"v1/content/{self['guid']}/deploy"
-        url = self._ctx.url + path
-        response = self._ctx.session.post(url, json={"bundle_id": None})
+        response = self._ctx.client.post(path, json={"bundle_id": None})
         result = response.json()
         ts = tasks.Tasks(self.params)
         return ts.get(result["task_id"])
@@ -442,8 +440,7 @@ class ContentItem(Active, VanityMixin, Resource):
         -------
         None
         """
-        url = self._ctx.url + f"v1/content/{self['guid']}"
-        response = self._ctx.session.patch(url, json=attrs)
+        response = self._ctx.client.patch(f"v1/content/{self['guid']}", json=attrs)
         super().update(**response.json())
 
     # Relationships
@@ -619,9 +616,7 @@ class Content(Resources):
         -------
         ContentItem
         """
-        path = "v1/content"
-        url = self._ctx.url + path
-        response = self._ctx.session.post(url, json=attrs)
+        response = self._ctx.client.post("v1/content", json=attrs)
         return ContentItem(self._ctx, **response.json())
 
     @overload
@@ -707,9 +702,7 @@ class Content(Resources):
         if self.owner_guid:
             conditions["owner_guid"] = self.owner_guid
 
-        path = "v1/content"
-        url = self._ctx.url + path
-        response = self._ctx.session.get(url, params=conditions)
+        response = self._ctx.client.get("v1/content", params=conditions)
         return [
             ContentItem(
                 self._ctx,
@@ -880,7 +873,5 @@ class Content(Resources):
         -------
         ContentItem
         """
-        path = f"v1/content/{guid}"
-        url = self._ctx.url + path
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(f"v1/content/{guid}")
         return ContentItem(self._ctx, **response.json())

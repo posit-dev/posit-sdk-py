@@ -167,8 +167,7 @@ class _ResourceSequence(Sequence):
 
 class _PaginatedResourceSequence(_ResourceSequence):
     def fetch(self, **conditions):
-        url = self._ctx.url + self._path
-        paginator = Paginator(self._ctx.session, url, dict(**conditions))
+        paginator = Paginator(self._ctx, self._path, dict(**conditions))
         for page in paginator.fetch_pages():
             resources = []
             results = page.results

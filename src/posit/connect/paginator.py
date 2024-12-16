@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generator, List
 
 if TYPE_CHECKING:
-    import requests
+    from .context import Context
 
 # The maximum page size supported by the API.
 _MAX_PAGE_SIZE = 500
@@ -43,15 +43,15 @@ class Paginator:
 
     def __init__(
         self,
-        session: requests.Session,
-        url: str,
+        ctx: Context,
+        path: str,
         params: dict | None = None,
     ) -> None:
         if params is None:
             params = {}
-        self.session = session
-        self.url = url
-        self.params = params
+        self._ctx = ctx
+        self._path = path
+        self._params = params
 
     def fetch_results(self) -> List[dict]:
         """
@@ -106,9 +106,9 @@ class Paginator:
 
         """
         params = {
-            **self.params,
+            **self._params,
             "page_number": page_number,
             "page_size": _MAX_PAGE_SIZE,
         }
-        response = self.session.get(self.url, params=params)
+        response = self._ctx.client.get(self._path, params=params)
         return Page(**response.json())
