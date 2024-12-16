@@ -23,7 +23,7 @@ from .vanities import Vanities
 
 if TYPE_CHECKING:
     from .environments import Environments
-    from .packages import _Packages
+    from .packages import Packages
 
 
 class Client(ContextManager):
@@ -299,7 +299,7 @@ class Client(ContextManager):
 
     @property
     @requires(version="2024.11.0")
-    def packages(self) -> _Packages:
+    def packages(self) -> Packages:
         return _PaginatedResourceSequence(self._ctx, "v1/packages", uid="name")
 
     @property
