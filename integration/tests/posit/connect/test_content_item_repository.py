@@ -2,7 +2,8 @@ import pytest
 from packaging import version
 
 from posit import connect
-from posit.connect.content import ContentItem, ContentItemRepository
+from posit.connect._repository import ContentItemRepository
+from posit.connect.content import ContentItem
 from posit.connect.resources import _Resource
 
 from . import CONNECT_VERSION
@@ -77,12 +78,12 @@ class TestContentItemRepository:
 
         # Update
         ex_branch = "main"
-        updated_repo = content_repo.update(branch=ex_branch)
-        assert updated_repo["branch"] == ex_branch
+        content_repo.update(branch=ex_branch)
+        assert content_repo["branch"] == ex_branch
 
-        assert updated_repo["repository"] == self.repo_repository
-        assert updated_repo["directory"] == self.repo_directory
-        assert updated_repo["polling"] is self.repo_polling
+        assert content_repo["repository"] == self.repo_repository
+        assert content_repo["directory"] == self.repo_directory
+        assert content_repo["polling"] is self.repo_polling
 
         # Delete
         content_repo.destroy()
