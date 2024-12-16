@@ -264,7 +264,7 @@ class ContentItem(Active, VanityMixin, Resource):
         ContentItemRepository
         """
         path = f"v1/content/{self['guid']}/repository"
-        response = self._ctx.client.session.put(path, json=attributes)
+        response = self._ctx.client.put(path, json=attributes)
         result = response.json()
 
         return _ContentItemRepository(
