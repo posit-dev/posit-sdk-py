@@ -4,17 +4,14 @@ from __future__ import annotations
 
 import posixpath
 import time
-from abc import abstractmethod
 
 from typing_extensions import (
     TYPE_CHECKING,
     Any,
-    Hashable,
     List,
     Literal,
     NotRequired,
     Optional,
-    Protocol,
     Required,
     TypedDict,
     Unpack,
@@ -22,13 +19,13 @@ from typing_extensions import (
 )
 
 from . import tasks
+from ._repository import ContentItemRepositoryMixin
 from .bundles import Bundles
 from .context import requires
 from .env import EnvVars
-from .errors import ClientError
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
-from .resources import Active, Resource, Resources, _Resource, _ResourceSequence
+from .resources import Active, Resource, Resources, _ResourceSequence
 from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
@@ -40,80 +37,9 @@ if TYPE_CHECKING:
     from .tasks import Task
 
 
-# TODO-barret: Replace with Resource class from https://github.com/posit-dev/posit-sdk-py/pull/364/files#diff-94b7dc3c7d7d7c7b1a5f25e06c37df5fc53e1921cb10d41d4f04b18a715fae55R72
-class ResourceP(Protocol):
-    def __getitem__(self, key: Hashable, /) -> Any: ...
-
-
 def _assert_guid(guid: str):
     assert isinstance(guid, str), "Expected 'guid' to be a string"
     assert len(guid) > 0, "Expected 'guid' to be non-empty"
-
-
-# ContentItem Repository uses a PATCH method, not a PUT for updating.
-class _ContentItemRepository(_Resource):
-    def update(self, **attributes):
-        response = self._ctx.client.patch(self._path, json=attributes)
-        result = response.json()
-        # # Calling this method will call `_Resource.update` which will try to PUT to the path.
-        # super().update(**result)
-        # Instead, update the dict directly.
-        dict.update(self, **result)
-
-
-class ContentItemRepository(ResourceP, Protocol):
-    """
-    Content items GitHub repository information.
-
-    See Also
-    --------
-    * Get info: https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
-    * Delete info: https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
-    * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
-    """
-
-    @abstractmethod
-    def destroy(self) -> None:
-        """
-        Delete the content's git repository location.
-
-        See Also
-        --------
-        * https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
-        """
-        ...
-
-    @abstractmethod
-    def update(
-        self,
-        *,
-        repository: Optional[str] = None,
-        branch: str = "main",
-        directory: str = ".",
-        polling: bool = False,
-    ) -> None:
-        """Update the content's repository.
-
-        Parameters
-        ----------
-        repository: str, optional
-            URL for the repository. Default is None.
-        branch: str, optional
-            The tracked Git branch. Default is 'main'.
-        directory: str, optional
-            Directory containing the content. Default is '.'
-        polling: bool, optional
-            Indicates that the Git repository is regularly polled. Default is False.
-
-        Returns
-        -------
-        None
-
-        See Also
-        --------
-        * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
-        """
-        ...
 
 
 class ContentItemOAuth(Resource):
@@ -130,7 +56,7 @@ class ContentItemOwner(Resource):
     pass
 
 
-class ContentItem(Active, VanityMixin, Resource):
+class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, Resource):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str
@@ -216,62 +142,6 @@ class ContentItem(Active, VanityMixin, Resource):
     @property
     def oauth(self) -> ContentItemOAuth:
         return ContentItemOAuth(self._ctx, content_guid=self["guid"])
-
-    @property
-    def repository(self) -> ContentItemRepository | None:
-        try:
-            path = f"v1/content/{self['guid']}/repository"
-            response = self._ctx.client.get(path)
-            result = response.json()
-            return _ContentItemRepository(
-                self._ctx,
-                path,
-                **result,
-            )
-        except ClientError:
-            return None
-
-    @overload
-    def create_repository(
-        self,
-        /,
-        *,
-        repository: Optional[str] = None,
-        branch: str = "main",
-        directory: str = ".",
-        polling: bool = False,
-    ) -> ContentItemRepository: ...
-
-    @overload
-    def create_repository(self, /, **attributes) -> ContentItemRepository: ...
-
-    def create_repository(self, /, **attributes) -> ContentItemRepository:
-        """Create repository.
-
-        Parameters
-        ----------
-        repository : str
-            URL for the respository.
-        branch : str, optional
-            The tracked Git branch. Default is 'main'.
-        directory : str, optional
-            Directory containing the content. Default is '.'.
-        polling : bool, optional
-            Indicates that the Git repository is regularly polled. Default is False.
-
-        Returns
-        -------
-        ContentItemRepository
-        """
-        path = f"v1/content/{self['guid']}/repository"
-        response = self._ctx.client.put(path, json=attributes)
-        result = response.json()
-
-        return _ContentItemRepository(
-            self._ctx,
-            path,
-            **result,
-        )
 
     def delete(self) -> None:
         """Delete the content item."""
