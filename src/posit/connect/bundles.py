@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import io
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from . import resources, tasks
+
+if TYPE_CHECKING:
+    from .context import Context
 
 
 class BundleMetadata(resources.Resource):
@@ -15,13 +18,12 @@ class BundleMetadata(resources.Resource):
 class Bundle(resources.Resource):
     @property
     def metadata(self) -> BundleMetadata:
-        return BundleMetadata(self.params, **self.get("metadata", {}))
+        return BundleMetadata(self._ctx, **self.get("metadata", {}))
 
     def delete(self) -> None:
         """Delete the bundle."""
         path = f"v1/content/{self['content_guid']}/bundles/{self['id']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._ctx.client.delete(path)
 
     def deploy(self) -> tasks.Task:
         """Deploy the bundle.
@@ -40,10 +42,9 @@ class Bundle(resources.Resource):
         None
         """
         path = f"v1/content/{self['content_guid']}/deploy"
-        url = self.params.url + path
-        response = self.params.session.post(url, json={"bundle_id": self["id"]})
+        response = self._ctx.client.post(path, json={"bundle_id": self["id"]})
         result = response.json()
-        ts = tasks.Tasks(self.params)
+        ts = tasks.Tasks(self._ctx)
         return ts.get(result["task_id"])
 
     def download(self, output: io.BufferedWriter | str) -> None:
@@ -78,8 +79,7 @@ class Bundle(resources.Resource):
             )
 
         path = f"v1/content/{self['content_guid']}/bundles/{self['id']}/download"
-        url = self.params.url + path
-        response = self.params.session.get(url, stream=True)
+        response = self._ctx.client.get(path, stream=True)
         if isinstance(output, io.BufferedWriter):
             for chunk in response.iter_content():
                 output.write(chunk)
@@ -109,10 +109,10 @@ class Bundles(resources.Resources):
 
     def __init__(
         self,
-        params: resources.ResourceParameters,
+        ctx: Context,
         content_guid: str,
     ) -> None:
-        super().__init__(params)
+        super().__init__(ctx)
         self.content_guid = content_guid
 
     def create(self, archive: io.BufferedReader | bytes | str) -> Bundle:
@@ -164,10 +164,9 @@ class Bundles(resources.Resources):
             )
 
         path = f"v1/content/{self.content_guid}/bundles"
-        url = self.params.url + path
-        response = self.params.session.post(url, data=data)
+        response = self._ctx.client.post(path, data=data)
         result = response.json()
-        return Bundle(self.params, **result)
+        return Bundle(self._ctx, **result)
 
     def find(self) -> List[Bundle]:
         """Find all bundles.
@@ -178,10 +177,9 @@ class Bundles(resources.Resources):
             List of all found bundles.
         """
         path = f"v1/content/{self.content_guid}/bundles"
-        url = self.params.url + path
-        response = self.params.session.get(url)
+        response = self._ctx.client.get(path)
         results = response.json()
-        return [Bundle(self.params, **result) for result in results]
+        return [Bundle(self._ctx, **result) for result in results]
 
     def find_one(self) -> Bundle | None:
         """Find a bundle.
@@ -208,7 +206,6 @@ class Bundles(resources.Resources):
             The bundle with the specified ID.
         """
         path = f"v1/content/{self.content_guid}/bundles/{uid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
+        response = self._ctx.client.get(path)
         result = response.json()
-        return Bundle(self.params, **result)
+        return Bundle(self._ctx, **result)

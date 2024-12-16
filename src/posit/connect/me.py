@@ -14,6 +14,6 @@ def get(ctx: Context) -> User:
     -------
         User: The current user.
     """
-    url = ctx.url + "v1/user"
-    response = ctx.session.get(url)
+    path = "v1/user"
+    response = ctx.client.get(path)
     return User(ctx, **response.json())

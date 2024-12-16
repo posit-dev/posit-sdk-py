@@ -1,12 +1,10 @@
 from unittest import mock
 
-import requests
 import responses
 from responses import matchers
 
+from posit import connect
 from posit.connect.metrics import visits
-from posit.connect.resources import ResourceParameters
-from posit.connect.urls import Url
 
 from ..api import load_mock, load_mock_dict
 
@@ -81,10 +79,10 @@ class TestVisitsFind:
         ]
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        c = connect.Client("https://connect.example", "12345")
 
         # invoke
-        events = visits.Visits(params).find()
+        events = visits.Visits(c._ctx).find()
 
         # assert
         assert mock_get[0].call_count == 1
@@ -125,10 +123,10 @@ class TestVisitsFindOne:
         ]
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        c = connect.Client("https://connect.example", "12345")
 
         # invoke
-        event = visits.Visits(params).find_one()
+        event = visits.Visits(c._ctx).find_one()
 
         # assert
         assert mock_get[0].call_count == 1

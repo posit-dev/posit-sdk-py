@@ -105,12 +105,11 @@ class ShinyUsage(Resources):
         params = rename_params(kwargs)
 
         path = "/v1/instrumentation/shiny/usage"
-        url = self.params.url + path
-        paginator = CursorPaginator(self.params.session, url, params=params)
+        paginator = CursorPaginator(self._ctx, path, params=params)
         results = paginator.fetch_results()
         return [
             ShinyUsageEvent(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -161,13 +160,12 @@ class ShinyUsage(Resources):
         """
         params = rename_params(kwargs)
         path = "/v1/instrumentation/shiny/usage"
-        url = self.params.url + path
-        paginator = CursorPaginator(self.params.session, url, params=params)
+        paginator = CursorPaginator(self._ctx, path, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         visits = (
             ShinyUsageEvent(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results

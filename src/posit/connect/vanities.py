@@ -2,8 +2,9 @@ from typing import Callable, List, Optional
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
+from .context import Context
 from .errors import ClientError
-from .resources import Resource, ResourceParameters, Resources
+from .resources import Resource, Resources
 
 
 class Vanity(Resource):
@@ -54,7 +55,7 @@ class Vanity(Resource):
     def __init__(
         self,
         /,
-        params: ResourceParameters,
+        ctx: Context,
         *,
         after_destroy: Optional[AfterDestroyCallback] = None,
         **kwargs: Unpack[VanityAttributes],
@@ -63,11 +64,11 @@ class Vanity(Resource):
 
         Parameters
         ----------
-        params : ResourceParameters
+        ctx : Context
         after_destroy : AfterDestroyCallback, optional
             Called after the Vanity is successfully destroyed, by default None
         """
-        super().__init__(params, **kwargs)
+        super().__init__(ctx, **kwargs)
         self._after_destroy = after_destroy
         self._content_guid = kwargs["content_guid"]
 
@@ -87,8 +88,8 @@ class Vanity(Resource):
         ----
         This action requires administrator privileges.
         """
-        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
-        self.params.session.delete(endpoint)
+        path = f"v1/content/{self._content_guid}/vanity"
+        self._ctx.client.delete(path)
 
         if self._after_destroy:
             self._after_destroy()
@@ -108,10 +109,10 @@ class Vanities(Resources):
         -----
         This action requires administrator privileges.
         """
-        endpoint = self.params.url + "v1/vanities"
-        response = self.params.session.get(endpoint)
+        path = "v1/vanities"
+        response = self._ctx.client.get(path)
         results = response.json()
-        return [Vanity(self.params, **result) for result in results]
+        return [Vanity(self._ctx, **result) for result in results]
 
 
 class VanityMixin(Resource):
@@ -122,8 +123,8 @@ class VanityMixin(Resource):
 
         guid: Required[str]
 
-    def __init__(self, params: ResourceParameters, **kwargs: Unpack[HasGuid]):
-        super().__init__(params, **kwargs)
+    def __init__(self, ctx: Context, **kwargs: Unpack[HasGuid]):
+        super().__init__(ctx, **kwargs)
         self._content_guid = kwargs["guid"]
         self._vanity: Optional[Vanity] = None
 
@@ -215,10 +216,10 @@ class VanityMixin(Resource):
         --------
         If setting force=True, the destroy operation performed on the other vanity is irreversible.
         """
-        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
-        response = self.params.session.put(endpoint, json=kwargs)
+        path = f"v1/content/{self._content_guid}/vanity"
+        response = self._ctx.client.put(path, json=kwargs)
         result = response.json()
-        return Vanity(self.params, **result)
+        return Vanity(self._ctx, **result)
 
     def find_vanity(self) -> Vanity:
         """Find the vanity.
@@ -227,7 +228,7 @@ class VanityMixin(Resource):
         -------
         Vanity
         """
-        endpoint = self.params.url + f"v1/content/{self._content_guid}/vanity"
-        response = self.params.session.get(endpoint)
+        path = f"v1/content/{self._content_guid}/vanity"
+        response = self._ctx.client.get(path)
         result = response.json()
-        return Vanity(self.params, **result)
+        return Vanity(self._ctx, **result)

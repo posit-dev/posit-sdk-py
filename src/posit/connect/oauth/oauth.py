@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import os
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from typing_extensions import TypedDict
 
-from ..resources import ResourceParameters, Resources
+from ..resources import Resources
 from .integrations import Integrations
 from .sessions import Sessions
+
+if TYPE_CHECKING:
+    from ..context import Context
 
 GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange"
 USER_SESSION_TOKEN_TYPE = "urn:posit:connect:user-session-token"
@@ -36,20 +39,18 @@ def _get_content_session_token() -> str:
 
 
 class OAuth(Resources):
-    def __init__(self, params: ResourceParameters, api_key: str) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context, api_key: str) -> None:
+        super().__init__(ctx)
         self.api_key = api_key
-
-    def _get_credentials_url(self) -> str:
-        return self.params.url + "v1/oauth/integrations/credentials"
+        self._path = "v1/oauth/integrations/credentials"
 
     @property
     def integrations(self):
-        return Integrations(self.params)
+        return Integrations(self._ctx)
 
     @property
     def sessions(self):
-        return Sessions(self.params)
+        return Sessions(self._ctx)
 
     def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
         """Perform an oauth credential exchange with a user-session-token."""
@@ -60,7 +61,7 @@ class OAuth(Resources):
         if user_session_token:
             data["subject_token"] = user_session_token
 
-        response = self.params.session.post(self._get_credentials_url(), data=data)
+        response = self._ctx.client.post(self._path, data=data)
         return Credentials(**response.json())
 
     def get_content_credentials(self, content_session_token: Optional[str] = None) -> Credentials:
@@ -71,7 +72,7 @@ class OAuth(Resources):
         data["subject_token_type"] = CONTENT_SESSION_TOKEN_TYPE
         data["subject_token"] = content_session_token or _get_content_session_token()
 
-        response = self.params.session.post(self._get_credentials_url(), data=data)
+        response = self._ctx.client.post(self._path, data=data)
         return Credentials(**response.json())
 
 

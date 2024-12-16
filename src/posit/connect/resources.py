@@ -3,7 +3,6 @@ from __future__ import annotations
 import posixpath
 import warnings
 from abc import ABC
-from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -11,38 +10,17 @@ from typing import (
     Sequence,
 )
 
-from posit.connect.paginator import Paginator
-
 from .context import Context
+from .paginator import Paginator
 
 if TYPE_CHECKING:
-    import requests
-
     from .context import Context
-    from .urls import Url
-
-
-@dataclass(frozen=True)
-class ResourceParameters:
-    """Shared parameter object for resources.
-
-    Attributes
-    ----------
-    session: requests.Session
-        A `requests.Session` object. Provides cookie persistence, connection-pooling, and
-        configuration.
-    url: str
-        The Connect API base URL (e.g., https://connect.example.com/__api__)
-    """
-
-    session: requests.Session
-    url: Url
 
 
 class Resource(dict):
-    def __init__(self, /, params: ResourceParameters, **kwargs):
-        self.params = params
+    def __init__(self, ctx: Context, /, **kwargs):
         super().__init__(**kwargs)
+        self._ctx = ctx
 
     def __getattr__(self, name):
         if name in self:
@@ -60,8 +38,8 @@ class Resource(dict):
 
 
 class Resources:
-    def __init__(self, params: ResourceParameters) -> None:
-        self.params = params
+    def __init__(self, ctx: Context) -> None:
+        self._ctx = ctx
 
 
 class Active(ABC, Resource):
@@ -79,8 +57,7 @@ class Active(ABC, Resource):
         **attributes : dict
             Resource attributes passed
         """
-        params = ResourceParameters(ctx.session, ctx.url)
-        super().__init__(params, **attributes)
+        super().__init__(ctx, **attributes)
         self._ctx = ctx
         self._path = path
 

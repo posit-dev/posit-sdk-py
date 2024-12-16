@@ -7,10 +7,7 @@ from typing import TYPE_CHECKING, Protocol
 from packaging.version import Version
 
 if TYPE_CHECKING:
-    import requests
-
     from .client import Client
-    from .urls import Url
 
 
 def requires(version: str):
@@ -31,8 +28,6 @@ def requires(version: str):
 
 class Context:
     def __init__(self, client: Client):
-        self.session: requests.Session = client.session
-        self.url: Url = client.cfg.url
         # Since this is a child object of the client, we use a weak reference to avoid circular
         # references (which would prevent garbage collection)
         self.client: Client = weakref.proxy(client)
@@ -40,8 +35,7 @@ class Context:
     @property
     def version(self) -> str | None:
         if not hasattr(self, "_version"):
-            endpoint = self.url + "server_settings"
-            response = self.session.get(endpoint)
+            response = self.client.get("server_settings")
             result = response.json()
             self._version: str | None = result.get("version")
 

@@ -2,16 +2,14 @@ import random
 import uuid
 
 import pytest
-import requests
 import responses
 from responses import matchers
 
+from posit import connect
 from posit.connect.client import Client
 from posit.connect.context import Context
 from posit.connect.groups import Group
 from posit.connect.permissions import Permission, Permissions
-from posit.connect.resources import ResourceParameters
-from posit.connect.urls import Url
 from posit.connect.users import User
 
 from .api import load_mock, load_mock_dict, load_mock_list
@@ -30,9 +28,9 @@ class TestPermissionDestroy:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        c = connect.Client("https://connect.example", "12345")
         fake_permission = load_mock_dict(f"v1/content/{content_guid}/permissions/{uid}.json")
-        permission = Permission(params, **fake_permission)
+        permission = Permission(c._ctx, **fake_permission)
 
         # invoke
         permission.destroy()
@@ -74,9 +72,9 @@ class TestPermissionUpdate:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
+        c = connect.Client("https://connect.example", "12345")
         permission = Permission(
-            params,
+            c._ctx,
             id=uid,
             content_guid=content_guid,
             principal_guid=principal_guid,
@@ -117,8 +115,8 @@ class TestPermissionUpdate:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permission = Permission(params, id=uid, content_guid=content_guid, role=old_role)
+        c = connect.Client("https://connect.example", "12345")
+        permission = Permission(c._ctx, id=uid, content_guid=content_guid, role=old_role)
 
         # assert role change with respect to api response
         assert permission["role"] == old_role
@@ -140,8 +138,8 @@ class TestPermissionsCount:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        c = connect.Client("https://connect.example", "12345")
+        permissions = Permissions(c._ctx, content_guid=content_guid)
 
         # invoke
         count = permissions.count()
@@ -182,8 +180,8 @@ class TestPermissionsCreate:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        c = connect.Client("https://connect.example", "12345")
+        permissions = Permissions(c._ctx, content_guid=content_guid)
 
         # invoke
         permission = permissions.create(
@@ -199,10 +197,10 @@ class TestPermissionsCreate:
         # setup
         principal_guid = "principal_guid"
         content_guid = "content_guid"
-        client = Client("https://connect.example/__api__", "12345")
-        permissions = Permissions(client.resource_params, content_guid=content_guid)
-        user = User(client._ctx, guid=principal_guid)
-        group = User(client._ctx, guid=principal_guid)
+        c = Client("https://connect.example/__api__", "12345")
+        permissions = Permissions(c._ctx, content_guid=content_guid)
+        user = User(c._ctx, guid=principal_guid)
+        group = User(c._ctx, guid=principal_guid)
 
         # behavior
         with pytest.raises(TypeError, match="str"):
@@ -249,10 +247,10 @@ class TestPermissionsCreate:
         )
 
         # setup
-        client = Client("https://connect.example/__api__", "12345")
-        permissions = Permissions(client.resource_params, content_guid=content_guid)
-        user = User(client._ctx, guid=user_guid)
-        group = Group(client._ctx, guid=group_guid)
+        c = Client("https://connect.example/__api__", "12345")
+        permissions = Permissions(c._ctx, content_guid=content_guid)
+        user = User(c._ctx, guid=user_guid)
+        group = Group(c._ctx, guid=group_guid)
 
         # invoke
         user_perm = permissions.create(user, role="viewer")
@@ -269,13 +267,13 @@ class TestPermissionsCreate:
 
         assert created_permissions == [
             Permission(
-                client.resource_params,
+                c._ctx,
                 principal_guid=user_guid,
                 principal_type="user",
                 role="viewer",
             ),
             Permission(
-                client.resource_params,
+                c._ctx,
                 principal_guid=group_guid,
                 principal_type="group",
                 role="viewer",
@@ -297,8 +295,8 @@ class TestPermissionsFind:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        c = connect.Client("https://connect.example", "12345")
+        permissions = Permissions(c._ctx, content_guid=content_guid)
 
         # invoke
         permissions = permissions.find()
@@ -321,8 +319,8 @@ class TestPermissionsFindOne:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        c = connect.Client("https://connect.example", "12345")
+        permissions = Permissions(c._ctx, content_guid=content_guid)
 
         # invoke
         permission = permissions.find_one()
@@ -346,8 +344,8 @@ class TestPermissionsGet:
         )
 
         # setup
-        params = ResourceParameters(requests.Session(), Url("https://connect.example/__api__"))
-        permissions = Permissions(params, content_guid=content_guid)
+        c = connect.Client("https://connect.example", "12345")
+        permissions = Permissions(c._ctx, content_guid=content_guid)
 
         # invoke
         permission = permissions.get(uid)
@@ -404,14 +402,12 @@ class TestPermissionsDestroy:
         # setup
         c = Client(api_key="12345", url="https://connect.example/")
         ctx = Context(c)
-        permissions = Permissions(ctx.client.resource_params, content_guid=content_guid)
+        permissions = Permissions(ctx, content_guid=content_guid)
 
         # (Doesn't match any permissions, but that's okay)
         user_to_remove = User(ctx, **fake_user)
         group_to_remove = Group(ctx, **fake_group)
-        permission_to_remove = Permission(
-            ctx.client.resource_params, **fake_manual_user_permission
-        )
+        permission_to_remove = Permission(ctx, **fake_manual_user_permission)
 
         # invoke
         permissions.destroy(permission_to_remove["id"])

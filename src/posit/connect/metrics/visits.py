@@ -137,12 +137,11 @@ class Visits(Resources):
         params = rename_params(kwargs)
 
         path = "/v1/instrumentation/content/visits"
-        url = self.params.url + path
-        paginator = CursorPaginator(self.params.session, url, params=params)
+        paginator = CursorPaginator(self._ctx, path, params=params)
         results = paginator.fetch_results()
         return [
             VisitEvent(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
@@ -193,13 +192,12 @@ class Visits(Resources):
         """
         params = rename_params(kwargs)
         path = "/v1/instrumentation/content/visits"
-        url = self.params.url + path
-        paginator = CursorPaginator(self.params.session, url, params=params)
+        paginator = CursorPaginator(self._ctx, path, params=params)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         visits = (
             VisitEvent(
-                self.params,
+                self._ctx,
                 **result,
             )
             for result in results
