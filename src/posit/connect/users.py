@@ -17,10 +17,6 @@ if TYPE_CHECKING:
 
 
 class User(Resource):
-    def __init__(self, ctx: Context, /, **attributes) -> None:
-        super().__init__(ctx.client.resource_params, **attributes)
-        self._ctx: Context = ctx
-
     @property
     def content(self) -> Content:
         return Content(self._ctx, owner_guid=self["guid"])
@@ -59,9 +55,8 @@ class User(Resource):
             raise RuntimeError(
                 "You cannot lock your own account. Set force=True to override this behavior.",
             )
-        url = self._ctx.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": True}
-        self._ctx.session.post(url, json=body)
+        self._ctx.client.post(f"v1/users/{self['guid']}/lock", json=body)
         super().update(locked=True)
 
     def unlock(self):
@@ -84,9 +79,8 @@ class User(Resource):
         --------
         * https://docs.posit.co/connect/api/#post-/v1/users/-guid-/lock
         """
-        url = self._ctx.url + f"v1/users/{self['guid']}/lock"
         body = {"locked": False}
-        self._ctx.session.post(url, json=body)
+        self._ctx.client.post(f"v1/users/{self['guid']}/lock", json=body)
         super().update(locked=False)
 
     class UpdateUser(TypedDict):
@@ -136,8 +130,7 @@ class User(Resource):
         --------
         * https://docs.posit.co/connect/api/#put-/v1/users/-guid-
         """
-        url = self._ctx.url + f"v1/users/{self['guid']}"
-        response = self._ctx.session.put(url, json=kwargs)
+        response = self._ctx.client.put(f"v1/users/{self['guid']}", json=kwargs)
         super().update(**response.json())
 
     @property
@@ -164,7 +157,7 @@ class User(Resource):
 
 class UserGroups(Resources):
     def __init__(self, ctx: Context, user_guid: str) -> None:
-        super().__init__(ctx.client.resource_params)
+        super().__init__(ctx)
         self._ctx: Context = ctx
         self._user_guid: str = user_guid
 
@@ -309,10 +302,6 @@ class UserGroups(Resources):
 class Users(Resources):
     """Users resource."""
 
-    def __init__(self, ctx: Context) -> None:
-        super().__init__(ctx.client.resource_params)
-        self._ctx: Context = ctx
-
     class CreateUser(TypedDict):
         """Create user request."""
 
@@ -387,8 +376,7 @@ class Users(Resources):
         * https://docs.posit.co/connect/api/#post-/v1/users
         """
         # todo - use the 'context' module to inspect the 'authentication' object and route to POST (local) or PUT (remote).
-        url = self._ctx.url + "v1/users"
-        response = self._ctx.session.post(url, json=attributes)
+        response = self._ctx.client.post("v1/users", json=attributes)
         return User(self._ctx, **response.json())
 
     class FindUser(TypedDict):
@@ -434,8 +422,8 @@ class Users(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self._ctx.url + "v1/users"
-        paginator = Paginator(self._ctx.session, url, params={**conditions})
+        path = "v1/users"
+        paginator = Paginator(self._ctx, path, params={**conditions})
         results = paginator.fetch_results()
         return [
             User(
@@ -481,8 +469,8 @@ class Users(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self._ctx.url + "v1/users"
-        paginator = Paginator(self._ctx.session, url, params={**conditions})
+        path = "v1/users"
+        paginator = Paginator(self._ctx, path, params={**conditions})
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         users = (
@@ -515,8 +503,7 @@ class Users(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self._ctx.url + f"v1/users/{uid}"
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(f"v1/users/{uid}")
         return User(
             self._ctx,
             **response.json(),
@@ -534,7 +521,6 @@ class Users(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/users
         """
-        url = self._ctx.url + "v1/users"
-        response = self._ctx.session.get(url, params={"page_size": 1})
+        response = self._ctx.client.get("v1/users", params={"page_size": 1})
         result: dict = response.json()
         return result["total"]

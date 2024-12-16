@@ -10,8 +10,7 @@ class Session(Resource):
 
     def delete(self) -> None:
         path = f"v1/oauth/sessions/{self['guid']}"
-        url = self.params.url + path
-        self.params.session.delete(url)
+        self._ctx.client.delete(path)
 
 
 class Sessions(Resources):
@@ -26,10 +25,10 @@ class Sessions(Resources):
     def find(self, **kwargs) -> List[Session]: ...
 
     def find(self, **kwargs) -> List[Session]:
-        url = self.params.url + "v1/oauth/sessions"
-        response = self.params.session.get(url, params=kwargs)
+        path = "v1/oauth/sessions"
+        response = self._ctx.client.get(path, params=kwargs)
         results = response.json()
-        return [Session(self.params, **result) for result in results]
+        return [Session(self._ctx, **result) for result in results]
 
     def get(self, guid: str) -> Session:
         """Get an OAuth session.
@@ -43,6 +42,5 @@ class Sessions(Resources):
         Session
         """
         path = f"v1/oauth/sessions/{guid}"
-        url = self.params.url + path
-        response = self.params.session.get(url)
-        return Session(self.params, **response.json())
+        response = self._ctx.client.get(path)
+        return Session(self._ctx, **response.json())

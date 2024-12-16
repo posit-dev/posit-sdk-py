@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 class Group(Resource):
     def __init__(self, ctx: Context, **kwargs) -> None:
-        super().__init__(ctx.client.resource_params, **kwargs)
+        super().__init__(ctx, **kwargs)
         self._ctx: Context = ctx
 
     @property
@@ -61,16 +61,13 @@ class Group(Resource):
         group.delete()
         ```
         """
-        path = f"v1/groups/{self['guid']}"
-        url = self._ctx.url + path
-        self._ctx.session.delete(url)
+        self._ctx.client.delete(f"v1/groups/{self['guid']}")
 
 
 class GroupMembers(Resources):
     def __init__(self, ctx: Context, group_guid: str) -> None:
-        super().__init__(ctx.client.resource_params)
+        super().__init__(ctx)
         self._group_guid = group_guid
-        self._ctx: Context = ctx
 
     @overload
     def add(self, user: User, /) -> None: ...
@@ -128,9 +125,10 @@ class GroupMembers(Resources):
         if not user_guid:
             raise ValueError("`user_guid=` should not be empty.")
 
-        path = f"v1/groups/{self._group_guid}/members"
-        url = self._ctx.url + path
-        self._ctx.session.post(url, json={"user_guid": user_guid})
+        self._ctx.client.post(
+            f"v1/groups/{self._group_guid}/members",
+            json={"user_guid": user_guid},
+        )
 
     @overload
     def delete(self, user: User, /) -> None: ...
@@ -188,9 +186,7 @@ class GroupMembers(Resources):
         if not user_guid:
             raise ValueError("`user_guid=` should not be empty.")
 
-        path = f"v1/groups/{self._group_guid}/members/{user_guid}"
-        url = self._ctx.url + path
-        self._ctx.session.delete(url)
+        self._ctx.client.delete(f"v1/groups/{self._group_guid}/members/{user_guid}")
 
     def find(self) -> list[User]:
         """Find group members.
@@ -221,8 +217,7 @@ class GroupMembers(Resources):
         from .users import User
 
         path = f"v1/groups/{self._group_guid}/members"
-        url = self._ctx.url + path
-        paginator = Paginator(self._ctx.session, url)
+        paginator = Paginator(self._ctx, path)
         member_dicts = paginator.fetch_results()
 
         # For each member in the group
@@ -253,19 +248,16 @@ class GroupMembers(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/groups/-group_guid-/members
         """
-        path = f"v1/groups/{self._group_guid}/members"
-        url = self._ctx.url + path
-        response = self._ctx.session.get(url, params={"page_size": 1})
+        response = self._ctx.client.get(
+            f"v1/groups/{self._group_guid}/members",
+            params={"page_size": 1},
+        )
         result = response.json()
         return result["total"]
 
 
 class Groups(Resources):
     """Groups resource."""
-
-    def __init__(self, ctx: Context) -> None:
-        super().__init__(ctx.client.resource_params)
-        self._ctx: Context = ctx
 
     @overload
     def create(self, *, name: str, unique_id: str | None) -> Group:
@@ -306,9 +298,7 @@ class Groups(Resources):
         -------
         Group
         """
-        path = "v1/groups"
-        url = self._ctx.url + path
-        response = self._ctx.session.post(url, json=kwargs)
+        response = self._ctx.client.post("v1/groups", json=kwargs)
         return Group(self._ctx, **response.json())
 
     @overload
@@ -338,8 +328,7 @@ class Groups(Resources):
         * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
-        url = self._ctx.url + path
-        paginator = Paginator(self._ctx.session, url, params=kwargs)
+        paginator = Paginator(self._ctx, path, params=kwargs)
         results = paginator.fetch_results()
         return [
             Group(
@@ -376,8 +365,7 @@ class Groups(Resources):
         * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
-        url = self._ctx.url + path
-        paginator = Paginator(self._ctx.session, url, params=kwargs)
+        paginator = Paginator(self._ctx, path, params=kwargs)
         pages = paginator.fetch_pages()
         results = (result for page in pages for result in page.results)
         groups = (
@@ -404,8 +392,7 @@ class Groups(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/groups
         """
-        url = self._ctx.url + f"v1/groups/{guid}"
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(f"v1/groups/{guid}")
         return Group(
             self._ctx,
             **response.json(),
@@ -423,7 +410,6 @@ class Groups(Resources):
         * https://docs.posit.co/connect/api/#get-/v1/groups
         """
         path = "v1/groups"
-        url = self._ctx.url + path
-        response: requests.Response = self._ctx.session.get(url, params={"page_size": 1})
+        response: requests.Response = self._ctx.client.get(path, params={"page_size": 1})
         result: dict = response.json()
         return result["total"]

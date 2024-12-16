@@ -32,10 +32,8 @@ from .permissions import Permissions
 from .resources import (
     Active,
     Resource,
-    ResourceParameters,
     Resources,
     _Resource,
-    _ResourcePatch,
     _ResourceSequence,
     _ResourceUpdatePatchMixin,
 )
@@ -46,7 +44,7 @@ from .variants import Variants
 if TYPE_CHECKING:
     from .context import Context
     from .jobs import Jobs
-    from .packages import _ContentPackages
+    from .packages import ContentPackages
     from .tasks import Task
 
 
@@ -115,13 +113,13 @@ class ContentItemRepository(Mapping[str, Any]):
 
 
 class ContentItemOAuth(Resource):
-    def __init__(self, params: ResourceParameters, content_guid: str) -> None:
-        super().__init__(params)
+    def __init__(self, ctx: Context, content_guid: str) -> None:
+        super().__init__(ctx)
         self["content_guid"] = content_guid
 
     @property
     def associations(self) -> ContentItemAssociations:
-        return ContentItemAssociations(self.params, content_guid=self["content_guid"])
+        return ContentItemAssociations(self._ctx, content_guid=self["content_guid"])
 
 
 class ContentItemOwner(Resource):
@@ -208,12 +206,12 @@ class ContentItem(Active, VanityMixin, Resource):
     def __getitem__(self, key: Any) -> Any:
         v = super().__getitem__(key)
         if key == "owner" and isinstance(v, dict):
-            return ContentItemOwner(params=self.params, **v)
+            return ContentItemOwner(self._ctx, **v)
         return v
 
     @property
     def oauth(self) -> ContentItemOAuth:
-        return ContentItemOAuth(self.params, content_guid=self["guid"])
+        return ContentItemOAuth(self._ctx, content_guid=self["guid"])
 
     @property
     def repository(self) -> ContentItemRepository | None:
@@ -270,8 +268,7 @@ class ContentItem(Active, VanityMixin, Resource):
     def delete(self) -> None:
         """Delete the content item."""
         path = f"v1/content/{self['guid']}"
-        url = self._ctx.url + path
-        self._ctx.session.delete(url)
+        self._ctx.client.delete(path)
 
     def deploy(self) -> tasks.Task:
         """Deploy the content.
@@ -290,10 +287,9 @@ class ContentItem(Active, VanityMixin, Resource):
         None
         """
         path = f"v1/content/{self['guid']}/deploy"
-        url = self._ctx.url + path
-        response = self._ctx.session.post(url, json={"bundle_id": None})
+        response = self._ctx.client.post(path, json={"bundle_id": None})
         result = response.json()
-        ts = tasks.Tasks(self.params)
+        ts = tasks.Tasks(self._ctx)
         return ts.get(result["task_id"])
 
     def render(self) -> Task:
@@ -346,8 +342,8 @@ class ContentItem(Active, VanityMixin, Resource):
             self.environment_variables.create(key, unix_epoch_in_seconds)
             self.environment_variables.delete(key)
             # GET via the base Connect URL to force create a new worker thread.
-            url = posixpath.join(dirname(self._ctx.url), f"content/{self['guid']}")
-            self._ctx.session.get(url)
+            path = f"../content/{self['guid']}"
+            self._ctx.client.get(path)
             return None
         else:
             raise ValueError(
@@ -417,23 +413,22 @@ class ContentItem(Active, VanityMixin, Resource):
         -------
         None
         """
-        url = self._ctx.url + f"v1/content/{self['guid']}"
-        response = self._ctx.session.patch(url, json=attrs)
+        response = self._ctx.client.patch(f"v1/content/{self['guid']}", json=attrs)
         super().update(**response.json())
 
     # Relationships
 
     @property
     def bundles(self) -> Bundles:
-        return Bundles(self.params, self["guid"])
+        return Bundles(self._ctx, self["guid"])
 
     @property
     def environment_variables(self) -> EnvVars:
-        return EnvVars(self.params, self["guid"])
+        return EnvVars(self._ctx, self["guid"])
 
     @property
     def permissions(self) -> Permissions:
-        return Permissions(self.params, self["guid"])
+        return Permissions(self._ctx, self["guid"])
 
     @property
     def owner(self) -> dict:
@@ -450,7 +445,7 @@ class ContentItem(Active, VanityMixin, Resource):
 
     @property
     def _variants(self) -> Variants:
-        return Variants(self.params, self["guid"])
+        return Variants(self._ctx, self["guid"])
 
     @property
     def is_interactive(self) -> bool:
@@ -494,7 +489,7 @@ class ContentItem(Active, VanityMixin, Resource):
 
     @property
     @requires(version="2024.11.0")
-    def packages(self) -> _ContentPackages:
+    def packages(self) -> ContentPackages:
         path = posixpath.join(self._path, "packages")
         return _ResourceSequence(self._ctx, path, uid="name")
 
@@ -518,7 +513,7 @@ class Content(Resources):
         *,
         owner_guid: str | None = None,
     ) -> None:
-        super().__init__(ctx.client.resource_params)
+        super().__init__(ctx)
         self.owner_guid = owner_guid
         self._ctx = ctx
 
@@ -594,9 +589,7 @@ class Content(Resources):
         -------
         ContentItem
         """
-        path = "v1/content"
-        url = self._ctx.url + path
-        response = self._ctx.session.post(url, json=attrs)
+        response = self._ctx.client.post("v1/content", json=attrs)
         return ContentItem(self._ctx, **response.json())
 
     @overload
@@ -682,9 +675,7 @@ class Content(Resources):
         if self.owner_guid:
             conditions["owner_guid"] = self.owner_guid
 
-        path = "v1/content"
-        url = self._ctx.url + path
-        response = self._ctx.session.get(url, params=conditions)
+        response = self._ctx.client.get("v1/content", params=conditions)
         return [
             ContentItem(
                 self._ctx,
@@ -855,7 +846,5 @@ class Content(Resources):
         -------
         ContentItem
         """
-        path = f"v1/content/{guid}"
-        url = self._ctx.url + path
-        response = self._ctx.session.get(url)
+        response = self._ctx.client.get(f"v1/content/{guid}")
         return ContentItem(self._ctx, **response.json())

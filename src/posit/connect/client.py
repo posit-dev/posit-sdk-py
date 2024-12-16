@@ -14,7 +14,7 @@ from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics import Metrics
 from .oauth import OAuth
-from .resources import ResourceParameters, _PaginatedResourceSequence, _ResourceSequence
+from .resources import _PaginatedResourceSequence, _ResourceSequence
 from .system import System
 from .tags import Tags
 from .tasks import Tasks
@@ -23,7 +23,7 @@ from .vanities import Vanities
 
 if TYPE_CHECKING:
     from .environments import Environments
-    from .packages import _Packages
+    from .packages import Packages
 
 
 class Client(ContextManager):
@@ -160,7 +160,6 @@ class Client(ContextManager):
         session.hooks["response"].append(hooks.check_for_deprecation_header)
         session.hooks["response"].append(hooks.handle_errors)
         self.session = session
-        self.resource_params = ResourceParameters(session, self.cfg.url)
         self._ctx = Context(self)
 
     @property
@@ -208,7 +207,7 @@ class Client(ContextManager):
         tasks.Tasks
             The tasks resource instance.
         """
-        return Tasks(self.resource_params)
+        return Tasks(self._ctx)
 
     @property
     def users(self) -> Users:
@@ -282,7 +281,7 @@ class Client(ContextManager):
         >>> len(events)
         24
         """
-        return Metrics(self.resource_params)
+        return Metrics(self._ctx)
 
     @property
     @requires(version="2024.08.0")
@@ -295,16 +294,16 @@ class Client(ContextManager):
         OAuth
             The oauth API instance.
         """
-        return OAuth(self.resource_params, self.cfg.api_key)
+        return OAuth(self._ctx, self.cfg.api_key)
 
     @property
     @requires(version="2024.11.0")
-    def packages(self) -> _Packages:
+    def packages(self) -> Packages:
         return _PaginatedResourceSequence(self._ctx, "v1/packages", uid="name")
 
     @property
     def vanities(self) -> Vanities:
-        return Vanities(self.resource_params)
+        return Vanities(self._ctx)
 
     @property
     def system(self) -> System:
