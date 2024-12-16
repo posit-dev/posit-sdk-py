@@ -64,7 +64,7 @@ class Vanity(Resource):
 
         Parameters
         ----------
-        _ctx : ResourceParameters
+        ctx : Context
         after_destroy : AfterDestroyCallback, optional
             Called after the Vanity is successfully destroyed, by default None
         """
