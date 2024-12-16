@@ -18,10 +18,6 @@ if TYPE_CHECKING:
 
 
 class User(Resource):
-    def __init__(self, ctx: Context, /, **attributes) -> None:
-        super().__init__(ctx, **attributes)
-        self._ctx: Context = ctx
-
     @property
     def content(self) -> Content:
         return Content(self._ctx, owner_guid=self["guid"])
@@ -306,10 +302,6 @@ class UserGroups(Resources):
 
 class Users(Resources):
     """Users resource."""
-
-    def __init__(self, ctx: Context) -> None:
-        super().__init__(ctx)
-        self._ctx: Context = ctx
 
     class CreateUser(TypedDict):
         """Create user request."""
