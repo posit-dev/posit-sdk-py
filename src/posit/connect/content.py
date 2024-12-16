@@ -5,12 +5,11 @@ from __future__ import annotations
 import posixpath
 import time
 from abc import abstractmethod
-from collections.abc import Mapping
-from posixpath import dirname
 
 from typing_extensions import (
     TYPE_CHECKING,
     Any,
+    Hashable,
     List,
     Literal,
     NotRequired,
@@ -29,14 +28,7 @@ from .env import EnvVars
 from .errors import ClientError
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
-from .resources import (
-    Active,
-    Resource,
-    Resources,
-    _Resource,
-    _ResourceSequence,
-    _ResourceUpdatePatchMixin,
-)
+from .resources import Active, Resource, Resources, _Resource, _ResourceSequence
 from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
@@ -48,16 +40,25 @@ if TYPE_CHECKING:
     from .tasks import Task
 
 
+# TODO-barret: Replace with Resource class from https://github.com/posit-dev/posit-sdk-py/pull/364/files#diff-94b7dc3c7d7d7c7b1a5f25e06c37df5fc53e1921cb10d41d4f04b18a715fae55R72
+class ResourceP(Protocol):
+    def __getitem__(self, key: Hashable, /) -> Any: ...
+
+
 def _assert_guid(guid: str):
     assert isinstance(guid, str), "Expected 'guid' to be a string"
     assert len(guid) > 0, "Expected 'guid' to be non-empty"
 
 
 # ContentItem Repository uses a PATCH method, not a PUT for updating.
-class _ContentItemRepositoryResource(_ResourceUpdatePatchMixin, _Resource): ...
+class _ContentItemRepository(_Resource):
+    def update(self, **attributes):  # type: ignore[reportIncompatibleMethodOverride]
+        response = self._ctx.client.patch(self._path, json=attributes)
+        result = response.json()
+        super().update(**result)
 
 
-class ContentItemRepository(Mapping[str, Any]):
+class ContentItemRepository(ResourceP):
     """
     Content items GitHub repository information.
 
@@ -216,7 +217,7 @@ class ContentItem(Active, VanityMixin, Resource):
     @property
     def repository(self) -> ContentItemRepository | None:
         try:
-            return _Resource(
+            return _ContentItemRepository(
                 self._ctx,
                 f"v1/content/{self['guid']}/repository",
             )
@@ -256,10 +257,10 @@ class ContentItem(Active, VanityMixin, Resource):
         ContentItemRepository
         """
         path = f"v1/content/{self['guid']}/repository"
-        response = self._ctx.session.put(path, json=attributes)
+        response = self._ctx.client.session.put(path, json=attributes)
         result = response.json()
 
-        return _ContentItemRepositoryResource(
+        return _ContentItemRepository(
             self._ctx,
             path,
             **result,
