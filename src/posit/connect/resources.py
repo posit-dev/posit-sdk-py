@@ -70,7 +70,7 @@ class Active(ABC, BaseResource):
 
 
 class Resource(Protocol):
-    def __getitem__(self, key: Hashable) -> Any: ...
+    def __getitem__(self, key: Hashable, /) -> Any: ...
 
 
 class _Resource(dict, Resource):
