@@ -8,6 +8,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Iterable,
+    Protocol,
     Sequence,
 )
 
@@ -85,8 +86,17 @@ class Active(ABC, Resource):
         self._path = path
 
 
+class _ResourceP(Protocol):
+    _ctx: Context
+    _path: str
+
+    def destroy(self) -> None: ...
+
+    def update(self, **attributes): ...
+
+
 class _Resource(dict):
-    def __init__(self, ctx: Context, path: str, **attributes):
+    def __init__(self, ctx: Context, path: str, /, **attributes):
         self._ctx = ctx
         self._path = path
         super().__init__(**attributes)
@@ -96,6 +106,20 @@ class _Resource(dict):
 
     def update(self, **attributes):  # type: ignore[reportIncompatibleMethodOverride]
         response = self._ctx.client.put(self._path, json=attributes)
+        result = response.json()
+        super().update(**result)
+
+
+class _ResourceUpdatePatchMixin:
+    def update(self: _ResourceP, **attributes):  # type: ignore[reportIncompatibleMethodOverride]
+        response = self._ctx.client.patch(self._path, json=attributes)
+        result = response.json()
+        super().update(**result)
+
+
+class _ResourcePatch(_Resource):
+    def update(self, **attributes):  # type: ignore[reportIncompatibleMethodOverride]
+        response = self._ctx.client.patch(self._path, json=attributes)
         result = response.json()
         super().update(**result)
 

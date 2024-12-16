@@ -3,9 +3,9 @@ import responses
 from responses import matchers
 
 from posit.connect.client import Client
-from posit.connect.content import ContentItem, ContentItemRepository
+from posit.connect.content import ContentItem
 from posit.connect.context import Context
-from posit.connect.resources import ResourceParameters
+from posit.connect.resources import ResourceParameters, _Resource
 
 from .api import load_mock, load_mock_dict
 
@@ -587,7 +587,7 @@ class TestContentRepository:
         )
         repository_info = content_item.repository
 
-        assert isinstance(repository_info, ContentItemRepository)
+        assert isinstance(repository_info, _Resource)
         assert mock_get.call_count == 1
 
         return repository_info
@@ -605,14 +605,14 @@ class TestContentRepository:
             self.endpoint,
             json=load_mock_dict(f"v1/content/{self.content_guid}/repository_patch.json"),
         )
-        new_repository_info = repository_info.update(branch="testing-main")
+        repository_info.update(branch="testing-main")
         assert mock_patch.call_count == 1
 
         for key, value in repository_info.items():
             if key == "branch":
-                assert new_repository_info[key] == "testing-main"
+                assert repository_info[key] == "testing-main"
             else:
-                assert new_repository_info[key] == value
+                assert repository_info[key] == value
 
     @responses.activate
     def test_repository_delete(self):

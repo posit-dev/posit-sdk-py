@@ -4,28 +4,41 @@ from __future__ import annotations
 
 import posixpath
 import time
+from abc import abstractmethod
+from collections.abc import Mapping
 from posixpath import dirname
-from typing import (
+
+from typing_extensions import (
     TYPE_CHECKING,
     Any,
     List,
     Literal,
+    NotRequired,
     Optional,
-    cast,
+    Protocol,
+    Required,
+    TypedDict,
+    Unpack,
     overload,
 )
 
-from typing_extensions import NotRequired, Required, TypedDict, Unpack
-
 from . import tasks
-from ._api import ApiDictEndpoint, JsonifiableDict
 from .bundles import Bundles
 from .context import requires
 from .env import EnvVars
 from .errors import ClientError
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
-from .resources import Active, Resource, ResourceParameters, Resources, _ResourceSequence
+from .resources import (
+    Active,
+    Resource,
+    ResourceParameters,
+    Resources,
+    _Resource,
+    _ResourcePatch,
+    _ResourceSequence,
+    _ResourceUpdatePatchMixin,
+)
 from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
@@ -42,12 +55,11 @@ def _assert_guid(guid: str):
     assert len(guid) > 0, "Expected 'guid' to be non-empty"
 
 
-def _assert_content_guid(content_guid: str):
-    assert isinstance(content_guid, str), "Expected 'content_guid' to be a string"
-    assert len(content_guid) > 0, "Expected 'content_guid' to be non-empty"
+# ContentItem Repository uses a PATCH method, not a PUT for updating.
+class _ContentItemRepositoryResource(_ResourceUpdatePatchMixin, _Resource): ...
 
 
-class ContentItemRepository(ApiDictEndpoint):
+class ContentItemRepository(Mapping[str, Any]):
     """
     Content items GitHub repository information.
 
@@ -58,65 +70,7 @@ class ContentItemRepository(ApiDictEndpoint):
     * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
     """
 
-    class _Attrs(TypedDict, total=False):
-        repository: str
-        """URL for the repository."""
-        branch: NotRequired[str]
-        """The tracked Git branch."""
-        directory: NotRequired[str]
-        """Directory containing the content."""
-        polling: NotRequired[bool]
-        """Indicates that the Git repository is regularly polled."""
-
-    def __init__(
-        self,
-        ctx: Context,
-        /,
-        *,
-        content_guid: str,
-        # By default, the `attrs` will be retrieved from the API if no `attrs` are supplied.
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> None:
-        """Content items GitHub repository information.
-
-        Parameters
-        ----------
-        ctx : Context
-            The context object containing the session and URL for API interactions.
-        content_guid : str
-            The unique identifier of the content item.
-        **attrs : ContentItemRepository._Attrs
-            Attributes for the content item repository. If not supplied, the attributes will be
-            retrieved from the API upon initialization
-        """
-        _assert_content_guid(content_guid)
-
-        path = self._api_path(content_guid)
-        # Only fetch data if `attrs` are not supplied
-        get_data = len(attrs) == 0
-        super().__init__(ctx, path, get_data, **{"content_guid": content_guid, **attrs})
-
-    @classmethod
-    def _api_path(cls, content_guid: str) -> str:
-        return f"v1/content/{content_guid}/repository"
-
-    @classmethod
-    def _create(
-        cls,
-        ctx: Context,
-        content_guid: str,
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> ContentItemRepository:
-        from ._api_call import put_api
-
-        result = put_api(ctx, cls._api_path(content_guid), json=cast(JsonifiableDict, attrs))
-
-        return ContentItemRepository(
-            ctx,
-            content_guid=content_guid,
-            **result,  # pyright: ignore[reportCallIssue]
-        )
-
+    @abstractmethod
     def destroy(self) -> None:
         """
         Delete the content's git repository location.
@@ -125,13 +79,17 @@ class ContentItemRepository(ApiDictEndpoint):
         --------
         * https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
         """
-        self._delete_api()
+        ...
 
+    @abstractmethod
     def update(
         self,
-        # *,
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> ContentItemRepository:
+        *,
+        repository: Optional[str] = None,
+        branch: str = "main",
+        directory: str = ".",
+        polling: bool = False,
+    ) -> None:
         """Update the content's repository.
 
         Parameters
@@ -153,12 +111,7 @@ class ContentItemRepository(ApiDictEndpoint):
         --------
         * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
         """
-        result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
-        return ContentItemRepository(
-            self._ctx,
-            content_guid=self["content_guid"],
-            **result,  # pyright: ignore[reportCallIssue]
-        )
+        ...
 
 
 class ContentItemOAuth(Resource):
@@ -265,14 +218,28 @@ class ContentItem(Active, VanityMixin, Resource):
     @property
     def repository(self) -> ContentItemRepository | None:
         try:
-            return ContentItemRepository(self._ctx, content_guid=self["guid"])
+            return _Resource(
+                self._ctx,
+                f"v1/content/{self['guid']}/repository",
+            )
         except ClientError:
             return None
 
+    @overload
     def create_repository(
         self,
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> ContentItemRepository:
+        /,
+        *,
+        repository: Optional[str] = None,
+        branch: str = "main",
+        directory: str = ".",
+        polling: bool = False,
+    ) -> ContentItemRepository: ...
+
+    @overload
+    def create_repository(self, /, **attributes) -> ContentItemRepository: ...
+
+    def create_repository(self, /, **attributes) -> ContentItemRepository:
         """Create repository.
 
         Parameters
@@ -290,7 +257,15 @@ class ContentItem(Active, VanityMixin, Resource):
         -------
         ContentItemRepository
         """
-        return ContentItemRepository._create(self._ctx, self["guid"], **attrs)
+        path = f"v1/content/{self['guid']}/repository"
+        response = self._ctx.session.put(path, json=attributes)
+        result = response.json()
+
+        return _ContentItemRepositoryResource(
+            self._ctx,
+            path,
+            **result,
+        )
 
     def delete(self) -> None:
         """Delete the content item."""
