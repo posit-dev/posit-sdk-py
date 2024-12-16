@@ -7,7 +7,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Iterable,
-    Protocol,
     Sequence,
 )
 

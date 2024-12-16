@@ -52,13 +52,16 @@ def _assert_guid(guid: str):
 
 # ContentItem Repository uses a PATCH method, not a PUT for updating.
 class _ContentItemRepository(_Resource):
-    def update(self, **attributes):  # type: ignore[reportIncompatibleMethodOverride]
+    def update(self, **attributes):
         response = self._ctx.client.patch(self._path, json=attributes)
         result = response.json()
-        super().update(**result)
+        # # Calling this method will call `_Resource.update` which will try to PUT to the path.
+        # super().update(**result)
+        # Instead, update the dict directly.
+        dict.update(self, **result)
 
 
-class ContentItemRepository(ResourceP):
+class ContentItemRepository(ResourceP, Protocol):
     """
     Content items GitHub repository information.
 
@@ -217,9 +220,13 @@ class ContentItem(Active, VanityMixin, Resource):
     @property
     def repository(self) -> ContentItemRepository | None:
         try:
+            path = f"v1/content/{self['guid']}/repository"
+            response = self._ctx.client.get(path)
+            result = response.json()
             return _ContentItemRepository(
                 self._ctx,
-                f"v1/content/{self['guid']}/repository",
+                path,
+                **result,
             )
         except ClientError:
             return None
