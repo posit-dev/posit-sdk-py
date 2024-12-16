@@ -7,7 +7,7 @@ from typing import overload
 from . import resources
 
 
-class Task(resources.Resource):
+class Task(resources.BaseResource):
     @property
     def is_finished(self) -> bool:
         """The task state.

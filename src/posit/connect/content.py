@@ -24,7 +24,7 @@ from .env import EnvVars
 from .errors import ClientError
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
-from .resources import Active, Resource, Resources, _ResourceSequence
+from .resources import Active, BaseResource, Resources, _ResourceSequence
 from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
@@ -160,7 +160,7 @@ class ContentItemRepository(ApiDictEndpoint):
         )
 
 
-class ContentItemOAuth(Resource):
+class ContentItemOAuth(BaseResource):
     def __init__(self, ctx: Context, content_guid: str) -> None:
         super().__init__(ctx)
         self["content_guid"] = content_guid
@@ -170,11 +170,11 @@ class ContentItemOAuth(Resource):
         return ContentItemAssociations(self._ctx, content_guid=self["content_guid"])
 
 
-class ContentItemOwner(Resource):
+class ContentItemOwner(BaseResource):
     pass
 
 
-class ContentItem(Active, VanityMixin, Resource):
+class ContentItem(Active, VanityMixin, BaseResource):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str
@@ -376,7 +376,7 @@ class ContentItem(Active, VanityMixin, Resource):
                 f"Restart not supported for this application mode: {self['app_mode']}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
-    def update(
+    def update(  # type: ignore[reportIncompatibleMethodOverride]
         self,
         **attrs: Unpack[ContentItem._Attrs],
     ) -> None:

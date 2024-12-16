@@ -3,13 +3,13 @@ from typing import Optional
 from unittest import mock
 from unittest.mock import Mock
 
-from posit.connect.resources import Resource
+from posit.connect.resources import BaseResource
 
 config = Mock()
 session = Mock()
 
 
-class FakeResource(Resource):
+class FakeResource(BaseResource):
     @property
     def foo(self) -> Optional[str]:
         return self.get("foo")
