@@ -16,7 +16,7 @@ from .resources import Resource, _Resource
 
 # ContentItem Repository uses a PATCH method, not a PUT for updating.
 class _ContentItemRepository(_Resource):
-    def update(self, **attributes):
+    def update(self, **attributes) -> None:
         response = self._ctx.client.patch(self._path, json=attributes)
         result = response.json()
 
