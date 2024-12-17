@@ -289,19 +289,16 @@ class TestTag:
         tag33 = client.tags.get("33")
 
         # invoke
-        updated_tag33_0 = tag33.update(name="academy-updated", parent_id=None)
-        updated_tag33_1 = tag33.update(name="academy-updated", parent=None)
+        tag33.update(name="academy-updated", parent_id=None)
+        tag33.update(name="academy-updated", parent=None)
 
         parent_tag = Tag(client._ctx, "/v1/tags/1", id="42", name="Parent")
-        updated_tag33_2 = tag33.update(name="academy-updated", parent=parent_tag)
-        updated_tag33_3 = tag33.update(name="academy-updated", parent_id=parent_tag["id"])
+        tag33.update(name="academy-updated", parent=parent_tag)
+        tag33.update(name="academy-updated", parent_id=parent_tag["id"])
 
         # assert
         assert mock_get_33_tag.call_count == 1
         assert mock_update_33_tag.call_count == 4
-
-        for tag in [updated_tag33_0, updated_tag33_1, updated_tag33_2, updated_tag33_3]:
-            assert isinstance(tag, Tag)
 
         # Asserting updated values are deferred to integration testing
         # to avoid agreening with the mocked data

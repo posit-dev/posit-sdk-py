@@ -228,7 +228,7 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
                 f"Restart not supported for this application mode: {self['app_mode']}. Did you need to use the 'render()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
             )
 
-    def update(  # type: ignore[reportIncompatibleMethodOverride]
+    def update(
         self,
         **attrs: Unpack[ContentItem._Attrs],
     ) -> None:
