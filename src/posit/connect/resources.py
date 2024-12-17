@@ -3,6 +3,7 @@ from __future__ import annotations
 import posixpath
 import warnings
 from abc import ABC
+from typing import ItemsView, cast
 
 from typing_extensions import (
     TYPE_CHECKING,
@@ -73,6 +74,8 @@ class Active(ABC, BaseResource):
 class Resource(Protocol):
     def __getitem__(self, key: Hashable) -> Any: ...
 
+    def items(self) -> ItemsView: ...
+
 
 class _Resource(dict, Resource):
     def __init__(self, ctx: Context, path: str, **attributes):
@@ -92,6 +95,10 @@ class _Resource(dict, Resource):
 T = TypeVar("T", bound=Resource)
 
 
+class ResourceFactory(Protocol):
+    def __call__(self, ctx: Context, path: str, **attributes) -> Resource: ...
+
+
 class ResourceSequence(Protocol[T]):
     @overload
     def __getitem__(self, index: SupportsIndex, /) -> T: ...
@@ -109,10 +116,17 @@ class ResourceSequence(Protocol[T]):
 
 
 class _ResourceSequence(Sequence[T], ResourceSequence[T]):
-    def __init__(self, ctx: Context, path: str, *, uid: str = "guid"):
+    def __init__(
+        self,
+        ctx: Context,
+        path: str,
+        factory: ResourceFactory = _Resource,
+        uid: str = "guid",
+    ):
         self._ctx = ctx
         self._path = path
         self._uid = uid
+        self._factory = factory
 
     def __getitem__(self, index):
         return list(self.fetch())[index]
@@ -129,32 +143,32 @@ class _ResourceSequence(Sequence[T], ResourceSequence[T]):
     def __repr__(self) -> str:
         return repr(self.fetch())
 
-    def create(self, **attributes: Any) -> Any:
+    def create(self, **attributes: Any) -> T:
         response = self._ctx.client.post(self._path, json=attributes)
         result = response.json()
         uid = result[self._uid]
         path = posixpath.join(self._path, uid)
-        return _Resource(self._ctx, path, **result)
+        return cast(T, self._factory(self._ctx, path, **result))
 
-    def fetch(self, **conditions) -> Iterable[Any]:
+    def fetch(self, **conditions) -> Iterable[T]:
         response = self._ctx.client.get(self._path, params=conditions)
         results = response.json()
-        resources = []
+        resources: List[T] = []
         for result in results:
             uid = result[self._uid]
             path = posixpath.join(self._path, uid)
-            resource = _Resource(self._ctx, path, **result)
+            resource = cast(T, self._factory(self._ctx, path, **result))
             resources.append(resource)
 
         return resources
 
-    def find(self, *args: str) -> Any:
+    def find(self, *args: str) -> T:
         path = posixpath.join(self._path, *args)
         response = self._ctx.client.get(path)
         result = response.json()
-        return _Resource(self._ctx, path, **result)
+        return cast(T, self._factory(self._ctx, path, **result))
 
-    def find_by(self, **conditions) -> Any | None:
+    def find_by(self, **conditions) -> T | None:
         """
         Find the first record matching the specified conditions.
 
@@ -169,12 +183,12 @@ class _ResourceSequence(Sequence[T], ResourceSequence[T]):
         Optional[T]
             The first record matching the conditions, or `None` if no match is found.
         """
-        collection = self.fetch(**conditions)
+        collection: Iterable[T] = self.fetch(**conditions)
         return next((v for v in collection if v.items() >= conditions.items()), None)
 
 
-class _PaginatedResourceSequence(_ResourceSequence):
-    def fetch(self, **conditions):
+class _PaginatedResourceSequence(_ResourceSequence[T]):
+    def fetch(self, **conditions) -> Iterator[T]:
         paginator = Paginator(self._ctx, self._path, dict(**conditions))
         for page in paginator.fetch_pages():
             resources = []
@@ -182,6 +196,6 @@ class _PaginatedResourceSequence(_ResourceSequence):
             for result in results:
                 uid = result[self._uid]
                 path = posixpath.join(self._path, uid)
-                resource = _Resource(self._ctx, path, **result)
+                resource = cast(T, self._factory(self._ctx, path, **result))
                 resources.append(resource)
             yield from resources

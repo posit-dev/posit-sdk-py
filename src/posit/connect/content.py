@@ -19,8 +19,6 @@ from typing_extensions import (
     overload,
 )
 
-from posit.connect.jobs import _Jobs, Job
-
 from . import tasks
 from ._api import ApiDictEndpoint, JsonifiableDict
 from .bundles import Bundles
@@ -516,7 +514,7 @@ class ContentItem(Active, VanityMixin, BaseResource):
     @property
     def jobs(self) -> Jobs:
         path = posixpath.join(self._path, "jobs")
-        return _Jobs(self._ctx, path, uid="key")
+        return _ResourceSequence(self._ctx, path, uid="key")
 
     @property
     @requires(version="2024.11.0")

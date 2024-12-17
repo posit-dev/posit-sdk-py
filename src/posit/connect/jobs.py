@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any, List
-
 from typing_extensions import (
     Iterable,
     Literal,
@@ -9,7 +7,7 @@ from typing_extensions import (
     runtime_checkable,
 )
 
-from .resources import Resource, ResourceSequence, _Resource, _ResourceSequence
+from .resources import Resource, ResourceSequence
 
 JobTag = Literal[
     "unknown",
@@ -54,11 +52,6 @@ class Job(Resource, Protocol):
         ----
         This action requires administrator, owner, or collaborator privileges.
         """
-
-
-class _Job(_Resource):
-    def wait_for(self) -> None:
-        pass
 
 
 @runtime_checkable
@@ -173,9 +166,3 @@ class Jobs(ResourceSequence[Job], Protocol):
         This action requires administrator, owner, or collaborator privileges.
         """
         ...
-
-
-class _Jobs(_ResourceSequence[Job]):
-    def fetch(self, **conditions) -> Iterable[Any]:
-        resources = super().fetch(**conditions)
-        return [_Job(**resource) for resource in resources]
