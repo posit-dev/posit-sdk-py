@@ -9,6 +9,7 @@ from typing_extensions import (
     runtime_checkable,
 )
 
+from ._utils import update_dict_values
 from .errors import ClientError
 from .resources import Resource, _Resource
 
@@ -18,10 +19,8 @@ class _ContentItemRepository(_Resource):
     def update(self, **attributes):
         response = self._ctx.client.patch(self._path, json=attributes)
         result = response.json()
-        # # Calling this method will call `_Resource.update` which will try to PUT to the path.
-        # super().update(**result)
-        # Instead, update the dict directly.
-        dict.update(self, **result)
+
+        update_dict_values(self, **result)
 
 
 @runtime_checkable
