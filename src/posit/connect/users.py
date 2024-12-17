@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal
-
-from typing_extensions import NotRequired, Required, TypedDict, Unpack
+from typing_extensions import (
+    TYPE_CHECKING,
+    List,
+    Literal,
+    NotRequired,
+    Required,
+    TypedDict,
+    Unpack,
+)
 
 from . import me
 from .content import Content

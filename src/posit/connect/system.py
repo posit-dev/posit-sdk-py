@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, overload
-
-from typing_extensions import TypedDict, Unpack
+from typing_extensions import TYPE_CHECKING, List, Literal, TypedDict, Unpack, overload
 
 from .context import ContextManager
 from .resources import Active

@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING
-
 import pytest
 import responses
 from requests.exceptions import HTTPError
+from typing_extensions import TYPE_CHECKING
 
 from posit.connect.client import Client
 

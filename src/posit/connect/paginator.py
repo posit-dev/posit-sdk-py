@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generator, List
+
+from typing_extensions import TYPE_CHECKING, Generator, List
 
 if TYPE_CHECKING:
     from .context import Context

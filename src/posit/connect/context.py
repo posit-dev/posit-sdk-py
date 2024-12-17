@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import functools
 import weakref
-from typing import TYPE_CHECKING, Protocol
 
 from packaging.version import Version
+from typing_extensions import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from .client import Client

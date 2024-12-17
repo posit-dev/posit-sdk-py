@@ -1,5 +1,6 @@
 import json
-from typing import Any
+
+from typing_extensions import Any
 
 
 class ClientError(Exception):

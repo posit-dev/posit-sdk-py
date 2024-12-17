@@ -1,6 +1,6 @@
 """OAuth session resources."""
 
-from typing import List, Optional, overload
+from typing_extensions import List, Optional, overload
 
 from ..resources import BaseResource, Resources
 

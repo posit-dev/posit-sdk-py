@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
-
 from requests import Response, Session
+from typing_extensions import TYPE_CHECKING, overload
 
 from . import hooks, me
 from .auth import Auth

@@ -1,7 +1,8 @@
 """Client configuration."""
 
 import os
-from typing import Optional
+
+from typing_extensions import Optional
 
 from . import urls
 

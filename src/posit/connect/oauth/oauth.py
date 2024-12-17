@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Optional
 
-from typing_extensions import TypedDict
+from typing_extensions import TYPE_CHECKING, Optional, TypedDict
 
 from ..resources import Resources
 from .integrations import Integrations

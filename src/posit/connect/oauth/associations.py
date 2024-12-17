@@ -1,6 +1,6 @@
 """OAuth association resources."""
 
-from typing import List
+from typing_extensions import List
 
 from ..context import Context
 from ..resources import BaseResource, Resources

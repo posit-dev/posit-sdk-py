@@ -3,7 +3,8 @@ from __future__ import annotations
 import posixpath
 import warnings
 from abc import ABC
-from typing import (
+
+from typing_extensions import (
     TYPE_CHECKING,
     Any,
     Hashable,
