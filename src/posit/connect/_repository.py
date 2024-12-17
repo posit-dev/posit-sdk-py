@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
-
 from typing_extensions import (
     Any,
     Hashable,
@@ -43,7 +41,6 @@ class ContentItemRepository(ResourceP, Protocol):
     * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
     """
 
-    @abstractmethod
     def destroy(self) -> None:
         """
         Delete the content's git repository location.
@@ -54,7 +51,6 @@ class ContentItemRepository(ResourceP, Protocol):
         """
         ...
 
-    @abstractmethod
     def update(
         self,
         *,
