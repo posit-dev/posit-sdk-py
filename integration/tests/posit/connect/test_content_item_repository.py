@@ -4,7 +4,6 @@ from packaging import version
 from posit import connect
 from posit.connect._repository import ContentItemRepository
 from posit.connect.content import ContentItem
-from posit.connect.resources import _Resource
 
 from . import CONNECT_VERSION
 
@@ -67,7 +66,7 @@ class TestContentItemRepository:
         assert content_repo is not None
 
         def assert_repo(r: ContentItemRepository):
-            assert isinstance(content_repo, _Resource)
+            assert isinstance(content_repo, ContentItemRepository)
             assert r["repository"] == self.repo_repository
             assert r["branch"] == self.repo_branch
             assert r["directory"] == self.repo_directory

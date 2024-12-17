@@ -8,6 +8,7 @@ from typing_extensions import (
     Optional,
     Protocol,
     overload,
+    runtime_checkable,
 )
 
 from .errors import ClientError
@@ -30,6 +31,7 @@ class _ContentItemRepository(_Resource):
         dict.update(self, **result)
 
 
+@runtime_checkable
 class ContentItemRepository(ResourceP, Protocol):
     """
     Content items GitHub repository information.
