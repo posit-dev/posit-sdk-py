@@ -2,8 +2,8 @@ import pytest
 from packaging import version
 
 from posit import connect
-from posit.connect._repository import ContentItemRepository
 from posit.connect.content import ContentItem
+from posit.connect.repository import ContentItemRepository
 
 from . import CONNECT_VERSION
 

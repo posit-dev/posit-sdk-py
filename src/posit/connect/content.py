@@ -19,12 +19,12 @@ from typing_extensions import (
 )
 
 from . import tasks
-from ._repository import ContentItemRepositoryMixin
 from .bundles import Bundles
 from .context import requires
 from .env import EnvVars
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
+from .repository import ContentItemRepositoryMixin
 from .resources import Active, Resource, Resources, _ResourceSequence
 from .tags import ContentItemTags
 from .vanities import VanityMixin
