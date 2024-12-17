@@ -3,7 +3,7 @@ from __future__ import annotations
 import posixpath
 import warnings
 from abc import ABC
-from typing import ItemsView
+from typing import ItemsView, cast
 
 from typing_extensions import (
     TYPE_CHECKING,
@@ -92,8 +92,8 @@ class _Resource(dict, Resource):
         super().update(**result)
 
 
-_T = TypeVar("_T", bound=_Resource)
-_T_co = TypeVar("_T_co", bound=_Resource, covariant=True)
+_T = TypeVar("_T", bound=Resource)
+_T_co = TypeVar("_T_co", bound=Resource, covariant=True)
 
 
 class ResourceFactory(Protocol[_T_co]):
@@ -121,13 +121,13 @@ class _ResourceSequence(Sequence[_T], ResourceSequence[_T]):
         self,
         ctx: Context,
         path: str,
-        factory: ResourceFactory[_T] = _Resource,
+        factory: ResourceFactory[_T_co] = _Resource,
         uid: str = "guid",
     ):
         self._ctx = ctx
         self._path = path
-        self._factory = factory
         self._uid = uid
+        self._factory = factory
 
     def __getitem__(self, index):
         return list(self.fetch())[index]
@@ -150,6 +150,7 @@ class _ResourceSequence(Sequence[_T], ResourceSequence[_T]):
         uid = result[self._uid]
         path = posixpath.join(self._path, uid)
         resource = self._factory(self._ctx, path, **result)
+        resource = cast(_T, resource)
         return resource
 
     def fetch(self, **conditions: Any) -> Iterable[_T]:
@@ -160,6 +161,7 @@ class _ResourceSequence(Sequence[_T], ResourceSequence[_T]):
             uid = result[self._uid]
             path = posixpath.join(self._path, uid)
             resource = self._factory(self._ctx, path, **result)
+            resource = cast(_T, resource)
             resources.append(resource)
 
         return resources
@@ -169,6 +171,7 @@ class _ResourceSequence(Sequence[_T], ResourceSequence[_T]):
         response = self._ctx.client.get(path)
         result = response.json()
         resource = self._factory(self._ctx, path, **result)
+        resource = cast(_T, resource)
         return resource
 
     def find_by(self, **conditions: Any) -> _T | None:
@@ -200,6 +203,6 @@ class _PaginatedResourceSequence(_ResourceSequence[_T]):
                 uid = result[self._uid]
                 path = posixpath.join(self._path, uid)
                 resource = self._factory(self._ctx, path, **result)
-
+                resource = cast(_T, resource)
                 resources.append(resource)
             yield from resources
