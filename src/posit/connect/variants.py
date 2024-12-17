@@ -1,11 +1,11 @@
 from typing import List
 
 from .context import Context
-from .resources import Resource, Resources
+from .resources import BaseResource, Resources
 from .tasks import Task
 
 
-class Variant(Resource):
+class Variant(BaseResource):
     def render(self) -> Task:
         path = f"variants/{self['id']}/render"
         response = self._ctx.client.post(path)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional, overload
 
 from .paginator import Paginator
-from .resources import Resource, Resources
+from .resources import BaseResource, Resources
 
 if TYPE_CHECKING:
     import requests
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .users import User
 
 
-class Group(Resource):
+class Group(BaseResource):
     def __init__(self, ctx: Context, **kwargs) -> None:
         super().__init__(ctx, **kwargs)
         self._ctx: Context = ctx

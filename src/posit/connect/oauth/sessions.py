@@ -2,10 +2,10 @@
 
 from typing import List, Optional, overload
 
-from ..resources import Resource, Resources
+from ..resources import BaseResource, Resources
 
 
-class Session(Resource):
+class Session(BaseResource):
     """OAuth session resource."""
 
     def delete(self) -> None:

@@ -4,10 +4,10 @@ from typing_extensions import NotRequired, Required, TypedDict, Unpack
 
 from .context import Context
 from .errors import ClientError
-from .resources import Resource, Resources
+from .resources import BaseResource, Resources
 
 
-class Vanity(Resource):
+class Vanity(BaseResource):
     """A vanity resource.
 
     Vanities maintain custom URL paths assigned to content.
@@ -115,7 +115,7 @@ class Vanities(Resources):
         return [Vanity(self._ctx, **result) for result in results]
 
 
-class VanityMixin(Resource):
+class VanityMixin(BaseResource):
     """Mixin class to add a vanity attribute to a resource."""
 
     class HasGuid(TypedDict):

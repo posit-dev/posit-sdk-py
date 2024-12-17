@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List, Optional, overload
 
 from requests.sessions import Session as Session
 
-from .resources import Resource, Resources
+from .resources import BaseResource, Resources
 
 if TYPE_CHECKING:
     from .context import Context
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .users import User
 
 
-class Permission(Resource):
+class Permission(BaseResource):
     def destroy(self) -> None:
         """Destroy the permission."""
         path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"

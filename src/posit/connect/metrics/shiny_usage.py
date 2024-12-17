@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import List, overload
 
 from ..cursors import CursorPaginator
-from ..resources import Resource, Resources
+from ..resources import BaseResource, Resources
 
 
-class ShinyUsageEvent(Resource):
+class ShinyUsageEvent(BaseResource):
     @property
     def content_guid(self) -> str:
         """The associated unique content identifier.

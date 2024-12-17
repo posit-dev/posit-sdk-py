@@ -11,11 +11,11 @@ if TYPE_CHECKING:
     from .context import Context
 
 
-class BundleMetadata(resources.Resource):
+class BundleMetadata(resources.BaseResource):
     pass
 
 
-class Bundle(resources.Resource):
+class Bundle(resources.BaseResource):
     @property
     def metadata(self) -> BundleMetadata:
         return BundleMetadata(self._ctx, **self.get("metadata", {}))

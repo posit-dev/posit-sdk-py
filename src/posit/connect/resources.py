@@ -6,8 +6,15 @@ from abc import ABC
 from typing import (
     TYPE_CHECKING,
     Any,
+    Hashable,
     Iterable,
+    Iterator,
+    List,
+    Protocol,
     Sequence,
+    SupportsIndex,
+    TypeVar,
+    overload,
 )
 
 from .context import Context
@@ -17,7 +24,7 @@ if TYPE_CHECKING:
     from .context import Context
 
 
-class Resource(dict):
+class BaseResource(dict):
     def __init__(self, ctx: Context, /, **kwargs):
         super().__init__(**kwargs)
         self._ctx = ctx
@@ -42,7 +49,7 @@ class Resources:
         self._ctx = ctx
 
 
-class Active(ABC, Resource):
+class Active(ABC, BaseResource):
     def __init__(self, ctx: Context, path: str, /, **attributes):
         """A dict abstraction for any HTTP endpoint that returns a singular resource.
 
@@ -62,8 +69,12 @@ class Active(ABC, Resource):
         self._path = path
 
 
-class _Resource(dict):
-    def __init__(self, ctx: Context, path: str, /, **attributes):
+class Resource(Protocol):
+    def __getitem__(self, key: Hashable, /) -> Any: ...
+
+
+class _Resource(dict, Resource):
+    def __init__(self, ctx: Context, path: str, **attributes):
         self._ctx = ctx
         self._path = path
         super().__init__(**attributes)
@@ -77,7 +88,26 @@ class _Resource(dict):
         super().update(**result)
 
 
-class _ResourceSequence(Sequence):
+T = TypeVar("T", bound=Resource)
+
+
+class ResourceSequence(Protocol[T]):
+    @overload
+    def __getitem__(self, index: SupportsIndex, /) -> T: ...
+
+    @overload
+    def __getitem__(self, index: slice, /) -> List[T]: ...
+
+    def __len__(self) -> int: ...
+
+    def __iter__(self) -> Iterator[T]: ...
+
+    def __str__(self) -> str: ...
+
+    def __repr__(self) -> str: ...
+
+
+class _ResourceSequence(Sequence[T], ResourceSequence[T]):
     def __init__(self, ctx: Context, path: str, *, uid: str = "guid"):
         self._ctx = ctx
         self._path = path
@@ -89,7 +119,7 @@ class _ResourceSequence(Sequence):
     def __len__(self) -> int:
         return len(list(self.fetch()))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[T]:
         return iter(self.fetch())
 
     def __str__(self) -> str:

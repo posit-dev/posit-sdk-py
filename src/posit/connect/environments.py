@@ -1,18 +1,16 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Mapping, Sized
+from typing import Protocol
 
 from typing_extensions import (
-    Any,
     List,
     Literal,
-    Protocol,
-    SupportsIndex,
     TypedDict,
-    overload,
     runtime_checkable,
 )
+
+from .resources import Resource, ResourceSequence
 
 MatchingType = Literal["any", "exact", "none"]
 """Directions for how environments are considered for selection.
@@ -40,7 +38,7 @@ class Installations(TypedDict):
     """Interpreter installations in an execution environment."""
 
 
-class Environment(Mapping[str, Any]):
+class Environment(Resource):
     @abstractmethod
     def destroy(self) -> None:
         """Destroy the environment.
@@ -95,13 +93,7 @@ class Environment(Mapping[str, Any]):
 
 
 @runtime_checkable
-class Environments(Sized, Protocol):
-    @overload
-    def __getitem__(self, index: SupportsIndex) -> Environment: ...
-
-    @overload
-    def __getitem__(self, index: slice) -> List[Environment]: ...
-
+class Environments(ResourceSequence[Environment], Protocol):
     def create(
         self,
         *,
@@ -217,4 +209,3 @@ class Environments(Sized, Protocol):
         ----
         This action requires administrator or publisher privileges.
         """
-        ...
