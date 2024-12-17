@@ -78,9 +78,9 @@ class ContentItemRepository(Resource, Protocol):
         ...
 
 
-class ContentItemRepositoryMixin(Resource):
+class ContentItemRepositoryMixin:
     @property
-    def repository(self) -> ContentItemRepository | None:
+    def repository(self: Resource) -> ContentItemRepository | None:
         try:
             path = f"v1/content/{self['guid']}/repository"
             response = self._ctx.client.get(path)
@@ -95,7 +95,7 @@ class ContentItemRepositoryMixin(Resource):
 
     @overload
     def create_repository(
-        self,
+        self: Resource,
         /,
         *,
         repository: Optional[str] = None,
@@ -105,9 +105,9 @@ class ContentItemRepositoryMixin(Resource):
     ) -> ContentItemRepository: ...
 
     @overload
-    def create_repository(self, /, **attributes) -> ContentItemRepository: ...
+    def create_repository(self: Resource, /, **attributes) -> ContentItemRepository: ...
 
-    def create_repository(self, /, **attributes) -> ContentItemRepository:
+    def create_repository(self: Resource, /, **attributes) -> ContentItemRepository:
         """Create repository.
 
         Parameters
