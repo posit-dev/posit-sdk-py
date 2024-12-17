@@ -70,6 +70,9 @@ class Active(ABC, BaseResource):
 
 
 class Resource(Protocol):
+    _ctx: Context
+    _path: str
+
     def __getitem__(self, key: Hashable, /) -> Any: ...
 
 

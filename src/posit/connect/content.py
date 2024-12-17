@@ -4,26 +4,27 @@ from __future__ import annotations
 
 import posixpath
 import time
-from typing import (
+
+from typing_extensions import (
     TYPE_CHECKING,
     Any,
     List,
     Literal,
+    NotRequired,
     Optional,
-    cast,
+    Required,
+    TypedDict,
+    Unpack,
     overload,
 )
 
-from typing_extensions import NotRequired, Required, TypedDict, Unpack
-
 from . import tasks
-from ._api import ApiDictEndpoint, JsonifiableDict
 from .bundles import Bundles
 from .context import requires
 from .env import EnvVars
-from .errors import ClientError
 from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
+from .repository import ContentItemRepositoryMixin
 from .resources import Active, BaseResource, Resources, _ResourceSequence
 from .tags import ContentItemTags
 from .vanities import VanityMixin
@@ -41,125 +42,6 @@ def _assert_guid(guid: str):
     assert len(guid) > 0, "Expected 'guid' to be non-empty"
 
 
-def _assert_content_guid(content_guid: str):
-    assert isinstance(content_guid, str), "Expected 'content_guid' to be a string"
-    assert len(content_guid) > 0, "Expected 'content_guid' to be non-empty"
-
-
-class ContentItemRepository(ApiDictEndpoint):
-    """
-    Content items GitHub repository information.
-
-    See Also
-    --------
-    * Get info: https://docs.posit.co/connect/api/#get-/v1/content/-guid-/repository
-    * Delete info: https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
-    * Update info: https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
-    """
-
-    class _Attrs(TypedDict, total=False):
-        repository: str
-        """URL for the repository."""
-        branch: NotRequired[str]
-        """The tracked Git branch."""
-        directory: NotRequired[str]
-        """Directory containing the content."""
-        polling: NotRequired[bool]
-        """Indicates that the Git repository is regularly polled."""
-
-    def __init__(
-        self,
-        ctx: Context,
-        /,
-        *,
-        content_guid: str,
-        # By default, the `attrs` will be retrieved from the API if no `attrs` are supplied.
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> None:
-        """Content items GitHub repository information.
-
-        Parameters
-        ----------
-        ctx : Context
-            The context object containing the session and URL for API interactions.
-        content_guid : str
-            The unique identifier of the content item.
-        **attrs : ContentItemRepository._Attrs
-            Attributes for the content item repository. If not supplied, the attributes will be
-            retrieved from the API upon initialization
-        """
-        _assert_content_guid(content_guid)
-
-        path = self._api_path(content_guid)
-        # Only fetch data if `attrs` are not supplied
-        get_data = len(attrs) == 0
-        super().__init__(ctx, path, get_data, **{"content_guid": content_guid, **attrs})
-
-    @classmethod
-    def _api_path(cls, content_guid: str) -> str:
-        return f"v1/content/{content_guid}/repository"
-
-    @classmethod
-    def _create(
-        cls,
-        ctx: Context,
-        content_guid: str,
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> ContentItemRepository:
-        from ._api_call import put_api
-
-        result = put_api(ctx, cls._api_path(content_guid), json=cast(JsonifiableDict, attrs))
-
-        return ContentItemRepository(
-            ctx,
-            content_guid=content_guid,
-            **result,  # pyright: ignore[reportCallIssue]
-        )
-
-    def destroy(self) -> None:
-        """
-        Delete the content's git repository location.
-
-        See Also
-        --------
-        * https://docs.posit.co/connect/api/#delete-/v1/content/-guid-/repository
-        """
-        self._delete_api()
-
-    def update(
-        self,
-        # *,
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> ContentItemRepository:
-        """Update the content's repository.
-
-        Parameters
-        ----------
-        repository: str, optional
-            URL for the repository. Default is None.
-        branch: str, optional
-            The tracked Git branch. Default is 'main'.
-        directory: str, optional
-            Directory containing the content. Default is '.'
-        polling: bool, optional
-            Indicates that the Git repository is regularly polled. Default is False.
-
-        Returns
-        -------
-        None
-
-        See Also
-        --------
-        * https://docs.posit.co/connect/api/#patch-/v1/content/-guid-/repository
-        """
-        result = self._patch_api(json=cast(JsonifiableDict, dict(attrs)))
-        return ContentItemRepository(
-            self._ctx,
-            content_guid=self["content_guid"],
-            **result,  # pyright: ignore[reportCallIssue]
-        )
-
-
 class ContentItemOAuth(BaseResource):
     def __init__(self, ctx: Context, content_guid: str) -> None:
         super().__init__(ctx)
@@ -174,7 +56,7 @@ class ContentItemOwner(BaseResource):
     pass
 
 
-class ContentItem(Active, VanityMixin, BaseResource):
+class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource):
     class _AttrsBase(TypedDict, total=False):
         # # `name` will be set by other _Attrs classes
         # name: str
@@ -260,36 +142,6 @@ class ContentItem(Active, VanityMixin, BaseResource):
     @property
     def oauth(self) -> ContentItemOAuth:
         return ContentItemOAuth(self._ctx, content_guid=self["guid"])
-
-    @property
-    def repository(self) -> ContentItemRepository | None:
-        try:
-            return ContentItemRepository(self._ctx, content_guid=self["guid"])
-        except ClientError:
-            return None
-
-    def create_repository(
-        self,
-        **attrs: Unpack[ContentItemRepository._Attrs],
-    ) -> ContentItemRepository:
-        """Create repository.
-
-        Parameters
-        ----------
-        repository : str
-            URL for the respository.
-        branch : str, optional
-            The tracked Git branch. Default is 'main'.
-        directory : str, optional
-            Directory containing the content. Default is '.'.
-        polling : bool, optional
-            Indicates that the Git repository is regularly polled. Default is False.
-
-        Returns
-        -------
-        ContentItemRepository
-        """
-        return ContentItemRepository._create(self._ctx, self["guid"], **attrs)
 
     def delete(self) -> None:
         """Delete the content item."""

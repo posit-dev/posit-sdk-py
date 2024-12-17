@@ -20,7 +20,7 @@ def load_mock(path: str):
 
     Returns
     -------
-    Jsonifiable
+    dict | list
         The parsed data from the JSONC file.
 
     Examples
