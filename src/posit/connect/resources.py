@@ -3,7 +3,7 @@ from __future__ import annotations
 import posixpath
 import warnings
 from abc import ABC
-from typing import ItemsView, Type, cast
+from typing import ItemsView
 
 from typing_extensions import (
     TYPE_CHECKING,
@@ -92,8 +92,8 @@ class _Resource(dict, Resource):
         super().update(**result)
 
 
-_T = TypeVar("_T", bound=Resource)
-_T_co = TypeVar("_T_co", bound=Resource, covariant=True)
+_T = TypeVar("_T", bound=_Resource)
+_T_co = TypeVar("_T_co", bound=_Resource, covariant=True)
 
 
 class ResourceFactory(Protocol[_T_co]):
@@ -121,13 +121,13 @@ class _ResourceSequence(Sequence[_T], ResourceSequence[_T]):
         self,
         ctx: Context,
         path: str,
-        factory: ResourceFactory[_T] | None = None,
+        factory: ResourceFactory[_T] = _Resource,
         uid: str = "guid",
     ):
         self._ctx = ctx
         self._path = path
+        self._factory = factory
         self._uid = uid
-        self._factory = factory or cast(ResourceFactory[_T], _Resource)
 
     def __getitem__(self, index):
         return list(self.fetch())[index]
