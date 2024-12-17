@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any, List
+
 from typing_extensions import (
     Iterable,
     Literal,
@@ -7,7 +9,7 @@ from typing_extensions import (
     runtime_checkable,
 )
 
-from .resources import Resource, ResourceSequence
+from .resources import Resource, ResourceSequence, _Resource, _ResourceSequence
 
 JobTag = Literal[
     "unknown",
@@ -39,6 +41,7 @@ JobTag = Literal[
 StatusCode = Literal[0, 1, 2]
 
 
+@runtime_checkable
 class Job(Resource, Protocol):
     def destroy(self) -> None:
         """Destroy the job.
@@ -51,6 +54,11 @@ class Job(Resource, Protocol):
         ----
         This action requires administrator, owner, or collaborator privileges.
         """
+
+
+class _Job(_Resource):
+    def wait_for(self) -> None:
+        pass
 
 
 @runtime_checkable
@@ -165,3 +173,9 @@ class Jobs(ResourceSequence[Job], Protocol):
         This action requires administrator, owner, or collaborator privileges.
         """
         ...
+
+
+class _Jobs(_ResourceSequence[Job]):
+    def fetch(self, **conditions) -> Iterable[Any]:
+        resources = super().fetch(**conditions)
+        return [_Job(**resource) for resource in resources]
