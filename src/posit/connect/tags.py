@@ -167,7 +167,7 @@ class Tag(Active):
     @overload
     def update(self, /, *, name: str = ..., parent_id: str | None = ...) -> None: ...
 
-    def update(  # pyright: ignore[reportIncompatibleMethodOverride] ; This method returns `Tag`. Parent method returns `None`
+    def update(
         self,
         **kwargs,
     ) -> None:

@@ -85,7 +85,7 @@ class _Resource(dict, Resource):
     def destroy(self) -> None:
         self._ctx.client.delete(self._path)
 
-    def update(self, **attributes):  # type: ignore[reportIncompatibleMethodOverride]
+    def update(self, **attributes):  # pyright: ignore[reportIncompatibleMethodOverride]
         response = self._ctx.client.put(self._path, json=attributes)
         result = response.json()
         super().update(**result)
