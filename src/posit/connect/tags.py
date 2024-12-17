@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Optional, overload
 
 from typing_extensions import NotRequired, TypedDict, Unpack
 
+from ._utils import update_dict_values
 from .context import Context, ContextManager
 from .resources import Active
 
@@ -162,14 +163,14 @@ class Tag(Active):
 
     # Allow for every combination of `name` and (`parent` or `parent_id`)
     @overload
-    def update(self, /, *, name: str = ..., parent: Tag | None = ...) -> Tag: ...
+    def update(self, /, *, name: str = ..., parent: Tag | None = ...) -> None: ...
     @overload
-    def update(self, /, *, name: str = ..., parent_id: str | None = ...) -> Tag: ...
+    def update(self, /, *, name: str = ..., parent_id: str | None = ...) -> None: ...
 
     def update(  # pyright: ignore[reportIncompatibleMethodOverride] ; This method returns `Tag`. Parent method returns `None`
         self,
         **kwargs,
-    ) -> Tag:
+    ) -> None:
         """
         Update the tag.
 
@@ -214,7 +215,7 @@ class Tag(Active):
         updated_kwargs = _update_parent_kwargs(kwargs)
         response = self._ctx.client.patch(self._path, json=updated_kwargs)
         result = response.json()
-        return Tag(self._ctx, self._path, **result)
+        update_dict_values(self, **result)
 
 
 class TagContentItems(ContextManager):

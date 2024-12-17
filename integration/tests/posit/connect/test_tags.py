@@ -151,12 +151,12 @@ class TestTags:
         }
 
         # Update tag
-        tagDName = tagD.update(name="tagD_updated")
-        assert tagDName["name"] == "tagD_updated"
+        tagD.update(name="tagD_updated")
+        assert tagD["name"] == "tagD_updated"
         assert self.client.tags.get(tagD["id"])["name"] == "tagD_updated"
 
-        tagDParent = tagDName.update(parent=tagB)
-        assert tagDParent["parent_id"] == tagB["id"]
+        tagD.update(parent=tagB)
+        assert tagD["parent_id"] == tagB["id"]
         assert self.client.tags.get(tagD["id"])["parent_id"] == tagB["id"]
 
         # Cleanup
