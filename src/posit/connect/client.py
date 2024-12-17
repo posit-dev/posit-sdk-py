@@ -5,6 +5,9 @@ from __future__ import annotations
 from requests import Response, Session
 from typing_extensions import TYPE_CHECKING, overload
 
+from posit.connect.environments import Environment
+from posit.connect.packages import Package
+
 from . import hooks, me
 from .auth import Auth
 from .config import Config
@@ -298,7 +301,7 @@ class Client(ContextManager):
     @property
     @requires(version="2024.11.0")
     def packages(self) -> Packages:
-        return _PaginatedResourceSequence(self._ctx, "v1/packages", uid="name")
+        return _PaginatedResourceSequence[Package](self._ctx, "v1/packages", uid="name")
 
     @property
     def vanities(self) -> Vanities:
@@ -311,7 +314,7 @@ class Client(ContextManager):
     @property
     @requires(version="2023.05.0")
     def environments(self) -> Environments:
-        return _ResourceSequence(self._ctx, "v1/environments")
+        return _ResourceSequence[Environment](self._ctx, "v1/environments")
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""

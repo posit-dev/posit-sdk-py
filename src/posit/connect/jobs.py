@@ -39,6 +39,7 @@ JobTag = Literal[
 StatusCode = Literal[0, 1, 2]
 
 
+@runtime_checkable
 class Job(Resource, Protocol):
     def destroy(self) -> None:
         """Destroy the job.
