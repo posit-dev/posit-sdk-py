@@ -9,14 +9,14 @@ from typing_extensions import NotRequired, Required, TypedDict, Unpack
 from . import me
 from .content import Content
 from .paginator import Paginator
-from .resources import Resource, Resources
+from .resources import BaseResource, Resources
 
 if TYPE_CHECKING:
     from .context import Context
     from .groups import Group
 
 
-class User(Resource):
+class User(BaseResource):
     @property
     def content(self) -> Content:
         return Content(self._ctx, owner_guid=self["guid"])

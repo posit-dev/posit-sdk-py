@@ -10,7 +10,7 @@ from .. import resources
 from . import shiny_usage, visits
 
 
-class UsageEvent(resources.Resource):
+class UsageEvent(resources.BaseResource):
     @staticmethod
     def from_event(
         event: visits.VisitEvent | shiny_usage.ShinyUsageEvent,

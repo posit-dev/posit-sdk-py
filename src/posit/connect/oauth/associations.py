@@ -3,10 +3,10 @@
 from typing import List
 
 from ..context import Context
-from ..resources import Resource, Resources
+from ..resources import BaseResource, Resources
 
 
-class Association(Resource):
+class Association(BaseResource):
     pass
 
 

@@ -1,28 +1,19 @@
 from __future__ import annotations
 
 from typing_extensions import (
-    Any,
     Iterable,
     Literal,
-    Mapping,
     Protocol,
-    Sized,
-    SupportsIndex,
-    overload,
 )
 
+from .resources import Resource, ResourceSequence
 
-class ContentPackage(Mapping[str, Any]):
+
+class ContentPackage(Resource, Protocol):
     pass
 
 
-class ContentPackages(Sized, Protocol):
-    @overload
-    def __getitem__(self, index: SupportsIndex) -> ContentPackage: ...
-
-    @overload
-    def __getitem__(self, index: slice) -> ContentPackage: ...
-
+class ContentPackages(ResourceSequence[ContentPackage], Protocol):
     def fetch(
         self,
         *,
@@ -84,17 +75,11 @@ class ContentPackages(Sized, Protocol):
         ...
 
 
-class Package(Mapping[str, Any]):
+class Package(Resource, Protocol):
     pass
 
 
-class Packages(Sized, Protocol):
-    @overload
-    def __getitem__(self, index: SupportsIndex) -> ContentPackage: ...
-
-    @overload
-    def __getitem__(self, index: slice) -> ContentPackage: ...
-
+class Packages(ResourceSequence[Package], Protocol):
     def fetch(
         self,
         *,

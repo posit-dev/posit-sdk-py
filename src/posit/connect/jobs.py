@@ -1,17 +1,13 @@
 from __future__ import annotations
 
-from abc import abstractmethod
-from collections.abc import Mapping, Sized
 from typing import (
-    Any,
     Iterable,
-    List,
     Literal,
     Protocol,
-    SupportsIndex,
-    overload,
     runtime_checkable,
 )
+
+from .resources import Resource, ResourceSequence
 
 JobTag = Literal[
     "unknown",
@@ -43,8 +39,7 @@ JobTag = Literal[
 StatusCode = Literal[0, 1, 2]
 
 
-class Job(Mapping[str, Any]):
-    @abstractmethod
+class Job(Resource, Protocol):
     def destroy(self) -> None:
         """Destroy the job.
 
@@ -59,13 +54,7 @@ class Job(Mapping[str, Any]):
 
 
 @runtime_checkable
-class Jobs(Sized, Protocol):
-    @overload
-    def __getitem__(self, index: SupportsIndex) -> Job: ...
-
-    @overload
-    def __getitem__(self, index: slice) -> List[Job]: ...
-
+class Jobs(ResourceSequence[Job], Protocol):
     def fetch(self) -> Iterable[Job]:
         """Fetch all jobs.
 
