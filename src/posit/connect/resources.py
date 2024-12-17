@@ -3,12 +3,12 @@ from __future__ import annotations
 import posixpath
 import warnings
 from abc import ABC
-from typing import ItemsView, cast
 
 from typing_extensions import (
     TYPE_CHECKING,
     Any,
     Hashable,
+    ItemsView,
     Iterable,
     Iterator,
     List,
@@ -16,6 +16,7 @@ from typing_extensions import (
     Sequence,
     SupportsIndex,
     TypeVar,
+    cast,
     overload,
 )
 
