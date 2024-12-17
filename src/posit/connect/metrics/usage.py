@@ -198,10 +198,7 @@ class Usage(resources.Resources):
         for finder in finders:
             instance = finder(self._ctx)
             events.extend(
-                [
-                    UsageEvent.from_event(event)
-                    for event in instance.find(**kwargs)  # type: ignore[attr-defined]
-                ],
+                [UsageEvent.from_event(event) for event in instance.find(**kwargs)],
             )
         return events
 
@@ -251,7 +248,7 @@ class Usage(resources.Resources):
         finders = (visits.Visits, shiny_usage.ShinyUsage)
         for finder in finders:
             instance = finder(self._ctx)
-            event = instance.find_one(**kwargs)  # type: ignore[attr-defined]
+            event = instance.find_one(**kwargs)
             if event:
                 return UsageEvent.from_event(event)
         return None

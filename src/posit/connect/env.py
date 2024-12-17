@@ -131,7 +131,7 @@ class EnvVars(Resources, MutableMapping[str, Optional[str]]):
             "Since environment variables may contain sensitive information, the values are not accessible outside of Connect.",
         )
 
-    def update(self, other=(), /, **kwargs: Optional[str]):
+    def update(self, other=(), /, **kwargs: Optional[str]) -> None:
         """
         Update environment variables.
 
