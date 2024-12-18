@@ -103,7 +103,11 @@ quartodoc:
         - connect.groups
         - connect.jobs
         - connect.metrics
+        - connect.metrics.usage
         - connect.oauth
+        - connect.oauth.associations
+        - connect.oauth.integrations
+        - connect.oauth.sessions
         - connect.packages
         - connect.permissions
         - connect.repository
