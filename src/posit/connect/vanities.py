@@ -1,3 +1,5 @@
+"""Vanity URL resources."""
+
 from typing import Callable, List, Optional
 
 from typing_extensions import NotRequired, Required, TypedDict, Unpack

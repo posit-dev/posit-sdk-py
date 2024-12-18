@@ -94,20 +94,25 @@ quartodoc:
             - put
             - patch
             - delete
-    - title: Posit Connect Resources
+    - title: Resources
       contents:
         - connect.bundles
         - connect.content
+        - connect.env
+        - connect.environments
         - connect.groups
+        - connect.jobs
+        - connect.metrics
+        - connect.oauth
+        - connect.packages
         - connect.permissions
+        - connect.repository
+        - connect.system
+        - connect.tags
         - connect.tasks
         - connect.users
         - connect.vanities
-    - title: Posit Connect Metrics
-      contents:
-        - connect.metrics
-        - connect.metrics.usage
-    - title: External Integrations
+    - title: Third-Party Integrations
       contents:
         - connect.external.databricks
         - connect.external.snowflake
