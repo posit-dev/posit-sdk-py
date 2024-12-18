@@ -1,6 +1,10 @@
-"""Snowflake SDK credentials implementations which support interacting with Posit OAuth integrations on Connect.
+"""Snowflake SDK integration.
 
-NOTE: The APIs in this module are provided as a convenience and are subject to breaking changes.
+Snowflake SDK credentials implementations which support interacting with Posit OAuth integrations on Connect.
+
+Notes
+-----
+The APIs in this module are provided as a convenience and are subject to breaking changes.
 """
 
 from typing import Optional

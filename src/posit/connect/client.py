@@ -12,8 +12,8 @@ from .config import Config
 from .content import Content
 from .context import Context, ContextManager, requires
 from .groups import Groups
-from .metrics import Metrics
-from .oauth import OAuth
+from .metrics.metrics import Metrics
+from .oauth.oauth import OAuth
 from .resources import _PaginatedResourceSequence, _ResourceSequence
 from .system import System
 from .tags import Tags
@@ -44,18 +44,30 @@ class Client(ContextManager):
     ----------
     content: Content
         Content resource.
+    environments: Environments
+        Environments resource.
+    groups: Groups
+        Groups resource.
     me: User
-        Connect user resource.
+        Current user resource.
     metrics: Metrics
         Metrics resource.
     oauth: OAuth
         OAuth resource.
+    packages: Packages
+        Packages resource.
+    system: System
+        System resource.
+    tags: Tags
+        Tags resource.
     tasks: Tasks
         Tasks resource.
     users: Users
         Users resource.
+    vanities: Vanities
+        Vanities resource.
     version: str
-        Server version.
+        The server version.
     """
 
     @overload
@@ -163,28 +175,21 @@ class Client(ContextManager):
         self._ctx = Context(self)
 
     @property
-    def version(self) -> str | None:
+    def content(self) -> Content:
         """
-        The server version.
+        The content resource interface.
 
         Returns
         -------
-        str
-            The version of the Posit Connect server.
+        Content
+            The content resource instance.
         """
-        return self._ctx.version
+        return Content(self._ctx)
 
     @property
-    def me(self) -> User:
-        """
-        The connected user.
-
-        Returns
-        -------
-        User
-            The currently authenticated user.
-        """
-        return me.get(self._ctx)
+    @requires(version="2023.05.0")
+    def environments(self) -> Environments:
+        return _ResourceSequence(self._ctx, "v1/environments")
 
     @property
     def groups(self) -> Groups:
@@ -198,62 +203,16 @@ class Client(ContextManager):
         return Groups(self._ctx)
 
     @property
-    def tasks(self) -> Tasks:
+    def me(self) -> User:
         """
-        The tasks resource interface.
+        The connected user.
 
         Returns
         -------
-        tasks.Tasks
-            The tasks resource instance.
+        User
+            The currently authenticated user.
         """
-        return Tasks(self._ctx)
-
-    @property
-    def users(self) -> Users:
-        """
-        The users resource interface.
-
-        Returns
-        -------
-        Users
-            The users resource instance.
-        """
-        return Users(self._ctx)
-
-    @property
-    def content(self) -> Content:
-        """
-        The content resource interface.
-
-        Returns
-        -------
-        Content
-            The content resource instance.
-        """
-        return Content(self._ctx)
-
-    @property
-    def tags(self) -> Tags:
-        """
-        The tags resource interface.
-
-        Returns
-        -------
-        Tags
-            The tags resource instance.
-
-        Examples
-        --------
-        ```python
-        import posit
-
-        client = posit.connect.Client()
-
-        tags = client.tags.find()
-        ```
-        """
-        return Tags(self._ctx, "v1/tags")
+        return me.get(self._ctx)
 
     @property
     def metrics(self) -> Metrics:
@@ -302,17 +261,70 @@ class Client(ContextManager):
         return _PaginatedResourceSequence(self._ctx, "v1/packages", uid="name")
 
     @property
-    def vanities(self) -> Vanities:
-        return Vanities(self._ctx)
-
-    @property
     def system(self) -> System:
         return System(self._ctx, "v1/system")
 
     @property
-    @requires(version="2023.05.0")
-    def environments(self) -> Environments:
-        return _ResourceSequence(self._ctx, "v1/environments")
+    def tags(self) -> Tags:
+        """
+        The tags resource interface.
+
+        Returns
+        -------
+        Tags
+            The tags resource instance.
+
+        Examples
+        --------
+        ```python
+        import posit
+
+        client = posit.connect.Client()
+
+        tags = client.tags.find()
+        ```
+        """
+        return Tags(self._ctx, "v1/tags")
+
+    @property
+    def tasks(self) -> Tasks:
+        """
+        The tasks resource interface.
+
+        Returns
+        -------
+        tasks.Tasks
+            The tasks resource instance.
+        """
+        return Tasks(self._ctx)
+
+    @property
+    def users(self) -> Users:
+        """
+        The users resource interface.
+
+        Returns
+        -------
+        Users
+            The users resource instance.
+        """
+        return Users(self._ctx)
+
+    @property
+    def vanities(self) -> Vanities:
+        return Vanities(self._ctx)
+
+    @property
+    def version(self) -> str | None:
+        """
+        The server version.
+
+        Returns
+        -------
+        str
+            The version of the Posit Connect server.
+        """
+        return self._ctx.version
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""

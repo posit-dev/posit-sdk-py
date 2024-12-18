@@ -1,7 +1,10 @@
-"""
+"""Databricks SDK integration.
+
 Databricks SDK credentials implementations which support interacting with Posit OAuth integrations on Connect.
 
-NOTE: These APIs are provided as a convenience and are subject to breaking changes:
+Notes
+-----
+These APIs are provided as a convenience and are subject to breaking changes:
 https://github.com/databricks/databricks-sdk-py#interface-stability
 """
 

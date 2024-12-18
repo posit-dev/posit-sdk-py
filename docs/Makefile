@@ -7,7 +7,7 @@ CURRENT_YEAR ?= $(shell date +%Y)
 # Quarto settings
 QUARTO ?= quarto
 # quartodoc doesn't like py3.8; Run using `--with` as it can conflict with the project's dependencies
-QUARTODOC ?= --with "quartodoc==0.8.1" quartodoc
+QUARTODOC ?= --no-cache --with "quartodoc==0.8.1" quartodoc
 
 # Netlify settings
 NETLIFY_SITE_ID ?= 5cea1f56-7935-4387-975a-18a7905d15ee
