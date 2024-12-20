@@ -9,9 +9,9 @@ https://github.com/databricks/databricks-sdk-py#interface-stability
 """
 
 import abc
-from typing import Callable, Dict, Optional
 
 import requests
+from typing_extensions import Callable, Dict, Optional
 
 from ..client import Client
 from ..oauth import Credentials

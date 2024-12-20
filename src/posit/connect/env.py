@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterator, List, Mapping, MutableMapping, Optional
+from typing_extensions import TYPE_CHECKING, Any, Iterator, List, Mapping, MutableMapping, Optional
 
 from .resources import Resources
 

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Annotated
 
 from databricks import sql
 from databricks.sdk.core import Config, databricks_cli
 from fastapi import FastAPI, Header
+from typing_extensions import TYPE_CHECKING, Annotated
 
 from posit.connect.external.databricks import PositCredentialsStrategy
 

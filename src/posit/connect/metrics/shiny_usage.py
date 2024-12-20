@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, overload
+from typing_extensions import List, overload
 
 from ..cursors import CursorPaginator
 from ..resources import BaseResource, Resources

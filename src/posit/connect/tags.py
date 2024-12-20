@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, overload
 
-from typing_extensions import NotRequired, TypedDict, Unpack
+from typing_extensions import TYPE_CHECKING, NotRequired, Optional, TypedDict, Unpack, overload
 
 from ._utils import update_dict_values
 from .context import Context, ContextManager

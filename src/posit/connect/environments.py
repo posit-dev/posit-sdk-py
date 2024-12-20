@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Protocol
 
 from typing_extensions import (
     List,
     Literal,
+    Protocol,
     TypedDict,
     runtime_checkable,
 )

@@ -1,7 +1,8 @@
 import warnings
-from typing import Optional
 from unittest import mock
 from unittest.mock import Mock
+
+from typing_extensions import Optional
 
 from posit.connect.resources import BaseResource
 

@@ -7,7 +7,7 @@ Notes
 The APIs in this module are provided as a convenience and are subject to breaking changes.
 """
 
-from typing import Optional
+from typing_extensions import Optional
 
 from ..client import Client
 from .external import is_local

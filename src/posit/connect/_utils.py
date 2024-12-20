@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing_extensions import Any
 
 
 def update_dict_values(obj: dict[str, Any], /, **kwargs: Any) -> None:

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
+from typing_extensions import TYPE_CHECKING
 
 from posit import connect
 
