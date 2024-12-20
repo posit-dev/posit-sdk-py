@@ -1,4 +1,4 @@
-"""Content item repository."""
+"""Repository resources."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""System Information."""
+"""System resources."""
 
 from __future__ import annotations
 
