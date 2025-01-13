@@ -4,7 +4,7 @@ import pytest
 import responses
 
 from posit.connect import Client
-from posit.connect.oauth.oauth import _get_content_session_token
+from posit.connect.oauth.oauth import API_KEY_TOKEN_TYPE, _get_content_session_token
 
 
 class TestOAuthIntegrations:
@@ -63,7 +63,7 @@ class TestOAuthIntegrations:
         )
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
-        creds = c.oauth.get_credentials("cit")
+        creds = c.oauth.get_credentials("cit", API_KEY_TOKEN_TYPE)
         assert "access_token" in creds
         assert creds["access_token"] == "viewer-api-key"
         assert "issued_token_type" in creds

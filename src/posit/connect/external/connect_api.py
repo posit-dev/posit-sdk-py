@@ -27,17 +27,18 @@ class ConnectAPIKeyProvider:
     from posit.connect import Client
     from posit.connect.external.connect_api import ConnectAPIKeyProvider
 
-    client = Client()
-
     app_ui = ui.page_fixed(
         ui.h1("My Shiny App"),
         # ...
     )
 
     def server(input, output, session):
+        client = Client()
         user_session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
         provider = ConnectAPIKeyProvider(client, user_session_token)
-        viewer_api_key = provider.viewer_key
+        viewer_client = Client(api_key=provider.viewer)
+
+        assert client.me() != viewer_client.me()
 
         # your app logic...
 
@@ -54,7 +55,7 @@ class ConnectAPIKeyProvider:
         self._user_session_token = user_session_token
 
     @property
-    def viewer_key(self) -> Optional[str]:
+    def viewer(self) -> Optional[str]:
         """
         The viewer key is retrieved through an OAuth exchange process using the user session token.
         The issued API key is associated with the viewer of your app and can be used on their behalf
