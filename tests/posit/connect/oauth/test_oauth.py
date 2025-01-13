@@ -42,6 +42,36 @@ class TestOAuthIntegrations:
         assert creds["access_token"] == "viewer-token"
 
     @responses.activate
+    def test_get_credentials_api_key(self):
+        responses.post(
+            "https://connect.example/__api__/v1/oauth/integrations/credentials",
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "subject_token_type": "urn:posit:connect:user-session-token",
+                        "subject_token": "cit",
+                        "requested_token_type": "urn:posit:connect:api-key"
+                    },
+                ),
+            ],
+            json={
+                "access_token": "viewer-api-key",
+                "issued_token_type": "urn:posit:connect:api-key",
+                "token_type": "Key",
+            },
+        )
+        c = Client(api_key="12345", url="https://connect.example/")
+        c._ctx.version = None
+        creds = c.oauth.get_credentials("cit")
+        assert "access_token" in creds
+        assert creds["access_token"] == "viewer-api-key"
+        assert "issued_token_type" in creds
+        assert creds["issued_token_type"] == "urn:posit:connect:api-key"
+        assert "token_type" in creds
+        assert creds["token_type"] == "Key"
+
+    @responses.activate
     def test_get_content_credentials(self):
         responses.post(
             "https://connect.example/__api__/v1/oauth/integrations/credentials",
