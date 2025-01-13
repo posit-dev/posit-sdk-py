@@ -9,21 +9,21 @@ The APIs in this module are provided as a convenience and are subject to breakin
 
 from typing_extensions import Optional
 
-from ..oauth.oauth import API_KEY_TOKEN_TYPE
-
 from ..client import Client
+from ..oauth.oauth import API_KEY_TOKEN_TYPE
 from .external import is_local
 
 
 class ConnectAPIKeyProvider:
-    """
+    """Viewer API key provider for Connect API integration.
+
     Provider for exchanging Connect User Session Token for Connect API Key that acts on behalf of the user.
     This is an ephemeral API key that adheres to typical ephemeral API key clean up processes.
 
     Examples
     --------
     ```python
-    from shiny import App, render, ui, reactive, req
+    from shiny import App, ui
     from posit.connect import Client
     from posit.connect.external.connect_api import ConnectAPIKeyProvider
 
@@ -31,6 +31,7 @@ class ConnectAPIKeyProvider:
         ui.h1("My Shiny App"),
         # ...
     )
+
 
     def server(input, output, session):
         client = Client()
@@ -41,6 +42,7 @@ class ConnectAPIKeyProvider:
         assert client.me() != viewer_client.me()
 
         # your app logic...
+
 
     app = App(app_ui, server)
     ```
@@ -56,7 +58,8 @@ class ConnectAPIKeyProvider:
 
     @property
     def viewer(self) -> Optional[str]:
-        """
+        """Retrieve the viewer api key.
+
         The viewer key is retrieved through an OAuth exchange process using the user session token.
         The issued API key is associated with the viewer of your app and can be used on their behalf
         to interact with the Connect API.
@@ -67,7 +70,9 @@ class ConnectAPIKeyProvider:
         # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.
         # user_session_token is required to impersonate the viewer.
         if self._user_session_token is None:
-            raise ValueError("The user-session-token is required for viewer API key authorization.")
+            raise ValueError(
+                "The user-session-token is required for viewer API key authorization."
+            )
 
         if self._client is None:
             self._client = Client()

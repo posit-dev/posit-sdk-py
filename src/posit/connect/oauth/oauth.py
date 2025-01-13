@@ -52,7 +52,9 @@ class OAuth(Resources):
     def sessions(self):
         return Sessions(self._ctx)
 
-    def get_credentials(self, user_session_token: Optional[str] = None, requested_token_type: Optional[str] = None) -> Credentials:
+    def get_credentials(
+        self, user_session_token: Optional[str] = None, requested_token_type: Optional[str] = None
+    ) -> Credentials:
         """Perform an oauth credential exchange with a user-session-token."""
         # craft a credential exchange request
         data = {}
