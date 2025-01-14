@@ -38,8 +38,7 @@ class TestOAuthIntegrations:
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
         creds = c.oauth.get_credentials("cit")
-        assert "access_token" in creds
-        assert creds["access_token"] == "viewer-token"
+        assert creds.get("access_token") == "viewer-token"
 
     @responses.activate
     def test_get_credentials_api_key(self):
@@ -64,12 +63,9 @@ class TestOAuthIntegrations:
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
         creds = c.oauth.get_credentials("cit", API_KEY_TOKEN_TYPE)
-        assert "access_token" in creds
-        assert creds["access_token"] == "viewer-api-key"
-        assert "issued_token_type" in creds
-        assert creds["issued_token_type"] == "urn:posit:connect:api-key"
-        assert "token_type" in creds
-        assert creds["token_type"] == "Key"
+        assert creds.get("access_token") == "viewer-api-key"
+        assert creds.get("issued_token_type") == "urn:posit:connect:api-key"
+        assert creds.get("token_type") == "Key"
 
     @responses.activate
     def test_get_content_credentials(self):
@@ -93,8 +89,7 @@ class TestOAuthIntegrations:
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
         creds = c.oauth.get_content_credentials("cit")
-        assert "access_token" in creds
-        assert creds["access_token"] == "content-token"
+        assert creds.get("access_token") == "content-token"
 
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
     @responses.activate
@@ -119,5 +114,4 @@ class TestOAuthIntegrations:
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
         creds = c.oauth.get_content_credentials()
-        assert "access_token" in creds
-        assert creds["access_token"] == "content-token"
+        assert creds.get("access_token") == "content-token"

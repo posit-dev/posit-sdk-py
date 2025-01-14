@@ -84,6 +84,62 @@ class TestClient:
         MockConfig.assert_called_once_with(api_key=api_key, url=url)
         MockSession.assert_called_once()
 
+    @responses.activate
+    def test_with_user_session_token(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client._ctx.version = None
+
+        responses.post(
+            "https://connect.example.com/__api__/v1/oauth/integrations/credentials",
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "subject_token_type": "urn:posit:connect:user-session-token",
+                        "subject_token": "cit",
+                        "requested_token_type": "urn:posit:connect:api-key",
+                    },
+                ),
+            ],
+            json={
+                "access_token": "api-key",
+                "issued_token_type": "urn:posit:connect:api-key",
+                "token_type": "Key",
+            },
+        )
+
+        viewer_client = client.with_user_session_token("cit")
+
+        assert viewer_client.cfg.url == "https://connect.example.com/__api__"
+        assert viewer_client.cfg.api_key == "api-key"
+
+    @responses.activate
+    def test_with_user_session_token_bad_exchange(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client._ctx.version = None
+
+        responses.post(
+            "https://connect.example.com/__api__/v1/oauth/integrations/credentials",
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "subject_token_type": "urn:posit:connect:user-session-token",
+                        "subject_token": "cit",
+                        "requested_token_type": "urn:posit:connect:api-key",
+                    },
+                ),
+            ],
+            json={},
+        )
+
+        with pytest.raises(ValueError):
+            client.with_user_session_token("cit")
+
     def test__del__(
         self,
         MockAuth: MagicMock,
