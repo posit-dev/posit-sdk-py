@@ -3,7 +3,7 @@ from unittest.mock import patch
 import responses
 
 from posit.connect import Client
-from posit.connect.external.connect_api import ConnectAPIKeyProvider
+from posit.connect.external.connect_api import ViewerConnectClientProvider
 
 
 def register_mocks():
@@ -29,24 +29,82 @@ def register_mocks():
 
 class TestConnectAPIKeyProvider:
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict(
+        "os.environ",
+        {
+            "RSTUDIO_PRODUCT": "CONNECT",
+            "CONNECT_SERVER": "http://connect.example/",
+            "CONNECT_API_KEY": "12345",
+        },
+    )
     def test_provider(self):
+        register_mocks()
+
+        provider = ViewerConnectClientProvider(
+            user_session_token="cit",
+        )
+        viewer_client = provider.get_client()
+        assert viewer_client is not None
+        assert viewer_client.cfg.url == "http://connect.example/"
+        assert viewer_client.cfg.api_key == "viewer-api-key"
+
+    @responses.activate
+    @patch.dict(
+        "os.environ",
+        {
+            "RSTUDIO_PRODUCT": "CONNECT",
+            "CONNECT_SERVER": "http://connect.example/",
+            "CONNECT_API_KEY": "12345",
+        },
+    )
+    def test_provider_with_url_override(self):
+        register_mocks()
+
+        provider = ViewerConnectClientProvider(
+            user_session_token="cit",
+            url_override="http://connect2.example/",
+        )
+        viewer_client = provider.get_client()
+        assert viewer_client is not None
+        assert viewer_client.cfg.url == "http://connect2.example/"
+        assert viewer_client.cfg.api_key == "viewer-api-key"
+
+    @responses.activate
+    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    def test_provider_with_client_override(self):
         register_mocks()
 
         client = Client(api_key="12345", url="https://connect.example/")
         client._ctx.version = None
-        auth = ConnectAPIKeyProvider(
-            client=client,
+        provider = ViewerConnectClientProvider(
+            user_session_token="cit",
+            client_override=client,
+        )
+        viewer_client = provider.get_client()
+        assert viewer_client is not None
+        assert viewer_client.cfg.url == "http://connect.example/"
+        assert viewer_client.cfg.api_key == "viewer-api-key"
+
+    @patch.dict(
+        "os.environ", {"CONNECT_SERVER": "http://connect.example/", "CONNECT_API_KEY": "12345"}
+    )
+    def test_provider_fallback(self):
+        # default client is used when the content is running locally
+        provider = ViewerConnectClientProvider(
             user_session_token="cit",
         )
-        assert auth.viewer == "viewer-api-key"
+        viewer_client = provider.get_client()
+        assert viewer_client.cfg.url == "https://connect.example/"
+        assert viewer_client.cfg.api_key == "12345"
 
-    def test_provider_fallback(self):
-        # local_authenticator is used when the content is running locally
+    def test_provider_fallback_with_client_override(self):
+        # provided client is used when the content is running locally
         client = Client(api_key="12345", url="https://connect.example/")
         client._ctx.version = None
-        auth = ConnectAPIKeyProvider(
-            client=client,
+        provider = ViewerConnectClientProvider(
             user_session_token="cit",
+            client_override=client,
         )
-        assert auth.viewer is None
+        viewer_client = provider.get_client()
+        assert viewer_client.cfg.url == "https://connect.example/"
+        assert viewer_client.cfg.api_key == "12345"
