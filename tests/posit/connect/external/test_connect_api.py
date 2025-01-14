@@ -45,7 +45,7 @@ class TestConnectAPIKeyProvider:
         )
         viewer_client = provider.get_client()
         assert viewer_client is not None
-        assert viewer_client.cfg.url == "http://connect.example/"
+        assert viewer_client.cfg.url == "http://connect.example/__api__"
         assert viewer_client.cfg.api_key == "viewer-api-key"
 
     @responses.activate
@@ -64,13 +64,16 @@ class TestConnectAPIKeyProvider:
             user_session_token="cit",
             url_override="http://connect2.example/",
         )
+        provider._client._ctx.version = None
         viewer_client = provider.get_client()
         assert viewer_client is not None
-        assert viewer_client.cfg.url == "http://connect2.example/"
+        assert viewer_client.cfg.url == "http://connect2.example/__api__"
         assert viewer_client.cfg.api_key == "viewer-api-key"
 
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict(
+        "os.environ", {"RSTUDIO_PRODUCT": "CONNECT", "CONNECT_SERVER": "http://connect.example/"}
+    )
     def test_provider_with_client_override(self):
         register_mocks()
 
@@ -82,7 +85,7 @@ class TestConnectAPIKeyProvider:
         )
         viewer_client = provider.get_client()
         assert viewer_client is not None
-        assert viewer_client.cfg.url == "http://connect.example/"
+        assert viewer_client.cfg.url == "http://connect.example/__api__"
         assert viewer_client.cfg.api_key == "viewer-api-key"
 
     @patch.dict(
@@ -93,8 +96,9 @@ class TestConnectAPIKeyProvider:
         provider = ViewerConnectClientProvider(
             user_session_token="cit",
         )
+        provider._client._ctx.version = None
         viewer_client = provider.get_client()
-        assert viewer_client.cfg.url == "https://connect.example/"
+        assert viewer_client.cfg.url == "https://connect.example/__api__"
         assert viewer_client.cfg.api_key == "12345"
 
     def test_provider_fallback_with_client_override(self):
@@ -106,5 +110,5 @@ class TestConnectAPIKeyProvider:
             client_override=client,
         )
         viewer_client = provider.get_client()
-        assert viewer_client.cfg.url == "https://connect.example/"
+        assert viewer_client.cfg.url == "https://connect.example/__api__"
         assert viewer_client.cfg.api_key == "12345"
