@@ -33,7 +33,7 @@ class TestConnectAPIKeyProvider:
         "os.environ",
         {
             "RSTUDIO_PRODUCT": "CONNECT",
-            "CONNECT_SERVER": "http://connect.example/",
+            "CONNECT_SERVER": "https://connect.example/",
             "CONNECT_API_KEY": "12345",
         },
     )
@@ -45,7 +45,7 @@ class TestConnectAPIKeyProvider:
         )
         viewer_client = provider.get_client()
         assert viewer_client is not None
-        assert viewer_client.cfg.url == "http://connect.example/__api__"
+        assert viewer_client.cfg.url == "https://connect.example/__api__"
         assert viewer_client.cfg.api_key == "viewer-api-key"
 
     @responses.activate
@@ -53,7 +53,7 @@ class TestConnectAPIKeyProvider:
         "os.environ",
         {
             "RSTUDIO_PRODUCT": "CONNECT",
-            "CONNECT_SERVER": "http://connect.example/",
+            "CONNECT_SERVER": "https://connect.example/",
             "CONNECT_API_KEY": "12345",
         },
     )
@@ -62,17 +62,17 @@ class TestConnectAPIKeyProvider:
 
         provider = ViewerConnectClientProvider(
             user_session_token="cit",
-            url_override="http://connect2.example/",
+            url_override="https://connect2.example/",
         )
         provider._client._ctx.version = None
         viewer_client = provider.get_client()
         assert viewer_client is not None
-        assert viewer_client.cfg.url == "http://connect2.example/__api__"
+        assert viewer_client.cfg.url == "https://connect2.example/__api__"
         assert viewer_client.cfg.api_key == "viewer-api-key"
 
     @responses.activate
     @patch.dict(
-        "os.environ", {"RSTUDIO_PRODUCT": "CONNECT", "CONNECT_SERVER": "http://connect.example/"}
+        "os.environ", {"RSTUDIO_PRODUCT": "CONNECT", "CONNECT_SERVER": "https://connect.example/"}
     )
     def test_provider_with_client_override(self):
         register_mocks()
@@ -85,11 +85,11 @@ class TestConnectAPIKeyProvider:
         )
         viewer_client = provider.get_client()
         assert viewer_client is not None
-        assert viewer_client.cfg.url == "http://connect.example/__api__"
+        assert viewer_client.cfg.url == "https://connect.example/__api__"
         assert viewer_client.cfg.api_key == "viewer-api-key"
 
     @patch.dict(
-        "os.environ", {"CONNECT_SERVER": "http://connect.example/", "CONNECT_API_KEY": "12345"}
+        "os.environ", {"CONNECT_SERVER": "https://connect.example/", "CONNECT_API_KEY": "12345"}
     )
     def test_provider_fallback(self):
         # default client is used when the content is running locally
