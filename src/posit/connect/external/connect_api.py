@@ -76,5 +76,8 @@ class ViewerConnectClientProvider:
             user_session_token=self._user_session_token,
             requested_token_type=API_KEY_TOKEN_TYPE,
         )
-
-        return Client(url=self._url, api_key=credentials.get("access_token"))
+        config = {
+            "url": self._url,
+            "api_key": credentials.get("access_token"),
+        }
+        return Client(**config)
