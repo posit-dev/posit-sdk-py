@@ -12,7 +12,7 @@ from .content import Content
 from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics.metrics import Metrics
-from .oauth.oauth import OAuth
+from .oauth.oauth import API_KEY_TOKEN_TYPE, OAuth
 from .resources import _PaginatedResourceSequence, _ResourceSequence
 from .system import System
 from .tags import Tags
@@ -172,6 +172,37 @@ class Client(ContextManager):
         session.hooks["response"].append(hooks.handle_errors)
         self.session = session
         self._ctx = Context(self)
+
+    @requires("2025.01.0-dev")
+    def with_user_session_token(self, token: str) -> Client:
+        """Create a new Client scoped to the user specified in the user session token.
+
+        Create a new Client instance from a user session token exchange for an api key scoped to the
+        user specified in the token.
+
+        Parameters
+        ----------
+        token : str
+            The user session token.
+
+        Returns
+        -------
+        Client
+            A new Client instance authenticated with an API key exchanged for the user session token.
+
+        Examples
+        --------
+        >>> from posit.connect import Client
+        >>> client = Client().with_user_session_token("my-user-session-token")
+        """
+        viewer_credentials = self.oauth.get_credentials(
+            token, requested_token_type=API_KEY_TOKEN_TYPE
+        )
+        viewer_api_key = viewer_credentials.get("access_token")
+        if viewer_api_key is None:
+            raise ValueError("Unable to retrieve viewer api key.")
+
+        return Client(url=self.cfg.url, api_key=viewer_api_key)
 
     @property
     def content(self) -> Content:

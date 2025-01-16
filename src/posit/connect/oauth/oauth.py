@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange"
 USER_SESSION_TOKEN_TYPE = "urn:posit:connect:user-session-token"
 CONTENT_SESSION_TOKEN_TYPE = "urn:posit:connect:content-session-token"
+API_KEY_TOKEN_TYPE = "urn:posit:connect:api-key"
 
 
 def _get_content_session_token() -> str:
@@ -51,7 +52,9 @@ class OAuth(Resources):
     def sessions(self):
         return Sessions(self._ctx)
 
-    def get_credentials(self, user_session_token: Optional[str] = None) -> Credentials:
+    def get_credentials(
+        self, user_session_token: Optional[str] = None, requested_token_type: Optional[str] = None
+    ) -> Credentials:
         """Perform an oauth credential exchange with a user-session-token."""
         # craft a credential exchange request
         data = {}
@@ -59,6 +62,8 @@ class OAuth(Resources):
         data["subject_token_type"] = USER_SESSION_TOKEN_TYPE
         if user_session_token:
             data["subject_token"] = user_session_token
+        if requested_token_type:
+            data["requested_token_type"] = requested_token_type
 
         response = self._ctx.client.post(self._path, data=data)
         return Credentials(**response.json())
