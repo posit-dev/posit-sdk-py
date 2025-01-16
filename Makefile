@@ -68,6 +68,9 @@ lint: dev
 	$(UV) run ruff check
 	$(UV) run pyright
 
+shiny: dev
+	$(MAKE) -C ./shiny assistant
+
 test: dev
 	$(UV) run coverage run --source=src -m pytest tests
 
@@ -93,6 +96,7 @@ help:
 	@echo "  install        Install the built project"
 	@echo "  it             Run integration tests"
 	@echo "  lint           Lint the code"
+	@echo "  shiny          Update compiled files for Shiny apps"
 	@echo "  test           Run unit tests with coverage"
 	@echo "  uninstall      Uninstall the project"
 	@echo "  version        Display the project version"
