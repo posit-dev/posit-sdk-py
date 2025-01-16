@@ -65,6 +65,8 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         title: NotRequired[str]
         description: NotRequired[str]
         access_type: NotRequired[Literal["all", "acl", "logged_in"]]
+        locked: NotRequired[bool]
+        locked_message: NotRequired[str]
         # Timeout Settings
         connection_timeout: NotRequired[int]
         read_timeout: NotRequired[int]
@@ -81,13 +83,35 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         memory_limit: NotRequired[int]
         amd_gpu_limit: NotRequired[int]
         nvidia_gpu_limit: NotRequired[int]
-        # Execution Settings
-        run_as: NotRequired[str]
-        run_as_current_user: NotRequired[bool]
+        # Bundle info
+        content_category: NotRequired[str]
+        parameterized: NotRequired[bool]
+        cluster_name: NotRequired[str]
+        image_name: NotRequired[str]
         default_image_name: NotRequired[str]
         default_r_environment_management: NotRequired[bool]
         default_py_environment_management: NotRequired[bool]
         service_account_name: NotRequired[str]
+        r_version: NotRequired[str]
+        r_environment_management: NotRequired[bool]
+        py_version: NotRequired[str]
+        py_environment_management: NotRequired[bool]
+        quarto_version: NotRequired[str]
+        # Execution Settings
+        run_as: NotRequired[str]
+        run_as_current_user: NotRequired[bool]
+        created_time: NotRequired[str]
+        last_deployed_time: NotRequired[str]
+        bundle_id: NotRequired[str]
+        app_mode: NotRequired[str]
+        content_url: NotRequired[str]
+        dashboard_url: NotRequired[str]
+        app_role: NotRequired[Literal["owner", "editor", "viewer", "none"]]
+        vanity_url: NotRequired[str]
+        tags: NotRequired[List[dict]]
+        owner: NotRequired[dict]
+        id: NotRequired[str]
+        extension: NotRequired[bool]
 
     class _AttrsNotRequired(_AttrsBase):
         name: NotRequired[str]
@@ -128,6 +152,131 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         guid: str,
         **kwargs: Unpack[ContentItem._AttrsNotRequired],
     ) -> None:
+        """
+        Content item.
+
+        The content object models all the "things" you may deploy to Posit
+        Connect. This includes Shiny applications, R Markdown documents, Jupyter notebooks,
+        Plumber APIs, FastAPI and Flask APIs, Python apps, plots, and pins.
+
+        The `app_mode` field specifies the type of content represented by this item
+        and defines its runtime model.
+
+        * Active content, such as apps and APIs, executes on demand as requests arrive.
+        * Reports render from source to output HTML. This rendering can occur based on a schedule or when
+        explicitly triggered. It is *not* on each visit. Viewers of this type of
+        content see a previously rendered result.
+        * Static content is presented to viewers in its deployed form.
+
+        The fields `bundle_id`, `app_mode`, `content_category`, `parameterized`,
+        `cluster_name`, `image_name`, `r_version`, `r_environment_management`,
+        `py_version`, `py_environment_management`, and `quarto_version` are
+        computed as a consequence of a <a href="#post-/v1/content/-guid-/deploy">POST
+        /v1/content/{guid}/deploy</a> deployment operation.
+
+        Parameters
+        ----------
+        ctx : Context
+            Context object.
+        guid : str
+            The unique identifier of this content item.
+        name: str, optional
+            A simple, URL-friendly identifier. Allows alpha-numeric characters, hyphens ("-"), and underscores ("_").
+        title : str, optional
+            The title of this content.
+        description : str, optional
+            A rich description of this content.
+        access_type : Literal['all', 'acl', 'logged_in'], optional
+            Access type describes how this content manages its viewers. The value `all` is the most permissive; any visitor to Posit Connect will be able to view this content. The value `logged_in` indicates that all Posit Connect accounts may view the content. The `acl` value lets specifically enumerated users and groups view the content. Users configured as collaborators may always view content.
+        locked : bool, optional
+            Whether or not the content is locked.
+        locked_message : str, optional
+            A custom message that is displayed by the content item when locked. It is possible to format this message using Markdown.
+        connection_timeout : int, optional
+            Maximum number of seconds allowed without data sent or received across a client connection. A value of `0` means connections will never time-out (not recommended). When `null`, the default `Scheduler.ConnectionTimeout` is used. Applies only to content types that are executed on demand.
+        read_timeout : int, optional
+            Maximum number of seconds allowed without data received from a client connection. A value of `0` means a lack of client (browser) interaction never causes the connection to close. When `null`, the default `Scheduler.ReadTimeout` is used. Applies only to content types that are executed on demand.
+        init_timeout : int, optional
+            The maximum number of seconds allowed for an interactive application to start. Posit Connect must be able to connect to a newly launched application before this threshold has elapsed. When `null`, the default `Scheduler.InitTimeout` is used. Applies only to content types that are executed on demand.
+        idle_timeout : int, optional
+            The maximum number of seconds a worker process for an interactive application to remain alive after it goes idle (no active connections). When `null`, the default `Scheduler.IdleTimeout` is used. Applies only to content types that are executed on demand.
+        max_processes : int, optional
+            Specifies the total number of concurrent processes allowed for a single interactive application per Posit Connect node. When `null`, the default `Scheduler.MaxProcesses` is used. Applies only to content types that are executed on demand.
+        min_processes : int, optional
+            Specifies the minimum number of concurrent processes allowed for a single interactive application per Posit Connect node. When `null`, the default `Scheduler.MinProcesses` is used. Applies only to content types that are executed on demand.
+        max_conns_per_process : int, optional
+            Specifies the maximum number of client connections allowed to an individual process. Incoming connections which will exceed this limit are routed to a new process or rejected. When `null`, the default `Scheduler.MaxConnsPerProcess` is used. Applies only to content types that are executed on demand.
+        load_factor : float, optional
+            Controls how aggressively new processes are spawned. When `null`, the default `Scheduler.LoadFactor` is used. Applies only to content types that are executed on demand.
+        cpu_request : float, optional
+            The minimum amount of compute power this content needs when executing or rendering, expressed in ["CPU Units"](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu), where 1.0 unit is equivalent to 1 physical or virtual core. Fractional values are allowed. This is used when running in an off-host execution configuration to determine where the content should be run. When `null`, the default `Scheduler.CPURequest` is used.
+        cpu_limit : float, optional
+            The maximum amount of compute power this content will be allowed to consume when executing or rendering, expressed in ["CPU Units"](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu), where 1.0 unit is equivalent to 1 physical or virtual core. Fractional values are allowed. This is used when running in an off-host execution configuration. If the process tries to use more CPU than allowed, it will be throttled. When `null`, the default `Scheduler.CPULimit` is used.
+        memory_request : int, optional
+            The minimum amount of RAM this content needs when executing or rendering, expressed in bytes. This is used when running in an off-host execution configuration to determine where the content should be run. When `null`, the default `Scheduler.MemoryRequest` is used.
+        memory_limit : int, optional
+            The maximum amount of RAM this content will be allowed to consume when executing or rendering, expressed in bytes. If the process tries to use more memory than allowed, it will be terminated. When `null`, the default `Scheduler.MemoryLimit` is used.
+        amd_gpu_limit : int, optional
+            The number of AMD GPUs that will be [allocated by Kubernetes](https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/) to run this content. This is used when running in an off-host execution configuration. When `null`, the default `Scheduler.AMDGPULimit` is used. This setting can not exceed `Scheduler.MaxAMDGPULimit`.
+        nvidia_gpu_limit : int, optional
+            The number of NVIDIA GPUs that will be [allocated by Kubernetes](https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/) to run this content. This is used when running in an off-host execution configuration. When `null`, the default `Scheduler.NvidiaGPULimit` is used. This setting can not exceed `Scheduler.MaxNvidiaGPULimit`.
+        created_time : str, optional
+            The timestamp (RFC3339) indicating when this content was created.
+        last_deployed_time : str, optional
+            The timestamp (RFC3339) indicating when this content last had a successful bundle deployment performed.
+        bundle_id : str, optional
+            The identifier for the active deployment bundle. Automatically assigned upon the successful deployment of that bundle.
+        app_mode : Literal['api', 'jupyter-static', 'jupyter-voila', 'python-api', 'python-bokeh', 'python-dash', 'python-fastapi', 'python-shiny', 'python-streamlit', 'quarto-shiny', 'quarto-static', 'rmd-shiny', 'rmd-static', 'shiny', 'static', 'tensorflow-saved-model', 'unknown'], optional
+            The runtime model for this content. Has a value of `unknown` before data is deployed to this item. Automatically assigned upon the first successful bundle deployment.
+        content_category : str, optional
+            Describes the specialization of the content runtime model. Automatically assigned upon the first successful bundle deployment.
+        parameterized : bool, optional
+            True when R Markdown rendered content allows parameter configuration. Automatically assigned upon the first successful bundle deployment. Applies only to content with an `app_mode` of `rmd-static`.
+        cluster_name : str, optional
+            The location where this content runs. Content running on the same server as Connect will have either a `null` value or the string "Local". Gives the name of the cluster when run external to the Connect host. A `null` value is returned when the client does not have sufficient rights to see this information.
+        image_name : str, optional
+            The location where this content runs. Content running on the same server as Connect will have either a `null` value or the string "Local". References the name of the target image when content runs in a clustered environment such as Kubernetes. A `null` value is returned when the client does not have sufficient rights to see this information.
+        default_image_name : str, optional
+            The default image that will be used when none is defined by the bundle's manifest. A specific image may be selected by setting the `environment.image` field in the manifest. If no image is selected by the manifest file, then the `default_image_name` is used. If a target image is not defined by the manifest, and no `default_image_name` is configured, then Connect will select an image from the list of configured execution environments. A `null` value is returned when the client does not have sufficient rights to see this information. Use the `/v1/environments` API endpoints to determine which environments are available for content execution.
+        default_r_environment_management : bool, optional
+            Indicates whether or not Connect should create and manage an R environment (installing required packages) for this content. When `null`, Connect makes this determination based on the server configuration. A `null` value is also returned when the client does not have sufficient rights to see this information. This value is ignored if the server setting `Applications.DefaultEnvironmentManagementSelection` is disabled.
+        default_py_environment_management : bool, optional
+            Indicates whether or not Connect should create and manage a Python environment (installing required packages) for this content. When `null`, Connect makes this determination based on the server configuration. A `null` value is also returned when the client does not have sufficient rights to see this information. This value is ignored if the server setting `Applications.DefaultEnvironmentManagementSelection` is disabled.
+        service_account_name : str, optional
+            The name of the Kubernetes service account that is used to run a particular piece of content. It must adhere to valid Kubernetes service account naming rules. Connect must be configured to run with `Launcher.Enabled = true`, `Launcher.Kubernetes = true` and `Launcher.KubernetesContentServiceAccountSelection = true` for this value to be applied. It will have precedence over the `Launcher.KubernetesDefaultServiceAccount` that may be set in the configuration for Connect. If this value is defined and Connect is configured with `Launcher.KubernetesContentServiceAccountSelection = false` an error will be returned. Only administrators and publishers can view this value. Only administrators can set or change this value.
+        r_version : str, optional
+            The of R interpreter associated with this content. A `null` value represents that R is not used by this content, that the content has not been prepared for execution, or that the client does not have sufficient rights to see this information. Automatically assigned upon the successful deployment of a bundle.
+        r_environment_management : bool, optional
+            Indicates whether or not Connect is managing an R environment and has installed the required packages for this content. A `null` value represents that R is not used by this content, that the content has not been prepared for execution, or that the client does not have sufficient rights to see this information. Automatically assigned upon the successful deployment of a bundle.
+        py_version : str, optional
+            The version of Python associated with this content. A `null` value represents that Python is not used by this content, that the content has not been prepared for execution, or that the client does not have sufficient rights to see this information. Automatically assigned upon the successful deployment of a bundle.
+        py_environment_management : bool, optional
+            Indicates whether or not Connect is managing a Python environment and has installed the required packages for this content. A `null` value represents that Python is not used by this content, that the content has not been prepared for execution, or that the client does not have sufficient rights to see this information. Automatically assigned upon the successful deployment of a bundle.
+        quarto_version : str, optional
+            The version of Quarto associated with this content. A `null` represents that Quarto is not used by this content, that the content has not been prepared for execution, or that the client does not have sufficient rights to see this information. Automatically assigned upon the successful deployment of a bundle.
+        run_as : str, optional
+            The UNIX user that executes this content. When `null`, the default `Applications.RunAs` is used. Applies only to executable content types - not `static`.
+        run_as_current_user : bool, optional
+            Indicates that Connect should run processes for this content item under the Unix account of the user who visits it. Content accessed anonymously will continue to run as the specified `run_as` user. Connect must be configured to use PAM authentication with the server settings `Applications.RunAsCurrentUser = true` and `PAM.ForwardPassword = true`. This setting has no effect for other authentication types. This setting only applies to application content types (Shiny, Dash, Streamlit, and Bokeh).
+        owner_guid : str, optional
+            The unique identifier of the user who owns this content item.
+        content_url : str, optional
+            The URL associated with this content. Computed from the associated GUID for this content.
+        dashboard_url : str, optional
+            The URL within the Connect dashboard where this content can be configured. Computed from the GUID for this content.
+        app_role : Literal['owner', 'editor', 'viewer', 'none'], optional
+            The relationship of the accessing user to this content. A value of `owner` is returned for the content owner. `editor` indicates a collaborator. The `viewer` value is given to users who are permitted to view the content. A `none` role is returned for administrators who cannot view the content but are permitted to view its configuration. Computed at the time of the request.
+        vanity_url : str, optional
+            The vanity URL associated with this content item. Included in responses when the vanity URL is set and `include=vanity_url` is provided.
+        tags : List[Tag], optional
+            Tags associated with this content item. Included in responses when `include=tags` is provided.
+        owner : ContentItemOwner, optional
+            Basic details about the owner of this content item. Included in responses when `include=owner` is provided.
+        id : str, optional
+            The internal numeric identifier of this content item.
+        extension : bool, optional
+            Whether the content is a Connect Extension.
+        """
         _assert_guid(guid)
 
         path = f"v1/content/{guid}"
