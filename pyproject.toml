@@ -135,6 +135,13 @@ examples = ["rsconnect-python", "pandas", "databricks", "shiny"]
 git = ["pre-commit"]
 lint = ["ruff", "pyright"]
 test = ["rsconnect-python", "responses", "pytest", "pyjson5"]
+llm = [
+    "chatlas@git+https://github.com/posit-dev/chatlas@main ;python_version>='3.12'",
+    "anthropic[bedrock]",
+    "shiny",
+    "faicons",
+]
+extra = ["pytz"]
 # Default install group by `uv`: `dev`
 dev = [
     { include-group = "build" },
@@ -146,4 +153,6 @@ dev = [
     { include-group = "git" },
     { include-group = "lint" },
     { include-group = "test" },
+    { include-group = "llm" },
+    { include-group = "extra" },
 ]

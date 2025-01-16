@@ -1,0 +1,25 @@
+{
+  "output": {
+    "style": "xml",
+    "headerText": "",
+    "instructionFilePath": "shiny/assistant/repomix-instruction.md",
+    "fileSummary": true,
+    "directoryStructure": true,
+    "removeComments": false,
+    "removeEmptyLines": true,
+    "showLineNumbers": false,
+    "copyToClipboard": false,
+    "topFilesLength": 5,
+    "includeEmptyDirectories": false
+  },
+  "ignore": {
+    "useGitignore": false,
+    "useDefaultPatterns": true
+  },
+  "security": {
+    "enableSecurityCheck": true
+  },
+  "tokenCount": {
+    "encoding": "o200k_base"
+  }
+}

@@ -170,3 +170,8 @@ cython_debug/
 
 /.luarc.json
 _dev/
+
+
+# LLM prompt generation
+/typings/
+/repomix-output.*
