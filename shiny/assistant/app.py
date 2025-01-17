@@ -109,7 +109,9 @@ def server(input: Inputs):  # noqa: A002
 
     @reactive.effect
     async def _init_chat():
-        chat_ui.update_user_input(value="Hello")
+        chat_ui.update_user_input(
+            value="What are the pieces of Posit connect and how do they fit together?"
+        )
 
         local_session = session.require_active_session(None)
         await local_session.send_custom_message("submit-chat", {})
