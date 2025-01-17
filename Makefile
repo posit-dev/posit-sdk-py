@@ -72,7 +72,7 @@ shiny: dev
 	$(MAKE) -C ./shiny assistant
 
 test: dev
-	$(UV) run --no-dev coverage run --source=src -m pytest tests
+	$(UV) run --no-group llm coverage run --source=src -m pytest tests
 
 uninstall: ensure-uv
 	$(UV) pip uninstall $(PROJECT_NAME)
