@@ -17,7 +17,12 @@ os.chdir(repo_root)
 def cleanup() -> None:
     # Clean slate
     print("Clean up")
-    for f in ["typings", "repomix-output.txt", "repomix-output.xml"]:
+    for f in [
+        "typings",
+        "repomix-output.txt",
+        "repomix-output.xml",
+        "repomix-instruction.md",
+    ]:
         path = repo_root / f
         if os.path.exists(path):
             print("Removing path:", path.relative_to(repo_root))
@@ -43,8 +48,20 @@ async def main() -> None:
     )
     print("--\n")
 
-    print("Creating repomix output")
+    print("Getting Swagger information")
+    os.system("python shiny/assistant/_update_swagger.py")
 
+    with open(repo_root / "shiny" / "assistant" / "repomix-instruction.md", "w") as prompt_f:
+        with open(repo_root / "shiny" / "assistant" / "instructions.md", "r") as instructions_f:
+            prompt_f.write(instructions_f.read())
+
+        prompt_f.write("\n")
+
+        with open(repo_root / "shiny" / "assistant" / "_swagger_prompt.md", "r") as swagger_f:
+            prompt_f.write(swagger_f.read())
+    print("--\n")
+
+    print("Creating repomix output")
     # Assert npx exists in system
     assert os.system("npx --version") == 0, "npx not found in system. Please install Node.js"
     os.system(

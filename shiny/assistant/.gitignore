@@ -1,3 +1,6 @@
 chatlas/
 prompt.xml
 rsconnect-python/
+_swagger.json
+_swagger_prompt.md
+repomix-instruction.md
