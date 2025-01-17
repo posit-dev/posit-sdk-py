@@ -4,6 +4,7 @@ import pytest
 import responses
 
 from posit.connect import Client
+from posit.connect.errors import ClientError
 from posit.connect.oauth.oauth import API_KEY_TOKEN_TYPE, _get_content_session_token
 
 

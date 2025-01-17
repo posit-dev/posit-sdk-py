@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from typing_extensions import Any
 
 
@@ -28,3 +30,13 @@ def update_dict_values(obj: dict[str, Any], /, **kwargs: Any) -> None:
 
     # Use the `dict` class to explicity update the object in-place
     dict.update(obj, **kwargs)
+
+
+def is_local() -> bool:
+    """Returns true if called from a piece of content running on a Connect server.
+
+    The connect server will always set the environment variable `RSTUDIO_PRODUCT=CONNECT`.
+    We can use this environment variable to determine if the content is running locally
+    or on a Connect server.
+    """
+    return os.getenv("RSTUDIO_PRODUCT") != "CONNECT"
