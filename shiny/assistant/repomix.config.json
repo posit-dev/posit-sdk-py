@@ -2,7 +2,7 @@
   "output": {
     "style": "xml",
     "headerText": "",
-    "instructionFilePath": "shiny/assistant/repomix-instruction.md",
+    "instructionFilePath": "shiny/assistant/_repomix-instructions.md",
     "fileSummary": true,
     "directoryStructure": true,
     "removeComments": false,
