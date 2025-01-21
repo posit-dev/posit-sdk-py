@@ -11,16 +11,16 @@ deploy:
 	$(foreach dir,$(SHINY_DIRS),$(MAKE) deploy-$(dir);)
 deploy-%:
 	cd "$*" && \
-		$(UV) run rsconnect deploy shiny . -v
+		$(UV) run --group llm rsconnect deploy shiny . -v
 
 assistant:
 	$(MAKE) assistant-update-prompt
 assistant-update-prompt:
 	cd assistant && \
-		$(UV) run python _update_prompt.py
+		$(UV) run --group llm python _update_prompt.py
 assistant-test-chat:
 	cd assistant && \
-		$(UV) run python _test_chat.py
+		$(UV) run --group llm python _test_chat.py
 
 help:
 	@echo "Makefile Targets"

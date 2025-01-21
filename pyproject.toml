@@ -153,6 +153,6 @@ dev = [
     { include-group = "git" },
     { include-group = "lint" },
     { include-group = "test" },
-    { include-group = "llm" },
+    # { include-group = "llm" },
     { include-group = "extra" },
 ]
