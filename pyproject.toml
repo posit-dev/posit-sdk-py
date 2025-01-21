@@ -136,7 +136,8 @@ git = ["pre-commit"]
 lint = ["ruff", "pyright"]
 test = ["rsconnect-python", "responses", "pytest", "pyjson5"]
 llm = [
-    "chatlas@git+https://github.com/posit-dev/chatlas@main; python_version>='3.9'",
+    # "chatlas@git+https://github.com/posit-dev/chatlas@main; python_version>='3.9'",
+    "chatlas; python_version>='3.9'",
     "anthropic[bedrock]",
     "shiny",
     "faicons",
