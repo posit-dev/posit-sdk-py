@@ -141,11 +141,10 @@ class TestClient:
 
         with pytest.raises(ValueError) as err:
             client.with_user_session_token("cit")
-        assert str(err.value) == "Unable to retrieve visitor API key."
+        assert str(err.value) == "Unable to retrieve token."
 
-    @responses.activate
     @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
-    def test_with_user_session_token_bad_token_when_deployed(self):
+    def test_with_user_session_token_bad_token_deployed(self):
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
@@ -155,21 +154,19 @@ class TestClient:
             client.with_user_session_token("")
         assert str(err.value) == "token must be set to non-empty string."
 
-    @responses.activate
-    @patch.dict("os.environ", {"CONNECT_API_KEY": "ABC123", "CUSTOM_KEY": "DEF456"})
-    def test_with_user_session_token_local_env_var_override(self):
+    def test_with_user_session_token_bad_token_local(self):
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client._ctx.version = None
 
-        visitor_client = client.with_user_session_token("")
-        assert visitor_client.cfg.url == client.cfg.url
-        assert visitor_client.cfg.api_key == "ABC123"
+        with pytest.raises(ValueError) as e:
+            client.with_user_session_token("")
+        assert str(e.value) == "token must be set to non-empty string."
 
-        visitor_client = client.with_user_session_token("", fallback_api_key_env_var="CUSTOM_KEY")
-        assert visitor_client.cfg.url == client.cfg.url
-        assert visitor_client.cfg.api_key == "DEF456"
+        with pytest.raises(ValueError) as e:
+            client.with_user_session_token(None) # type: ignore
+        assert str(e.value) == "token must be set to non-empty string."
 
     def test__del__(
         self,

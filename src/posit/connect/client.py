@@ -177,27 +177,18 @@ class Client(ContextManager):
         self._ctx = Context(self)
 
     @requires("2025.01.0-dev")
-    def with_user_session_token(
-        self, token: str, fallback_api_key_env_var: str = "CONNECT_API_KEY"
-    ) -> Client:
+    def with_user_session_token(self, token: str) -> Client:
         """Create a new Client scoped to the user specified in the user session token.
 
         Create a new Client instance from a user session token exchange for an api key scoped to the
         user specified in the token (the user viewing your app). If running your application locally,
-        you will not have a user session token. In that case, this method will look for an API key in
-        the environment variable specified in `fallback_api_key_env_var`. If that is not set, the API
-        key of the original client will be used.
-
-        Environment Variables
-        ---------------------
-        CONNECT_API_KEY - The API key credential for client authentication.
+        a user session token will not exist, which will cause this method to result in an error needing
+        to be handled in your application.
 
         Parameters
         ----------
         token : str
             The user session token.
-        fallback_api_key_env_var: str
-            Environment variable with a fallback API key for local development.
 
         Returns
         -------
@@ -209,16 +200,7 @@ class Client(ContextManager):
         >>> from posit.connect import Client
         >>> client = Client().with_user_session_token("my-user-session-token")
         """
-        if is_local():
-            # if user session token is not available when running locally,
-            # default to using API set in environment variable
-            return Client(
-                url=self.cfg.url,
-                api_key=os.getenv(fallback_api_key_env_var, self.cfg.api_key),
-            )
-
         if token is None or token == "":
-            # if deployed to Connect, token must be set
             raise ValueError("token must be set to non-empty string.")
 
         visitor_credentials = self.oauth.get_credentials(
@@ -227,7 +209,7 @@ class Client(ContextManager):
 
         visitor_api_key = visitor_credentials.get("access_token", "")
         if visitor_api_key == "":
-            raise ValueError("Unable to retrieve visitor API key.")
+            raise ValueError("Unable to retrieve token.")
 
         return Client(url=self.cfg.url, api_key=visitor_api_key)
 
