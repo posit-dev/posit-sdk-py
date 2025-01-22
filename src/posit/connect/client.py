@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import os
-
 from requests import Response, Session
 from typing_extensions import TYPE_CHECKING, overload
 
 from . import hooks, me
-from ._utils import is_local
 from .auth import Auth
 from .config import Config
 from .content import Content

@@ -165,7 +165,7 @@ class TestClient:
         assert str(e.value) == "token must be set to non-empty string."
 
         with pytest.raises(ValueError) as e:
-            client.with_user_session_token(None) # type: ignore
+            client.with_user_session_token(None)  # type: ignore
         assert str(e.value) == "token must be set to non-empty string."
 
     def test__del__(
