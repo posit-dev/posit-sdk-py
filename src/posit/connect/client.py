@@ -173,7 +173,7 @@ class Client(ContextManager):
         self.session = session
         self._ctx = Context(self)
 
-    @requires("2025.01.0-dev")
+    @requires("2025.01.0")
     def with_user_session_token(self, token: str) -> Client:
         """Create a new Client scoped to the user specified in the user session token.
 
