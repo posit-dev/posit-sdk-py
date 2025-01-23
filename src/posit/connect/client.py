@@ -178,7 +178,9 @@ class Client(ContextManager):
         """Create a new Client scoped to the user specified in the user session token.
 
         Create a new Client instance from a user session token exchange for an api key scoped to the
-        user specified in the token.
+        user specified in the token (the user viewing your app). If running your application locally,
+        a user session token will not exist, which will cause this method to result in an error needing
+        to be handled in your application.
 
         Parameters
         ----------
@@ -195,14 +197,18 @@ class Client(ContextManager):
         >>> from posit.connect import Client
         >>> client = Client().with_user_session_token("my-user-session-token")
         """
-        viewer_credentials = self.oauth.get_credentials(
+        if token is None or token == "":
+            raise ValueError("token must be set to non-empty string.")
+
+        visitor_credentials = self.oauth.get_credentials(
             token, requested_token_type=API_KEY_TOKEN_TYPE
         )
-        viewer_api_key = viewer_credentials.get("access_token")
-        if viewer_api_key is None:
-            raise ValueError("Unable to retrieve viewer api key.")
 
-        return Client(url=self.cfg.url, api_key=viewer_api_key)
+        visitor_api_key = visitor_credentials.get("access_token", "")
+        if visitor_api_key == "":
+            raise ValueError("Unable to retrieve token.")
+
+        return Client(url=self.cfg.url, api_key=visitor_api_key)
 
     @property
     def content(self) -> Content:
