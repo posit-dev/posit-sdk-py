@@ -237,10 +237,14 @@ class Client(ContextManager):
         ...     if token:
         ...         return base_client.with_user_session_token(token)
         ...     else:
-        ...         return base_client
+        ...         return None
         >>> # Simulate request without header
         >>> mock_request = requests.Request()
-        >>> client = get_client(mock_request)  # Returns original client
+        >>> client = get_client(mock_request)
+        >>> if client:
+        ...     # perform actions with SDK
+        ... else:
+        ...     print("This app requires a user session token to operate.")
         """
         if token is None or token == "":
             raise ValueError("token must be set to non-empty string.")
