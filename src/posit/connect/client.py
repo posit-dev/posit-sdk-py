@@ -218,9 +218,10 @@ class Client(ContextManager):
         >>> @reactive.calc
         >>> def visitor_client():
         ...     ## read the user session token and generate a new client
-        ...     user_session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
+        ...     user_session_token = session.http_conn.headers.get(
+        ...         "Posit-Connect-User-Session-Token"
+        ...     )
         ...     return client.with_user_session_token(user_session_token)
-        ...
         >>> @render.text
         >>> def user_profile():
         ...     # fetch the viewer's profile information
@@ -237,7 +238,6 @@ class Client(ContextManager):
         ...         return base_client.with_user_session_token(token)
         ...     else:
         ...         return base_client
-        ...
         >>> # Simulate request without header
         >>> mock_request = requests.Request()
         >>> client = get_client(mock_request)  # Returns original client
