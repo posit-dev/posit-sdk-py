@@ -206,45 +206,47 @@ class Client(ContextManager):
 
         Examples
         --------
-        >>> from posit.connect import Client
-        >>> client = Client().with_user_session_token("my-user-session-token")
+        ```python
+        from posit.connect import Client
+        client = Client().with_user_session_token("my-user-session-token")
+        ```
 
         Example using user session token from Shiny session:
-        >>> from posit.connect import Client
-        >>> from shiny.express import render, session
-        >>>
-        >>> client = Client()
-        >>>
-        >>> @reactive.calc
-        >>> def visitor_client():
-        ...     ## read the user session token and generate a new client
-        ...     user_session_token = session.http_conn.headers.get(
-        ...         "Posit-Connect-User-Session-Token"
-        ...     )
-        ...     return client.with_user_session_token(user_session_token)
-        >>> @render.text
-        >>> def user_profile():
-        ...     # fetch the viewer's profile information
-        ...     return visitor_client().me
+        ```python
+        from posit.connect import Client
+        from shiny.express import render, session
 
-        Example with fallback when header is missing in API request:
-        >>> from posit.connect import Client
-        >>> import requests
-        >>>
-        >>> def get_client(request):
-        ...     base_client = Client()
-        ...     token = request.headers.get("Posit-Connect-User-Session-Token")
-        ...     if token:
-        ...         return base_client.with_user_session_token(token)
-        ...     else:
-        ...         return None
-        >>> # Simulate request without header
-        >>> mock_request = requests.Request()
-        >>> client = get_client(mock_request)
-        >>> if client:
-        ...     # perform actions with SDK
-        ... else:
-        ...     print("This app requires a user session token to operate.")
+        client = Client()
+
+        @reactive.calc
+        def visitor_client():
+            ## read the user session token and generate a new client
+            user_session_token = session.http_conn.headers.get(
+                "Posit-Connect-User-Session-Token"
+            )
+            return client.with_user_session_token(user_session_token)
+        @render.text
+        def user_profile():
+            # fetch the viewer's profile information
+            return visitor_client().me
+        ```
+
+        Example of when the visitor's token could not be retrieved (for
+        example, if this app allows unauthenticated access) and handle
+        that in cases where a token is expected.
+        ```python
+        from posit.connect import Client
+        import requests
+
+        # Simulate request without header
+        mock_request = requests.Request()
+        visitor_client = None
+        token = request.headers.get("Posit-Connect-User-Session-Token")
+        if token:
+            visitor_client = Client().with_user_session_token(token)
+        else:
+            print("This app requires a user session token to operate.")
+        ```
         """
         if token is None or token == "":
             raise ValueError("token must be set to non-empty string.")
