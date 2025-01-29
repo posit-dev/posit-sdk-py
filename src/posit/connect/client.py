@@ -173,12 +173,19 @@ class Client(ContextManager):
         self.session = session
         self._ctx = Context(self)
 
-    @requires("2025.01.0-dev")
+    @requires("2025.01.0")
     def with_user_session_token(self, token: str) -> Client:
         """Create a new Client scoped to the user specified in the user session token.
 
         Create a new Client instance from a user session token exchange for an api key scoped to the
-        user specified in the token.
+        user specified in the token (the user viewing your app). If running your application locally,
+        a user session token will not exist, which will cause this method to result in an error needing
+        to be handled in your application.
+
+        Depending on the type of application you are building, the user session token is retrieved in
+        a variety of ways. For example, in Streamlit and Shiny applications, the token is stored in the
+        context or session object headers using the `Posit-Connect-User-Session-Token` key. For API
+        applications, the token is added to the request headers.
 
         Parameters
         ----------
@@ -190,19 +197,69 @@ class Client(ContextManager):
         Client
             A new Client instance authenticated with an API key exchanged for the user session token.
 
+        Raises
+        ------
+        ValueError
+            If the provided token is `None` or empty or if the exchange response is malformed.
+        ClientError
+            If the token exchange request with the Connect Server fails.
+
         Examples
         --------
-        >>> from posit.connect import Client
-        >>> client = Client().with_user_session_token("my-user-session-token")
+        ```python
+        from posit.connect import Client
+        client = Client().with_user_session_token("my-user-session-token")
+        ```
+
+        Example using user session token from Shiny session:
+        ```python
+        from posit.connect import Client
+        from shiny.express import render, session
+
+        client = Client()
+
+        @reactive.calc
+        def visitor_client():
+            ## read the user session token and generate a new client
+            user_session_token = session.http_conn.headers.get(
+                "Posit-Connect-User-Session-Token"
+            )
+            return client.with_user_session_token(user_session_token)
+        @render.text
+        def user_profile():
+            # fetch the viewer's profile information
+            return visitor_client().me
+        ```
+
+        Example of when the visitor's token could not be retrieved (for
+        example, if this app allows unauthenticated access) and handle
+        that in cases where a token is expected.
+        ```python
+        from posit.connect import Client
+        import requests
+
+        # Simulate request without header
+        mock_request = requests.Request()
+        visitor_client = None
+        token = request.headers.get("Posit-Connect-User-Session-Token")
+        if token:
+            visitor_client = Client().with_user_session_token(token)
+        else:
+            print("This app requires a user session token to operate.")
+        ```
         """
-        viewer_credentials = self.oauth.get_credentials(
+        if token is None or token == "":
+            raise ValueError("token must be set to non-empty string.")
+
+        visitor_credentials = self.oauth.get_credentials(
             token, requested_token_type=API_KEY_TOKEN_TYPE
         )
-        viewer_api_key = viewer_credentials.get("access_token")
-        if viewer_api_key is None:
-            raise ValueError("Unable to retrieve viewer api key.")
 
-        return Client(url=self.cfg.url, api_key=viewer_api_key)
+        visitor_api_key = visitor_credentials.get("access_token", "")
+        if visitor_api_key == "":
+            raise ValueError("Unable to retrieve token.")
+
+        return Client(url=self.cfg.url, api_key=visitor_api_key)
 
     @property
     def content(self) -> Content:

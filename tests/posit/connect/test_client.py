@@ -85,6 +85,7 @@ class TestClient:
         MockSession.assert_called_once()
 
     @responses.activate
+    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
     def test_with_user_session_token(self):
         api_key = "12345"
         url = "https://connect.example.com"
@@ -110,13 +111,14 @@ class TestClient:
             },
         )
 
-        viewer_client = client.with_user_session_token("cit")
+        visitor_client = client.with_user_session_token("cit")
 
-        assert viewer_client.cfg.url == "https://connect.example.com/__api__"
-        assert viewer_client.cfg.api_key == "api-key"
+        assert visitor_client.cfg.url == "https://connect.example.com/__api__"
+        assert visitor_client.cfg.api_key == "api-key"
 
     @responses.activate
-    def test_with_user_session_token_bad_exchange(self):
+    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    def test_with_user_session_token_bad_exchange_response_body(self):
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
@@ -137,8 +139,34 @@ class TestClient:
             json={},
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as err:
             client.with_user_session_token("cit")
+        assert str(err.value) == "Unable to retrieve token."
+
+    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    def test_with_user_session_token_bad_token_deployed(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client._ctx.version = None
+
+        with pytest.raises(ValueError) as err:
+            client.with_user_session_token("")
+        assert str(err.value) == "token must be set to non-empty string."
+
+    def test_with_user_session_token_bad_token_local(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client._ctx.version = None
+
+        with pytest.raises(ValueError) as e:
+            client.with_user_session_token("")
+        assert str(e.value) == "token must be set to non-empty string."
+
+        with pytest.raises(ValueError) as e:
+            client.with_user_session_token(None)  # type: ignore
+        assert str(e.value) == "token must be set to non-empty string."
 
     def test__del__(
         self,
