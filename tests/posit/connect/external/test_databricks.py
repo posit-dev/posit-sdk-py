@@ -1,4 +1,5 @@
-import base64
+from __future__ import annotations
+
 from unittest.mock import patch
 
 import pytest
@@ -8,27 +9,41 @@ from typing_extensions import Dict
 from posit.connect import Client
 from posit.connect.external.databricks import (
     POSIT_OAUTH_INTEGRATION_AUTH_TYPE,
-    CredentialsProvider,
-    CredentialsStrategy,
-    PositContentCredentialsProvider,
-    PositContentCredentialsStrategy,
-    PositCredentialsProvider,
-    PositCredentialsStrategy,
-    PositLocalContentCredentialsProvider,
-    PositLocalContentCredentialsStrategy,
-    _get_auth_type,
+    ConnectStrategy,
     _new_bearer_authorization_header,
+    _PositConnectContentCredentialsProvider,
+    _PositConnectViewerCredentialsProvider,
+    databricks_config,
 )
 from posit.connect.oauth import Credentials
 
+try:
+    from databricks.sdk.core import Config, DefaultCredentials
+    from databricks.sdk.credentials_provider import (
+        CredentialsProvider,
+        CredentialsStrategy,
+    )
 
-class mock_strategy(CredentialsStrategy):
+    # construct a DefaultCredentials CredentialsStrategy
+    # weirdly, you have to call `__call__()` at least once in order to initialize `auth_type()`
+    # This is the expected credentials strategy when none is provided to our databricks_config() helper
+    expected_credentials = DefaultCredentials()  # pyright: ignore[reportPossiblyUnboundVariable]
+    expected_credentials(Config(auth_type="pat", token="asdf", host="https://databricks.com/"))  # pyright: ignore[reportPossiblyUnboundVariable]
+
+except ImportError:
+    pytestmark = pytest.mark.skipif(True, reason="requires the Databricks SDK")
+
+
+class mock_strategy(CredentialsStrategy):  # pyright: ignore[reportPossiblyUnboundVariable]
+    def __init__(self, name: str):
+        self.name = name
+
     def auth_type(self) -> str:
-        return "local"
+        return self.name
 
-    def __call__(self) -> CredentialsProvider:
+    def __call__(self, *args, **kwargs) -> CredentialsProvider:
         def inner() -> Dict[str, str]:
-            return {"Authorization": "Bearer static-pat-token"}
+            return {"Authorization": f"Bearer {self.name}"}
 
         return inner
 
@@ -84,42 +99,6 @@ class TestPositCredentialsHelpers:
         result = _new_bearer_authorization_header(credential)
         assert result == {"Authorization": "Bearer access_token"}
 
-    def test_get_auth_type_local(self):
-        assert _get_auth_type("local-auth") == "local-auth"
-
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
-    def test_get_auth_type_connect(self):
-        assert _get_auth_type("local-auth") == POSIT_OAUTH_INTEGRATION_AUTH_TYPE
-
-    @responses.activate
-    def test_local_content_credentials_provider(self):
-        token_url = "https://my-token/url"
-        client_id = "client_id"
-        client_secret = "client_secret_123"
-        basic_auth = f"{client_id}:{client_secret}"
-        b64_basic_auth = base64.b64encode(basic_auth.encode("utf-8")).decode("utf-8")
-
-        responses.post(
-            token_url,
-            match=[
-                responses.matchers.urlencoded_params_matcher(
-                    {
-                        "grant_type": "client_credentials",
-                        "scope": "all-apis",
-                    },
-                ),
-                responses.matchers.header_matcher({"Authorization": f"Basic {b64_basic_auth}"}),
-            ],
-            json={
-                "access_token": "oauth2-m2m-access-token",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-            },
-        )
-
-        cp = PositLocalContentCredentialsProvider(token_url, client_id, client_secret)
-        assert cp() == {"Authorization": "Bearer oauth2-m2m-access-token"}
-
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
     @responses.activate
     def test_posit_content_credentials_provider(self):
@@ -127,7 +106,7 @@ class TestPositCredentialsHelpers:
 
         client = Client(api_key="12345", url="https://connect.example/")
         client._ctx.version = None
-        cp = PositContentCredentialsProvider(client=client)
+        cp = _PositConnectContentCredentialsProvider(client=client)
         assert cp() == {"Authorization": "Bearer content-access-token"}
 
     @responses.activate
@@ -136,95 +115,86 @@ class TestPositCredentialsHelpers:
 
         client = Client(api_key="12345", url="https://connect.example/")
         client._ctx.version = None
-        cp = PositCredentialsProvider(client=client, user_session_token="cit")
+        cp = _PositConnectViewerCredentialsProvider(client=client, user_session_token="cit")
         assert cp() == {"Authorization": "Bearer dynamic-viewer-access-token"}
 
-    @responses.activate
-    def test_local_content_credentials_strategy(self):
-        token_url = "https://my-token/url"
-        client_id = "client_id"
-        client_secret = "client_secret_123"
-        basic_auth = f"{client_id}:{client_secret}"
-        b64_basic_auth = base64.b64encode(basic_auth.encode("utf-8")).decode("utf-8")
-
-        responses.post(
-            token_url,
-            match=[
-                responses.matchers.urlencoded_params_matcher(
-                    {
-                        "grant_type": "client_credentials",
-                        "scope": "all-apis",
-                    },
-                ),
-                responses.matchers.header_matcher({"Authorization": f"Basic {b64_basic_auth}"}),
-            ],
-            json={
-                "access_token": "oauth2-m2m-access-token",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-            },
-        )
-
-        cs = PositLocalContentCredentialsStrategy(
-            token_url,
-            client_id,
-            client_secret,
-        )
-        cp = cs()
-        assert cs.auth_type() == "posit-local-client-credentials"
-        assert cp() == {"Authorization": "Bearer oauth2-m2m-access-token"}
-
+    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
-    def test_posit_content_credentials_strategy(self):
+    def test_connect_strategy(self):
         register_mocks()
-
         client = Client(api_key="12345", url="https://connect.example/")
         client._ctx.version = None
-        cs = PositContentCredentialsStrategy(
-            local_strategy=mock_strategy(),
-            client=client,
-        )
+
+        # the default implementation uses Service Account authentication
+        cs = ConnectStrategy(client=client)
+        assert cs.auth_type() == POSIT_OAUTH_INTEGRATION_AUTH_TYPE
         cp = cs()
-        assert cs.auth_type() == "posit-oauth-integration"
         assert cp() == {"Authorization": "Bearer content-access-token"}
 
-    @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
-    def test_posit_credentials_strategy(self):
-        register_mocks()
-
-        client = Client(api_key="12345", url="https://connect.example/")
-        client._ctx.version = None
-        cs = PositCredentialsStrategy(
-            local_strategy=mock_strategy(),
-            user_session_token="cit",
-            client=client,
-        )
+        # if a session token is provided then Viewer auth is used
+        cs = ConnectStrategy(client=client, user_session_token="cit")
         cp = cs()
-        assert cs.auth_type() == "posit-oauth-integration"
         assert cp() == {"Authorization": "Bearer dynamic-viewer-access-token"}
 
-    def test_posit_content_credentials_strategy_fallback(self):
-        # local_strategy is used when the content is running locally
-        client = Client(api_key="12345", url="https://connect.example/")
-        cs = PositContentCredentialsStrategy(
-            local_strategy=mock_strategy(),
-            client=client,
+    def test_databricks_config(self):
+        # credentials_strategy is removed if it is provided
+        cfg = databricks_config(
+            credentials_strategy=mock_strategy("mock"),
+            auth_type="pat",
+            token="asdf",
+            host="https://databricks.com/",
         )
-        cp = cs()
-        assert cs.auth_type() == "local"
-        assert cp() == {"Authorization": "Bearer static-pat-token"}
+        assert cfg._credentials_strategy.auth_type() == expected_credentials.auth_type()
 
-    def test_posit_credentials_strategy_fallback(self):
-        # local_strategy is used when the content is running locally
-        client = Client(api_key="12345", url="https://connect.example/")
-        cs = PositCredentialsStrategy(
-            local_strategy=mock_strategy(),
-            user_session_token="cit",
-            client=client,
+        # kwargs are passed through to the Config() constructor
+        cfg = databricks_config(
+            host="https://databricks.com",
+            cluster_id="cluster_id",
+            warehouse_id="warehouse_id",
+            token="token",
         )
-        cp = cs()
-        assert cs.auth_type() == "local"
-        assert cp() == {"Authorization": "Bearer static-pat-token"}
+        assert cfg.host == "https://databricks.com"
+        assert cfg.cluster_id == "cluster_id"
+        assert cfg.warehouse_id == "warehouse_id"
+        assert cfg.token == "token"
+
+    def test_databricks_config_default(self):
+        cfg = databricks_config(
+            posit_default_strategy=mock_strategy("default"),
+            posit_workbench_strategy=mock_strategy("workbench"),
+            posit_connect_strategy=mock_strategy("connect"),
+        )
+        assert cfg._credentials_strategy.auth_type() == "default"
+
+        # default fallback defaults to DefaultCredentials() when none is provided
+        cfg = databricks_config(auth_type="pat", token="asdf", host="https://databricks.com/")
+        assert cfg._credentials_strategy.auth_type() == expected_credentials.auth_type()
+
+    @patch.dict("os.environ", {"RS_SERVER_ADDRESS": "https://workbench.posit.co/"})
+    def test_databricks_config_workbench(self):
+        cfg = databricks_config(
+            posit_default_strategy=mock_strategy("default"),
+            posit_workbench_strategy=mock_strategy("workbench"),
+            posit_connect_strategy=mock_strategy("connect"),
+        )
+        assert cfg._credentials_strategy.auth_type() == "workbench"
+
+        # workbench defaults to DefaultCredentials() when none is provided
+        cfg = databricks_config(auth_type="pat", token="asdf", host="https://databricks.com/")
+        assert cfg._credentials_strategy.auth_type() == expected_credentials.auth_type()
+
+    @patch.dict("os.environ", {"CONNECT_API_KEY": "API_KEY"})
+    @patch.dict("os.environ", {"CONNECT_SERVER": "https://connect.posit.co/"})
+    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    def test_databricks_config_connect(self):
+        cfg = databricks_config(
+            posit_default_strategy=mock_strategy("default"),
+            posit_workbench_strategy=mock_strategy("workbench"),
+            posit_connect_strategy=mock_strategy("connect"),
+        )
+        assert cfg._credentials_strategy.auth_type() == "connect"
+
+        # connect defaults to ConnectStrategy() when none is provided
+        cfg = databricks_config()
+        assert cfg._credentials_strategy.auth_type() == ConnectStrategy().auth_type()
