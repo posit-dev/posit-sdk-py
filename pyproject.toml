@@ -131,7 +131,15 @@ exclude = ".*"
 [dependency-groups]
 build = ["build"]
 coverage = ["coverage"]
-examples = ["rsconnect-python", "pandas", "databricks", "shiny"]
+examples = [
+    "databricks-sdk>=0.29.0",
+    "databricks-sql-connector>=3.3.0",
+    "pandas",
+    "rsconnect-python",
+    "shiny",
+    "streamlit>=1.37.0"
+]
+external = ["databricks-sdk"]
 git = ["pre-commit"]
 lint = ["ruff", "pyright"]
 test = ["rsconnect-python", "responses", "pytest", "pyjson5"]
@@ -143,6 +151,7 @@ dev = [
     # # `numpy==1.24.4` requires `distutils`, which is not available in python3.12
     # # `numpy>1.24.4` does not require `distutils`
     # { include-group = "examples" },
+    { include-group = "external" },
     { include-group = "git" },
     { include-group = "lint" },
     { include-group = "test" },
