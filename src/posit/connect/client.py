@@ -208,6 +208,7 @@ class Client(ContextManager):
         --------
         ```python
         from posit.connect import Client
+
         client = Client().with_user_session_token("my-user-session-token")
         ```
 
@@ -218,13 +219,14 @@ class Client(ContextManager):
 
         client = Client()
 
+
         @reactive.calc
         def visitor_client():
             ## read the user session token and generate a new client
-            user_session_token = session.http_conn.headers.get(
-                "Posit-Connect-User-Session-Token"
-            )
+            user_session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
             return client.with_user_session_token(user_session_token)
+
+
         @render.text
         def user_profile():
             # fetch the viewer's profile information
