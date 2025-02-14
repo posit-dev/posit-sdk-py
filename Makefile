@@ -4,6 +4,9 @@ include vars.mk
 
 .PHONY: build clean cov default dev docker-deps docs ensure-uv fmt fix install it lint test uninstall version help
 
+$(UV_LOCK): dev
+	$(UV) lock
+
 all: dev test lint build
 
 build: dev
@@ -30,7 +33,7 @@ cov-xml: dev
 	$(UV) run coverage xml
 
 dev: ensure-uv
-	$(UV) pip install -e .
+	$(UV) pip install --upgrade -e .
 
 docker-deps: ensure-uv
 	# Sync given the `uv.lock` file
@@ -59,8 +62,6 @@ fmt: dev
 install: build
 	$(UV) pip install dist/*.whl
 
-$(UV_LOCK): dev
-	$(UV) lock
 it: $(UV_LOCK)
 	$(MAKE) -C ./integration
 

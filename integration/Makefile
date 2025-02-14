@@ -26,6 +26,8 @@ PYTEST_ARGS ?= "-s"
 
 # Versions
 CONNECT_VERSIONS := \
+	2025.01.0 \
+	2024.12.0 \
 	2024.11.0 \
 	2024.09.0 \
 	2024.08.0 \
