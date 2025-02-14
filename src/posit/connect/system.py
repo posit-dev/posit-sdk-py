@@ -201,7 +201,8 @@ class SystemRuntimeCaches(ContextManager):
         version: str,
         image_name: str,
         dry_run: Literal[False] = False,
-    ) -> Task: ...
+    ) -> Task | None: ...
+
     @overload
     def destroy(
         self,
@@ -211,7 +212,7 @@ class SystemRuntimeCaches(ContextManager):
         version: str,
         image_name: str,
         dry_run: Literal[True] = True,
-    ) -> None: ...
+    ) -> Task | None: ...
 
     def destroy(
         self,
