@@ -7,24 +7,28 @@ Notes
 These APIs are provided as a convenience and are subject to breaking changes:
 https://github.com/databricks/databricks-sdk-py#interface-stability
 """
-
-import abc
+from __future__ import annotations
 
 import requests
-from typing_extensions import Callable, Dict, Optional
+from typing_extensions import TYPE_CHECKING, Dict, Optional
 
-from .._utils import is_local
+from .._utils import is_local, is_connect, is_workbench
 from ..client import Client
 from ..oauth import Credentials
 
+if TYPE_CHECKING:
+    from databricks.sdk.core import Config
+    from databricks.sdk.credentials_provider import (
+            CredentialsStrategy,
+            CredentialsProvider
+    )
+
 POSIT_OAUTH_INTEGRATION_AUTH_TYPE = "posit-oauth-integration"
 POSIT_LOCAL_CLIENT_CREDENTIALS_AUTH_TYPE = "posit-local-client-credentials"
-
-# The Databricks SDK CredentialsProvider == Databricks SQL HeaderFactory
-CredentialsProvider = Callable[[], Dict[str, str]]
+POSIT_WORKBENCH_AUTH_TYPE = "posit-workbench"
 
 
-class CredentialsStrategy(abc.ABC):
+class CredentialsStrategyWrapper(CredentialsStrategy):
     """Maintain compatibility with the Databricks SQL/SDK client libraries.
 
     See Also
@@ -33,13 +37,19 @@ class CredentialsStrategy(abc.ABC):
     * https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/credentials_provider.py#L44-L54
     """
 
-    @abc.abstractmethod
-    def auth_type(self) -> str:
-        raise NotImplementedError
+    def sql_credentials_provider(self, *args, **kwargs):
+        """The sql connector attempts to call the credentials provider w/o any args.
 
-    @abc.abstractmethod
-    def __call__(self, *args, **kwargs) -> CredentialsProvider:
-        raise NotImplementedError
+        The SQL client's `ExternalAuthProvider` is not compatible w/ the SDK's implementation of
+        `CredentialsProvider`, so create a no-arg lambda that wraps the args defined by the real caller.
+        This way we can pass in a databricks `Config` object required by most of the SDK's `CredentialsProvider`
+        implementations from where `sql.connect` is called.
+
+        See Also
+        --------
+        * https://github.com/databricks/databricks-sql-python/issues/148#issuecomment-2271561365
+        """
+        return lambda: self.__call__(*args, **kwargs)
 
 
 def _new_bearer_authorization_header(credentials: Credentials) -> Dict[str, str]:
@@ -60,32 +70,13 @@ def _new_bearer_authorization_header(credentials: Credentials) -> Dict[str, str]
 
 
 def _get_auth_type(local_auth_type: str) -> str:
-    """Returns the auth type currently in use.
-
-    The databricks-sdk client uses the configured auth_type to create
-    a user-agent string which is used for attribution. We should only
-    overwrite the auth_type if we are using the PositCredentialsStrategy (non-local),
-    otherwise, we should return the auth_type of the configured local_strategy instead
-    to avoid breaking someone elses attribution.
-
-    NOTE: The databricks-sql client does not use auth_type to set the user-agent.
-    https://github.com/databricks/databricks-sql-python/blob/v3.3.0/src/databricks/sql/client.py#L214-L219
-
-    See Also
-    --------
-    * https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/config.py#L261-L269
-
-    Returns
-    -------
-        str
-    """
     if is_local():
         return local_auth_type
 
     return POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
 
-class PositLocalContentCredentialsProvider:
+class positLocalContentCredentialsProvider:
     """`CredentialsProvider` implementation which provides a fallback for local development using a client credentials flow.
 
     There is an open issue against the Databricks CLI which prevents it from returning service principal access tokens.
@@ -120,7 +111,7 @@ class PositLocalContentCredentialsProvider:
         return _new_bearer_authorization_header(credentials)
 
 
-class PositContentCredentialsProvider:
+class positConnectContentCredentialsProvider:
     """`CredentialsProvider` implementation which initiates a credential exchange using a content-session-token.
 
     The content-session-token is provided by Connect through the environment variable `CONNECT_CONTENT_SESSION_TOKEN`.
@@ -139,7 +130,7 @@ class PositContentCredentialsProvider:
         return _new_bearer_authorization_header(credentials)
 
 
-class PositCredentialsProvider:
+class positConnectViewerCredentialsProvider:
     """`CredentialsProvider` implementation which initiates a credential exchange using a user-session-token.
 
     The user-session-token is provided by Connect through the HTTP session header
@@ -234,105 +225,64 @@ class PositLocalContentCredentialsStrategy(CredentialsStrategy):
         self._client_id = client_id
         self._client_secret = client_secret
 
-    def sql_credentials_provider(self, *args, **kwargs):
-        return lambda: self.__call__(*args, **kwargs)
 
     def auth_type(self) -> str:
         return POSIT_LOCAL_CLIENT_CREDENTIALS_AUTH_TYPE
 
     def __call__(self, *args, **kwargs) -> CredentialsProvider:  # noqa: ARG002
-        return PositLocalContentCredentialsProvider(
+        return positLocalContentCredentialsProvider(
             self._token_endpoint_url,
             self._client_id,
             self._client_secret,
         )
 
 
-class PositContentCredentialsStrategy(CredentialsStrategy):
-    """`CredentialsStrategy` implementation which supports interacting with Service Account OAuth integrations on Connect.
-
-    This strategy callable class returns a `PositContentCredentialsProvider` when hosted on Connect, and
-    its `local_strategy` strategy otherwise.
-
-    Examples
-    --------
-    NOTE: in the example below, the `PositContentCredentialsStrategy` can be initialized anywhere that
-    the Python process can read environment variables.
-
-    ```python
-    from posit.connect.external.databricks import PositContentCredentialsStrategy
-
-    import pandas as pd
-    from databricks import sql
-    from databricks.sdk.core import ApiClient, Config, databricks_cli
-    from databricks.sdk.service.iam import CurrentUserAPI
-
-    DATABRICKS_HOST = "<REDACTED>"
-    DATABRICKS_HOST_URL = f"https://{DATABRICKS_HOST}"
-    SQL_HTTP_PATH = "<REDACTED>"
-
-    # NOTE: currently the databricks_cli local strategy only supports auth code OAuth flows.
-    # https://github.com/databricks/cli/issues/1939
-    #
-    # This means that the databricks_cli supports local development using the developer's
-    # databricks credentials, but not the credentials for a service principal.
-    # To fallback to service principal credentials in local development, use
-    # `PositLocalContentCredentialsStrategy` as a drop-in replacement.
-    posit_strategy = PositContentCredentialsStrategy(local_strategy=databricks_cli)
-
-    cfg = Config(host=DATABRICKS_HOST_URL, credentials_strategy=posit_strategy)
-
-    databricks_user_info = CurrentUserAPI(ApiClient(cfg)).me()
-    print(f"Hello, {databricks_user_info.display_name}!")
-
-    query = "SELECT * FROM samples.nyctaxi.trips LIMIT 10;"
-    with sql.connect(
-        server_hostname=DATABRICKS_HOST,
-        http_path=SQL_HTTP_PATH,
-        credentials_provider=posit_strategy.sql_credentials_provider(cfg),
-    ) as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            print(pd.DataFrame([row.asDict() for row in rows]))
-    ```
+class PositWorkbenchCredentialsStrategy(CredentialsStrategyWrapper):
     """
-
-    def __init__(
-        self,
-        local_strategy: CredentialsStrategy,
-        client: Optional[Client] = None,
-    ):
-        self._local_strategy = local_strategy
-        self._client = client
-
-    def sql_credentials_provider(self, *args, **kwargs):
-        """The sql connector attempts to call the credentials provider w/o any args.
-
-        The SQL client's `ExternalAuthProvider` is not compatible w/ the SDK's implementation of
-        `CredentialsProvider`, so create a no-arg lambda that wraps the args defined by the real caller.
-        This way we can pass in a databricks `Config` object required by most of the SDK's `CredentialsProvider`
-        implementations from where `sql.connect` is called.
-
-        https://github.com/databricks/databricks-sql-python/issues/148#issuecomment-2271561365
-        """
-        return lambda: self.__call__(*args, **kwargs)
+    """
+    def __init__(self, config: Config):
+        self.config = config
 
     def auth_type(self) -> str:
-        return _get_auth_type(self._local_strategy.auth_type())
+        return POSIT_WORKBENCH_AUTH_TYPE
+
+    def __call__(self, *args, **kwargs) -> CredentialsProvider: # noqa: ARG002
+        if self.config.token is None:
+            raise ValueError("Missing value for field 'token' in Config.")
+
+        def cp():
+            return {"Authorization": f"Bearer {self.config.token}"}
+        return cp
+
+
+class PositConnectCredentialsStrategy(CredentialsStrategyWrapper):
+    """
+    """
+    def __init__(self,
+                 client: Optional[Client] = None,
+                 user_session_token: Optional[str] = None,
+    ):
+        self._client = client
+        self._user_session_token = user_session_token
+        if self._user_session_token is None:
+            print() # log that we are falling back to client credentials
+
+    def auth_type(self) -> str:
+        return POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
     def __call__(self, *args, **kwargs) -> CredentialsProvider:
-        # If the content is not running on Connect then fall back to local_strategy
-        if is_local():
-            return self._local_strategy(*args, **kwargs)
+        if not is_connect():
+            raise ValueError("The PositConnectCredentialsStrategy is not supported for content running outside of Posit Connect.")
 
         if self._client is None:
             self._client = Client()
 
-        return PositContentCredentialsProvider(self._client)
+        if self._user_session_token:
+            return positConnectViewerCredentialsProvider(self._client, self._user_session_token)
+        return positConnectContentCredentialsProvider(self._client)
 
 
-class PositCredentialsStrategy(CredentialsStrategy):
+class PositCredentialsStrategy(CredentialsStrategyWrapper):
     """`CredentialsStrategy` implementation which supports interacting with Viewer OAuth integrations on Connect.
 
     This strategy callable class returns a `PositCredentialsProvider` when hosted on Connect, and
@@ -395,42 +345,59 @@ class PositCredentialsStrategy(CredentialsStrategy):
 
     def __init__(
         self,
-        local_strategy: CredentialsStrategy,
+        local_strategy: Optional[CredentialsStrategy] = None,
+        workbench_strategy: Optional[CredentialsStrategy] = None,
+        connect_strategy: Optional[CredentialsStrategy] = None,
         client: Optional[Client] = None,
-        user_session_token: Optional[str] = None,
     ):
+        self._auth_type = "posit-connect-default"
         self._local_strategy = local_strategy
+        self._workbench_strategy = workbench_strategy
+        self._connect_strategy = connect_strategy
         self._client = client
-        self._user_session_token = user_session_token
 
-    def sql_credentials_provider(self, *args, **kwargs):
-        """The sql connector attempts to call the credentials provider w/o any args.
+        # TODO: set self._strategy during init and log the one that we picked
 
-        The SQL client's `ExternalAuthProvider` is not compatible w/ the SDK's implementation of
-        `CredentialsProvider`, so create a no-arg lambda that wraps the args defined by the real caller.
-        This way we can pass in a databricks `Config` object required by most of the SDK's `CredentialsProvider`
-        implementations from where `sql.connect` is called.
+    def auth_type(self) -> str:
+        """Returns the auth type currently in use.
+
+        The databricks-sdk client uses the configured auth_type to create
+        a user-agent string which is used for attribution. We should only
+        overwrite the auth_type if we are using the PositWorkbenchCredentialsStrategy
+        or PositConnectCredentialsStrategy (non-local), otherwise, we should return the auth_type
+        of the configured local_strategy instead to avoid breaking someone elses attribution.
+
+        NOTE: The databricks-sql client does not use auth_type to set the user-agent.
+        https://github.com/databricks/databricks-sql-python/blob/v3.3.0/src/databricks/sql/client.py#L214-L219
 
         See Also
         --------
-        * https://github.com/databricks/databricks-sql-python/issues/148#issuecomment-2271561365
-        """
-        return lambda: self.__call__(*args, **kwargs)
+        * https://github.com/databricks/databricks-sdk-py/blob/v0.29.0/databricks/sdk/config.py#L261-L269
 
-    def auth_type(self) -> str:
-        return _get_auth_type(self._local_strategy.auth_type())
+        Returns
+        -------
+            str
+        """
+        return self._auth_type
 
     def __call__(self, *args, **kwargs) -> CredentialsProvider:
-        # If the content is not running on Connect then fall back to local_strategy
-        if is_local():
+        if is_connect() and self._connect_strategy is not None:
+            self._auth_type = self._connect_strategy.auth_type()
+            return self._connect_strategy(*args, **kwargs)
+        else:
+            print()
+            # log and continue
+
+        if is_workbench() and self._workbench_strategy is not None:
+            self._auth_type = self._workbench_strategy.auth_type()
+            return self._workbench_strategy(*args, **kwargs)
+        else:
+            print()
+            # log and continue
+
+        if self._local_strategy is not None:
+            self._auth_type = self._local_strategy.auth_type()
             return self._local_strategy(*args, **kwargs)
+        else:
+            raise ValueError("") # TODO: Real error message
 
-        # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.
-        # user_session_token is required to impersonate the viewer.
-        if self._user_session_token is None:
-            raise ValueError("The user-session-token is required for viewer authentication.")
-
-        if self._client is None:
-            self._client = Client()
-
-        return PositCredentialsProvider(self._client, self._user_session_token)

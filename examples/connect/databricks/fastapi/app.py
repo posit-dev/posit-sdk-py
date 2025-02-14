@@ -9,7 +9,11 @@ from databricks.sdk.core import Config, databricks_cli
 from fastapi import FastAPI, Header
 from typing_extensions import TYPE_CHECKING, Annotated
 
-from posit.connect.external.databricks import PositCredentialsStrategy
+from posit.connect.external.databricks import (
+    PositCredentialsStrategy,
+    PositWorkbenchCredentialsStrategy,
+    PositConnectCredentialsStrategy,
+)
 
 if TYPE_CHECKING:
     from fastapi.responses import JSONResponse
@@ -34,12 +38,11 @@ async def get_fares(
 
     posit_strategy = PositCredentialsStrategy(
         local_strategy=databricks_cli,
-        user_session_token=posit_connect_user_session_token,
+        workbench_strategy=PositWorkbenchCredentialsStrategy(Config(profile="workbench")),
+        connect_strategy=PositConnectCredentialsStrategy(user_session_token=posit_connect_user_session_token),
     )
     cfg = Config(
-        host=DATABRICKS_HOST_URL,
-        # uses Posit's custom credential_strategy if running on Connect,
-        # otherwise falls back to the strategy defined by local_strategy
+        host=DATABRICKS_HOST_URL, # required by databricks_cli
         credentials_strategy=posit_strategy,
     )
 
