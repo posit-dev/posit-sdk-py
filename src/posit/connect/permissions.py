@@ -158,7 +158,6 @@ class Permissions(Resources):
             kwargs["principal_type"] = principal_type
 
         path = f"v1/content/{self.content_guid}/permissions"
-        print(kwargs)
         response = self._ctx.client.post(path, json=kwargs)
         return Permission(self._ctx, **response.json())
 
