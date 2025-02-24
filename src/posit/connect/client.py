@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from requests import Response, Session
 from typing_extensions import TYPE_CHECKING, overload
 
 from . import hooks, me
@@ -14,6 +13,7 @@ from .groups import Groups
 from .metrics.metrics import Metrics
 from .oauth.oauth import API_KEY_TOKEN_TYPE, OAuth
 from .resources import _PaginatedResourceSequence, _ResourceSequence
+from .sessions import Session
 from .system import System
 from .tags import Tags
 from .tasks import Tasks
@@ -21,6 +21,8 @@ from .users import User, Users
 from .vanities import Vanities
 
 if TYPE_CHECKING:
+    from requests import Response
+
     from .environments import Environments
     from .packages import Packages
 
@@ -208,6 +210,7 @@ class Client(ContextManager):
         --------
         ```python
         from posit.connect import Client
+
         client = Client().with_user_session_token("my-user-session-token")
         ```
 
@@ -218,13 +221,14 @@ class Client(ContextManager):
 
         client = Client()
 
+
         @reactive.calc
         def visitor_client():
             ## read the user session token and generate a new client
-            user_session_token = session.http_conn.headers.get(
-                "Posit-Connect-User-Session-Token"
-            )
+            user_session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
             return client.with_user_session_token(user_session_token)
+
+
         @render.text
         def user_profile():
             # fetch the viewer's profile information
