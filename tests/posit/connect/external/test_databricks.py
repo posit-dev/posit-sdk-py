@@ -87,7 +87,7 @@ class TestPositCredentialsHelpers:
     def test_get_auth_type_local(self):
         assert _get_auth_type("local-auth") == "local-auth"
 
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict("os.environ", {"POSIT_PRODUCT": "CONNECT"})
     def test_get_auth_type_connect(self):
         assert _get_auth_type("local-auth") == POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
@@ -176,7 +176,7 @@ class TestPositCredentialsHelpers:
 
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict("os.environ", {"POSIT_PRODUCT": "CONNECT"})
     def test_posit_content_credentials_strategy(self):
         register_mocks()
 
@@ -191,7 +191,7 @@ class TestPositCredentialsHelpers:
         assert cp() == {"Authorization": "Bearer content-access-token"}
 
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict("os.environ", {"POSIT_PRODUCT": "CONNECT"})
     def test_posit_credentials_strategy(self):
         register_mocks()
 

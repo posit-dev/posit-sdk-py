@@ -9,7 +9,7 @@ The APIs in this module are provided as a convenience and are subject to breakin
 
 from typing_extensions import Optional
 
-from .._utils import is_local
+from ...environment import is_local
 from ..client import Client
 
 
