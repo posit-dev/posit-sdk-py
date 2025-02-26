@@ -31,24 +31,24 @@ def test_get_product(posit_product, rstudio_product, expected):
 
 
 def test_is_local():
-    with patch("posit.connect.helpers.get_product", return_value=None):
+    with patch("posit.environment.get_product", return_value=None):
         assert is_local() is True
 
-    with patch("posit.connect.helpers.get_product", return_value="CONNECT"):
+    with patch("posit.environment.get_product", return_value="CONNECT"):
         assert is_local() is False
 
 
 def test_is_running_on_connect():
-    with patch("posit.connect.helpers.get_product", return_value="CONNECT"):
+    with patch("posit.environment.get_product", return_value="CONNECT"):
         assert is_running_on_connect() is True
 
-    with patch("posit.connect.helpers.get_product", return_value="WORKBENCH"):
+    with patch("posit.environment.get_product", return_value="WORKBENCH"):
         assert is_running_on_connect() is False
 
 
 def test_is_running_on_workbench():
-    with patch("posit.connect.helpers.get_product", return_value="WORKBENCH"):
+    with patch("posit.environment.get_product", return_value="WORKBENCH"):
         assert is_running_on_workbench() is True
 
-    with patch("posit.connect.helpers.get_product", return_value="CONNECT"):
+    with patch("posit.environment.get_product", return_value="CONNECT"):
         assert is_running_on_workbench() is False
