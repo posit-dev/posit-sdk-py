@@ -1,3 +1,4 @@
+import pytest
 import responses
 
 from posit.connect.sessions import Session
@@ -54,17 +55,20 @@ def test_post_with_redirect_no_preserve():
     assert responses.calls[1].request.method == "GET"
 
 
+@pytest.mark.parametrize("status_code", [307, 308])
 @responses.activate
-def test_post_redirect_307():
+def test_post_redirect_307_308(status_code):
     initial_url = "http://connect.example.com/api"
     redirect_url = "http://connect.example.com/redirect"
 
-    # For 307 redirects, the HTTP spec mandates preserving the method.
-    responses.add(responses.POST, initial_url, status=307, headers={"location": "/redirect"})
+    # For 307 and 308 redirects, the HTTP spec mandates preserving the method.
+    responses.add(
+        responses.POST, initial_url, status=status_code, headers={"location": "/redirect"}
+    )
     responses.add(responses.POST, redirect_url, json={"result": "redirected"}, status=200)
 
     session = Session()
-    # Even with preserve_post=False, a 307 redirect should use POST.
+    # Even with preserve_post=False, a 307 or 308 redirect should use POST.
     response = session.post(initial_url, data={"key": "value"}, preserve_post=False)
 
     assert response.status_code == 200
