@@ -41,6 +41,7 @@ jobs:
       matrix:
         CONNECT_VERSION:
           - preview
+          - 2025.02.0
           - 2025.01.0
           - 2024.12.0
           - 2024.11.0
