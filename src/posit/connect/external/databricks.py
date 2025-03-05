@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 POSIT_OAUTH_INTEGRATION_AUTH_TYPE = "posit-oauth-integration"
 POSIT_WORKBENCH_AUTH_TYPE = "posit-workbench"
 
-logger = logging.getLogger("posit.sdk")
+logger = logging.getLogger(__name__)
 
 
 def _new_bearer_authorization_header(credentials: Credentials) -> Dict[str, str]:
@@ -130,7 +130,8 @@ class WorkbenchStrategy(CredentialsStrategy):
 
     @render.text
     def text():
-        databricks_user_info = CurrentUserAPI(ApiClient(cfg())).me()
+        current_user_api = CurrentUserAPI(ApiClient(cfg()))
+        databricks_user_info = current_user_api.me()
         return f"Hello, {databricks_user_info.display_name}!"
     ```
     """
@@ -197,7 +198,8 @@ class ConnectStrategy(CredentialsStrategy):
 
     @render.text
     def text():
-        databricks_user_info = CurrentUserAPI(ApiClient(cfg())).me()
+        current_user_api = CurrentUserAPI(ApiClient(cfg()))
+        databricks_user_info = current_user_api.me()
         return f"Hello, {databricks_user_info.display_name}!"
     ```
 
@@ -224,7 +226,8 @@ class ConnectStrategy(CredentialsStrategy):
 
     @render.text
     def text():
-        databricks_user_info = CurrentUserAPI(ApiClient(cfg())).me()
+        current_user_api = CurrentUserAPI(ApiClient(cfg()))
+        databricks_user_info = current_user_api.me()
         return f"Hello, {databricks_user_info.display_name}!"
     ```
     """
@@ -234,7 +237,7 @@ class ConnectStrategy(CredentialsStrategy):
         client: Optional[Client] = None,
         user_session_token: Optional[str] = None,
     ):
-        self._cp = None
+        self._cp: Optional[CredentialsProvider] = None
         self._client = client
         self._user_session_token = user_session_token
 
@@ -375,7 +378,8 @@ def databricks_config(
 
     @render.text
     def text():
-        databricks_user_info = CurrentUserAPI(ApiClient(cfg())).me()
+        current_user_api = CurrentUserAPI(ApiClient(cfg()))
+        databricks_user_info = current_user_api.me()
         return f"Hello, {databricks_user_info.display_name}!"
     ```
 
@@ -417,7 +421,8 @@ def databricks_config(
 
     @render.text
     def text():
-        databricks_user_info = CurrentUserAPI(ApiClient(cfg())).me()
+        current_user_api = CurrentUserAPI(ApiClient(cfg()))
+        databricks_user_info = current_user_api.me()
         return f"Hello, {databricks_user_info.display_name}!"
     ```
 
@@ -459,7 +464,8 @@ def databricks_config(
 
     @render.text
     def text():
-        databricks_user_info = CurrentUserAPI(ApiClient(cfg())).me()
+        current_user_api = CurrentUserAPI(ApiClient(cfg()))
+        databricks_user_info = current_user_api.me()
         return f"Hello, {databricks_user_info.display_name}!"
     ```
     """
