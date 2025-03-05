@@ -28,7 +28,7 @@ def register_mocks():
 
 class TestPositAuthenticator:
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict("os.environ", {"POSIT_PRODUCT": "CONNECT"})
     def test_posit_authenticator(self):
         register_mocks()
 
