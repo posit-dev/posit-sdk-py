@@ -102,6 +102,10 @@ up-%: build
 	PYTEST_ARGS="$(PYTEST_ARGS)" \
 	$(DOCKER_COMPOSE) -p $(PROJECT_NAME)-$(subst .,-,$(CONNECT_VERSION)) up -V --abort-on-container-exit --no-build
 
+# Show available versions
+print-versions:
+	@printf "%s\n" $(strip $(CONNECT_VERSIONS))
+
 # Show help message.
 help:
 	@echo "Makefile Targets:"
@@ -112,6 +116,7 @@ help:
 	@echo "  up               Start Docker Compose for all Connect versions."
 	@echo "  down             Tear down Docker resources for all Connect versions."
 	@echo "  clean            Clean up the project directory."
+	@echo "  print-versions   Show the available Connect versions."
 	@echo "  help             Show this help message."
 	@echo
 	@echo "Common Usage:"
