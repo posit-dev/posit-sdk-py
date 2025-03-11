@@ -349,7 +349,9 @@ class Client(ContextManager):
     @property
     @requires(version="2024.11.0")
     def packages(self) -> Packages:
-        return _PaginatedResourceSequence(self._ctx, "v1/packages", uid="name")
+        return _PaginatedResourceSequence(
+            self._ctx, "v1/packages", uid="name", page_size=1_000_000
+        )
 
     @property
     def system(self) -> System:
