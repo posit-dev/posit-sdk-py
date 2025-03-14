@@ -170,3 +170,6 @@ cython_debug/
 
 /.luarc.json
 _dev/
+
+# license files should not be commited to this repository
+*.lic
