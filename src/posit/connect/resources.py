@@ -177,8 +177,12 @@ class _ResourceSequence(Sequence[T], ResourceSequence[T]):
 
 
 class _PaginatedResourceSequence(_ResourceSequence):
+    def __init__(self, ctx, path: str, *, uid: str = "guid", page_size: int | None = None):
+        super().__init__(ctx, path, uid=uid)
+        self._page_size = page_size
+
     def fetch(self, **conditions):
-        paginator = Paginator(self._ctx, self._path, dict(**conditions))
+        paginator = Paginator(self._ctx, self._path, dict(**conditions), page_size=self._page_size)
         for page in paginator.fetch_pages():
             resources = []
             results = page.results
