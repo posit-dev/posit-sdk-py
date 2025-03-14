@@ -32,11 +32,27 @@ def update_dict_values(obj: dict[str, Any], /, **kwargs: Any) -> None:
     dict.update(obj, **kwargs)
 
 
-def is_local() -> bool:
-    """Returns true if called from a piece of content running on a Connect server.
+def is_workbench() -> bool:
+    """Attempts to return true if called from a piece of content running on Posit Workbench.
 
-    The connect server will always set the environment variable `RSTUDIO_PRODUCT=CONNECT`.
-    We can use this environment variable to determine if the content is running locally
-    or on a Connect server.
+    There is not yet a definitive way to determine if the content is running on Workbench. This method is best-effort.
     """
-    return os.getenv("RSTUDIO_PRODUCT") != "CONNECT"
+    return (
+        "RSW_LAUNCHER" in os.environ
+        or "RSTUDIO_MULTI_SESSION" in os.environ
+        or "RS_SERVER_ADDRESS" in os.environ
+        or "RS_SERVER_URL" in os.environ
+    )
+
+
+def is_connect() -> bool:
+    """Returns true if called from a piece of content running on Posit Connect.
+
+    The Connect content will always set the environment variable `RSTUDIO_PRODUCT=CONNECT`.
+    """
+    return os.getenv("RSTUDIO_PRODUCT") == "CONNECT"
+
+
+def is_local() -> bool:
+    """Returns true if called from a piece of content running locally."""
+    return not is_connect() and not is_workbench()
