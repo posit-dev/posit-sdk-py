@@ -11,7 +11,7 @@ from .content import Content
 from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics.metrics import Metrics
-from .oauth.oauth import API_KEY_TOKEN_TYPE, OAuth
+from .oauth.oauth import OAuth, OAuthTokenType
 from .resources import _PaginatedResourceSequence, _ResourceSequence
 from .sessions import Session
 from .system import System
@@ -256,7 +256,7 @@ class Client(ContextManager):
             raise ValueError("token must be set to non-empty string.")
 
         visitor_credentials = self.oauth.get_credentials(
-            token, requested_token_type=API_KEY_TOKEN_TYPE
+            token, requested_token_type=OAuthTokenType.API_KEY
         )
 
         visitor_api_key = visitor_credentials.get("access_token", "")

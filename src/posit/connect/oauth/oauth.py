@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from enum import Enum
 
 from typing_extensions import TYPE_CHECKING, Optional, TypedDict
 
@@ -12,9 +13,14 @@ if TYPE_CHECKING:
     from ..context import Context
 
 GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange"
-USER_SESSION_TOKEN_TYPE = "urn:posit:connect:user-session-token"
-CONTENT_SESSION_TOKEN_TYPE = "urn:posit:connect:content-session-token"
-API_KEY_TOKEN_TYPE = "urn:posit:connect:api-key"
+
+
+class OAuthTokenType(str, Enum):
+    ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token"
+    AWS_CREDENTIALS = "urn:ietf:params:aws:token-type:credentials"
+    API_KEY = "urn:posit:connect:api-key"
+    CONTENT_SESSION_TOKEN = "urn:posit:connect:content-session-token"
+    USER_SESSION_TOKEN = "urn:posit:connect:user-session-token"
 
 
 def _get_content_session_token() -> str:
@@ -53,13 +59,15 @@ class OAuth(Resources):
         return Sessions(self._ctx)
 
     def get_credentials(
-        self, user_session_token: Optional[str] = None, requested_token_type: Optional[str] = None
+        self,
+        user_session_token: Optional[str] = None,
+        requested_token_type: Optional[str | OAuthTokenType] = None,
     ) -> Credentials:
         """Perform an oauth credential exchange with a user-session-token."""
         # craft a credential exchange request
         data = {}
         data["grant_type"] = GRANT_TYPE
-        data["subject_token_type"] = USER_SESSION_TOKEN_TYPE
+        data["subject_token_type"] = OAuthTokenType.USER_SESSION_TOKEN
         if user_session_token:
             data["subject_token"] = user_session_token
         if requested_token_type:
@@ -73,7 +81,7 @@ class OAuth(Resources):
         # craft a credential exchange request
         data = {}
         data["grant_type"] = GRANT_TYPE
-        data["subject_token_type"] = CONTENT_SESSION_TOKEN_TYPE
+        data["subject_token_type"] = OAuthTokenType.CONTENT_SESSION_TOKEN
         data["subject_token"] = content_session_token or _get_content_session_token()
 
         response = self._ctx.client.post(self._path, data=data)
