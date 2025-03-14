@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import os
+import warnings
 
 from typing_extensions import Any
+
+from ..environment import is_local as env_is_local
 
 
 def update_dict_values(obj: dict[str, Any], /, **kwargs: Any) -> None:
@@ -33,10 +35,15 @@ def update_dict_values(obj: dict[str, Any], /, **kwargs: Any) -> None:
 
 
 def is_local() -> bool:
-    """Returns true if called from a piece of content running on a Connect server.
-
-    The connect server will always set the environment variable `RSTUDIO_PRODUCT=CONNECT`.
-    We can use this environment variable to determine if the content is running locally
-    or on a Connect server.
     """
-    return os.getenv("RSTUDIO_PRODUCT") != "CONNECT"
+    Check if code is running locally.
+
+    .. deprecated:: 0.9.0
+        Use :func:`posit.environment.is_local` instead.
+    """
+    warnings.warn(
+        "posit.connect._utils.is_local is deprecated. Use posit.environment.is_local instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return env_is_local()

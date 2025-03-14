@@ -85,7 +85,7 @@ class TestClient:
         MockSession.assert_called_once()
 
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict("os.environ", {"POSIT_PRODUCT": "CONNECT"})
     def test_with_user_session_token(self):
         api_key = "12345"
         url = "https://connect.example.com"
@@ -117,7 +117,7 @@ class TestClient:
         assert visitor_client.cfg.api_key == "api-key"
 
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict("os.environ", {"POSIT_PRODUCT": "CONNECT"})
     def test_with_user_session_token_bad_exchange_response_body(self):
         api_key = "12345"
         url = "https://connect.example.com"
@@ -143,7 +143,7 @@ class TestClient:
             client.with_user_session_token("cit")
         assert str(err.value) == "Unable to retrieve token."
 
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict("os.environ", {"POSIT_PRODUCT": "CONNECT"})
     def test_with_user_session_token_bad_token_deployed(self):
         api_key = "12345"
         url = "https://connect.example.com"
