@@ -1,19 +1,22 @@
+from datetime import datetime
+
 import pytest
 import responses
 
 from posit.connect import Client
 from posit.connect.external.aws import (
+    Credentials,
     _decode_access_token,
-    get_aws_content_credentials,
-    get_aws_credentials,
+    get_content_credentials,
+    get_credentials,
 )
 
-aws_creds = {
-    "accessKeyId": "abc123",
-    "secretAccessKey": "def456",
-    "sessionToken": "ghi789",
-    "expiration": "2025-01-01T00:00:00Z",
-}
+aws_creds = Credentials(
+    aws_access_key_id="abc123",
+    aws_secret_access_key="def456",
+    aws_session_token="ghi789",
+    expiration=datetime(2025, 1, 1, 0, 0, 0, 0),
+)
 
 encoded_aws_creds = "eyJhY2Nlc3NLZXlJZCI6ICJhYmMxMjMiLCAic2VjcmV0QWNjZXNzS2V5IjogImRlZjQ1NiIsICJzZXNzaW9uVG9rZW4iOiAiZ2hpNzg5IiwgImV4cGlyYXRpb24iOiAiMjAyNS0wMS0wMVQwMDowMDowMFoifQ=="
 
@@ -42,7 +45,7 @@ class TestAWS:
 
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
-        response = get_aws_credentials(c, "cit")
+        response = get_credentials(c, "cit")
 
         assert response == aws_creds
 
@@ -67,7 +70,7 @@ class TestAWS:
         c._ctx.version = None
 
         with pytest.raises(ValueError) as e:
-            get_aws_credentials(c, "cit")
+            get_credentials(c, "cit")
 
         assert e.match("No access token found in credentials")
 
@@ -94,7 +97,7 @@ class TestAWS:
 
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
-        response = get_aws_content_credentials(c, "cit")
+        response = get_content_credentials(c, "cit")
 
         assert response == aws_creds
 
@@ -119,7 +122,7 @@ class TestAWS:
         c._ctx.version = None
 
         with pytest.raises(ValueError) as e:
-            get_aws_content_credentials(c, "cit")
+            get_content_credentials(c, "cit")
 
         assert e.match("No access token found in credentials")
 

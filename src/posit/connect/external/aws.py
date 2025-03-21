@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import base64
 import json
+from datetime import datetime
 
-from typing_extensions import TYPE_CHECKING, Dict, Optional
+from typing_extensions import TYPE_CHECKING, Optional, TypedDict
 
 from ..oauth.oauth import OAuthTokenType
 
@@ -11,13 +12,20 @@ if TYPE_CHECKING:
     from ..client import Client
 
 
-def get_aws_credentials(client: Client, user_session_token: str) -> Dict[str, str]:
+class Credentials(TypedDict):
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_session_token: str
+    expiration: datetime
+
+
+def get_credentials(client: Client, user_session_token: str) -> Credentials:
     """
     Get AWS credentials using OAuth token exchange for an AWS Viewer integration.
 
-    According to RFC 8693, the access token must be a base64 encoded JSON object
-    containing the AWS credentials. This function will decode and deserialize the
-    access token and return the AWS credentials.
+    According to RFC 8693, the access token must be a base64-encoded JSON object
+    containing the AWS credentials. This function will return the decoded and
+    deserialized AWS credentials.
 
     Examples
     --------
@@ -32,9 +40,9 @@ def get_aws_credentials(client: Client, user_session_token: str) -> Dict[str, st
     credentials = get_aws_credentials(client, user_session_token)
     aws_session_expiration = credentials["expiration"]
     aws_session = boto3.Session(
-        aws_access_key_id=credentials["accessKeyId"],
-        aws_secret_access_key=credentials["secretAccessKey"],
-        aws_session_token=credentials["sessionToken"],
+        aws_access_key_id=credentials["aws_access_key_id"],
+        aws_secret_access_key=credentials["aws_secret_access_key"],
+        aws_session_token=credentials["aws_session_token"],
     )
 
     s3 = aws_session.resource("s3")
@@ -67,15 +75,15 @@ def get_aws_credentials(client: Client, user_session_token: str) -> Dict[str, st
     return _decode_access_token(access_token)
 
 
-def get_aws_content_credentials(
+def get_content_credentials(
     client: Client, content_session_token: Optional[str] = None
-) -> Dict[str, str]:
+) -> Credentials:
     """
     Get AWS credentials using OAuth token exchange for an AWS Service Account integration.
 
-    According to RFC 8693, the access token must be a base64 encoded JSON object
-    containing the AWS credentials. This function will decode and deserialize the
-    access token and return the AWS credentials.
+    According to RFC 8693, the access token must be a base64-encoded JSON object
+    containing the AWS credentials. This function will return the decoded and
+    deserialized AWS credentials.
 
     Examples
     --------
@@ -87,10 +95,10 @@ def get_aws_content_credentials(
     client = Client()
     credentials = get_aws_content_credentials(client)
     session_expiration = credentials["expiration"]
-    session = boto3.Session(
-        aws_access_key_id=credentials["accessKeyId"],
-        aws_secret_access_key=credentials["secretAccessKey"],
-        aws_session_token=credentials["sessionToken"],
+    aws_session = boto3.Session(
+        aws_access_key_id=credentials["aws_access_key_id"],
+        aws_secret_access_key=credentials["aws_secret_access_key"],
+        aws_session_token=credentials["aws_session_token"],
     )
 
     s3 = session.resource("s3")
@@ -123,11 +131,11 @@ def get_aws_content_credentials(
     return _decode_access_token(access_token)
 
 
-def _decode_access_token(access_token: str) -> Dict[str, str]:
+def _decode_access_token(access_token: str) -> Credentials:
     """
     Decode and deserialize an access token containing AWS credentials.
 
-    According to RFC 8693, the access token must be a base64 encoded JSON object
+    According to RFC 8693, the access token must be a base64-encoded JSON object
     containing the AWS credentials. This function will decode and deserialize the
     access token and return the AWS credentials.
 
@@ -138,7 +146,7 @@ def _decode_access_token(access_token: str) -> Dict[str, str]:
 
     Returns
     -------
-    Dict[str, str]
+    Credentials
         Dictionary containing AWS credentials with keys:
         access_key_id, secret_access_key, session_token, and expiration
     """
@@ -146,4 +154,9 @@ def _decode_access_token(access_token: str) -> Dict[str, str]:
     decoded_str = decoded_bytes.decode("utf-8")
     aws_credentials = json.loads(decoded_str)
 
-    return aws_credentials
+    return Credentials(
+        aws_access_key_id=aws_credentials["accessKeyId"],
+        aws_secret_access_key=aws_credentials["secretAccessKey"],
+        aws_session_token=aws_credentials["sessionToken"],
+        expiration=datetime.strptime(aws_credentials["expiration"], "%Y-%m-%dT%H:%M:%SZ"),
+    )
