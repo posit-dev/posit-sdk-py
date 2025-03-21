@@ -76,13 +76,19 @@ class OAuth(Resources):
         response = self._ctx.client.post(self._path, data=data)
         return Credentials(**response.json())
 
-    def get_content_credentials(self, content_session_token: Optional[str] = None) -> Credentials:
+    def get_content_credentials(
+        self,
+        content_session_token: Optional[str] = None,
+        requested_token_type: Optional[str | OAuthTokenType] = None,
+    ) -> Credentials:
         """Perform an oauth credential exchange with a content-session-token."""
         # craft a credential exchange request
         data = {}
         data["grant_type"] = GRANT_TYPE
         data["subject_token_type"] = OAuthTokenType.CONTENT_SESSION_TOKEN
         data["subject_token"] = content_session_token or _get_content_session_token()
+        if requested_token_type:
+            data["requested_token_type"] = requested_token_type
 
         response = self._ctx.client.post(self._path, data=data)
         return Credentials(**response.json())
