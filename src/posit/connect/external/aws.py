@@ -30,6 +30,7 @@ def get_aws_credentials(client: Client, user_session_token: str) -> Dict[str, st
     client = Client()
     session_token = session.http_conn.headers.get("Posit-Connect-User-Session-Token")
     credentials = get_aws_credentials(client, user_session_token)
+    aws_session_expiration = credentials["expiration"]
     aws_session = boto3.Session(
         aws_access_key_id=credentials["accessKeyId"],
         aws_secret_access_key=credentials["secretAccessKey"],
@@ -85,6 +86,7 @@ def get_aws_content_credentials(
 
     client = Client()
     credentials = get_aws_content_credentials(client)
+    session_expiration = credentials["expiration"]
     session = boto3.Session(
         aws_access_key_id=credentials["accessKeyId"],
         aws_secret_access_key=credentials["secretAccessKey"],
