@@ -13,7 +13,7 @@ import abc
 import requests
 from typing_extensions import Callable, Dict, Optional
 
-from .._utils import is_local
+from ...environment import is_local
 from ..client import Client
 from ..oauth import Credentials
 
