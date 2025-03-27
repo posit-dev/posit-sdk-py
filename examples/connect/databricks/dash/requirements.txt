@@ -1,4 +1,0 @@
-databricks-sql-connector==3.3.0
-databricks-sdk==0.29.0
-dash==2.15.0
-posit-sdk>=0.4.0
