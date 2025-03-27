@@ -43,16 +43,14 @@ class Paginator:
     """
 
     def __init__(
-        self,
-        ctx: Context,
-        path: str,
-        params: dict | None = None,
+        self, ctx: Context, path: str, params: dict | None = None, page_size: int | None = None
     ) -> None:
         if params is None:
             params = {}
         self._ctx = ctx
         self._path = path
         self._params = params
+        self._page_size = page_size or _MAX_PAGE_SIZE
 
     def fetch_results(self) -> List[dict]:
         """
@@ -109,7 +107,7 @@ class Paginator:
         params = {
             **self._params,
             "page_number": page_number,
-            "page_size": _MAX_PAGE_SIZE,
+            "page_size": self._page_size,
         }
         response = self._ctx.client.get(self._path, params=params)
         return Page(**response.json())

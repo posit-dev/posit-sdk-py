@@ -26,6 +26,7 @@ class TestOAuthIntegrations:
                         "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                         "subject_token_type": "urn:posit:connect:user-session-token",
                         "subject_token": "cit",
+                        # no requested token type set
                     },
                 ),
             ],
@@ -41,7 +42,7 @@ class TestOAuthIntegrations:
         assert creds.get("access_token") == "viewer-token"
 
     @responses.activate
-    def test_get_credentials_api_key(self):
+    def test_get_credentials_with_requested_token_type(self):
         responses.post(
             "https://connect.example/__api__/v1/oauth/integrations/credentials",
             match=[
@@ -68,33 +69,6 @@ class TestOAuthIntegrations:
         assert creds.get("token_type") == "Key"
 
     @responses.activate
-    def test_get_credentials_aws(self):
-        responses.post(
-            "https://connect.example/__api__/v1/oauth/integrations/credentials",
-            match=[
-                responses.matchers.urlencoded_params_matcher(
-                    {
-                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-                        "subject_token_type": "urn:posit:connect:user-session-token",
-                        "subject_token": "cit",
-                        "requested_token_type": "urn:ietf:params:aws:token-type:credentials",
-                    },
-                ),
-            ],
-            json={
-                "access_token": "encoded-aws-creds",
-                "issued_token_type": "urn:ietf:params:aws:token-type:credentials",
-                "token_type": "aws_credentials",
-            },
-        )
-        c = Client(api_key="12345", url="https://connect.example/")
-        c._ctx.version = None
-        creds = c.oauth.get_credentials("cit", OAuthTokenType.AWS_CREDENTIALS)
-        assert creds.get("access_token") == "encoded-aws-creds"
-        assert creds.get("issued_token_type") == "urn:ietf:params:aws:token-type:credentials"
-        assert creds.get("token_type") == "aws_credentials"
-
-    @responses.activate
     def test_get_content_credentials(self):
         responses.post(
             "https://connect.example/__api__/v1/oauth/integrations/credentials",
@@ -104,6 +78,7 @@ class TestOAuthIntegrations:
                         "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                         "subject_token_type": "urn:posit:connect:content-session-token",
                         "subject_token": "cit",
+                        # no requested token type set
                     },
                 ),
             ],
@@ -117,6 +92,33 @@ class TestOAuthIntegrations:
         c._ctx.version = None
         creds = c.oauth.get_content_credentials("cit")
         assert creds.get("access_token") == "content-token"
+
+    @responses.activate
+    def test_get_content_credentials_with_requested_token_type(self):
+        responses.post(
+            "https://connect.example/__api__/v1/oauth/integrations/credentials",
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "subject_token_type": "urn:posit:connect:content-session-token",
+                        "subject_token": "cit",
+                        "requested_token_type": "urn:ietf:params:aws:token-type:credentials",
+                    },
+                ),
+            ],
+            json={
+                "access_token": "encoded-aws-creds",
+                "issued_token_type": "urn:ietf:params:aws:token-type:credentials",
+                "token_type": "aws_credentials",
+            },
+        )
+        c = Client(api_key="12345", url="https://connect.example/")
+        c._ctx.version = None
+        creds = c.oauth.get_content_credentials("cit", OAuthTokenType.AWS_CREDENTIALS)
+        assert creds.get("access_token") == "encoded-aws-creds"
+        assert creds.get("issued_token_type") == "urn:ietf:params:aws:token-type:credentials"
+        assert creds.get("token_type") == "aws_credentials"
 
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
     @responses.activate
