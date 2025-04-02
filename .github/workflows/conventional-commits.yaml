@@ -9,7 +9,8 @@ jobs:
   default:
     runs-on: ubuntu-latest
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
+      - name: Lint pull request title
+        uses: amannn/action-semantic-pull-request@v5
         id: lint
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -25,7 +26,9 @@ jobs:
             style
             refactor
             test
-      - uses: marocchino/sticky-pull-request-comment@v2
+
+      - name: Post lint error comment
+        uses: marocchino/sticky-pull-request-comment@v2
         if: always() && (steps.lint.outputs.error_message != null)
         with:
           header: lint-error
@@ -39,7 +42,9 @@ jobs:
             ```
             ${{ steps.lint.outputs.error_message }}
             ```
-      - if: ${{ steps.lint.outputs.error_message == null }}
+
+      - name: Remove lint error comment
+        if: ${{ steps.lint.outputs.error_message == null }}
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: lint-error

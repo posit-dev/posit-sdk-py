@@ -14,13 +14,16 @@ jobs:
     permissions:
       issues: write
     steps:
-      - run: gh issue edit "$NUMBER" --add-label "$LABELS"
+      - name: Add label to issue
+        run: gh issue edit "$NUMBER" --add-label "$LABELS"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           NUMBER: ${{ github.event.issue.number }}
           LABELS: sdk
-      - uses: actions/add-to-project@v1.0.2
+
+      - name: Add issue to project board
+        uses: actions/add-to-project@v1.0.2
         continue-on-error: true
         with:
           project-url: https://github.com/orgs/rstudio/projects/207
