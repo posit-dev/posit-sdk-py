@@ -9,13 +9,26 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v3
-      - run: uv python install
-      - uses: actions/setup-node@v4
-      - run: make build
-      - run: make install
-      - id: release
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install UV Python
+        run: uv python install
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Build project
+        run: make build
+
+      - name: Install project
+        run: make install
+
+      - name: Publish to PyPI
+        id: release
         uses: pypa/gh-action-pypi-publish@release/v1

@@ -19,34 +19,66 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v3
-      - run: uv python install
-      - run: make build install
-      - uses: quarto-dev/quarto-actions/setup@v2
-      - run: make docs
-      - uses: actions/configure-pages@v3
-      - uses: actions/upload-pages-artifact@v3
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install UV Python
+        run: uv python install
+
+      - name: Build and install project
+        run: make build install
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Build documentation
+        run: make docs
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload documentation to Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: "./docs/_site"
-      - uses: actions/deploy-pages@v4
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
 
   preview:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v3
-      - run: uv python install
-      - uses: actions/setup-node@v4
-      - uses: quarto-dev/quarto-actions/setup@v2
-      - run: make dev
-      - run: make docs
-      - id: preview
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install UV Python
+        run: uv python install
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Setup development environment
+        run: make dev
+
+      - name: Build documentation
+        run: make docs
+
+      - name: Deploy preview to Netlify
+        id: preview
         working-directory: docs
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

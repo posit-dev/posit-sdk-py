@@ -8,13 +8,26 @@ jobs:
   cov:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv python install
-      - run: make dev
-      - run: make test
-      - run: make cov-xml
-      - if: ${{ ! github.event.pull_request.head.repo.fork }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install UV Python
+        run: uv python install
+
+      - name: Setup development environment
+        run: make dev
+
+      - name: Run tests
+        run: make test
+
+      - name: Generate coverage report
+        run: make cov-xml
+
+      - name: Upload coverage report
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
         uses: orgoro/coverage@v3.2
         with:
           coverageFile: coverage.xml

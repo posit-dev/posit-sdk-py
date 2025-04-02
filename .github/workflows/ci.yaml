@@ -8,12 +8,23 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv python install
-      - run: make dev
-      - run: make lint
-      - run: make fmt
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install UV Python
+        run: uv python install
+
+      - name: Setup development environment
+        run: make dev
+
+      - name: Run linter
+        run: make lint
+
+      - name: Format code
+        run: make fmt
 
   test:
     runs-on: ubuntu-latest
@@ -28,19 +39,31 @@ jobs:
           - "3.12"
           - "3.13"
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv python install ${{ matrix.python-version }}
-      - run: make dev
-      - run: make test
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install UV Python for matrix version
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Setup development environment
+        run: make dev
+
+      - name: Run tests
+        run: make test
 
   setup-integration-test:
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.versions.outputs.versions }}
     steps:
-        - uses: actions/checkout@v4
-        - id: versions
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Get integration versions
+          id: versions
           working-directory: ./integration
           # The `jq` command is "output compact, raw input, slurp, split on new lines, and remove the last element". This results in a JSON array of Connect versions (e.g., ["2025.01.0", "2024.12.0"]).
           run: |
@@ -55,16 +78,32 @@ jobs:
       matrix:
         CONNECT_VERSION: ${{ fromJson(needs.setup-integration-test.outputs.versions) }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Write Posit Connect license to disk
-        run: echo "$CONNECT_LICENSE" > ./integration/license.lic
-        env:
-          CONNECT_LICENSE: ${{ secrets.CONNECT_LICENSE }}
-      - uses: astral-sh/setup-uv@v3
-      - run: uv python install
-      - run: make -C ./integration ${{ matrix.CONNECT_VERSION }}
-      - uses: actions/upload-artifact@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install UV Python
+        run: uv python install
+
+      - name: Configure Connect license
+        working-directory: ./integration
+        run: |
+          cat << EOF > connect.lic
+          ${{ secrets.CONNECT_LICENSE }}
+          EOF
+          chmod 600 connect.lic
+
+      - name: Run integration tests
+        working-directory: ./integration
+        run: make ${{ matrix.CONNECT_VERSION }}
+
+      - name: Upload integration test report
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ matrix.CONNECT_VERSION }} - Integration Test Report
@@ -78,10 +117,13 @@ jobs:
       pull-requests: write
     if: always()
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - uses: EnricoMi/publish-unit-test-result-action@v2
+
+      - name: Publish integration test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: integration-test-results
           comment_mode: off
@@ -91,8 +133,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv python install
-      - run: make dev
-      - run: make build
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install UV Python
+        run: uv python install
+
+      - name: Setup development environment
+        run: make dev
+
+      - name: Build project
+        run: make build
