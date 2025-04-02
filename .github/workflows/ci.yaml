@@ -84,19 +84,23 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Write Posit Connect license to disk
-        run: echo "$CONNECT_LICENSE" > ./integration/license.lic
-        env:
-          CONNECT_LICENSE: ${{ secrets.CONNECT_LICENSE }}
-
       - name: Setup UV
         uses: astral-sh/setup-uv@v3
 
       - name: Install UV Python
         run: uv python install
 
-      - name: Run integration tests for version
-        run: make -C ./integration ${{ matrix.CONNECT_VERSION }}
+      - name: Configure Connect license
+        working-directory: ./integration
+        run: |
+          cat << EOF > connect.lic
+          ${{ secrets.CONNECT_LICENSE }}
+          EOF
+          chmod 600 connect.lic
+
+      - name: Run integration tests
+        working-directory: ./integration
+        run: make ${{ matrix.CONNECT_VERSION }}
 
       - name: Upload integration test report
         uses: actions/upload-artifact@v4
