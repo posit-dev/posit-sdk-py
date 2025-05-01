@@ -6,6 +6,8 @@ import io
 
 from typing_extensions import TYPE_CHECKING, List
 
+from posit.connect.context import requires
+
 from . import resources, tasks
 
 if TYPE_CHECKING:
@@ -192,6 +194,24 @@ class Bundles(resources.Resources):
         """
         bundles = self.find()
         return next(iter(bundles), None)
+
+    @requires("2025.02.0")
+    def active(self) -> Bundle | None:
+        """Retrieve the active bundle.
+
+        Returns
+        -------
+        Bundle | None
+            The currently active bundle, or None if no active bundle exists.
+
+        Examples
+        --------
+        >>> client = connect.Client()
+        >>> content = client.content.get(guid)
+        >>> bundle = content.bundles.active()
+        """
+        bundles = self.find()
+        return next((bundle for bundle in bundles if bundle.get("active", False)), None)
 
     def get(self, uid: str) -> Bundle:
         """Get a bundle.

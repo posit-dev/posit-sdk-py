@@ -373,3 +373,66 @@ class TestBundlesGet:
         assert mock_content_get.call_count == 1
         assert mock_bundle_get.call_count == 1
         assert bundle["id"] == bundle_id
+
+
+class TestBundlesActive:
+    @responses.activate
+    def test_active_bundle_exists(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # Create a modified copy of bundles.json with one bundle as active
+        bundles_data = load_mock(f"v1/content/{content_guid}/bundles.json")
+        active_bundles_data = bundles_data.copy()
+        active_bundles_data[0]["active"] = True
+
+        # behavior
+        mock_content_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_bundles_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles",
+            json=active_bundles_data,
+        )
+
+        # setup
+        c = Client("https://connect.example", "12345")
+        c._ctx.version = None
+
+        # invoke
+        bundle = c.content.get(content_guid).bundles.active()
+
+        # assert
+        assert mock_content_get.call_count == 1
+        assert mock_bundles_get.call_count == 1
+        assert bundle is not None
+        assert bundle["id"] == "101"
+        assert bundle["active"] is True
+
+    @responses.activate
+    def test_no_active_bundle(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # behavior
+        mock_content_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_bundles_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles",
+            json=load_mock(f"v1/content/{content_guid}/bundles.json"),
+        )
+
+        # setup
+        c = Client("https://connect.example", "12345")
+        c._ctx.version = None
+
+        # invoke
+        bundle = c.content.get(content_guid).bundles.active()
+
+        # assert
+        assert mock_content_get.call_count == 1
+        assert mock_bundles_get.call_count == 1
+        assert bundle is None
