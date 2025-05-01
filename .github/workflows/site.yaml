@@ -24,8 +24,8 @@ jobs:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v3
       - run: uv python install
-      - uses: quarto-dev/quarto-actions/setup@v2
       - run: make build install
+      - uses: quarto-dev/quarto-actions/setup@v2
       - run: make docs
       - uses: actions/configure-pages@v3
       - uses: actions/upload-pages-artifact@v3
