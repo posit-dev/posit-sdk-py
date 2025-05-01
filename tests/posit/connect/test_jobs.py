@@ -90,6 +90,33 @@ class TestJobsFindBy:
         assert job
         assert job["key"] == "tHawGvHZTosJA2Dx"
 
+    @responses.activate
+    def test_with_content_id(self):
+        responses.get(
+            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+        )
+
+        responses.get(
+            "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066/jobs.json"),
+        )
+
+        c = Client("https://connect.example", "12345")
+        content = c.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
+
+        # Test with content_id (new field)
+        job = content.jobs.find_by(content_id="54")
+        assert job
+        assert job["content_id"] == "54"
+        assert job["app_id"] == "54"  # Should have both fields
+
+        # Test with app_id (deprecated field)
+        job = content.jobs.find_by(app_id="54")
+        assert job
+        assert job["app_id"] == "54"
+        assert job["content_id"] == "54"  # Should have both fields
+
 
 class TestJobDestory:
     @responses.activate
