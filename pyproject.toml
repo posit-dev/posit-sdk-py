@@ -7,12 +7,11 @@ name = "posit-sdk"
 description = "Posit SDK for Python"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { file = "LICENSE" }
+license-files = [ "LICENSE" ]
 keywords = ["posit", "sdk"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries",
