@@ -12,9 +12,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
       - run: uv python install
       - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - run: make build
       - run: make install
       - id: release
