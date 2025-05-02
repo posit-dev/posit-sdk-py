@@ -37,7 +37,6 @@ api: ensure-dev
 build: ensure-dev
 	CURRENT_YEAR=$(CURRENT_YEAR) \
 	PROJECT_VERSION=$(PROJECT_VERSION) \
-	$(UV) tool run --with ../ \
 	$(QUARTO) render
 
 clean:
@@ -48,12 +47,12 @@ _extensions/posit-dev/posit-docs/_extension.yml:
 	$(QUARTO) add --no-prompt posit-dev/product-doc-theme@v4.0.2
 _extensions/machow/interlinks/_extension.yml:
 	$(QUARTO) add --no-prompt machow/quartodoc
+
 deps: ensure-dev _extensions/posit-dev/posit-docs/_extension.yml _extensions/machow/interlinks/_extension.yml
 
 preview: ensure-dev
 	CURRENT_YEAR=$(CURRENT_YEAR) \
 	PROJECT_VERSION=$(PROJECT_VERSION) \
-	$(UV) tool run --with ../ \
 	$(QUARTO) preview
 
 deploy:

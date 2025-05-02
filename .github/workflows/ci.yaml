@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
       - run: uv python install
       - run: make dev
       - run: make lint
@@ -29,7 +29,7 @@ jobs:
           - "3.13"
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
       - run: uv python install ${{ matrix.python-version }}
       - run: make dev
       - run: make test
@@ -61,7 +61,7 @@ jobs:
         run: echo "$CONNECT_LICENSE" > ./integration/license.lic
         env:
           CONNECT_LICENSE: ${{ secrets.CONNECT_LICENSE }}
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
       - run: uv python install
       - run: make -C ./integration ${{ matrix.CONNECT_VERSION }}
       - uses: actions/upload-artifact@v4
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
       - run: uv python install
       - run: make dev
       - run: make build
