@@ -1,6 +1,10 @@
 """Metric resources."""
 
+import posixpath
+
 from .. import resources
+from ..context import requires
+from .hits import Hits
 from .usage import Usage
 
 
@@ -16,3 +20,8 @@ class Metrics(resources.Resources):
     @property
     def usage(self) -> Usage:
         return Usage(self._ctx)
+
+    @property
+    @requires(version="2025.04.0")
+    def hits(self) -> Hits:
+        return resources._ResourceSequence(self._ctx, "v1/instrumentation/content/hits", uid="id")
