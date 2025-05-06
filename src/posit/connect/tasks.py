@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import time
-
 from typing_extensions import overload
 
 from . import resources
