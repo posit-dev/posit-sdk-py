@@ -97,39 +97,21 @@ class Task(resources.BaseResource):
         result = response.json()
         super().update(**result)
 
-    def wait_for(self, *, initial_wait: int = 1, max_wait: int = 10, backoff: float = 1.5) -> None:
+    def wait_for(self, *, wait: int = 1) -> None:
         """Wait for the task to finish.
 
         Parameters
         ----------
-        initial_wait : int, default 1
-            Initial wait time in seconds. First API request will use this as the wait parameter.
-        max_wait : int, default 10
-            Maximum wait time in seconds between polling requests.
-        backoff : float, default 1.5
-            Backoff multiplier for increasing wait times.
+        wait : int, default 1
+            Wait time in seconds between polling requests.
 
         Examples
         --------
         >>> task.wait_for()
         None
-
-        Notes
-        -----
-        This method implements an exponential backoff strategy to reduce the number of API calls
-        while waiting for long-running tasks. The first request uses the initial_wait value,
-        and subsequent requests increase the wait time by the backoff factor, up to max_wait. To disable exponential backoff, set backoff to 1.0.
         """
-        wait_time = initial_wait
-
         while not self.is_finished:
-            self.update()
-
-            # Wait client-side
-            time.sleep(wait_time)
-
-            # Calculate next wait time with backoff
-            wait_time = min(wait_time * backoff, max_wait)
+            self.update(wait=wait)
 
 
 class Tasks(resources.Resources):

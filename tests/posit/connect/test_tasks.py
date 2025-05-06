@@ -118,6 +118,7 @@ class TestTaskWaitFor:
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
                 json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
+                match=[matchers.query_param_matcher({"wait": 1})],
             ),
         ]
 
@@ -127,7 +128,7 @@ class TestTaskWaitFor:
         assert not task.is_finished
 
         # invoke
-        task.wait_for()
+        task.wait_for(wait=1)
 
         # assert
         assert task.is_finished
@@ -135,8 +136,7 @@ class TestTaskWaitFor:
         assert mock_tasks_get[1].call_count == 1
 
     @responses.activate
-    @mock.patch("time.sleep", autospec=True)
-    def test_exponential_backoff(self, mock_sleep):
+    def test_with_custom_wait(self):
         uid = "jXhOhdm5OOSkGhJw"
 
         # behavior
@@ -147,15 +147,8 @@ class TestTaskWaitFor:
             ),
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
-            ),
-            responses.get(
-                f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
-            ),
-            responses.get(
-                f"https://connect.example/__api__/v1/tasks/{uid}",
                 json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
+                match=[matchers.query_param_matcher({"wait": 5})],
             ),
         ]
 
@@ -165,33 +158,21 @@ class TestTaskWaitFor:
         assert not task.is_finished
 
         # invoke
-        task.wait_for(initial_wait=1, max_wait=5, backoff=2.0)
+        task.wait_for(wait=5)
 
         # assert
         assert task.is_finished
         assert mock_tasks_get[0].call_count == 1
         assert mock_tasks_get[1].call_count == 1
 
-        # Verify sleep calls
-        mock_sleep.assert_has_calls([mock.call(1), mock.call(2), mock.call(4)], any_order=False)
-
     @responses.activate
-    @mock.patch("time.sleep", autospec=True)
-    def test_no_backoff(self, mock_sleep):
+    def test_immediate_completion(self):
         uid = "jXhOhdm5OOSkGhJw"
 
         # behavior
         mock_tasks_get = [
             responses.get(
                 f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
-            ),
-            responses.get(
-                f"https://connect.example/__api__/v1/tasks/{uid}",
-                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
-            ),
-            responses.get(
-                f"https://connect.example/__api__/v1/tasks/{uid}",
                 json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": True},
             ),
         ]
@@ -199,18 +180,14 @@ class TestTaskWaitFor:
         # setup
         c = connect.Client("https://connect.example", "12345")
         task = c.tasks.get(uid)
-        assert not task.is_finished
+        assert task.is_finished
 
         # invoke
-        task.wait_for(initial_wait=2, max_wait=5, backoff=1.0)
+        task.wait_for(wait=1)
 
         # assert
         assert task.is_finished
         assert mock_tasks_get[0].call_count == 1
-        assert mock_tasks_get[1].call_count == 1
-
-        # Verify sleep calls
-        mock_sleep.assert_has_calls([mock.call(2), mock.call(2)], any_order=False)
 
 
 class TestTasksGet:
