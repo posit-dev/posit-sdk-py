@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 import responses
 from responses import BaseResponse, matchers
 
@@ -188,6 +189,31 @@ class TestTaskWaitFor:
         # assert
         assert task.is_finished
         assert mock_tasks_get[0].call_count == 1
+
+    @responses.activate
+    def test_maximum_attempts(self):
+        uid = "jXhOhdm5OOSkGhJw"
+
+        # behavior
+        mock_tasks_get = [
+            responses.get(
+                f"https://connect.example/__api__/v1/tasks/{uid}",
+                json={**load_mock_dict(f"v1/tasks/{uid}.json"), "finished": False},
+            ),
+        ]
+
+        # setup
+        c = connect.Client("https://connect.example", "12345")
+        task = c.tasks.get(uid)
+        assert not task.is_finished
+
+        # invoke and assert
+        with pytest.raises(TimeoutError):
+            task.wait_for(wait=1, max_attempts=1)
+
+        # assert
+        assert not task.is_finished
+        assert mock_tasks_get[0].call_count == 2  # 1 for initial check, 1 for timeout check
 
 
 class TestTasksGet:

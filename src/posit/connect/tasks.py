@@ -95,21 +95,53 @@ class Task(resources.BaseResource):
         result = response.json()
         super().update(**result)
 
-    def wait_for(self, *, wait: int = 1) -> None:
+    def wait_for(self, *, wait: int = 1, max_attempts: int | None = None) -> None:
         """Wait for the task to finish.
 
         Parameters
         ----------
         wait : int, default 1
-            Wait time in seconds between polling requests.
+            Maximum wait time in seconds between polling requests.
+        max_attempts : int | None, default None
+            Maximum number of polling attempts. If None, polling will continue indefinitely.
+
+        Raises
+        ------
+        TimeoutError
+            If the task does not finish within the maximum attempts.
+
+        Notes
+        -----
+        If the task finishes before the wait time or maximum attempts are reached, the function will return immediately. For example, if the wait time is set to 5 seconds and the task finishes in 2 seconds, the function will return after 2 seconds.
+
+        If the task does not finished after the maximum attempts, a TimeoutError will be raised. By default, the maximum attempts is None, which means the function will wait indefinitely until the task finishes.
 
         Examples
         --------
         >>> task.wait_for()
         None
+
+        Waiting for a task to finish with a custom wait time.
+
+        >>> task.wait_for(wait=5)
+        None
+
+        Waiting for a task with a maximum number of attempts.
+
+        >>> task.wait_for(max_attempts=3)
+        None
         """
+        attempts = 0
         while not self.is_finished:
+            if max_attempts is not None and attempts >= max_attempts:
+                break
             self.update(wait=wait)
+            attempts += 1
+
+        if not self.is_finished:
+            raise TimeoutError(
+                f"Task {self['id']} did not finish within the specified wait time or maximum attempts."
+            )
 
 
 class Tasks(resources.Resources):
