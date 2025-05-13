@@ -136,7 +136,7 @@ class _ResourceSequence(Sequence[T], ResourceSequence[T]):
         response = self._ctx.client.post(self._path, json=attributes)
         result = response.json()
         uid = result[self._uid]
-        path = posixpath.join(self._path, uid)
+        path = posixpath.join(self._path, str(uid))
         return _Resource(self._ctx, path, **result)
 
     def fetch(self, **conditions) -> Iterable[Any]:
@@ -145,7 +145,7 @@ class _ResourceSequence(Sequence[T], ResourceSequence[T]):
         resources = []
         for result in results:
             uid = result[self._uid]
-            path = posixpath.join(self._path, uid)
+            path = posixpath.join(self._path, str(uid))
             resource = _Resource(self._ctx, path, **result)
             resources.append(resource)
 
@@ -188,7 +188,7 @@ class _PaginatedResourceSequence(_ResourceSequence):
             results = page.results
             for result in results:
                 uid = result[self._uid]
-                path = posixpath.join(self._path, uid)
+                path = posixpath.join(self._path, str(uid))
                 resource = _Resource(self._ctx, path, **result)
                 resources.append(resource)
             yield from resources
