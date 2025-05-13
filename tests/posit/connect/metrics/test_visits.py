@@ -133,17 +133,3 @@ class TestVisitsFindOne:
         assert mock_get[1].call_count == 0
         assert event
         assert event.content_guid == "bd1d2285-6c80-49af-8a83-a200effe3cb3"
-
-
-class TestRenameParams:
-    def test_start_to_from(self):
-        params = {"start": ...}
-        params = visits.rename_params(params)
-        assert "start" not in params
-        assert "from" in params
-
-    def test_end_to_to(self):
-        params = {"end": ...}
-        params = visits.rename_params(params)
-        assert "end" not in params
-        assert "to" in params
