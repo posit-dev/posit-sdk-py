@@ -53,23 +53,39 @@ To start a release create a semver compatible tag.
 
 _For this example, we will use the tag `v0.1.0`. This tag already exists, so you will not be able run the following commands verbatim._
 
+```bash
+export TAG=v0.1.0
+```
+
 **Step 1**
 
 Create a proper SemVer compatible tag. Consult the [SemVer specification](https://semver.org/spec/v2.0.0.html) if you are unsure what this means.
 
-`git tag v0.1.0`
+```bash
+git tag $TAG
+```
 
 **Step 2**
 
 Push the tag GitHub.
 
-`git push origin v0.1.0`
+```bash
+git push origin $TAG
+```
 
 This command will trigger the [Release GitHub Action](https://github.com/posit-dev/posit-sdk-py/actions/workflows/release.yaml).
 
+Once complete, the release will be available on [PyPI](https://pypi.org/project/posit-sdk).
+
 **Step 3**
 
-Once complete, the release will be available on [PyPI](https://pypi.org/project/posit-sdk).
+Create a release on GitHub. Please follow the pattern established in previous releases. Set the title to the tag name (e.g., `v0.1.0`) and the body to the generated release notes. Enable the "Create a discussion for this release" option and set the category to "Announcements". For reference, see <https://github.com/posit-dev/posit-sdk-py/releases>.
+
+You can do this via the GitHub UI or using the following command:
+
+```bash
+gh release create $TAG --verify-tag --generate-notes --discussion-category "Announcements"`
+```
 
 ### Pre-Releases
 
