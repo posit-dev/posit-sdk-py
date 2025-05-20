@@ -62,7 +62,7 @@ export TAG=v0.1.0
 Create a proper SemVer compatible tag. Consult the [SemVer specification](https://semver.org/spec/v2.0.0.html) if you are unsure what this means.
 
 ```bash
-git $TAG v0.1.0
+git tag $TAG
 ```
 
 **Step 2**
