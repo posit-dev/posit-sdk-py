@@ -92,6 +92,8 @@ class Packages(ResourceSequence[Package], Protocol):
         bundle_id: str = ...,
         app_id: str = ...,
         app_guid: str = ...,
+        content_id: str = ...,
+        content_guid: str = ...,
     ) -> Iterable[Package]:
         """
         Fetch all records matching the specified conditions.
@@ -110,8 +112,14 @@ class Packages(ResourceSequence[Package], Protocol):
             The unique identifier of the bundle this package is associated with.
         app_id: str, not required
             The numerical identifier of the application this package is associated with.
+            This field is deprecated and has been renamed to content_id.
         app_guid: str, not required
             The unique identifier of the application this package is associated with.
+            This field is deprecated and has been renamed to content_guid.
+        content_id: str, not required
+            The numerical identifier of the content item this package is associated with.
+        content_guid: str, not required
+            The unique identifier of the content item this package is associated with.
 
         Returns
         -------
@@ -130,6 +138,8 @@ class Packages(ResourceSequence[Package], Protocol):
         bundle_id: str = ...,
         app_id: str = ...,
         app_guid: str = ...,
+        content_id: str = ...,
+        content_guid: str = ...,
     ) -> Package | None:
         """
         Find the first record matching the specified conditions.
@@ -150,8 +160,14 @@ class Packages(ResourceSequence[Package], Protocol):
             The unique identifier of the bundle this package is associated with.
         app_id: str, not required
             The numerical identifier of the application this package is associated with.
+            This field is deprecated and has been renamed to content_id.
         app_guid: str, not required
             The unique identifier of the application this package is associated with.
+            This field is deprecated and has been renamed to content_guid.
+        content_id: str, not required
+            The numerical identifier of the content item this package is associated with.
+        content_guid: str, not required
+            The unique identifier of the content item this package is associated with.
 
         Returns
         -------
