@@ -87,10 +87,12 @@ class _Hits(_ResourceSequence, Hits):
         start : str, not required
             The timestamp that starts the time window of interest in RFC 3339 format.
             Any hit information that happened prior to this timestamp will not be returned.
+            This corresponds to the `from` parameter in the API.
             Example: "2025-05-01T00:00:00Z"
         end : str, not required
             The timestamp that ends the time window of interest in RFC 3339 format.
             Any hit information that happened after this timestamp will not be returned.
+            This corresponds to the `to` parameter in the API.
             Example: "2025-05-02T00:00:00Z"
 
         Returns
