@@ -99,7 +99,4 @@ class _Hits(_ResourceSequence, Hits):
             All content hit records matching the specified conditions.
         """
         params = rename_params(kwargs)
-
-        result = super().fetch(**params)
-
-        return result
+        return super().fetch(**params)
