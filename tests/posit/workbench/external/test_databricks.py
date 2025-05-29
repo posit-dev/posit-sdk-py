@@ -14,11 +14,14 @@ except ImportError:
 
 
 class TestPositCredentialsHelpers:
-    def test_workbench_strategy(self):
-        # default will attempt to load the workbench profile
-        with pytest.raises(ValueError, match="profile=workbench"):
-            WorkbenchStrategy()
+    def test_default_workbench_strategy(self):
+        # By default, the WorkbenchStrategy should use "workbench" profile.
+        strategy = WorkbenchStrategy()
 
+        with pytest.raises(ValueError, match="profile=workbench"):
+            strategy()
+
+    def test_workbench_strategy(self):
         # providing a Config is allowed
         cs = WorkbenchStrategy(
             config=Config(host="https://databricks.com/workspace", token="token")  # pyright: ignore[reportPossiblyUnboundVariable]
