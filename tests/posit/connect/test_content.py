@@ -169,7 +169,7 @@ class TestContentsFind:
         assert content[2]["name"] == "My-Streamlit-app"
 
     @responses.activate
-    def test_params_include(self):
+    def test_params_include_string(self):
         # behavior
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
@@ -200,24 +200,6 @@ class TestContentsFind:
 
         # invoke
         client.content.find(include=["tags", "owner"])
-
-        #  assert
-        assert mock_get.call_count == 1
-
-    @responses.activate
-    def test_params_include_none(self):
-        # behavior
-        mock_get = responses.get(
-            "https://connect.example/__api__/v1/content",
-            json=load_mock("v1/content.json"),
-            match=[matchers.query_param_matcher({})],
-        )
-
-        # setup
-        client = Client("https://connect.example", "12345")
-
-        # invoke
-        client.content.find(include=None)
 
         #  assert
         assert mock_get.call_count == 1
@@ -373,6 +355,38 @@ class TestContentsGet:
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         assert get_one["name"] == "Performance-Data-1671216053560"
 
+    @responses.activate
+    def test_get_with_include_string(self):
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        mock_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+            match=[matchers.query_param_matcher({"include": "owner"})],
+        )
+
+        con = Client("https://connect.example", "12345")
+        content = con.content.get(guid, include="owner")
+        assert content["guid"] == guid
+
+        #  assert
+        assert mock_get.call_count == 1
+
+
+    @responses.activate
+    def test_get_with_include_list(self):
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        mock_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+            match=[matchers.query_param_matcher({"include": "owner,tags,vanity_url"})],
+        )
+
+        con = Client("https://connect.example", "12345")
+        content = con.content.get(guid, include=["owner", "tags", "vanity_url"])
+        assert content["guid"] == guid
+
+        #  assert
+        assert mock_get.call_count == 1
 
 class TestContentsCount:
     @responses.activate
