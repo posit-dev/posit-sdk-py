@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import urllib.parse
 from pathlib import Path
+from typing import Callable
 
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
@@ -10,20 +13,27 @@ from mcp.server.fastmcp.exceptions import ToolError
 
 from .tools import TOOLS
 
-mcp = FastMCP(
-    name="Connect MCP Server",
-    instructions="MCP server for interacting with Posit Connect.",
-)
 
-for tool_fn in TOOLS:
-    mcp.add_tool(tool_fn)
+def get_mcp_server(tool_funcs: list[Callable]):
+    mcp = FastMCP(
+        name="Connect MCP Server",
+        instructions="MCP server for interacting with Posit Connect.",
+    )
+    for tool_fn in tool_funcs:
+        mcp.add_tool(tool_fn)
+    return mcp
 
 
 def run_stdio_server():
+    mcp = get_mcp_server(TOOLS)
     asyncio.run(mcp.run_stdio_async())
 
 
-def get_streamable_http_server():
+def run_streamable_http_server(host: str, port: int):
+    import uvicorn
+
+    mcp = get_mcp_server(TOOLS)
+
     @contextlib.asynccontextmanager
     async def lifespan(app: FastAPI):
         async with contextlib.AsyncExitStack() as stack:
@@ -70,4 +80,5 @@ def get_streamable_http_server():
         )
 
     app.mount("/", mcp.streamable_http_app())
-    return app
+
+    uvicorn.run(app, host=host, port=port)

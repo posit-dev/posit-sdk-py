@@ -1,6 +1,6 @@
 import click
 
-from .server import get_streamable_http_server, run_stdio_server
+from .server import run_stdio_server, run_streamable_http_server
 
 
 @click.group()
@@ -14,11 +14,10 @@ def stdio():
 
 
 @click.command()
-def http():
-    app = get_streamable_http_server()
-    import uvicorn
-
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+@click.argument("--host", default="127.0.0.1")
+@click.argument("--port", default=8001)
+def http(host: str, port: int):
+    run_streamable_http_server(host, port)
 
 
 run.add_command(stdio)
