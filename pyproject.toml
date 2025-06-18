@@ -25,6 +25,14 @@ dependencies = [
     "typing-extensions",
 ]
 
+[project.optional-dependencies]
+mcp = [
+    "mcp>=1.3.0; python_version >= '3.10'",
+    "click>=8.1.7",
+    "fastapi>=0.115.13",
+    "jinja2>=3.1.6",
+]
+
 [project.urls]
 Source = "https://github.com/posit-dev/posit-sdk-py"
 Issues = "https://github.com/posit-dev/posit-sdk-py/issues"
