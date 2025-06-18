@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import urllib.parse
+from logging import getLogger
 from pathlib import Path
 from typing import Callable
 
@@ -12,6 +13,8 @@ from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 
 from .tools import TOOLS
+
+logger = getLogger(__name__)
 
 
 def get_mcp_server(tool_funcs: list[Callable]):
@@ -26,6 +29,8 @@ def get_mcp_server(tool_funcs: list[Callable]):
 
 def run_stdio_server():
     mcp = get_mcp_server(TOOLS)
+
+    logger.info("Running MCP server in stdio mode")
     asyncio.run(mcp.run_stdio_async())
 
 
@@ -81,4 +86,5 @@ def run_streamable_http_server(host: str, port: int):
 
     app.mount("/", mcp.streamable_http_app())
 
+    logger.info("Running MCP server in streamable HTTP mode")
     uvicorn.run(app, host=host, port=port)
