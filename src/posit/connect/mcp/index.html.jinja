@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ server_name }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        p {
+            margin-bottom: 15px;
+        }
+        strong {
+            color: #2980b9;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        li strong {
+            color: #34495e;
+        }
+        .tool-parameters {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 8px;
+            padding-left: 15px;
+            border-left: 2px solid #ddd;
+        }
+        .tool-parameters p {
+            margin: 5px 0;
+        }
+        .tool-parameters code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: "Courier New", Courier, monospace;
+        }
+        .mcp-endpoint-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #mcpEndpointUrl {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            background-color: #e9ecef;
+        }
+        .copy-button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #2980b9;
+        }
+        #copyStatus {
+            margin-left: 8px;
+            font-size: 0.9em;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ server_name }}</h1>
+        <p>This server provides data-related tools via the Model Context Protocol (MCP).</p>
+        
+        <p>The MCP endpoint is available at:</p>
+        <div class="mcp-endpoint-section">
+            <input type="text" id="mcpEndpointUrl" value="{{ endpoint }}" readonly>
+            <button class="copy-button" onclick="copyToClipboard()">Copy</button>
+            <span id="copyStatus"></span>
+        </div>
+
+        <h2>Available MCP Tools:</h2>
+        {% if tools %}
+            <ul>
+                {% for tool in tools %}
+                <li>
+                    <strong>{{ tool.name }}</strong>
+                    {{ tool.description }}
+                    {% if tool.parameters %}
+                    <div class="tool-parameters">
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                        {% for param_name, param_details in tool.parameters.items() %}
+                            <li><code>{{ param_name }}</code> {% if param_details.required %} <strong>(required)</strong>{% endif %}: {{ param_details.type }}</li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No tools are currently available.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const endpointUrlField = document.getElementById('mcpEndpointUrl');
+            const copyStatus = document.getElementById('copyStatus');
+            
+            navigator.clipboard.writeText(endpointUrlField.value).then(function() {
+                copyStatus.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyStatus.textContent = '';
+                }, 2000);
+            }, function(err) {
+                copyStatus.textContent = 'Failed to copy';
+                console.error('Could not copy text: ', err);
+                setTimeout(() => {
+                    copyStatus.textContent = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
