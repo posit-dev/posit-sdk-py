@@ -1,0 +1,19 @@
+{
+    "servers": {
+        "my-mcp-server-84ef811e": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "--from",
+                "git+https://github.com/posit-dev/posit-sdk-py@connect-mcp[mcp]",
+                "python",
+                "-m",
+                "posit.connect.mcp",
+                "stdio"
+            ]
+        },
+        "my-mcp-server-4f84e9ec": {
+            "url": "http://localhost:8001"
+        }
+    }
+}
