@@ -325,7 +325,7 @@ class TestContentsFindOne:
         assert content_item["name"] == name
 
     @responses.activate
-    def test_params_include(self):
+    def test_params_include_string(self):
         # behavior
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
@@ -373,7 +373,7 @@ class TestContentsGet:
         assert get_one["name"] == "Performance-Data-1671216053560"
 
     @responses.activate
-    def test_get_with_include_string(self):
+    def test_params_include_string(self):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         mock_get = responses.get(
             f"https://connect.example/__api__/v1/content/{guid}",
@@ -390,7 +390,7 @@ class TestContentsGet:
 
 
     @responses.activate
-    def test_get_with_include_list(self):
+    def test_params_include_list(self):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         mock_get = responses.get(
             f"https://connect.example/__api__/v1/content/{guid}",
@@ -406,7 +406,7 @@ class TestContentsGet:
         assert mock_get.call_count == 1
 
     @responses.activate
-    def test_get_with_include_none(self):
+    def test_params_include_none(self):
         guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         mock_get = responses.get(
             f"https://connect.example/__api__/v1/content/{guid}",
