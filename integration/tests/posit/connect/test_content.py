@@ -26,7 +26,7 @@ class TestContent:
         assert self.client.content.get(self.content["guid"]) == self.content
 
     def test_get_with_include_string(self):
-        assert  self.client.content.get(self.content["guid"], include="owner")
+        assert self.client.content.get(self.content["guid"], include="owner")
 
     def test_get_with_include_list(self):
         assert self.client.content.get(
