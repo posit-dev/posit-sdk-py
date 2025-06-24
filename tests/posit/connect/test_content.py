@@ -222,6 +222,7 @@ class TestContentsFind:
         #  assert
         assert mock_get.call_count == 1
 
+
 class TestContentsFindBy:
     @responses.activate
     def test(self):
@@ -387,7 +388,6 @@ class TestContentsGet:
 
         #  assert
         assert mock_get.call_count == 1
-
 
     @responses.activate
     def test_params_include_list(self):
