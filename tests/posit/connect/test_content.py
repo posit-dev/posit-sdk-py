@@ -204,6 +204,23 @@ class TestContentsFind:
         #  assert
         assert mock_get.call_count == 1
 
+    @responses.activate
+    def test_params_include_none(self):
+        # behavior
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=load_mock("v1/content.json"),
+            match=[matchers.query_param_matcher({})],
+        )
+
+        # setup
+        client = Client("https://connect.example", "12345")
+
+        # invoke
+        client.content.find(include=None)
+
+        #  assert
+        assert mock_get.call_count == 1
 
 class TestContentsFindBy:
     @responses.activate
