@@ -405,6 +405,23 @@ class TestContentsGet:
         #  assert
         assert mock_get.call_count == 1
 
+    @responses.activate
+    def test_get_with_include_none(self):
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        mock_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+            match=[matchers.query_param_matcher({})],
+        )
+
+        con = Client("https://connect.example", "12345")
+        content = con.content.get(guid, include=None)
+        assert content["guid"] == guid
+
+        # assert
+        assert mock_get.call_count == 1
+
+
 class TestContentsCount:
     @responses.activate
     def test(self):
