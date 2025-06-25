@@ -23,7 +23,17 @@ class TestContent:
         assert self.client.content.count() == 1
 
     def test_get(self):
-        assert self.client.content.get(self.content["guid"]) == self.content
+        item = self.client.content.get(self.content["guid"])
+        # get() always includes owner, tags, and vanity_url. Owner data is always present in all
+        # content, tags and vanity_url is only present if explicitly set in the content.
+        # Check that essential fields match instead of exact equality
+        for key in self.content:
+            assert key in item
+            assert item[key] == self.content[key]
+        # Also verify we have the additional fields that should always be included
+        assert "owner" in item
+        assert "tags" not in item
+        assert "vanity_url" not in item
 
     def test_find(self):
         assert self.client.content.find()

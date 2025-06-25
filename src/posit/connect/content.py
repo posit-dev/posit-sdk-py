@@ -989,10 +989,14 @@ class Content(Resources):
         Parameters
         ----------
         guid : str
+            The unique identifier of the content item.
 
         Returns
         -------
         ContentItem
         """
-        response = self._ctx.client.get(f"v1/content/{guid}")
+        # Always request all available optional fields for the content item
+        params = {"include": "owner,tags,vanity_url"}
+
+        response = self._ctx.client.get(f"v1/content/{guid}", params=params)
         return ContentItem(self._ctx, **response.json())
