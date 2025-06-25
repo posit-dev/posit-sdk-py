@@ -365,61 +365,15 @@ class TestContentsFindOne:
 class TestContentsGet:
     @responses.activate
     def test(self):
+        # All calls to get() should automatically include all available optional fields
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
             json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+            match=[matchers.query_param_matcher({"include": "owner,tags,vanity_url"})],
         )
         con = Client("https://connect.example", "12345")
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
         assert get_one["name"] == "Performance-Data-1671216053560"
-
-    @responses.activate
-    def test_params_include_string(self):
-        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        mock_get = responses.get(
-            f"https://connect.example/__api__/v1/content/{guid}",
-            json=load_mock(f"v1/content/{guid}.json"),
-            match=[matchers.query_param_matcher({"include": "owner"})],
-        )
-
-        con = Client("https://connect.example", "12345")
-        content = con.content.get(guid, include="owner")
-        assert content["guid"] == guid
-
-        #  assert
-        assert mock_get.call_count == 1
-
-    @responses.activate
-    def test_params_include_list(self):
-        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        mock_get = responses.get(
-            f"https://connect.example/__api__/v1/content/{guid}",
-            json=load_mock(f"v1/content/{guid}.json"),
-            match=[matchers.query_param_matcher({"include": "owner,tags,vanity_url"})],
-        )
-
-        con = Client("https://connect.example", "12345")
-        content = con.content.get(guid, include=["owner", "tags", "vanity_url"])
-        assert content["guid"] == guid
-
-        #  assert
-        assert mock_get.call_count == 1
-
-    @responses.activate
-    def test_params_include_none(self):
-        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
-        mock_get = responses.get(
-            f"https://connect.example/__api__/v1/content/{guid}",
-            json=load_mock(f"v1/content/{guid}.json"),
-            match=[matchers.query_param_matcher({})],
-        )
-
-        con = Client("https://connect.example", "12345")
-        content = con.content.get(guid, include=None)
-        assert content["guid"] == guid
-
-        # assert
-        assert mock_get.call_count == 1
 
 
 class TestContentsCount:
