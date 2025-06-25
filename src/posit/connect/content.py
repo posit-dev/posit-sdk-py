@@ -983,34 +983,20 @@ class Content(Resources):
         items = self.find(**conditions)
         return next(iter(items), None)
 
-    def get(
-        self,
-        guid: str,
-        *,
-        include: Optional[
-            Literal["owner", "tags", "vanity_url"] | list[Literal["owner", "tags", "vanity_url"]]
-        ] = None,
-    ) -> ContentItem:
+    def get(self, guid: str) -> ContentItem:
         """Get a content item.
 
         Parameters
         ----------
         guid : str
             The unique identifier of the content item.
-        include : str or list of str, optional
-            Additional details to include in the response.
-            Allowed values: 'owner', 'tags', 'vanity_url'.
 
         Returns
         -------
         ContentItem
         """
-        params = {}
-        if include is not None:
-            if isinstance(include, list):
-                params["include"] = ",".join(include)
-            else:
-                params["include"] = include
+        # Always request all available optional fields for the content item
+        params = {"include": "owner,tags,vanity_url"}
 
         response = self._ctx.client.get(f"v1/content/{guid}", params=params)
         return ContentItem(self._ctx, **response.json())
