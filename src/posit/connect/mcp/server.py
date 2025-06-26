@@ -22,7 +22,9 @@ def get_mcp_server(tool_funcs: list[Callable]):
         name="Connect MCP Server",
         instructions="MCP server for interacting with Posit Connect.",
     )
+    print("Registering tools:")
     for tool_fn in tool_funcs:
+        print(f" - {tool_fn.__name__}")
         mcp.add_tool(tool_fn)
     return mcp
 
