@@ -219,6 +219,7 @@ class TestClient:
         con = Client(api_key="12345", url="https://connect.example/")
         assert con.me["username"] == "carlos12"
 
+    @responses.activate
     def test_request(self, MockSession):
         api_key = "12345"
         url = "https://connect.example.com"
@@ -234,35 +235,45 @@ class TestClient:
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client.get("/foo")
-        client.session.get.assert_called_once_with("https://connect.example.com/__api__/foo")
+        MockSession.return_value.get.assert_called_once_with(
+            "https://connect.example.com/__api__/foo"
+        )
 
     def test_post(self, MockSession):
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client.post("/foo")
-        client.session.post.assert_called_once_with("https://connect.example.com/__api__/foo")
+        MockSession.return_value.post.assert_called_once_with(
+            "https://connect.example.com/__api__/foo"
+        )
 
     def test_put(self, MockSession):
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client.put("/foo")
-        client.session.put.assert_called_once_with("https://connect.example.com/__api__/foo")
+        MockSession.return_value.put.assert_called_once_with(
+            "https://connect.example.com/__api__/foo"
+        )
 
     def test_patch(self, MockSession):
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client.patch("/foo")
-        client.session.patch.assert_called_once_with("https://connect.example.com/__api__/foo")
+        MockSession.return_value.patch.assert_called_once_with(
+            "https://connect.example.com/__api__/foo"
+        )
 
     def test_delete(self, MockSession):
         api_key = "12345"
         url = "https://connect.example.com"
         client = Client(api_key=api_key, url=url)
         client.delete("/foo")
-        client.session.delete.assert_called_once_with("https://connect.example.com/__api__/foo")
+        MockSession.return_value.delete.assert_called_once_with(
+            "https://connect.example.com/__api__/foo"
+        )
 
 
 class TestClientOAuth:
