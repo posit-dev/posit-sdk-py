@@ -23,10 +23,6 @@ class TestPackages:
         task = bundle.deploy()
         task.wait_for()
 
-    @classmethod
-    def teardown_class(cls):
-        cls.content.delete()
-
     def test(self):
         assert self.client.packages
         assert self.content.packages

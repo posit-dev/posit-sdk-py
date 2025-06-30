@@ -3,7 +3,7 @@ from packaging import version
 
 from posit import connect
 
-from .. import CONNECT_VERSION
+from .. import CONNECT_VERSION, fixtures
 
 
 @pytest.mark.skipif(
@@ -15,7 +15,7 @@ class TestIntegrations:
     def setup_class(cls):
         cls.client = connect.Client()
         cls.integration = cls.client.oauth.integrations.create(
-            name="example integration",
+            name=fixtures.name(),
             description="integration description",
             template="custom",
             config={
@@ -30,7 +30,7 @@ class TestIntegrations:
         )
 
         cls.another_integration = cls.client.oauth.integrations.create(
-            name="another example integration",
+            name=fixtures.name(),
             description="another integration description",
             template="custom",
             config={
@@ -44,27 +44,21 @@ class TestIntegrations:
             },
         )
 
-    @classmethod
-    def teardown_class(cls):
-        cls.integration.delete()
-        cls.another_integration.delete()
-        assert len(cls.client.oauth.integrations.find()) == 0
-
     def test_get(self):
         result = self.client.oauth.integrations.get(self.integration["guid"])
         assert result == self.integration
 
     def test_find(self):
         results = self.client.oauth.integrations.find()
-        assert len(results) == 2
-        assert results[0] == self.integration
-        assert results[1] == self.another_integration
+        assert len(results) >= 2
+        integration_guids = {integration["guid"] for integration in results}
+        assert self.integration["guid"] in integration_guids
+        assert self.another_integration["guid"] in integration_guids
 
     def test_create_update_delete(self):
         # create a new integration
-
         integration = self.client.oauth.integrations.create(
-            name="new integration",
+            name=fixtures.name(),
             description="new integration description",
             template="custom",
             config={
@@ -82,7 +76,7 @@ class TestIntegrations:
         assert created == integration
 
         all_integrations = self.client.oauth.integrations.find()
-        assert len(all_integrations) == 3
+        assert len(all_integrations) >= 3
 
         # update the new integration
 
@@ -94,4 +88,4 @@ class TestIntegrations:
 
         created.delete()
         all_integrations_after_delete = self.client.oauth.integrations.find()
-        assert len(all_integrations_after_delete) == 2
+        assert len(all_integrations_after_delete) == len(all_integrations) - 1

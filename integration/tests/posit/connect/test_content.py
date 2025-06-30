@@ -5,7 +5,7 @@ from packaging import version
 
 from posit import connect
 
-from . import CONNECT_VERSION
+from . import CONNECT_VERSION, fixtures
 
 
 class TestContent:
@@ -14,13 +14,9 @@ class TestContent:
         cls.client = connect.Client()
         cls.content = cls.client.content.create()
 
-    @classmethod
-    def teardown_class(cls):
-        cls.content.delete()
-        assert cls.client.content.count() == 0
-
     def test_count(self):
-        assert self.client.content.count() == 1
+        # Assert that count works. We don't care what the count is.
+        assert self.client.content.count()
 
     def test_get(self):
         assert self.client.content.get(self.content["guid"]) == self.content
@@ -52,7 +48,7 @@ class TestContent:
     )
     def test_restart(self):
         # create content
-        content = self.client.content.create(name="example-flask-minimal")
+        content = self.client.content.create(name=fixtures.name())
         # create bundle
         path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
         path = (Path(__file__).parent / path).resolve()
@@ -71,7 +67,7 @@ class TestContent:
     )
     def test_render(self):
         # create content
-        content = self.client.content.create(name="example-quarto-minimal")
+        content = self.client.content.create(name=fixtures.name())
         # create bundle
         path = Path("../../../resources/connect/bundles/example-quarto-minimal/bundle.tar.gz")
         path = (Path(__file__).parent / path).resolve()

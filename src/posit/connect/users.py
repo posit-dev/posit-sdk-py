@@ -362,7 +362,7 @@ class Users(Resources):
         ...     email="jdoe@example.com",
         ...     first_name="John",
         ...     last_name="Doe",
-        ...     password="s3cur3p@ssword",
+        ...     password=fixtures.password(),
         ...     user_role="viewer",
         ... )
 

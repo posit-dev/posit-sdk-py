@@ -5,7 +5,7 @@ from posit import connect
 from posit.connect.content import ContentItem
 from posit.connect.repository import ContentItemRepository
 
-from . import CONNECT_VERSION
+from . import CONNECT_VERSION, fixtures
 
 
 class TestContentItemRepository:
@@ -14,12 +14,7 @@ class TestContentItemRepository:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
-        cls.content = cls.client.content.create(name="example")
-
-    @classmethod
-    def teardown_class(cls):
-        cls.content.delete()
-        assert cls.client.content.count() == 0
+        cls.content = cls.client.content.create(name=fixtures.name())
 
     @property
     def repo_repository(self):

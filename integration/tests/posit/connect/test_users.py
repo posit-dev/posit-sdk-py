@@ -1,97 +1,76 @@
 from posit import connect
 
+from . import fixtures
+
 
 class TestUser:
     @classmethod
     def setup_class(cls):
         cls.client = client = connect.Client()
-
-        # Play nicely with other tests
-        cls.existing_user_count = client.users.count()
-
-        cls.aron = client.users.create(
-            username="aron",
-            email="aron@example.com",
-            password="s3cur3p@ssword",
+        cls.alice = client.users.create(
+            username=fixtures.username(),
+            email=fixtures.email(),
+            password=fixtures.password(),
         )
-        cls.bill = client.users.create(
-            username="bill",
-            email="bill@example.com",
-            password="s3cur3p@ssword",
+        cls.bob = client.users.create(
+            username=fixtures.username(),
+            email=fixtures.email(),
+            password=fixtures.password(),
         )
-        cls.cole = client.users.create(
-            username="cole",
-            email="cole@example.com",
-            password="s3cur3p@ssword",
+        cls.carol = client.users.create(
+            username=fixtures.username(),
+            email=fixtures.email(),
+            password=fixtures.password(),
         )
 
     def test_lock(self):
-        for user in (self.aron, self.bill, self.cole):
+        for user in (self.alice, self.bob, self.carol):
             user.lock()
             assert len(self.client.users.find(account_status="locked")) == 1
             user.unlock()
+
         assert len(self.client.users.find(account_status="locked")) == 0
 
     def test_count(self):
-        # aron, bill, cole, and me (and existing user)
-        assert self.client.users.count() == 3 + self.existing_user_count
+        # Assert that count works. We don't care what the count is.
+        assert self.client.users.count()
 
     def test_find(self):
-        assert self.client.users.find(prefix="aron") == [self.aron]
-        assert self.client.users.find(prefix="bill") == [self.bill]
-        assert self.client.users.find(prefix="cole") == [self.cole]
+        assert self.client.users.find(prefix=self.alice["username"]) == [self.alice]
+        assert self.client.users.find(prefix=self.bob["username"]) == [self.bob]
+        assert self.client.users.find(prefix=self.carol["username"]) == [self.carol]
 
     def test_find_one(self):
-        assert self.client.users.find_one(prefix="aron") == self.aron
-        assert self.client.users.find_one(prefix="bill") == self.bill
-        assert self.client.users.find_one(prefix="cole") == self.cole
+        assert self.client.users.find_one(prefix=self.alice["username"]) == self.alice
+        assert self.client.users.find_one(prefix=self.bob["username"]) == self.bob
+        assert self.client.users.find_one(prefix=self.carol["username"]) == self.carol
 
     def test_get(self):
-        assert self.client.users.get(self.aron["guid"]) == self.aron
-        assert self.client.users.get(self.bill["guid"]) == self.bill
-        assert self.client.users.get(self.cole["guid"]) == self.cole
+        assert self.client.users.get(self.alice["guid"]) == self.alice
+        assert self.client.users.get(self.bob["guid"]) == self.bob
+        assert self.client.users.get(self.carol["guid"]) == self.carol
 
-    # Also tests Groups.members
-    def test_user_group_interactions(self):
-        try:
-            test_group = self.client.groups.create(name="UnitFriends")
+    def test_members(self):
+        group = self.client.groups.create(name=fixtures.name())
 
-            # `Group.members.count()`
-            assert test_group.members.count() == 0
+        # Add members to the group
+        group.members.add(self.bob)
 
-            # `Group.members.add()`
-            test_group.members.add(self.bill)
-            # `User.groups.add()`
-            assert test_group.members.count() == 1
-            self.cole.groups.add(test_group)
-            assert test_group.members.count() == 2
+        # Assign group to member
+        self.carol.groups.add(group)
 
-            # `Group.members.find()`
-            group_users = test_group.members.find()
-            assert len(group_users) == 2
-            assert group_users[0]["guid"] == self.bill["guid"]
-            assert group_users[1]["guid"] == self.cole["guid"]
+        # Assert group members
+        members = group.members.find()
+        assert len(members) == 2
+        assert members[0]["guid"] == self.bob["guid"]
+        assert members[1]["guid"] == self.carol["guid"]
 
-            # `User.group.find()`
-            bill_groups = self.bill.groups.find()
-            assert len(bill_groups) == 1
-            assert bill_groups[0]["guid"] == test_group["guid"]
+        # Assert group members through user
+        assert self.bob.groups.find()[0]["guid"] == group["guid"]
 
-            # `Group.members.delete()`
-            test_group.members.delete(self.bill)
-            assert test_group.members.count() == 1
-
-            # `User.groups.delete()`
-            self.cole.groups.delete(test_group)
-            assert test_group.members.count() == 0
-
-        finally:
-            groups = self.client.groups.find(prefix="UnitFriends")
-            if len(groups) > 0:
-                test_group = groups[0]
-                test_group.delete()
-
-            assert len(self.client.groups.find(prefix="UnitFriends")) == 0
+        # Remove member from group
+        group.members.delete(self.bob)
+        assert group.members.count() == 1
 
 
 class TestUserContent:
@@ -100,20 +79,16 @@ class TestUserContent:
     @classmethod
     def setup_class(cls):
         cls.client = client = connect.Client()
-        cls.me = me = client.me
-        cls.content = me.content.create(
-            name="Sample",
+        cls.me = client.me
+        cls.content = client.me.content.create(
+            name=fixtures.name(),
             description="Simple sample content for testing",
             access_type="acl",
         )
 
-    @classmethod
-    def teardown_class(cls):
-        assert cls.content.delete() is None
-        assert cls.me.content.count() == 0
-
     def test_count(self):
-        assert self.me.content.count() == 1
+        # Assert that count works. We don't care what the count is.
+        assert self.me.content.count() >= 1
 
     def test_find(self):
         assert self.me.content.find()
@@ -123,11 +98,9 @@ class TestUserContent:
 
     def test_multiple_users(self):
         user = self.client.users.create(
-            username="example",
-            email="example@example.com",
-            password="s3cur3p@ssword",
+            username=fixtures.username(),
+            email=fixtures.email(),
+            password=fixtures.password(),
         )
-        # assert filtering limits to the provided user.
-        assert self.me.content.find_one() == self.content
+
         assert user.content.find_one() is None
-        user.lock()

@@ -1,3 +1,5 @@
+import uuid
+
 from posit import connect
 
 
@@ -6,12 +8,9 @@ class TestVanities:
     def setup_class(cls):
         cls.client = connect.Client()
 
-    @classmethod
-    def teardown_class(cls):
-        assert cls.client.content.count() == 0
-
     def test_all(self):
-        content = self.client.content.create(name="example")
+        unique_name = f"example-{uuid.uuid4().hex[:8]}"
+        content = self.client.content.create(name=unique_name)
 
         # None by default
         vanities = self.client.vanities.all()
@@ -31,7 +30,8 @@ class TestVanities:
         assert len(vanities) == 0
 
     def test_property(self):
-        content = self.client.content.create(name="example")
+        unique_name = f"example-{uuid.uuid4().hex[:8]}"
+        content = self.client.content.create(name=unique_name)
 
         # None by default
         assert content.vanity is None
@@ -51,7 +51,8 @@ class TestVanities:
         content.delete()
 
     def test_destroy(self):
-        content = self.client.content.create(name="example")
+        unique_name = f"example-{uuid.uuid4().hex[:8]}"
+        content = self.client.content.create(name=unique_name)
 
         # None by default
         assert content.vanity is None

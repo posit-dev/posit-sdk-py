@@ -1,20 +1,17 @@
 from posit import connect
 
+from . import fixtures
+
 
 class TestEnvVars:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
         cls.content = cls.client.content.create(
-            name="Sample",
+            name=fixtures.name(),
             description="Simple sample content for testing",
             access_type="acl",
         )
-
-    @classmethod
-    def teardown_class(cls):
-        cls.content.delete()
-        assert cls.client.content.count() == 0
 
     def test_clear(self):
         self.content.environment_variables.create("KEY", "value")

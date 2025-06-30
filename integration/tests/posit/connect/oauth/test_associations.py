@@ -5,7 +5,7 @@ from packaging import version
 
 from posit import connect
 
-from .. import CONNECT_VERSION
+from .. import CONNECT_VERSION, fixtures
 
 
 @pytest.mark.skipif(
@@ -17,7 +17,7 @@ class TestAssociations:
     def setup_class(cls):
         cls.client = connect.Client()
         cls.integration = cls.client.oauth.integrations.create(
-            name="example integration",
+            name=fixtures.name(),
             description="integration description",
             template="custom",
             config={
@@ -32,7 +32,7 @@ class TestAssociations:
         )
 
         cls.another_integration = cls.client.oauth.integrations.create(
-            name="another example integration",
+            name=fixtures.name(),
             description="another integration description",
             template="custom",
             config={
@@ -48,25 +48,18 @@ class TestAssociations:
 
         # create content
         # requires full bundle deployment to produce an interactive content type
-        cls.content = cls.client.content.create(name="example-flask-minimal")
+        cls.content = cls.client.content.create(name=fixtures.name())
+
         # create bundle
         path = Path("../../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
         path = (Path(__file__).parent / path).resolve()
         bundle = cls.content.bundles.create(str(path))
+
         # deploy bundle
         task = bundle.deploy()
         task.wait_for()
 
         cls.content.oauth.associations.update(cls.integration["guid"])
-
-    @classmethod
-    def teardown_class(cls):
-        cls.integration.delete()
-        cls.another_integration.delete()
-        assert len(cls.client.oauth.integrations.find()) == 0
-
-        cls.content.delete()
-        assert cls.client.content.count() == 0
 
     def test_find_by_integration(self):
         associations = self.integration.associations.find()

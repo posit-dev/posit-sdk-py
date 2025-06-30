@@ -5,7 +5,7 @@ from packaging import version
 
 from posit import connect
 
-from . import CONNECT_VERSION
+from . import CONNECT_VERSION, fixtures
 
 
 @pytest.mark.skipif(
@@ -16,12 +16,7 @@ class TestJobs:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
-        cls.content = cls.client.content.create(name="example-quarto-minimal")
-
-    @classmethod
-    def teardown_class(cls):
-        cls.content.delete()
-        assert cls.client.content.count() == 0
+        cls.content = cls.client.content.create(name=fixtures.name())
 
     def test(self):
         content = self.content

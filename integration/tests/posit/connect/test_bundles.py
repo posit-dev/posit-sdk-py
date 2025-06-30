@@ -24,10 +24,6 @@ class TestBundles:
         )
         cls.bundle_path = (Path(__file__).parent / bundle_path).resolve()
 
-    @classmethod
-    def teardown_class(cls):
-        cls.content.delete()
-
     def test_create_bundle(self):
         """Test creating a bundle."""
         bundle = self.content.bundles.create(str(self.bundle_path))
