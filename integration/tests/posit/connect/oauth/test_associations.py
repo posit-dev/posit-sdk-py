@@ -16,6 +16,17 @@ class TestAssociations:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
+
+        # Destroy existing integrations.
+        #
+        # Starting with Connect 2025.05.0, a default integration is created automatically.
+        # https://github.com/posit-dev/connect/issues/31570
+        for integration in cls.client.oauth.integrations.find():
+            integration.delete()
+
+        # Assert that no integrations exist
+        assert len(cls.client.oauth.integrations.find()) == 0
+
         cls.integration = cls.client.oauth.integrations.create(
             name="example integration",
             description="integration description",
@@ -49,10 +60,12 @@ class TestAssociations:
         # create content
         # requires full bundle deployment to produce an interactive content type
         cls.content = cls.client.content.create(name="example-flask-minimal")
+
         # create bundle
         path = Path("../../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
         path = (Path(__file__).parent / path).resolve()
         bundle = cls.content.bundles.create(str(path))
+
         # deploy bundle
         task = bundle.deploy()
         task.wait_for()
@@ -61,11 +74,17 @@ class TestAssociations:
 
     @classmethod
     def teardown_class(cls):
+        # Destroy created integrations.
         cls.integration.delete()
         cls.another_integration.delete()
+
+        # Assert that no integrations exist
         assert len(cls.client.oauth.integrations.find()) == 0
 
+        # Destroy created content
         cls.content.delete()
+
+        # Assert that no content exists
         assert cls.client.content.count() == 0
 
     def test_find_by_integration(self):

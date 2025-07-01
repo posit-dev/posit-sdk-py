@@ -77,5 +77,8 @@ def test_deprecation_warning():
     )
     c = Client("https://connect.example", "12345")
 
-    with pytest.warns(DeprecationWarning):
+    with pytest.warns(
+        DeprecationWarning,
+        match="https://connect.example/__api__/v0 is deprecated and will be removed in a future version of Connect. Please upgrade `posit-sdk` in order to use the new APIs.",
+    ):
         c.get("v0")
