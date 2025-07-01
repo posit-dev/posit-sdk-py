@@ -40,8 +40,8 @@ class ContentPackages(ResourceSequence[ContentPackage], Protocol):
 
         Returns
         -------
-        List[ContentPackage]
-            The first record matching the specified conditions, or `None` if no such record exists.
+        Iterable[ContentPackage]
+            All records matching the specified conditions.
         """
         ...
 
@@ -88,7 +88,7 @@ class Packages(ResourceSequence[Package], Protocol):
         language: Literal["python", "r"] = ...,
         name: str = ...,
         version: str = ...,
-        hash: str | None = ...,  # noqa: A002,
+        hash: str | None = ...,  # noqa: A002
         bundle_id: str = ...,
         app_id: str = ...,
         app_guid: str = ...,
@@ -115,8 +115,8 @@ class Packages(ResourceSequence[Package], Protocol):
 
         Returns
         -------
-        List[Package]
-            The first record matching the specified conditions, or `None` if no such record exists.
+        Iterable[Package]
+            All records matching the specified conditions.
         """
         ...
 
@@ -126,7 +126,7 @@ class Packages(ResourceSequence[Package], Protocol):
         language: Literal["python", "r"] = ...,
         name: str = ...,
         version: str = ...,
-        hash: str | None = ...,  # noqa: A002,
+        hash: str | None = ...,  # noqa: A002
         bundle_id: str = ...,
         app_id: str = ...,
         app_guid: str = ...,
