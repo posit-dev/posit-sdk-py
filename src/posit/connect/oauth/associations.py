@@ -1,9 +1,13 @@
 """OAuth association resources."""
 
-from typing_extensions import List
+from __future__ import annotations
 
-from ..context import Context
+from typing_extensions import TYPE_CHECKING, List
+
 from ..resources import BaseResource, Resources
+
+if TYPE_CHECKING:
+    from ..context import Context
 
 
 class Association(BaseResource):
@@ -66,9 +70,11 @@ class ContentItemAssociations(Resources):
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         self._ctx.client.put(path, json=data)
 
-    def update(self, integration_guid: str) -> None:
+    def update(self, integration_guid: str | list[str]) -> None:
         """Set integration associations."""
-        data = [{"oauth_integration_guid": integration_guid}]
+        if isinstance(integration_guid, str):
+            integration_guid = [integration_guid]
+        data = [{"oauth_integration_guid": guid} for guid in integration_guid]
 
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         self._ctx.client.put(path, json=data)
