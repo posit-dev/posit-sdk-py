@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 from typing_extensions import TYPE_CHECKING, overload
 
 from . import hooks, me
@@ -176,7 +178,11 @@ class Client(ContextManager):
         self._ctx = Context(self)
 
     @requires("2025.01.0")
-    def with_user_session_token(self, token: str) -> Client:
+    def with_user_session_token(
+        self,
+        token: str,
+        audience: Optional[str] = None,
+    ) -> Client:
         """Create a new Client scoped to the user specified in the user session token.
 
         Create a new Client instance from a user session token exchange for an api key scoped to the
@@ -256,7 +262,9 @@ class Client(ContextManager):
             raise ValueError("token must be set to non-empty string.")
 
         visitor_credentials = self.oauth.get_credentials(
-            token, requested_token_type=OAuthTokenType.API_KEY
+            token,
+            requested_token_type=OAuthTokenType.API_KEY,
+            audience=audience,
         )
 
         visitor_api_key = visitor_credentials.get("access_token", "")

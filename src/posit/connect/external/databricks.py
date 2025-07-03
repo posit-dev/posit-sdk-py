@@ -62,11 +62,16 @@ class _PositConnectContentCredentialsProvider:
     * https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/oauth/oauth.py
     """
 
-    def __init__(self, client: Client):
+    def __init__(
+        self,
+        client: Client,
+        audience: Optional[str] = None,
+    ):
         self._client = client
+        self._audience = audience
 
     def __call__(self) -> Dict[str, str]:
-        credentials = self._client.oauth.get_content_credentials()
+        credentials = self._client.oauth.get_content_credentials(audience=self._audience)
         return _new_bearer_authorization_header(credentials)
 
 
@@ -81,12 +86,21 @@ class _PositConnectViewerCredentialsProvider:
     * https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/oauth/oauth.py
     """
 
-    def __init__(self, client: Client, user_session_token: str):
+    def __init__(
+        self,
+        client: Client,
+        user_session_token: str,
+        audience: Optional[str] = None,
+    ):
         self._client = client
         self._user_session_token = user_session_token
+        self._audience = audience
 
     def __call__(self) -> Dict[str, str]:
-        credentials = self._client.oauth.get_credentials(self._user_session_token)
+        credentials = self._client.oauth.get_credentials(
+            self._user_session_token,
+            audience=self._audience,
+        )
         return _new_bearer_authorization_header(credentials)
 
 
@@ -174,10 +188,12 @@ class ConnectStrategy(CredentialsStrategy):
         self,
         client: Optional[Client] = None,
         user_session_token: Optional[str] = None,
+        audience: Optional[str] = None,
     ):
         self._cp: Optional[CredentialsProvider] = None
         self._client = client
         self._user_session_token = user_session_token
+        self._audience = audience
 
     def auth_type(self) -> str:
         return POSIT_OAUTH_INTEGRATION_AUTH_TYPE
@@ -194,13 +210,18 @@ class ConnectStrategy(CredentialsStrategy):
         if self._cp is None:
             if self._user_session_token:
                 self._cp = _PositConnectViewerCredentialsProvider(
-                    self._client, self._user_session_token
+                    self._client,
+                    self._user_session_token,
+                    audience=self._audience,
                 )
             else:
                 logger.info(
                     "ConnectStrategy will attempt to use OAuth Service Account credentials because user_session_token is not set"
                 )
-                self._cp = _PositConnectContentCredentialsProvider(self._client)
+                self._cp = _PositConnectContentCredentialsProvider(
+                    self._client,
+                    audience=self._audience,
+                )
         return self._cp
 
 

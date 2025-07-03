@@ -69,10 +69,12 @@ class PositAuthenticator:
         local_authenticator: Optional[str] = None,
         client: Optional[Client] = None,
         user_session_token: Optional[str] = None,
+        audience: Optional[str] = None,
     ):
         self._local_authenticator = local_authenticator
         self._client = client
         self._user_session_token = user_session_token
+        self._audience = audience
 
     @property
     def authenticator(self) -> Optional[str]:
@@ -93,5 +95,8 @@ class PositAuthenticator:
         if self._client is None:
             self._client = Client()
 
-        credentials = self._client.oauth.get_credentials(self._user_session_token)
+        credentials = self._client.oauth.get_credentials(
+            self._user_session_token,
+            audience=self._audience,
+        )
         return credentials.get("access_token")
