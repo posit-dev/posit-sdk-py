@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
-from typing_extensions import TYPE_CHECKING, overload
+from typing_extensions import TYPE_CHECKING, Optional, overload
 
 from . import hooks, me
 from .auth import Auth
