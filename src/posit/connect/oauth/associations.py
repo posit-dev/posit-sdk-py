@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from typing_extensions import List
+from typing_extensions import TYPE_CHECKING, List
 
 from ..resources import BaseResource, Resources
 
