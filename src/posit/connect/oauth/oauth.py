@@ -62,6 +62,7 @@ class OAuth(Resources):
         self,
         user_session_token: Optional[str] = None,
         requested_token_type: Optional[str | OAuthTokenType] = None,
+        audience: Optional[str] = None,
     ) -> Credentials:
         """Perform an oauth credential exchange with a user-session-token."""
         # craft a credential exchange request
@@ -72,6 +73,8 @@ class OAuth(Resources):
             data["subject_token"] = user_session_token
         if requested_token_type:
             data["requested_token_type"] = requested_token_type
+        if audience:
+            data["audience"] = audience
 
         response = self._ctx.client.post(self._path, data=data)
         return Credentials(**response.json())
@@ -80,6 +83,7 @@ class OAuth(Resources):
         self,
         content_session_token: Optional[str] = None,
         requested_token_type: Optional[str | OAuthTokenType] = None,
+        audience: Optional[str] = None,
     ) -> Credentials:
         """Perform an oauth credential exchange with a content-session-token."""
         # craft a credential exchange request
@@ -89,6 +93,8 @@ class OAuth(Resources):
         data["subject_token"] = content_session_token or _get_content_session_token()
         if requested_token_type:
             data["requested_token_type"] = requested_token_type
+        if audience:
+            data["audience"] = audience
 
         response = self._ctx.client.post(self._path, data=data)
         return Credentials(**response.json())
