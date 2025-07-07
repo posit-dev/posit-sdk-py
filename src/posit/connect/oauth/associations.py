@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from typing_extensions import TYPE_CHECKING, List
+import re
 
+from typing_extensions import TYPE_CHECKING, List, Optional
+
+# from ..context import requires
 from ..resources import BaseResource, Resources
 
 if TYPE_CHECKING:
     from ..context import Context
+    from ..oauth import types
 
 
 class Association(BaseResource):
@@ -62,6 +66,43 @@ class ContentItemAssociations(Resources):
             )
             for result in response.json()
         ]
+
+    # TODO turn this on before merging
+    # @requires("2025.07.0")
+    def find_by(
+        self,
+        integration_type: Optional[types.OAuthIntegrationType] = None,
+        auth_type: Optional[types.OAuthIntegrationAuthType] = None,
+        name: Optional[str] = None,
+        guid: Optional[str] = None,
+    ) -> Association | None:
+        for association in self.find():
+            match = True
+
+            if (
+                integration_type is not None
+                and association.get("oauth_integration_template") != integration_type
+            ):
+                match = False
+
+            if (
+                auth_type is not None
+                and association.get("oauth_integration_auth_type") != auth_type
+            ):
+                match = False
+
+            if name is not None:
+                integration_name = association.get("oauth_integration_name", "")
+                if not re.search(name, integration_name):
+                    match = False
+
+            if guid is not None and association.get("oauth_integration_guid") != guid:
+                match = False
+
+            if match:
+                return association
+            else:
+                return None
 
     def delete(self) -> None:
         """Delete integration associations."""

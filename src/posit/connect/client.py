@@ -11,7 +11,8 @@ from .content import Content
 from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics.metrics import Metrics
-from .oauth.oauth import OAuth, OAuthTokenType
+from .oauth.oauth import OAuth
+from .oauth.types import OAuthTokenType
 from .resources import _PaginatedResourceSequence, _ResourceSequence
 from .sessions import Session
 from .system import System

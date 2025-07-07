@@ -6,7 +6,7 @@ from datetime import datetime
 
 from typing_extensions import TYPE_CHECKING, Optional, TypedDict
 
-from ..oauth.oauth import OAuthTokenType
+from ..oauth.types import OAuthTokenType
 
 if TYPE_CHECKING:
     from ..client import Client
