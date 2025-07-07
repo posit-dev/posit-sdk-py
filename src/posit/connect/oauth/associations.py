@@ -101,8 +101,7 @@ class ContentItemAssociations(Resources):
 
             if match:
                 return association
-            else:
-                return None
+        return None
 
     def delete(self) -> None:
         """Delete integration associations."""
