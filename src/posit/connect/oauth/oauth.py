@@ -12,6 +12,12 @@ from .sessions import Sessions
 if TYPE_CHECKING:
     from ..context import Context
 
+# Adding constants for backwards compatibility
+# Moving these could break existing code that imports them directly
+GRANT_TYPE = types.GRANT_TYPE
+
+OAuthTokenType = types.OAuthTokenType
+
 
 def _get_content_session_token() -> str:
     """Return the content session token.
