@@ -169,7 +169,7 @@ class TestContentsFind:
         assert content[2]["name"] == "My-Streamlit-app"
 
     @responses.activate
-    def test_params_include(self):
+    def test_params_include_string(self):
         # behavior
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
@@ -326,7 +326,7 @@ class TestContentsFindOne:
         assert content_item["name"] == name
 
     @responses.activate
-    def test_params_include(self):
+    def test_params_include_string(self):
         # behavior
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content",
@@ -365,9 +365,11 @@ class TestContentsFindOne:
 class TestContentsGet:
     @responses.activate
     def test(self):
+        # All calls to get() should automatically include all available optional fields
         responses.get(
             "https://connect.example/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
             json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+            match=[matchers.query_param_matcher({"include": "owner,tags,vanity_url"})],
         )
         con = Client("https://connect.example", "12345")
         get_one = con.content.get("f2f37341-e21d-3d80-c698-a935ad614066")
