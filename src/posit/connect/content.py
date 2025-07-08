@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import posixpath
 import time
 
@@ -1000,3 +1001,16 @@ class Content(Resources):
 
         response = self._ctx.client.get(f"v1/content/{guid}", params=params)
         return ContentItem(self._ctx, **response.json())
+
+    @property
+    def current(self) -> ContentItem:
+        """Get the content item for the current context.
+
+        Returns
+        -------
+        ContentItem
+        """
+        guid = os.getenv("CONNECT_CONTENT_GUID")
+        if not guid:
+            raise RuntimeError("CONNECT_CONTENT_GUID environment variable is not set.")
+        return self.get(guid)

@@ -6,7 +6,7 @@ from datetime import datetime
 
 from typing_extensions import TYPE_CHECKING, Optional, TypedDict
 
-from ..oauth.oauth import OAuthTokenType
+from ..oauth.types import OAuthTokenType
 
 if TYPE_CHECKING:
     from ..client import Client
@@ -19,7 +19,11 @@ class Credentials(TypedDict):
     expiration: datetime
 
 
-def get_credentials(client: Client, user_session_token: str) -> Credentials:
+def get_credentials(
+    client: Client,
+    user_session_token: str,
+    audience: Optional[str] = None,
+) -> Credentials:
     """
     Get AWS credentials using OAuth token exchange for an AWS Viewer integration.
 
@@ -66,6 +70,7 @@ def get_credentials(client: Client, user_session_token: str) -> Credentials:
     credentials = client.oauth.get_credentials(
         user_session_token=user_session_token,
         requested_token_type=OAuthTokenType.AWS_CREDENTIALS,
+        audience=audience,
     )
 
     # Decode base64 access token
@@ -76,7 +81,9 @@ def get_credentials(client: Client, user_session_token: str) -> Credentials:
 
 
 def get_content_credentials(
-    client: Client, content_session_token: Optional[str] = None
+    client: Client,
+    content_session_token: Optional[str] = None,
+    audience: Optional[str] = None,
 ) -> Credentials:
     """
     Get AWS credentials using OAuth token exchange for an AWS Service Account integration.
@@ -122,6 +129,7 @@ def get_content_credentials(
     credentials = client.oauth.get_content_credentials(
         content_session_token=content_session_token,
         requested_token_type=OAuthTokenType.AWS_CREDENTIALS,
+        audience=audience,
     )
 
     # Decode base64 access token
