@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import re
-
-from typing_extensions import TYPE_CHECKING, List, Optional
+from typing_extensions import TYPE_CHECKING, List
 
 # from ..context import requires
 from ..resources import BaseResource, Resources
 
 if TYPE_CHECKING:
     from ..context import Context
-    from ..oauth import types
 
 
 class Association(BaseResource):
@@ -67,42 +64,6 @@ class ContentItemAssociations(Resources):
             for result in response.json()
         ]
 
-    # TODO turn this on before merging
-    # @requires("2025.07.0")
-    def find_by(
-        self,
-        integration_type: Optional[types.OAuthIntegrationType] = None,
-        auth_type: Optional[types.OAuthIntegrationAuthType] = None,
-        name: Optional[str] = None,
-        guid: Optional[str] = None,
-    ) -> Association | None:
-        for association in self.find():
-            match = True
-
-            if (
-                integration_type is not None
-                and association.get("oauth_integration_template") != integration_type
-            ):
-                match = False
-
-            if (
-                auth_type is not None
-                and association.get("oauth_integration_auth_type") != auth_type
-            ):
-                match = False
-
-            if name is not None:
-                integration_name = association.get("oauth_integration_name", "")
-                if not re.search(name, integration_name):
-                    match = False
-
-            if guid is not None and association.get("oauth_integration_guid") != guid:
-                match = False
-
-            if match:
-                return association
-        return None
-
     def delete(self) -> None:
         """Delete integration associations."""
         data = []
@@ -110,10 +71,8 @@ class ContentItemAssociations(Resources):
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         self._ctx.client.put(path, json=data)
 
-    def update(self, integration_guid: str | list[str]) -> None:
+    def update(self, integration_guid: list[str]) -> None:
         """Set integration associations."""
-        if isinstance(integration_guid, str):
-            integration_guid = [integration_guid]
         data = [{"oauth_integration_guid": guid} for guid in integration_guid]
 
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"

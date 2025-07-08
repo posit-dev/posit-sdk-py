@@ -1,9 +1,16 @@
 """OAuth integration resources."""
 
-from typing_extensions import List, Optional, overload
+from __future__ import annotations
+
+import re
+
+from typing_extensions import TYPE_CHECKING, List, Optional, overload
 
 from ..resources import BaseResource, Resources
 from .associations import IntegrationAssociations
+
+if TYPE_CHECKING:
+    from ..oauth import types
 
 
 class Integration(BaseResource):
@@ -117,6 +124,71 @@ class Integrations(Resources):
             )
             for result in response.json()
         ]
+
+    # TODO turn this on before merging
+    # @requires("2025.07.0")
+    def find_by(
+        self,
+        integration_type: Optional[types.OAuthIntegrationType] = None,
+        auth_type: Optional[types.OAuthIntegrationAuthType] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        guid: Optional[str] = None,
+        config: Optional[dict] = None,
+    ) -> Integration | None:
+        """Find an OAuth integration by various criteria.
+
+        Parameters
+        ----------
+        integration_type : Optional[types.OAuthIntegrationType]
+            The type of the integration (e.g., "aws", "azure").
+        auth_type : Optional[types.OAuthIntegrationAuthType]
+            The authentication type of the integration (e.g., "Viewer", "Service Account").
+        name : Optional[str]
+            A regex pattern to match the integration name.
+        description : Optional[str]
+            A regex pattern to match the integration description.
+        guid : Optional[str]
+            The unique identifier of the integration.
+        config : Optional[dict]
+            A dictionary of configuration key-value pairs to match against the integration's config. This will
+            vary based on the integration type.
+
+        Returns
+        -------
+        Integration | None
+            The first matching integration, or None if no match is found.
+        """
+        for integration in self.find():
+            match = True
+
+            if integration_type is not None and integration.get("template") != integration_type:
+                match = False
+
+            if auth_type is not None and integration.get("auth_type") != auth_type:
+                match = False
+
+            if name is not None:
+                integration_name = integration.get("name", "")
+                if not re.search(name, integration_name):
+                    match = False
+
+            if description is not None:
+                integration_description = integration.get("description", "")
+                if not re.search(description, integration_description):
+                    match = False
+
+            if guid is not None and integration.get("guid") != guid:
+                match = False
+
+            if config is not None:
+                integration_config = integration.get("config", {})
+                if not all(integration_config.get(k) == v for k, v in config.items()):
+                    match = False
+
+            if match:
+                return integration
+        return None
 
     def get(self, guid: str) -> Integration:
         """Get an OAuth integration.
