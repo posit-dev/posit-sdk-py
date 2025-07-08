@@ -120,7 +120,7 @@ class TestContentAssociationsUpdate:
         c._ctx.version = None
 
         # invoke
-        c.content.get(guid).oauth.associations.update(new_integration_guid)
+        c.content.get(guid).oauth.associations.update([new_integration_guid])
 
         # assert
         assert mock_put.call_count == 1
