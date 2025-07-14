@@ -71,16 +71,30 @@ class WorkbenchStrategy(CredentialsStrategy):
     """
 
     def __init__(self, config: Optional[Config] = None):
-        self._config = config or Config(profile="workbench")
+        self.__config = config
 
     def auth_type(self) -> str:
         return POSIT_WORKBENCH_AUTH_TYPE
+
+    @property
+    def _config(self) -> Config:
+        """The Databricks SDK `Config` object used by this strategy.
+
+        Returns
+        -------
+        Config
+            The provided `Config` object, defaulting to a new `Config` with the profile set to "workbench" if not provided.
+        """
+        if self.__config is None:
+            # Do not create this configuration object until it is needed.
+            # This avoids failing if the 'workbench' profile is not defined in the user's
+            # `~/.databrickscfg` file until this strategy is actually used.
+            self.__config = Config(profile="workbench")
+
+        return self.__config
 
     def __call__(self, *args, **kwargs) -> CredentialsProvider:  # noqa: ARG002
         if self._config.token is None:
             raise ValueError("Missing value for field 'token' in Config.")
 
-        def cp():
-            return {"Authorization": f"Bearer {self._config.token}"}
-
-        return cp
+        return lambda: {"Authorization": f"Bearer {self._config.token}"}
