@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from typing_extensions import TYPE_CHECKING, List
+import re
+
+from typing_extensions import TYPE_CHECKING, List, Optional
 
 # from ..context import requires
 from ..resources import BaseResource, Resources
 
 if TYPE_CHECKING:
     from ..context import Context
+    from ..oauth import types
 
 
 class Association(BaseResource):
@@ -63,6 +66,68 @@ class ContentItemAssociations(Resources):
             )
             for result in response.json()
         ]
+
+    # TODO turn this on before merging
+    # @requires("2025.07.0")
+    def find_by(
+        self,
+        integration_type: Optional[types.OAuthIntegrationType | str] = None,
+        auth_type: Optional[types.OAuthIntegrationAuthType | str] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        guid: Optional[str] = None,
+    ) -> Association | None:
+        """Find an OAuth integration associated with content by various criteria.
+
+        Parameters
+        ----------
+        integration_type : Optional[types.OAuthIntegrationType | str]
+            The type of the integration (e.g., "aws", "azure").
+        auth_type : Optional[types.OAuthIntegrationAuthType | str]
+            The authentication type of the integration (e.g., "Viewer", "Service Account").
+        name : Optional[str]
+            A regex pattern to match the integration name. For exact matches, use `^` and `$`. For example,
+            `^My Integration$` will match only "My Integration".
+        description : Optional[str]
+            A regex pattern to match the integration description. For exact matches, use `^` and `$`. For example,
+            `^My Integration Description$` will match only "My Integration Description".
+        guid : Optional[str]
+            The unique identifier of the integration.
+
+        Returns
+        -------
+        Association | None
+            The first matching association, or None if no match is found.
+        """
+        for integration in self.find():
+            if (
+                integration_type is not None
+                and integration.get("oauth_integration_template") != integration_type
+            ):
+                continue
+
+            if (
+                auth_type is not None
+                and integration.get("oauth_integration_auth_type") != auth_type
+            ):
+                continue
+
+            if name is not None:
+                integration_name = integration.get("oauth_integration_name", "")
+                if not re.search(name, integration_name):
+                    continue
+
+            if description is not None:
+                integration_description = integration.get("oauth_integration_description", "")
+                if not re.search(description, integration_description):
+                    continue
+
+            if guid is not None and integration.get("oauth_integration_guid") != guid:
+                continue
+
+            return integration
+
+        return None
 
     def delete(self) -> None:
         """Delete integration associations."""

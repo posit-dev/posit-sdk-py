@@ -165,3 +165,66 @@ class TestContentAssociationsDelete:
         # assert
         assert mock_put.call_count == 1
         assert mock_get_content.call_count == 1
+
+
+class TestContentAssociationsFindBy:
+    @responses.activate
+    def test(self):
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # behavior
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}/oauth/integrations/associations",
+            json=load_mock(f"v1/content/{guid}/oauth/integrations/associations.json"),
+        )
+
+        # setup
+        c = Client("https://connect.example", "12345")
+        c._ctx.version = None
+        associations = c.content.get(guid).oauth.associations
+
+        # invoke and assert
+        # by guid
+        found = associations.find_by(guid="22644575-a27b-4118-ad06-e24459b05126")
+        assert found is not None
+        assert found["oauth_integration_guid"] == "22644575-a27b-4118-ad06-e24459b05126"
+
+        # by name (exact match)
+        found = associations.find_by(name="^keycloak integration$")
+        assert found is not None
+        assert found["oauth_integration_name"] == "keycloak integration"
+
+        # by name (partial match) - should find first match
+        found = associations.find_by(name="integration")
+        assert found is not None
+        assert found["oauth_integration_name"] == "keycloak integration"
+
+        # by description (exact match)
+        found = associations.find_by(description="^integration description$")
+        assert found is not None
+        assert found["oauth_integration_description"] == "integration description"
+
+        # by description (partial match)
+        found = associations.find_by(description="another")
+        assert found is not None
+        assert found["oauth_integration_description"] == "another description"
+
+        # by integration_type
+        found = associations.find_by(integration_type="custom")
+        assert found is not None
+        assert found["oauth_integration_template"] == "custom"
+        assert found["oauth_integration_name"] == "keycloak integration"  # first one
+
+        # by multiple criteria
+        found = associations.find_by(integration_type="custom", name="another integration")
+        assert found is not None
+        assert found["oauth_integration_template"] == "custom"
+        assert found["oauth_integration_name"] == "another integration"
+
+        # no match
+        found = associations.find_by(name="Non-existent Integration")
+        assert found is None
