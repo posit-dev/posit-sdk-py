@@ -32,5 +32,17 @@
             "token_endpoint_auth_method": "client_secret_post",
             "token_uri": "http://keycloak:8080/realms/rsconnect/protocol/openid-connect/token"
         }
+    },
+    {
+        "id": "5",
+        "guid": "d32b3f4e-3f4a-4c5a-9f1e-8b6e2f7c9a2b",
+        "created_time": "2025-07-15T20:35:11Z",
+        "updated_time": "2025-07-15T20:35:11Z",
+        "name": "Connect Visitor API Key",
+        "description": "Allows access to Connect APIs on behalf of a Connect user.",
+        "template": "connect",
+        "config": {
+            "scopes": "admin"
+        }
     }
 ]

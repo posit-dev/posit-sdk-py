@@ -129,8 +129,8 @@ class Integrations(Resources):
     # @requires("2025.07.0")
     def find_by(
         self,
-        integration_type: Optional[types.OAuthIntegrationType] = None,
-        auth_type: Optional[types.OAuthIntegrationAuthType] = None,
+        integration_type: Optional[types.OAuthIntegrationType | str] = None,
+        auth_type: Optional[types.OAuthIntegrationAuthType | str] = None,
         name: Optional[str] = None,
         description: Optional[str] = None,
         guid: Optional[str] = None,
@@ -140,14 +140,16 @@ class Integrations(Resources):
 
         Parameters
         ----------
-        integration_type : Optional[types.OAuthIntegrationType]
+        integration_type : Optional[types.OAuthIntegrationType | str]
             The type of the integration (e.g., "aws", "azure").
-        auth_type : Optional[types.OAuthIntegrationAuthType]
+        auth_type : Optional[types.OAuthIntegrationAuthType | str]
             The authentication type of the integration (e.g., "Viewer", "Service Account").
         name : Optional[str]
-            A regex pattern to match the integration name.
+            A regex pattern to match the integration name. For exact matches, use `^` and `$`. For example,
+            `^My Integration$` will match only "My Integration".
         description : Optional[str]
-            A regex pattern to match the integration description.
+            A regex pattern to match the integration description. For exact matches, use `^` and `$`. For example,
+            `^My Integration Description$` will match only "My Integration Description".
         guid : Optional[str]
             The unique identifier of the integration.
         config : Optional[dict]
@@ -160,34 +162,32 @@ class Integrations(Resources):
             The first matching integration, or None if no match is found.
         """
         for integration in self.find():
-            match = True
-
             if integration_type is not None and integration.get("template") != integration_type:
-                match = False
+                continue
 
             if auth_type is not None and integration.get("auth_type") != auth_type:
-                match = False
+                continue
 
             if name is not None:
                 integration_name = integration.get("name", "")
                 if not re.search(name, integration_name):
-                    match = False
+                    continue
 
             if description is not None:
                 integration_description = integration.get("description", "")
                 if not re.search(description, integration_description):
-                    match = False
+                    continue
 
             if guid is not None and integration.get("guid") != guid:
-                match = False
+                continue
 
             if config is not None:
                 integration_config = integration.get("config", {})
                 if not all(integration_config.get(k) == v for k, v in config.items()):
-                    match = False
+                    continue
 
-            if match:
-                return integration
+            return integration
+
         return None
 
     def get(self, guid: str) -> Integration:

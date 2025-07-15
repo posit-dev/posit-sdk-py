@@ -89,9 +89,12 @@ class TestContentAssociationsFind:
         associations = c.content.get(guid).oauth.associations.find()
 
         # assert
-        assert len(associations) == 1
-        association = associations[0]
-        assert association["app_guid"] == guid
+        assert len(associations) == 2
+        assert associations[0]["app_guid"] == guid
+        assert associations[1]["app_guid"] == guid
+        assert (
+            associations[0]["oauth_integration_guid"] != associations[1]["oauth_integration_guid"]
+        )
 
         assert mock_get_content.call_count == 1
         assert mock_get_association.call_count == 1
@@ -108,11 +111,15 @@ class TestContentAssociationsUpdate:
             json=load_mock(f"v1/content/{guid}.json"),
         )
 
-        new_integration_guid = "00000000-a27b-4118-ad06-e24459b05126"
+        new_integration_guid1 = "00000000-a27b-4118-ad06-e24459b05126"
+        new_integration_guid2 = "00000001-a27b-4118-ad06-e24459b05126"
 
         mock_put = responses.put(
             f"https://connect.example/__api__/v1/content/{guid}/oauth/integrations/associations",
-            json=[{"oauth_integration_guid": new_integration_guid}],
+            json=[
+                {"oauth_integration_guid": new_integration_guid1},
+                {"oauth_integration_guid": new_integration_guid2},
+            ],
         )
 
         # setup
@@ -120,7 +127,12 @@ class TestContentAssociationsUpdate:
         c._ctx.version = None
 
         # invoke
-        c.content.get(guid).oauth.associations.update([new_integration_guid])
+        c.content.get(guid).oauth.associations.update(
+            [
+                new_integration_guid1,
+                new_integration_guid2,
+            ]
+        )
 
         # assert
         assert mock_put.call_count == 1

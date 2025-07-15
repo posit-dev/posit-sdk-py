@@ -71,9 +71,9 @@ class ContentItemAssociations(Resources):
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         self._ctx.client.put(path, json=data)
 
-    def update(self, integration_guid: list[str]) -> None:
+    def update(self, integration_guids: list[str]) -> None:
         """Set integration associations."""
-        data = [{"oauth_integration_guid": guid} for guid in integration_guid]
+        data = [{"oauth_integration_guid": guid} for guid in integration_guids]
 
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         self._ctx.client.put(path, json=data)

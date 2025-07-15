@@ -2,6 +2,7 @@ import responses
 from responses import matchers
 
 from posit.connect.client import Client
+from posit.connect.oauth import types
 
 from ..api import load_mock, load_mock_dict
 
@@ -125,9 +126,10 @@ class TestIntegrationsFind:
 
         # assert
         assert mock_get.call_count == 1
-        assert len(integrations) == 2
+        assert len(integrations) == 3
         assert integrations[0]["id"] == "3"
         assert integrations[1]["id"] == "4"
+        assert integrations[2]["id"] == "5"
 
 
 class TestIntegrationsGet:
@@ -148,3 +150,107 @@ class TestIntegrationsGet:
 
         assert mock_get.call_count == 1
         assert integration["guid"] == guid
+
+
+class TestIntegrationsFindBy:
+    @responses.activate
+    def test(self):
+        # behavior
+        responses.get(
+            "https://connect.example/__api__/v1/oauth/integrations",
+            json=load_mock("v1/oauth/integrations.json"),
+        )
+
+        # setup
+        c = Client("https://connect.example", "12345")
+        c._ctx.version = None
+        integrations = c.oauth.integrations
+
+        # invoke and assert
+        # by guid
+        found = integrations.find_by(guid="22644575-a27b-4118-ad06-e24459b05126")
+        assert found is not None
+        assert found["guid"] == "22644575-a27b-4118-ad06-e24459b05126"
+
+        # by name (exact match)
+        found = integrations.find_by(name="^keycloak integration$")
+        assert found is not None
+        assert found["name"] == "keycloak integration"
+
+        # by name (partial match) - should find first match
+        found = integrations.find_by(name="keycloak")
+        assert found is not None
+        assert found["name"] == "keycloak integration"
+
+        # by description (exact match)
+        found = integrations.find_by(description="^integration description$")
+        assert found is not None
+        assert found["description"] == "integration description"
+
+        # by description (partial match)
+        found = integrations.find_by(description="another")
+        assert found is not None
+        assert found["description"] == "another integration description"
+
+        # by integration_type
+        found = integrations.find_by(integration_type=types.OAuthIntegrationType.CUSTOM)
+        assert found is not None
+        assert found["template"] == "custom"
+        assert found["name"] == "keycloak integration"  # first one
+
+        found = integrations.find_by(integration_type="custom")
+        assert found is not None
+        assert found["template"] == "custom"
+        assert found["name"] == "keycloak integration"  # first one
+
+        # by auth_type (no match)
+        found = integrations.find_by(auth_type=types.OAuthIntegrationAuthType.VIEWER)
+        assert found is None
+
+        found = integrations.find_by(auth_type="Viewer")
+        assert found is None
+
+        # by config
+        found = integrations.find_by(config={"client_id": "rsconnect-oidc"})
+        assert found is not None
+        assert found["config"]["client_id"] == "rsconnect-oidc"
+        assert found["name"] == "keycloak integration"  # first one
+
+        # by config to find second integration
+        found = integrations.find_by(config={"token_endpoint_auth_method": "client_secret_post"})
+        assert found is not None
+        assert found["config"]["token_endpoint_auth_method"] == "client_secret_post"
+        assert found["name"] == "keycloak-post"
+
+        # by multiple criteria
+        found = integrations.find_by(integration_type="custom", name="keycloak-post")
+        assert found is not None
+        assert found["template"] == "custom"
+        assert found["name"] == "keycloak-post"
+
+        # find connect integration
+        found = integrations.find_by(integration_type=types.OAuthIntegrationType.CONNECT)
+        assert found is not None
+        assert found["template"] == "connect"
+        assert found["name"] == "Connect Visitor API Key"
+
+        found = integrations.find_by(integration_type="connect")
+        assert found is not None
+        assert found["template"] == "connect"
+        assert found["name"] == "Connect Visitor API Key"
+
+        found = integrations.find_by(name="Connect Visitor API Key")
+        assert found is not None
+        assert found["name"] == "Connect Visitor API Key"
+
+        found = integrations.find_by(description="Allows access to Connect APIs")
+        assert found is not None
+        assert found["description"] == "Allows access to Connect APIs on behalf of a Connect user."
+
+        found = integrations.find_by(config={"scopes": "admin"})
+        assert found is not None
+        assert found["config"]["scopes"] == "admin"
+
+        # no match
+        found = integrations.find_by(name="Non-existent Integration")
+        assert found is None
