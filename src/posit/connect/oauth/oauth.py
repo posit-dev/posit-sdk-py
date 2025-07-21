@@ -56,17 +56,31 @@ class OAuth(Resources):
 
     def get_credentials(
         self,
-        user_session_token: Optional[str] = None,
+        user_session_token: str,
         requested_token_type: Optional[str | types.OAuthTokenType] = None,
         audience: Optional[str] = None,
     ) -> Credentials:
-        """Perform an oauth credential exchange with a user-session-token."""
+        """Perform an oauth credential exchange with a user-session-token.
+
+        Parameters
+        ----------
+        user_session_token : str
+            The user session token to use for the exchange.
+        requested_token_type : str or OAuthTokenType, optional
+            The type of token being requested. This can be one of the predefined types in `OAuthTokenType` or a custom string.
+        audience : str, optional
+            The intended audience for the token. This must be a valid integration GUID.
+
+        Returns
+        -------
+        Credentials
+            The credentials obtained from the exchange.
+        """
         # craft a credential exchange request
         data = {}
         data["grant_type"] = types.GRANT_TYPE
         data["subject_token_type"] = types.OAuthTokenType.USER_SESSION_TOKEN
-        if user_session_token:
-            data["subject_token"] = user_session_token
+        data["subject_token"] = user_session_token
         if requested_token_type:
             data["requested_token_type"] = requested_token_type
         if audience:
@@ -81,7 +95,23 @@ class OAuth(Resources):
         requested_token_type: Optional[str | types.OAuthTokenType] = None,
         audience: Optional[str] = None,
     ) -> Credentials:
-        """Perform an oauth credential exchange with a content-session-token."""
+        """Perform an oauth credential exchange with a content-session-token.
+
+        Parameters
+        ----------
+        content_session_token : str, optional
+            The content session token to use for the exchange. If not provided, the function will attempt to read the token from the environment variable 'CONNECT_CONTENT_SESSION_TOKEN'.
+        requested_token_type : str or OAuthTokenType, optional
+            The type of token being requested. This can be one of the predefined types in `OAuthTokenType` or a custom string.
+        audience : str, optional
+            The intended audience for the token. This must be a valid integration GUID.
+
+        Returns
+        -------
+        Credentials
+            The credentials obtained from the exchange.
+
+        """
         # craft a credential exchange request
         data = {}
         data["grant_type"] = types.GRANT_TYPE

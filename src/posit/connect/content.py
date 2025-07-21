@@ -984,33 +984,28 @@ class Content(Resources):
         items = self.find(**conditions)
         return next(iter(items), None)
 
-    def get(self, guid: str) -> ContentItem:
+    def get(self, guid: Optional[str] = None) -> ContentItem:
         """Get a content item.
+
+        If `guid` is None, attempts to get the content item for the current context using the
+        CONNECT_CONTENT_GUID environment variable, which is automatically set when running on Connect.
 
         Parameters
         ----------
-        guid : str
+        guid : str, optional
             The unique identifier of the content item.
 
         Returns
         -------
         ContentItem
         """
+        if guid is None:
+            guid = os.getenv("CONNECT_CONTENT_GUID")
+            if not guid:
+                raise RuntimeError("CONNECT_CONTENT_GUID environment variable is not set.")
+
         # Always request all available optional fields for the content item
         params = {"include": "owner,tags,vanity_url"}
 
         response = self._ctx.client.get(f"v1/content/{guid}", params=params)
         return ContentItem(self._ctx, **response.json())
-
-    @property
-    def current(self) -> ContentItem:
-        """Get the content item for the current context.
-
-        Returns
-        -------
-        ContentItem
-        """
-        guid = os.getenv("CONNECT_CONTENT_GUID")
-        if not guid:
-            raise RuntimeError("CONNECT_CONTENT_GUID environment variable is not set.")
-        return self.get(guid)

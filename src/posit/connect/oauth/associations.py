@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import re
+from functools import partial
 
 from typing_extensions import TYPE_CHECKING, List, Optional
 
 # from ..context import requires
-from ..resources import BaseResource, Resources
+from ..resources import BaseResource, Resources, _matches_exact, _matches_pattern
 
 if TYPE_CHECKING:
     from ..context import Context
@@ -99,33 +99,27 @@ class ContentItemAssociations(Resources):
         Association | None
             The first matching association, or None if no match is found.
         """
+        filters = []
+        if integration_type is not None:
+            filters.append(
+                partial(_matches_exact, key="oauth_integration_template", value=integration_type)
+            )
+        if auth_type is not None:
+            filters.append(
+                partial(_matches_exact, key="oauth_integration_auth_type", value=auth_type)
+            )
+        if name is not None:
+            filters.append(partial(_matches_pattern, key="oauth_integration_name", pattern=name))
+        if description is not None:
+            filters.append(
+                partial(_matches_pattern, key="oauth_integration_description", pattern=description)
+            )
+        if guid is not None:
+            filters.append(partial(_matches_exact, key="oauth_integration_guid", value=guid))
+
         for integration in self.find():
-            if (
-                integration_type is not None
-                and integration.get("oauth_integration_template") != integration_type
-            ):
-                continue
-
-            if (
-                auth_type is not None
-                and integration.get("oauth_integration_auth_type") != auth_type
-            ):
-                continue
-
-            if name is not None:
-                integration_name = integration.get("oauth_integration_name", "")
-                if not re.search(name, integration_name):
-                    continue
-
-            if description is not None:
-                integration_description = integration.get("oauth_integration_description", "")
-                if not re.search(description, integration_description):
-                    continue
-
-            if guid is not None and integration.get("oauth_integration_guid") != guid:
-                continue
-
-            return integration
+            if all(f(integration) for f in filters):
+                return integration
 
         return None
 

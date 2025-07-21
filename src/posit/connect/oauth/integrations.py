@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
-import re
+from functools import partial
 
 from typing_extensions import TYPE_CHECKING, List, Optional, overload
 
-from ..resources import BaseResource, Resources
+from ..resources import (
+    BaseResource,
+    Resources,
+    _contains_dict_key_values,
+    _matches_exact,
+    _matches_pattern,
+)
 from .associations import IntegrationAssociations
 
 if TYPE_CHECKING:
@@ -161,32 +167,23 @@ class Integrations(Resources):
         Integration | None
             The first matching integration, or None if no match is found.
         """
+        filters = []
+        if integration_type is not None:
+            filters.append(partial(_matches_exact, key="template", value=integration_type))
+        if auth_type is not None:
+            filters.append(partial(_matches_exact, key="auth_type", value=auth_type))
+        if name is not None:
+            filters.append(partial(_matches_pattern, key="name", pattern=name))
+        if description is not None:
+            filters.append(partial(_matches_pattern, key="description", pattern=description))
+        if guid is not None:
+            filters.append(partial(_matches_exact, key="guid", value=guid))
+        if config is not None:
+            filters.append(partial(_contains_dict_key_values, key="config", value=config))
+
         for integration in self.find():
-            if integration_type is not None and integration.get("template") != integration_type:
-                continue
-
-            if auth_type is not None and integration.get("auth_type") != auth_type:
-                continue
-
-            if name is not None:
-                integration_name = integration.get("name", "")
-                if not re.search(name, integration_name):
-                    continue
-
-            if description is not None:
-                integration_description = integration.get("description", "")
-                if not re.search(description, integration_description):
-                    continue
-
-            if guid is not None and integration.get("guid") != guid:
-                continue
-
-            if config is not None:
-                integration_config = integration.get("config", {})
-                if not all(integration_config.get(k) == v for k, v in config.items()):
-                    continue
-
-            return integration
+            if all(f(integration) for f in filters):
+                return integration
 
         return None
 

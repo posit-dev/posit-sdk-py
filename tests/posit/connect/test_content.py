@@ -388,7 +388,7 @@ class TestContentCurrent:
             match=[matchers.query_param_matcher({"include": "owner,tags,vanity_url"})],
         )
         c = Client("https://connect.example", "12345")
-        content_item = c.content.current
+        content_item = c.content.get()
         assert content_item["guid"] == guid
 
     def test_without_env_var(self, monkeypatch):
@@ -397,7 +397,7 @@ class TestContentCurrent:
         with pytest.raises(
             RuntimeError, match="CONNECT_CONTENT_GUID environment variable is not set."
         ):
-            _ = c.content.current
+            _ = c.content.get()
 
 
 class TestContentsCount:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import posixpath
+import re
 import warnings
 from abc import ABC
 
@@ -192,3 +193,24 @@ class _PaginatedResourceSequence(_ResourceSequence):
                 resource = _Resource(self._ctx, path, **result)
                 resources.append(resource)
             yield from resources
+
+
+def _matches_exact(item: BaseResource, key: str, value: str):
+    item_value = item.get(key)
+    if item_value is None or not isinstance(item_value, str):
+        return False
+    return item_value == value
+
+
+def _matches_pattern(item: BaseResource, key: str, pattern: str):
+    item_value = item.get(key)
+    if item_value is None or not isinstance(item_value, str):
+        return False
+    return re.search(pattern, item_value) is not None
+
+
+def _contains_dict_key_values(item: BaseResource, key: str, value: dict):
+    item_value = item.get(key)
+    if item_value is None or not isinstance(item_value, dict):
+        return False
+    return all(item_value.get(k) == v for k, v in value.items())
