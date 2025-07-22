@@ -132,7 +132,7 @@ class Integrations(Resources):
             for result in response.json()
         ]
 
-    @requires("2025.06.0-dev")
+    @requires("2025.07.0-dev")
     def find_by(
         self,
         integration_type: Optional[types.OAuthIntegrationType | str] = None,
