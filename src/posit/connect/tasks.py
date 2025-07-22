@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import time
-
 from typing_extensions import overload
 
 from . import resources
@@ -97,39 +95,53 @@ class Task(resources.BaseResource):
         result = response.json()
         super().update(**result)
 
-    def wait_for(self, *, initial_wait: int = 1, max_wait: int = 10, backoff: float = 1.5) -> None:
+    def wait_for(self, *, wait: int = 1, max_attempts: int | None = None) -> None:
         """Wait for the task to finish.
 
         Parameters
         ----------
-        initial_wait : int, default 1
-            Initial wait time in seconds. First API request will use this as the wait parameter.
-        max_wait : int, default 10
+        wait : int, default 1
             Maximum wait time in seconds between polling requests.
-        backoff : float, default 1.5
-            Backoff multiplier for increasing wait times.
+        max_attempts : int | None, default None
+            Maximum number of polling attempts. If None, polling will continue indefinitely.
+
+        Raises
+        ------
+        TimeoutError
+            If the task does not finish within the maximum attempts.
+
+        Notes
+        -----
+        If the task finishes before the wait time or maximum attempts are reached, the function will return immediately. For example, if the wait time is set to 5 seconds and the task finishes in 2 seconds, the function will return after 2 seconds.
+
+        If the task does not finished after the maximum attempts, a TimeoutError will be raised. By default, the maximum attempts is None, which means the function will wait indefinitely until the task finishes.
 
         Examples
         --------
         >>> task.wait_for()
         None
 
-        Notes
-        -----
-        This method implements an exponential backoff strategy to reduce the number of API calls
-        while waiting for long-running tasks. The first request uses the initial_wait value,
-        and subsequent requests increase the wait time by the backoff factor, up to max_wait. To disable exponential backoff, set backoff to 1.0.
+        Waiting for a task to finish with a custom wait time.
+
+        >>> task.wait_for(wait=5)
+        None
+
+        Waiting for a task with a maximum number of attempts.
+
+        >>> task.wait_for(max_attempts=3)
+        None
         """
-        wait_time = initial_wait
-
+        attempts = 0
         while not self.is_finished:
-            self.update()
+            if max_attempts is not None and attempts >= max_attempts:
+                break
+            self.update(wait=wait)
+            attempts += 1
 
-            # Wait client-side
-            time.sleep(wait_time)
-
-            # Calculate next wait time with backoff
-            wait_time = min(wait_time * backoff, max_wait)
+        if not self.is_finished:
+            raise TimeoutError(
+                f"Task {self['id']} did not finish within the specified wait time or maximum attempts."
+            )
 
 
 class Tasks(resources.Resources):
