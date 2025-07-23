@@ -116,9 +116,9 @@ class ContentItemAssociations(Resources):
         if guid is not None:
             filters.append(partial(_matches_exact, key="oauth_integration_guid", value=guid))
 
-        for integration in self.find():
-            if all(f(integration) for f in filters):
-                return integration
+        for association in self.find():
+            if all(f(association) for f in filters):
+                return association
 
         return None
 
