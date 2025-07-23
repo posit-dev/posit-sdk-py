@@ -24,7 +24,16 @@ class OAuthIntegrationType(str, Enum):
 
     AWS = "aws"
     AZURE = "azure"
+    AZURE_OPENAI = "azure-openai"
     CONNECT = "connect"
-    SNOWFLAKE = "snowflake"
     CUSTOM = "custom"
-    # TODO add the rest
+    DATABRICKS = "databricks"
+    GITHUB = "github"
+    GOOGLE_BIGQUERY = "bigquery"
+    GOOGLE_DRIVE = "drive"
+    GOOGLE_SHEETS = "sheets"
+    GOOGLE_VERTEX_AI = "vertex-ai"
+    MSGRAPH = "msgraph"
+    SALESFORCE = "salesforce"
+    SHAREPOINT = "sharepoint"
+    SNOWFLAKE = "snowflake"
