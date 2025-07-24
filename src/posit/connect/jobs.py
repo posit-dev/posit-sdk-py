@@ -95,6 +95,7 @@ class Jobs(ResourceSequence[Job], Protocol):
         key: str = ...,
         remote_id: str | None = ...,
         app_id: str = ...,
+        content_id: str = ...,
         variant_id: str = ...,
         bundle_id: str = ...,
         # Timestamps
@@ -128,6 +129,9 @@ class Jobs(ResourceSequence[Job], Protocol):
         remote_id : Optional[str], not required
             Identifier for off-host execution configurations.
         app_id : str, not required
+            Identifier of the parent content associated with the job.
+            This field is deprecated and has been renamed to content_id.
+        content_id : str, not required
             Identifier of the parent content associated with the job.
         variant_id : str, not required
             Identifier of the variant responsible for the job.
