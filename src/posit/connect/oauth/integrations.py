@@ -1,9 +1,23 @@
 """OAuth integration resources."""
 
-from typing_extensions import List, Optional, overload
+from __future__ import annotations
 
-from ..resources import BaseResource, Resources
+from functools import partial
+
+from typing_extensions import TYPE_CHECKING, List, Optional, overload
+
+from ..context import requires
+from ..resources import (
+    BaseResource,
+    Resources,
+    _contains_dict_key_values,
+    _matches_exact,
+    _matches_pattern,
+)
 from .associations import IntegrationAssociations
+
+if TYPE_CHECKING:
+    from ..oauth import types
 
 
 class Integration(BaseResource):
@@ -117,6 +131,61 @@ class Integrations(Resources):
             )
             for result in response.json()
         ]
+
+    @requires("2025.07.0-dev")
+    def find_by(
+        self,
+        integration_type: Optional[types.OAuthIntegrationType | str] = None,
+        auth_type: Optional[types.OAuthIntegrationAuthType | str] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        guid: Optional[str] = None,
+        config: Optional[dict] = None,
+    ) -> Integration | None:
+        """Find an OAuth integration by various criteria.
+
+        Parameters
+        ----------
+        integration_type : Optional[types.OAuthIntegrationType | str]
+            The type of the integration (e.g., "aws", "azure").
+        auth_type : Optional[types.OAuthIntegrationAuthType | str]
+            The authentication type of the integration (e.g., "Viewer", "Service Account").
+        name : Optional[str]
+            A regex pattern to match the integration name. For exact matches, use `^` and `$`. For example,
+            `^My Integration$` will match only "My Integration".
+        description : Optional[str]
+            A regex pattern to match the integration description. For exact matches, use `^` and `$`. For example,
+            `^My Integration Description$` will match only "My Integration Description".
+        guid : Optional[str]
+            The unique identifier of the integration.
+        config : Optional[dict]
+            A dictionary of configuration key-value pairs to match against the integration's config. This will
+            vary based on the integration type.
+
+        Returns
+        -------
+        Integration | None
+            The first matching integration, or None if no match is found.
+        """
+        filters = []
+        if integration_type is not None:
+            filters.append(partial(_matches_exact, key="template", value=integration_type))
+        if auth_type is not None:
+            filters.append(partial(_matches_exact, key="auth_type", value=auth_type))
+        if name is not None:
+            filters.append(partial(_matches_pattern, key="name", pattern=name))
+        if description is not None:
+            filters.append(partial(_matches_pattern, key="description", pattern=description))
+        if guid is not None:
+            filters.append(partial(_matches_exact, key="guid", value=guid))
+        if config is not None:
+            filters.append(partial(_contains_dict_key_values, key="config", value=config))
+
+        for integration in self.find():
+            if all(f(integration) for f in filters):
+                return integration
+
+        return None
 
     def get(self, guid: str) -> Integration:
         """Get an OAuth integration.

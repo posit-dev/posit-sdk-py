@@ -376,6 +376,30 @@ class TestContentsGet:
         assert get_one["name"] == "Performance-Data-1671216053560"
 
 
+class TestContentCurrent:
+    @responses.activate
+    def test_with_env_var(self, monkeypatch):
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        monkeypatch.setenv("CONNECT_CONTENT_GUID", guid)
+
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+            match=[matchers.query_param_matcher({"include": "owner,tags,vanity_url"})],
+        )
+        c = Client("https://connect.example", "12345")
+        content_item = c.content.get()
+        assert content_item["guid"] == guid
+
+    def test_without_env_var(self, monkeypatch):
+        monkeypatch.delenv("CONNECT_CONTENT_GUID", raising=False)
+        c = Client("https://connect.example", "12345")
+        with pytest.raises(
+            RuntimeError, match="CONNECT_CONTENT_GUID environment variable is not set."
+        ):
+            _ = c.content.get()
+
+
 class TestContentsCount:
     @responses.activate
     def test(self):
