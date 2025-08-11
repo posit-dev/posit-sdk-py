@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import responses
+from requests.exceptions import HTTPError
 
 from posit.connect import Client
 
@@ -85,7 +86,13 @@ class TestClient:
         MockSession.assert_called_once()
 
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict(
+        "os.environ",
+        {
+            "RSTUDIO_PRODUCT": "CONNECT",
+            "CONNECT_CONTENT_GUID": "f2f37341-e21d-3d80-c698-a935ad614066",
+        },
+    )
     def test_with_user_session_token(self):
         api_key = "12345"
         url = "https://connect.example.com"
@@ -111,13 +118,38 @@ class TestClient:
             },
         )
 
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/oauth/integrations/associations",
+            json=[
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "00000000-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "another integration",
+                    "oauth_integration_description": "another description",
+                    "oauth_integration_template": "connect",
+                    "created_time": "2024-10-02T18:16:09Z",
+                },
+            ],
+        )
+
         visitor_client = client.with_user_session_token("cit")
 
         assert visitor_client.cfg.url == "https://connect.example.com/__api__"
         assert visitor_client.cfg.api_key == "api-key"
 
     @responses.activate
-    @patch.dict("os.environ", {"RSTUDIO_PRODUCT": "CONNECT"})
+    @patch.dict(
+        "os.environ",
+        {
+            "RSTUDIO_PRODUCT": "CONNECT",
+            "CONNECT_CONTENT_GUID": "f2f37341-e21d-3d80-c698-a935ad614066",
+        },
+    )
     def test_with_user_session_token_bad_exchange_response_body(self):
         api_key = "12345"
         url = "https://connect.example.com"
@@ -137,6 +169,25 @@ class TestClient:
                 ),
             ],
             json={},
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/oauth/integrations/associations",
+            json=[
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "00000000-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "another integration",
+                    "oauth_integration_description": "another description",
+                    "oauth_integration_template": "connect",
+                    "created_time": "2024-10-02T18:16:09Z",
+                },
+            ],
         )
 
         with pytest.raises(ValueError) as err:
@@ -167,6 +218,260 @@ class TestClient:
         with pytest.raises(ValueError) as e:
             client.with_user_session_token(None)  # type: ignore
         assert str(e.value) == "token must be set to non-empty string."
+
+    @responses.activate
+    @patch.dict(
+        "os.environ",
+        {
+            "RSTUDIO_PRODUCT": "CONNECT",
+            "CONNECT_CONTENT_GUID": "f2f37341-e21d-3d80-c698-a935ad614066",
+        },
+    )
+    def test_with_user_session_token_audience_multiple_integrations(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client._ctx.version = None
+
+        responses.post(
+            "https://connect.example.com/__api__/v1/oauth/integrations/credentials",
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "subject_token_type": "urn:posit:connect:user-session-token",
+                        "subject_token": "cit",
+                        "requested_token_type": "urn:posit:connect:api-key",
+                        "audience": "00000000-a27b-4118-ad06-e24459b05126",
+                    },
+                ),
+            ],
+            json={
+                "access_token": "api-key",
+                "issued_token_type": "urn:posit:connect:api-key",
+                "token_type": "Key",
+            },
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/oauth/integrations/associations",
+            json=[
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "22644575-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "keycloak integration",
+                    "oauth_integration_description": "integration description",
+                    "oauth_integration_template": "custom",
+                    "created_time": "2024-10-01T18:16:09Z",
+                },
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "00000000-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "another integration",
+                    "oauth_integration_description": "another description",
+                    "oauth_integration_template": "connect",
+                    "created_time": "2024-10-02T18:16:09Z",
+                },
+            ],
+        )
+
+        visitor_client = client.with_user_session_token(
+            "cit",
+            audience="00000000-a27b-4118-ad06-e24459b05126",
+        )
+
+        assert visitor_client.cfg.url == "https://connect.example.com/__api__"
+        assert visitor_client.cfg.api_key == "api-key"
+
+    @responses.activate
+    @patch.dict(
+        "os.environ",
+        {
+            "RSTUDIO_PRODUCT": "CONNECT",
+            "CONNECT_CONTENT_GUID": "f2f37341-e21d-3d80-c698-a935ad614066",
+        },
+    )
+    def test_with_user_session_token_audience_does_not_exist(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client._ctx.version = None
+
+        responses.post(
+            "https://connect.example.com/__api__/v1/oauth/integrations/credentials",
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "subject_token_type": "urn:posit:connect:user-session-token",
+                        "subject_token": "cit",
+                        "requested_token_type": "urn:posit:connect:api-key",
+                        "audience": "00000001-a27b-4118-ad06-e24459b05126",
+                    },
+                ),
+            ],
+            json={
+                "access_token": "api-key",
+                "issued_token_type": "urn:posit:connect:api-key",
+                "token_type": "Key",
+            },
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/oauth/integrations/associations",
+            json=[
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "22644575-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "keycloak integration",
+                    "oauth_integration_description": "integration description",
+                    "oauth_integration_template": "custom",
+                    "created_time": "2024-10-01T18:16:09Z",
+                },
+            ],
+        )
+
+        visitor_client = client.with_user_session_token(
+            "cit", audience="00000001-a27b-4118-ad06-e24459b05126"
+        )
+
+        assert visitor_client.cfg.url == "https://connect.example.com/__api__"
+        assert visitor_client.cfg.api_key == "api-key"
+
+    @responses.activate
+    @patch.dict(
+        "os.environ",
+        {
+            "RSTUDIO_PRODUCT": "CONNECT",
+            "CONNECT_CONTENT_GUID": "f2f37341-e21d-3d80-c698-a935ad614066",
+        },
+    )
+    def test_with_user_session_token_discover_audience(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client._ctx.version = None
+
+        responses.post(
+            "https://connect.example.com/__api__/v1/oauth/integrations/credentials",
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "subject_token_type": "urn:posit:connect:user-session-token",
+                        "subject_token": "cit",
+                        "requested_token_type": "urn:posit:connect:api-key",
+                        "audience": "00000000-a27b-4118-ad06-e24459b05126",
+                    },
+                ),
+            ],
+            json={
+                "access_token": "api-key",
+                "issued_token_type": "urn:posit:connect:api-key",
+                "token_type": "Key",
+            },
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/oauth/integrations/associations",
+            json=[
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "22644575-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "keycloak integration",
+                    "oauth_integration_description": "integration description",
+                    "oauth_integration_template": "custom",
+                    "created_time": "2024-10-01T18:16:09Z",
+                },
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "00000000-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "another integration",
+                    "oauth_integration_description": "another description",
+                    "oauth_integration_template": "connect",
+                    "created_time": "2024-10-02T18:16:09Z",
+                },
+            ],
+        )
+
+        visitor_client = client.with_user_session_token("cit")
+
+        assert visitor_client.cfg.url == "https://connect.example.com/__api__"
+        assert visitor_client.cfg.api_key == "api-key"
+
+    @responses.activate
+    @patch.dict(
+        "os.environ",
+        {
+            "RSTUDIO_PRODUCT": "CONNECT",
+            "CONNECT_CONTENT_GUID": "f2f37341-e21d-3d80-c698-a935ad614066",
+        },
+    )
+    def test_with_user_session_token_discover_audience_no_connect_integration(self):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        client._ctx.version = None
+
+        responses.post(
+            "https://connect.example.com/__api__/v1/oauth/integrations/credentials",
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "subject_token_type": "urn:posit:connect:user-session-token",
+                        "subject_token": "cit",
+                        "requested_token_type": "urn:posit:connect:api-key",
+                    },
+                ),
+            ],
+            status=400,
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066",
+            json=load_mock("v1/content/f2f37341-e21d-3d80-c698-a935ad614066.json"),
+        )
+
+        responses.get(
+            "https://connect.example.com/__api__/v1/content/f2f37341-e21d-3d80-c698-a935ad614066/oauth/integrations/associations",
+            json=[
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "22644575-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "keycloak integration",
+                    "oauth_integration_description": "integration description",
+                    "oauth_integration_template": "custom",
+                    "created_time": "2024-10-01T18:16:09Z",
+                },
+                {
+                    "app_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+                    "oauth_integration_guid": "00000000-a27b-4118-ad06-e24459b05126",
+                    "oauth_integration_name": "another integration",
+                    "oauth_integration_description": "another description",
+                    "oauth_integration_template": "custom",
+                    "created_time": "2024-10-02T18:16:09Z",
+                },
+            ],
+        )
+
+        with pytest.raises(HTTPError) as err:
+            client.with_user_session_token("cit")
 
     def test__del__(
         self,
@@ -212,11 +517,11 @@ class TestClient:
     @responses.activate
     def test_me_request(self):
         responses.get(
-            "https://connect.example/__api__/v1/user",
+            "https://connect.example.com/__api__/v1/user",
             json=load_mock("v1/user.json"),
         )
 
-        con = Client(api_key="12345", url="https://connect.example/")
+        con = Client(api_key="12345", url="https://connect.example.com/")
         assert con.me["username"] == "carlos12"
 
     def test_request(self, MockSession):
