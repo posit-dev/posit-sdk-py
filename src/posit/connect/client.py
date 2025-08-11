@@ -12,7 +12,7 @@ from .context import Context, ContextManager, requires
 from .groups import Groups
 from .metrics.metrics import Metrics
 from .oauth.oauth import OAuth
-from .oauth.types import OAuthTokenType
+from .oauth.types import OAuthIntegrationType, OAuthTokenType
 from .resources import _PaginatedResourceSequence, _ResourceSequence
 from .sessions import Session
 from .system import System
@@ -198,6 +198,10 @@ class Client(ContextManager):
         ----------
         token : str
             The user session token.
+        audience : str, optional
+            The audience for the token exchange. This is the integration GUID of the Connect API integration
+            that is associate with the content. If not provided when there are multiple integrations, the
+            function will attempt to determine the audience from the current content associations.
 
         Returns
         -------
@@ -259,6 +263,18 @@ class Client(ContextManager):
         """
         if token is None or token == "":
             raise ValueError("token must be set to non-empty string.")
+
+        # If the audience is not provided and there are multiple associations,
+        # we will try to find the Connect API integration GUID from the content resource.
+        current_content_associations = self.content.get().oauth.associations.find()
+        if audience is None and len(current_content_associations) > 1:
+            connect_api_integration_guids = [
+                a["oauth_integration_guid"]
+                for a in current_content_associations
+                if a.get("oauth_integration_template") == OAuthIntegrationType.CONNECT
+            ]
+            if len(connect_api_integration_guids) == 1:
+                audience = connect_api_integration_guids[0]
 
         visitor_credentials = self.oauth.get_credentials(
             token,
