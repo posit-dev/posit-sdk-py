@@ -6,7 +6,6 @@ from functools import partial
 
 from typing_extensions import TYPE_CHECKING, List, Optional
 
-from ..context import requires
 from ..resources import BaseResource, Resources, _matches_exact, _matches_pattern
 
 if TYPE_CHECKING:
@@ -67,7 +66,6 @@ class ContentItemAssociations(Resources):
             for result in response.json()
         ]
 
-    @requires("2025.07.0-dev")
     def find_by(
         self,
         integration_type: Optional[types.OAuthIntegrationType | str] = None,
