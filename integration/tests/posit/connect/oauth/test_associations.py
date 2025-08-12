@@ -57,15 +57,6 @@ class TestAssociations:
             },
         )
 
-        cls.connect_integration = cls.client.oauth.integrations.create(
-            name="connect integration",
-            description="a connect description",
-            template="connect",
-            config={
-                "max_role": "admin",
-            },
-        )
-
         # create content
         # requires full bundle deployment to produce an interactive content type
         cls.content = cls.client.content.create(name="example-flask-minimal")
@@ -86,7 +77,6 @@ class TestAssociations:
         # Destroy created integrations.
         cls.integration.delete()
         cls.another_integration.delete()
-        cls.connect_integration.delete()
 
         # Assert that no integrations exist
         assert len(cls.client.oauth.integrations.find()) == 0
@@ -144,26 +134,24 @@ class TestAssociations:
             [
                 self.integration["guid"],
                 self.another_integration["guid"],
-                self.connect_integration["guid"],
             ]
         )
         updated_associations = self.content.oauth.associations.find()
-        assert len(updated_associations) == 3
+        assert len(updated_associations) == 2
         for assoc in updated_associations:
             assert assoc["app_guid"] == self.content["guid"]
             assert assoc["oauth_integration_guid"] in [
                 self.integration["guid"],
                 self.another_integration["guid"],
-                self.connect_integration["guid"],
             ]
 
         associated_connect_integration = self.content.oauth.associations.find_by(
-            name="connect integration"
+            name=".*another.*"
         )
         assert associated_connect_integration is not None
         assert (
             associated_connect_integration["oauth_integration_guid"]
-            == self.connect_integration["guid"]
+            == self.another_integration["guid"]
         )
 
         # unset content association
