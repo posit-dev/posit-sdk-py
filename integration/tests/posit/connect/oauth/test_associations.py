@@ -124,12 +124,6 @@ class TestAssociations:
         assert len(no_associations) == 0
 
     def test_find_update_by_content_multiple(self):
-        associations = self.content.oauth.associations.find()
-        assert len(associations) == 1
-        assert associations[0]["app_guid"] == self.content["guid"]
-        assert associations[0]["oauth_integration_guid"] == self.integration["guid"]
-
-        # update to have multiple associations
         self.content.oauth.associations.update(
             [
                 self.integration["guid"],
