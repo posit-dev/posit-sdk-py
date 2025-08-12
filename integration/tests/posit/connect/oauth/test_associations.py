@@ -57,6 +57,15 @@ class TestAssociations:
             },
         )
 
+        cls.connect_integration = cls.client.oauth.integrations.create(
+            name="connect integration",
+            description="a connect description",
+            template="connect",
+            config={
+                "max_role": "admin",
+            },
+        )
+
         # create content
         # requires full bundle deployment to produce an interactive content type
         cls.content = cls.client.content.create(name="example-flask-minimal")
@@ -77,6 +86,7 @@ class TestAssociations:
         # Destroy created integrations.
         cls.integration.delete()
         cls.another_integration.delete()
+        cls.connect_integration.delete()
 
         # Assert that no integrations exist
         assert len(cls.client.oauth.integrations.find()) == 0
@@ -95,6 +105,14 @@ class TestAssociations:
         no_associations = self.another_integration.associations.find()
         assert len(no_associations) == 0
 
+    def test_find_by_content(self):
+        association = self.content.oauth.associations.find_by(integration_type="custom")
+        assert association is not None
+        assert association["oauth_integration_guid"] == self.integration["guid"]
+
+        no_association = self.content.oauth.associations.find_by(integration_type="connect")
+        assert no_association is None
+
     def test_find_update_by_content(self):
         associations = self.content.oauth.associations.find()
         assert len(associations) == 1
@@ -108,6 +126,44 @@ class TestAssociations:
         assert updated_associations[0]["app_guid"] == self.content["guid"]
         assert (
             updated_associations[0]["oauth_integration_guid"] == self.another_integration["guid"]
+        )
+
+        # unset content association
+        self.content.oauth.associations.delete()
+        no_associations = self.content.oauth.associations.find()
+        assert len(no_associations) == 0
+
+    def test_find_update_by_content_multiple(self):
+        associations = self.content.oauth.associations.find()
+        assert len(associations) == 1
+        assert associations[0]["app_guid"] == self.content["guid"]
+        assert associations[0]["oauth_integration_guid"] == self.integration["guid"]
+
+        # update to have multiple associations
+        self.content.oauth.associations.update(
+            [
+                self.integration["guid"],
+                self.another_integration["guid"],
+                self.connect_integration["guid"],
+            ]
+        )
+        updated_associations = self.content.oauth.associations.find()
+        assert len(updated_associations) == 3
+        for assoc in updated_associations:
+            assert assoc["app_guid"] == self.content["guid"]
+            assert assoc["oauth_integration_guid"] in [
+                self.integration["guid"],
+                self.another_integration["guid"],
+                self.connect_integration["guid"],
+            ]
+
+        associated_connect_integration = self.content.oauth.associations.find_by(
+            name="connect integration"
+        )
+        assert associated_connect_integration is not None
+        assert (
+            associated_connect_integration["oauth_integration_guid"]
+            == self.connect_integration["guid"]
         )
 
         # unset content association
