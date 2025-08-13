@@ -123,6 +123,10 @@ class TestAssociations:
         no_associations = self.content.oauth.associations.find()
         assert len(no_associations) == 0
 
+    @pytest.mark.skipif(
+        CONNECT_VERSION <= version.parse("2025.07.0"),
+        reason="Multi associations not supported.",
+    )
     def test_find_update_by_content_multiple(self):
         self.content.oauth.associations.update(
             [
