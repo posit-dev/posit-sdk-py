@@ -63,7 +63,7 @@ class TestIntegrations:
     def test_find_by(self):
         result = self.client.oauth.integrations.find_by(
             integration_type="custom",
-            auth_type="Confidential",
+            config={"auth_mode": "Confidential"},
             name="example integration",
         )
         assert result is not None
@@ -71,7 +71,7 @@ class TestIntegrations:
 
         result = self.client.oauth.integrations.find_by(
             integration_type="custom",
-            auth_type="Confidential",
+            config={"auth_mode": "Confidential"},
             name="nonexistent integration",
         )
         assert result is None
