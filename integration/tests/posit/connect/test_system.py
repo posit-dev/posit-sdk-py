@@ -4,6 +4,8 @@ import pytest
 from packaging import version
 
 from posit.connect import Client
+from posit.connect.system import SystemRuntimeCache
+from posit.connect.tasks import Task
 
 from . import CONNECT_VERSION
 
@@ -28,5 +30,31 @@ class TestSystem:
         cls.content.delete()
 
     def test_runtime_caches(self):
-        caches = self.client.system.caches.runtime.find()
-        assert len(caches) > 0
+        runtimes = self.client.system.caches.runtime.find()
+        assert len(runtimes) > 0
+
+    def test_runtime_cache_destroy(self):
+        # Find existing runtime caches
+        runtimes: list[SystemRuntimeCache] = self.client.system.caches.runtime.find()
+        assert len(runtimes) > 0
+        
+        # Get the first cache for testing
+        cache = runtimes[0]
+        assert isinstance(cache, SystemRuntimeCache)
+        
+        # Test dry run destroy (should return None and not actually destroy)
+        result = cache.destroy(dry_run=True)
+        assert result is None
+        
+        # Verify cache still exists after dry run
+        runtimes_after_dry_run = self.client.system.caches.runtime.find()
+        assert len(runtimes_after_dry_run) == len(runtimes)
+        
+        # Test actual destroy
+        task: Task = cache.destroy()
+        assert isinstance(task, Task)
+        task.wait_for()
+        
+        # Verify cache was removed
+        runtimes_after_destroy = self.client.system.caches.runtime.find()
+        assert len(runtimes_after_destroy) == len(runtimes) - 1
