@@ -8,10 +8,10 @@ from posit.connect import Client
 from . import CONNECT_VERSION
 
 
-# @pytest.mark.skipif(
-#     CONNECT_VERSION < version.parse("2024.05.0"),
-#     reason="Cache runtimes not implemented",
-# )
+@pytest.mark.skipif(
+    CONNECT_VERSION < version.parse("2024.05.0"),
+    reason="Cache runtimes not implemented",
+)
 class TestSystem:
     @classmethod
     def setup_class(cls):
