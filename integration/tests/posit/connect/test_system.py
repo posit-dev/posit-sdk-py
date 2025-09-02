@@ -4,8 +4,6 @@ import pytest
 from packaging import version
 
 from posit.connect import Client
-from posit.connect.system import SystemRuntimeCache
-from posit.connect.tasks import Task
 
 from . import CONNECT_VERSION
 
