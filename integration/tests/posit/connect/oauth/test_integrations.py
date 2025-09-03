@@ -60,6 +60,22 @@ class TestIntegrations:
         assert results[0] == self.integration
         assert results[1] == self.another_integration
 
+    def test_find_by(self):
+        result = self.client.oauth.integrations.find_by(
+            integration_type="custom",
+            config={"auth_mode": "Confidential"},
+            name="example integration",
+        )
+        assert result is not None
+        assert result["guid"] == self.integration["guid"]
+
+        result = self.client.oauth.integrations.find_by(
+            integration_type="custom",
+            config={"auth_mode": "Confidential"},
+            name="nonexistent integration",
+        )
+        assert result is None
+
     def test_create_update_delete(self):
         # create a new integration
 

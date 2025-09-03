@@ -95,6 +95,14 @@ class TestAssociations:
         no_associations = self.another_integration.associations.find()
         assert len(no_associations) == 0
 
+    def test_find_by_content(self):
+        association = self.content.oauth.associations.find_by(integration_type="custom")
+        assert association is not None
+        assert association["oauth_integration_guid"] == self.integration["guid"]
+
+        no_association = self.content.oauth.associations.find_by(integration_type="connect")
+        assert no_association is None
+
     def test_find_update_by_content(self):
         associations = self.content.oauth.associations.find()
         assert len(associations) == 1
@@ -108,6 +116,40 @@ class TestAssociations:
         assert updated_associations[0]["app_guid"] == self.content["guid"]
         assert (
             updated_associations[0]["oauth_integration_guid"] == self.another_integration["guid"]
+        )
+
+        # unset content association
+        self.content.oauth.associations.delete()
+        no_associations = self.content.oauth.associations.find()
+        assert len(no_associations) == 0
+
+    @pytest.mark.skipif(
+        CONNECT_VERSION < version.parse("2025.07.0"),
+        reason="Multi associations not supported.",
+    )
+    def test_find_update_by_content_multiple(self):
+        self.content.oauth.associations.update(
+            [
+                self.integration["guid"],
+                self.another_integration["guid"],
+            ]
+        )
+        updated_associations = self.content.oauth.associations.find()
+        assert len(updated_associations) == 2
+        for assoc in updated_associations:
+            assert assoc["app_guid"] == self.content["guid"]
+            assert assoc["oauth_integration_guid"] in [
+                self.integration["guid"],
+                self.another_integration["guid"],
+            ]
+
+        associated_connect_integration = self.content.oauth.associations.find_by(
+            name=".*another.*"
+        )
+        assert associated_connect_integration is not None
+        assert (
+            associated_connect_integration["oauth_integration_guid"]
+            == self.another_integration["guid"]
         )
 
         # unset content association

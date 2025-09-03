@@ -220,9 +220,9 @@ class TestContentAssociationsFindBy:
         assert found["oauth_integration_name"] == "keycloak integration"  # first one
 
         # by multiple criteria
-        found = associations.find_by(integration_type="custom", name="another integration")
+        found = associations.find_by(integration_type="connect", name="another integration")
         assert found is not None
-        assert found["oauth_integration_template"] == "custom"
+        assert found["oauth_integration_template"] == "connect"
         assert found["oauth_integration_name"] == "another integration"
 
         # no match
