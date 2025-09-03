@@ -31,6 +31,7 @@ mcp = [
     "fastapi>=0.115.13",
     "jinja2>=3.1.6",
     "fastmcp>=2.3.0; python_version >= '3.10'",
+    "rsconnect>=1.27.1",
 ]
 
 [project.urls]
