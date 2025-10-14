@@ -121,7 +121,7 @@ class Client(ContextManager):
 
         Examples
         --------
-        >>> Client("https://connect.example.com", abcdefghijklmnopqrstuvwxyz012345")
+        >>> Client("https://connect.example.com", "{your API key}")
         """
 
     def __init__(self, *args, **kwargs) -> None:
@@ -152,8 +152,8 @@ class Client(ContextManager):
         --------
         >>> Client()
         >>> Client("https://connect.example.com")
-        >>> Client("https://connect.example.com", abcdefghijklmnopqrstuvwxyz012345")
-        >>> Client(api_key=""abcdefghijklmnopqrstuvwxyz012345", url="https://connect.example.com")
+        >>> Client("https://connect.example.com", "{your API key}")
+        >>> Client(api_key="{your API key}", url="https://connect.example.com")
         """
         api_key = None
         url = None
