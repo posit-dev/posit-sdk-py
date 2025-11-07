@@ -83,7 +83,7 @@ jobs:
           version: ${{ matrix.CONNECT_VERSION }}
           license: ${{ secrets.CONNECT_LICENSE }}
           command:
-            uv run pytest -s --junit-xml=./reports/${{ matrix.CONNECT_VERSION }}.xml
+            uv run pytest -s --junit-xml=./integration/reports/${{ matrix.CONNECT_VERSION }}.xml
       - uses: actions/upload-artifact@v5
         if: always()
         with:
