@@ -335,9 +335,7 @@ class TestPermissionsUpsert:
         successful = [r for r in results if r["success"]]
         failed = [r for r in results if not r["success"]]
 
-        print(
-            f"\nConcurrent updates - Successful: {len(successful)}, Failed: {len(failed)}"
-        )
+        print(f"\nConcurrent updates - Successful: {len(successful)}, Failed: {len(failed)}")
 
         # All requests should succeed
         assert len(successful) == num_concurrent_requests, (
@@ -348,8 +346,7 @@ class TestPermissionsUpsert:
         # Verify still only ONE permission exists
         permissions = self.content.permissions.find(principal_guid=self.user["guid"])
         assert len(permissions) == 1, (
-            f"Expected exactly 1 permission after concurrent updates, "
-            f"but found {len(permissions)}"
+            f"Expected exactly 1 permission after concurrent updates, but found {len(permissions)}"
         )
 
         # Verify final state is correct
@@ -416,7 +413,7 @@ class TestPermissionsUpsert:
         viewer_attempts = [r for r in results if r["target_role"] == "viewer"]
         owner_attempts = [r for r in results if r["target_role"] == "owner"]
 
-        print(f"\nConcurrent conflicting updates:")
+        print("\nConcurrent conflicting updates:")
         print(f"  Total threads: {num_threads}")
         print(f"  Viewer update attempts: {len(viewer_attempts)}")
         print(f"  Owner update attempts: {len(owner_attempts)}")
@@ -424,8 +421,7 @@ class TestPermissionsUpsert:
 
         # All requests should succeed (upsert behavior)
         assert len(successful) == num_threads, (
-            f"Expected all {num_threads} requests to succeed, "
-            f"but {len(failed)} failed: {failed}"
+            f"Expected all {num_threads} requests to succeed, but {len(failed)} failed: {failed}"
         )
 
         # Critical check: Verify only ONE permission exists
@@ -443,7 +439,7 @@ class TestPermissionsUpsert:
         )
 
         print(f"  Final state: 1 permission with role='{final_role}'")
-        print(f"  Result: Last-write-wins behavior (acceptable)")
+        print("  Result: Last-write-wins behavior (acceptable)")
 
         # Clean up
         self.content.permissions.destroy(self.group)
@@ -613,8 +609,7 @@ class TestPermissionsUpsert:
 
         # All requests should succeed
         assert len(successful) == num_concurrent_requests, (
-            f"Expected all {num_concurrent_requests} requests to succeed, "
-            f"but {len(failed)} failed"
+            f"Expected all {num_concurrent_requests} requests to succeed, but {len(failed)} failed"
         )
 
         # Critical check: Verify only ONE permission exists
