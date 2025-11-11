@@ -2,7 +2,7 @@ include vars.mk
 
 .DEFAULT_GOAL := all
 
-.PHONY: build clean cov default dev docker-deps docs ensure-uv fmt fix install it lint test uninstall version help
+.PHONY: build clean cov default dev docs ensure-uv fmt fix install it lint test uninstall version help
 
 $(UV_LOCK): dev
 	$(UV) lock
@@ -34,12 +34,6 @@ cov-xml: dev
 
 dev: ensure-uv
 	$(UV) pip install --upgrade -e .
-
-docker-deps: ensure-uv
-	# Sync given the `uv.lock` file
-	# --frozen : assert that the lock file exists
-	# --no-install-project : do not install the project itself, but install its dependencies
-	$(UV) sync --frozen --no-install-project
 
 docs: ensure-uv
 	$(MAKE) -C ./docs
