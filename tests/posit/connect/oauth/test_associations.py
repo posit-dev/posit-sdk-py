@@ -138,6 +138,36 @@ class TestContentAssociationsUpdate:
         assert mock_put.call_count == 1
         assert mock_get_content.call_count == 1
 
+    @responses.activate
+    def test_overload_str_type(self):
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+
+        # behavior
+        mock_get_content = responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+
+        new_integration_guid = "00000000-a27b-4118-ad06-e24459b05126"
+
+        mock_put = responses.put(
+            f"https://connect.example/__api__/v1/content/{guid}/oauth/integrations/associations",
+            json=[
+                {"oauth_integration_guid": new_integration_guid},
+            ],
+        )
+
+        # setup
+        c = Client("https://connect.example", "12345")
+        c._ctx.version = None
+
+        # invoke
+        c.content.get(guid).oauth.associations.update(new_integration_guid)
+
+        # assert
+        assert mock_put.call_count == 1
+        assert mock_get_content.call_count == 1
+
 
 class TestContentAssociationsDelete:
     @responses.activate

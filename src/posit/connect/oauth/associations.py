@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 
-from typing_extensions import TYPE_CHECKING, List, Optional
+from typing_extensions import TYPE_CHECKING, List, Optional, overload
 
 from ..resources import BaseResource, Resources, _matches_exact, _matches_pattern
 
@@ -127,8 +127,33 @@ class ContentItemAssociations(Resources):
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
         self._ctx.client.put(path, json=data)
 
-    def update(self, integration_guids: list[str]) -> None:
+    @overload
+    def update(self, integration_guid: str) -> None:
+        """Set a single integration association.
+
+        Parameters
+        ----------
+        integration_guid : str
+            The unique identifier of the integration.
+        """
+
+    @overload
+    def update(self, integration_guid: list[str]) -> None:
+        """Set multiple integration associations.
+
+        Parameters
+        ----------
+        integration_guids : list[str]
+            A list of unique identifiers of the integrations.
+        """
+
+    def update(self, integration_guid: str | list[str]) -> None:
         """Set integration associations."""
+        if isinstance(integration_guid, str):
+            integration_guids = [integration_guid]
+        else:
+            integration_guids = integration_guid
+
         data = [{"oauth_integration_guid": guid} for guid in integration_guids]
 
         path = f"v1/content/{self.content_guid}/oauth/integrations/associations"
