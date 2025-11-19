@@ -105,7 +105,7 @@ class Client(ContextManager):
 
         Examples
         --------
-        Client("https://connect.example.com)
+        Client("https://connect.example.com")
         """
 
     @overload
