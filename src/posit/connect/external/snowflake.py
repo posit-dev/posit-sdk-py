@@ -69,11 +69,13 @@ class PositAuthenticator:
         local_authenticator: Optional[str] = None,
         client: Optional[Client] = None,
         user_session_token: Optional[str] = None,
+        content_session_token: Optional[str] = None,
         audience: Optional[str] = None,
     ):
         self._local_authenticator = local_authenticator
         self._client = client
         self._user_session_token = user_session_token
+        self._content_session_token = content_session_token
         self._audience = audience
 
     @property
@@ -87,16 +89,26 @@ class PositAuthenticator:
         if is_local():
             return None
 
-        # If the user-session-token wasn't provided and we're running on Connect then we raise an exception.
+        # If a session token wasn't provided and we're running on Connect then we raise an exception.
         # user_session_token is required to impersonate the viewer.
-        if self._user_session_token is None:
-            raise ValueError("The user-session-token is required for viewer authentication.")
+        # content_session_token is required for service account access.
+        if self._user_session_token is None and self._content_session_token is None:
+            raise ValueError(
+                "A user-session-token or content-session-token is required for authentication."
+            )
 
         if self._client is None:
             self._client = Client()
 
-        credentials = self._client.oauth.get_credentials(
-            self._user_session_token,
-            audience=self._audience,
-        )
+        if self._user_session_token is not None:
+            credentials = self._client.oauth.get_credentials(
+                self._user_session_token,
+                audience=self._audience,
+            )
+        else:
+            credentials = self._client.oauth.get_content_credentials(
+                self._content_session_token,
+                audience=self._audience,
+            )
+
         return credentials.get("access_token")
