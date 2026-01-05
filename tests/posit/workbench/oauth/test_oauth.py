@@ -1,0 +1,680 @@
+"""Tests for Workbench OAuth functionality."""
+
+from unittest.mock import patch
+from datetime import datetime
+
+import pytest
+import responses
+
+from posit.workbench import Client
+
+
+class TestGetCredentials:
+    """Tests for the existing get_credentials method."""
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_get_credentials_success(self):
+        """Test successful credential retrieval."""
+        integration_id = "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
+
+        responses.get(
+            "https://workbench.example.com/oauth_token",
+            json={
+                "access_token": "token123",
+                "expiry": "2025-12-31T23:59:59+00:00",
+            },
+        )
+
+        client = Client()
+        credentials = client.oauth.get_credentials(integration_id)
+
+        assert credentials is not None
+        assert credentials["access_token"] == "token123"
+        assert credentials["integration_id"] == integration_id
+        assert isinstance(credentials["expiry"], datetime)
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_get_credentials_error(self):
+        """Test error handling in credential retrieval."""
+        responses.get(
+            "https://workbench.example.com/oauth_token",
+            json={"error": "Integration not found"},
+        )
+
+        client = Client()
+
+        with pytest.raises(RuntimeError, match="Integration not found"):
+            client.oauth.get_credentials("invalid-id")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_get_credentials_not_found(self):
+        """Test when credentials are not available."""
+        responses.get(
+            "https://workbench.example.com/oauth_token",
+            json={},  # Empty response, no access_token
+        )
+
+        client = Client()
+        credentials = client.oauth.get_credentials("some-id")
+
+        assert credentials is None
+
+
+class TestIntegrations:
+    """Tests for integrations resource."""
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_find_success(self):
+        """Test successful retrieval of integrations list."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={
+                "providers": [
+                    {
+                        "type": "custom",
+                        "integrations": [
+                            {
+                                "type": "custom",
+                                "name": "github-main",
+                                "display_name": "GitHub",
+                                "client_id": "client123",
+                                "auth_url": "https://github.com/login/oauth/authorize",
+                                "token_url": "https://github.com/login/oauth/access_token",
+                                "scopes": ["read:user", "user:email"],
+                                "issuer": "https://github.com",
+                                "authenticated": True,
+                                "uid": "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6",
+                            },
+                            {
+                                "type": "custom",
+                                "name": "azure-ad",
+                                "display_name": "Azure AD",
+                                "client_id": "azure-client-id",
+                                "auth_url": "https://login.microsoftonline.com/authorize",
+                                "token_url": "https://login.microsoftonline.com/token",
+                                "scopes": ["openid", "profile"],
+                                "issuer": "https://login.microsoftonline.com",
+                                "authenticated": False,
+                                "uid": "b2c3d4e5-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
+                            },
+                        ]
+                    }
+                ]
+            },
+        )
+
+        client = Client()
+        integrations = client.oauth.integrations.find()
+
+        assert len(integrations) == 2
+        assert integrations[0]["type"] == "custom"
+        assert integrations[0]["name"] == "github-main"
+        assert integrations[0]["guid"] == "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
+        assert integrations[0]["authenticated"] is True
+        assert integrations[1]["type"] == "custom"
+        assert integrations[1]["name"] == "azure-ad"
+        assert integrations[1]["guid"] == "b2c3d4e5-6f7g-8h9i-0j1k-l2m3n4o5p6q7"
+        assert integrations[1]["authenticated"] is False
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_find_empty(self):
+        """Test when no integrations are configured."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={"providers": []},
+        )
+
+        client = Client()
+        integrations = client.oauth.integrations.find()
+
+        assert integrations == []
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_find_error(self):
+        """Test error handling in integrations retrieval."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={"error": "Unauthorized access"},
+        )
+
+        client = Client()
+
+        with pytest.raises(RuntimeError, match="Unauthorized access"):
+            client.oauth.integrations.find()
+
+
+class TestIntegrationsGetAndFindBy:
+    """Tests for get() and find_by() methods."""
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_get_found(self):
+        """Test successful retrieval of specific integration by GUID."""
+        target_guid = "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
+
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={
+                "providers": [
+                    {
+                        "type": "custom",
+                        "integrations": [
+                            {
+                                "type": "custom",
+                                "name": "github-main",
+                                "display_name": "GitHub",
+                                "client_id": "client123",
+                                "auth_url": "https://github.com/login/oauth/authorize",
+                                "token_url": "https://github.com/login/oauth/access_token",
+                                "scopes": ["read:user"],
+                                "issuer": "https://github.com",
+                                "authenticated": True,
+                                "uid": target_guid,
+                            },
+                        ]
+                    }
+                ]
+            },
+        )
+
+        client = Client()
+        integration = client.oauth.integrations.get(target_guid)
+
+        assert integration is not None
+        assert integration["guid"] == target_guid
+        assert integration["type"] == "custom"
+        assert integration["display_name"] == "GitHub"
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_get_not_found(self):
+        """Test when integration with given GUID doesn't exist."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={"providers": []},
+        )
+
+        client = Client()
+        integration = client.oauth.integrations.get("nonexistent-guid")
+
+        assert integration is None
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    def test_get_invalid_guid(self):
+        """Test validation of guid parameter."""
+        client = Client()
+
+        with pytest.raises(ValueError, match="non-empty string"):
+            client.oauth.integrations.get("")
+
+        with pytest.raises(ValueError, match="non-empty string"):
+            client.oauth.integrations.get(None)  # type: ignore
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_find_by_type(self):
+        """Test finding integration by type."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={
+                "providers": [
+                    {
+                        "type": "custom",
+                        "integrations": [
+                            {
+                                "type": "github",
+                                "name": "github-main",
+                                "display_name": "GitHub",
+                                "client_id": "client123",
+                                "auth_url": "https://github.com/login/oauth/authorize",
+                                "token_url": "https://github.com/login/oauth/access_token",
+                                "scopes": ["read:user"],
+                                "issuer": "https://github.com",
+                                "authenticated": True,
+                                "uid": "guid-1",
+                            },
+                            {
+                                "type": "azure",
+                                "name": "azure-ad",
+                                "display_name": "Azure AD",
+                                "client_id": "azure-client-id",
+                                "auth_url": "https://login.microsoftonline.com/authorize",
+                                "token_url": "https://login.microsoftonline.com/token",
+                                "scopes": ["openid", "profile"],
+                                "issuer": "https://login.microsoftonline.com",
+                                "authenticated": False,
+                                "uid": "guid-2",
+                            },
+                        ]
+                    }
+                ]
+            },
+        )
+
+        client = Client()
+        integration = client.oauth.integrations.find_by(type="azure")
+
+        assert integration is not None
+        assert integration["type"] == "azure"
+        assert integration["guid"] == "guid-2"
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_find_by_name_pattern(self):
+        """Test finding integration by name pattern."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={
+                "providers": [
+                    {
+                        "type": "custom",
+                        "integrations": [
+                            {
+                                "type": "custom",
+                                "name": "github-main",
+                                "display_name": "GitHub",
+                                "client_id": "client123",
+                                "auth_url": "https://github.com/login/oauth/authorize",
+                                "token_url": "https://github.com/login/oauth/access_token",
+                                "scopes": ["read:user"],
+                                "issuer": "https://github.com",
+                                "authenticated": True,
+                                "uid": "guid-1",
+                            },
+                        ]
+                    }
+                ]
+            },
+        )
+
+        client = Client()
+        integration = client.oauth.integrations.find_by(name="^github.*")
+
+        assert integration is not None
+        assert integration["name"] == "github-main"
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_find_by_authenticated(self):
+        """Test finding integration by authenticated status."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={
+                "providers": [
+                    {
+                        "type": "custom",
+                        "integrations": [
+                            {
+                                "type": "github",
+                                "name": "github-main",
+                                "display_name": "GitHub",
+                                "client_id": "client123",
+                                "auth_url": "https://github.com/login/oauth/authorize",
+                                "token_url": "https://github.com/login/oauth/access_token",
+                                "scopes": ["read:user"],
+                                "issuer": "https://github.com",
+                                "authenticated": True,
+                                "uid": "guid-1",
+                            },
+                            {
+                                "type": "azure",
+                                "name": "azure-ad",
+                                "display_name": "Azure AD",
+                                "client_id": "azure-client-id",
+                                "auth_url": "https://login.microsoftonline.com/authorize",
+                                "token_url": "https://login.microsoftonline.com/token",
+                                "scopes": ["openid", "profile"],
+                                "issuer": "https://login.microsoftonline.com",
+                                "authenticated": False,
+                                "uid": "guid-2",
+                            },
+                        ]
+                    }
+                ]
+            },
+        )
+
+        client = Client()
+        integration = client.oauth.integrations.find_by(authenticated=True)
+
+        assert integration is not None
+        assert integration["authenticated"] is True
+        assert integration["type"] == "github"
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0",
+        },
+    )
+    @responses.activate
+    def test_find_by_multiple_criteria(self):
+        """Test finding integration with multiple criteria."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={
+                "providers": [
+                    {
+                        "type": "custom",
+                        "integrations": [
+                            {
+                                "type": "github",
+                                "name": "github-main",
+                                "display_name": "GitHub",
+                                "client_id": "client123",
+                                "auth_url": "https://github.com/login/oauth/authorize",
+                                "token_url": "https://github.com/login/oauth/access_token",
+                                "scopes": ["read:user"],
+                                "issuer": "https://github.com",
+                                "authenticated": True,
+                                "uid": "guid-1",
+                            },
+                        ]
+                    }
+                ]
+            },
+        )
+
+        client = Client()
+        integration = client.oauth.integrations.find_by(
+            type="github",
+            authenticated=True
+        )
+
+        assert integration is not None
+        assert integration["type"] == "github"
+        assert integration["authenticated"] is True
+
+
+class TestGetDelegatedAzureToken:
+    """Tests for get_delegated_azure_token method."""
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_success(self):
+        """Test successful Azure token retrieval."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={
+                "access_token": "azure-token-xyz",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "scope": "https://management.azure.com/.default",
+                "ext_expires_in": 7200,
+            },
+        )
+
+        client = Client()
+        token = client.oauth.get_delegated_azure_token("https://management.azure.com/")
+
+        assert token["access_token"] == "azure-token-xyz"
+        assert token["token_type"] == "Bearer"
+        assert token["expires_in"] == 3600
+        assert token["scope"] == "https://management.azure.com/.default"
+        assert token["ext_expires_in"] == 7200
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_minimal_response(self):
+        """Test Azure token with only required fields."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={
+                "access_token": "azure-token-xyz",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+            },
+        )
+
+        client = Client()
+        token = client.oauth.get_delegated_azure_token("https://storage.azure.com/")
+
+        assert token["access_token"] == "azure-token-xyz"
+        assert token["token_type"] == "Bearer"
+        assert token["expires_in"] == 3600
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_error(self):
+        """Test error handling for Azure token."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={"error": "Azure AD not configured"},
+        )
+
+        client = Client()
+
+        with pytest.raises(RuntimeError, match="Azure AD not configured"):
+            client.oauth.get_delegated_azure_token("https://management.azure.com/")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_invalid_response(self):
+        """Test handling of malformed response."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={"some_field": "value"},  # Missing required fields
+        )
+
+        client = Client()
+
+        with pytest.raises(RuntimeError, match="missing required token fields"):
+            client.oauth.get_delegated_azure_token("https://management.azure.com/")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+        },
+    )
+    def test_get_delegated_azure_token_invalid_resource(self):
+        """Test validation of resource parameter."""
+        client = Client()
+
+        with pytest.raises(ValueError, match="non-empty string"):
+            client.oauth.get_delegated_azure_token("")
+
+        with pytest.raises(ValueError, match="non-empty string"):
+            client.oauth.get_delegated_azure_token(None)  # type: ignore
+
+
+class TestVersionRequirements:
+    """Tests for version requirement enforcement."""
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.10.0",  # Too old for oauth property
+        },
+    )
+    def test_oauth_property_version_check(self):
+        """Test that oauth property enforces version requirement."""
+        client = Client()
+
+        with pytest.raises(RuntimeError, match="2025.11.0"):
+            _ = client.oauth
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.11.0",  # Too old for Azure token
+        },
+    )
+    def test_azure_token_version_check(self):
+        """Test that get_delegated_azure_token enforces its version."""
+        client = Client()
+
+        with pytest.raises(RuntimeError, match="2024.12.0"):
+            client.oauth.get_delegated_azure_token("https://management.azure.com/")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2025.11.0-dev",  # Dev version should skip check
+        },
+    )
+    @responses.activate
+    def test_dev_version_skips_check(self):
+        """Test that dev versions skip version checks."""
+        responses.get(
+            "https://workbench.example.com/oauth_integrations",
+            json={"providers": []},
+        )
+
+        client = Client()
+        # Should not raise even though this would be considered < 2025.11.0
+        integrations = client.oauth.integrations.find()
+        assert integrations == []
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.11.0-dev+123",  # Dev version should skip check
+        },
+    )
+    @responses.activate
+    def test_dev_version_with_build_number_skips_check(self):
+        """Test that dev versions with build numbers skip version checks."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={
+                "access_token": "azure-token-xyz",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+            },
+        )
+
+        client = Client()
+        # Should not raise for dev version even though base version is too old
+        token = client.oauth.get_delegated_azure_token("https://management.azure.com/")
+        assert token["access_token"] == "azure-token-xyz"

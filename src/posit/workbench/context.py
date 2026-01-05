@@ -14,22 +14,14 @@ if TYPE_CHECKING:
 def _normalize_version(version_str: str) -> str:
     """Normalize Workbench version strings to PEP 440 format.
 
-    Workbench versions like '2025.12.0-daily+324.pro1' need to be normalized
-    to '2025.12.0.dev324' for proper version comparison.
+    Workbench versions like '2025.12.0-daily+324.pro1' or '2025.12.0-dev' need
+    to be normalized by stripping metadata for version comparison.
+
+    Note: Dev version checking is handled separately in the @requires decorator.
+    This function only extracts the base version for numeric comparison.
     """
-    # Extract the base version (e.g., '2025.12.0')
+    # Extract the base version (e.g., '2025.12.0' from '2025.12.0-daily+324.pro1')
     base = version_str.split('-')[0].split('+')[0]
-
-    # Handle pre-release/dev versions
-    if '-' in version_str or '+' in version_str:
-        # For now, treat any dev/daily builds as dev versions
-        # Extract build number if present (e.g., '324' from '+324')
-        if '+' in version_str:
-            build_part = version_str.split('+')[1].split('.')[0]
-            if build_part.isdigit():
-                return f"{base}.dev{build_part}"
-        return f"{base}.dev0"
-
     return base
 
 def requires(version: str):
@@ -38,6 +30,10 @@ def requires(version: str):
         def wrapper(instance: ContextManager, *args, **kwargs):
             ctx = instance._ctx
             if ctx.version:
+                # Skip version check for development versions (matches R implementation)
+                if "dev" in ctx.version.lower():
+                    return func(instance, *args, **kwargs)
+
                 try:
                     current_version = Version(_normalize_version(ctx.version))
                     required_version = Version(_normalize_version(version))
@@ -45,8 +41,11 @@ def requires(version: str):
                         raise RuntimeError(
                             f"This API is not available in Posit Workbench version {ctx.version}. Please upgrade to version {version} or later.",
                         )
+                except RuntimeError:
+                    # Re-raise version requirement errors
+                    raise
                 except Exception:
-                    # If version comparison fails, log a warning but allow the call to proceed
+                    # If version parsing fails, allow the call to proceed
                     # This prevents version parsing issues from blocking functionality
                     pass
             return func(instance, *args, **kwargs)

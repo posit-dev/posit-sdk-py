@@ -89,7 +89,6 @@ class Client(ContextManager):
         return self.session.delete(url, **kwargs)
 
     @property
-    @requires(version="2025.11.0")
     def oauth(self) -> OAuth:
         """Access the OAuth resource manager.
 
