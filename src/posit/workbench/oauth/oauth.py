@@ -63,7 +63,7 @@ class OAuth(Resources):
         """
         return Integrations(self._ctx)
 
-    @requires(version="2025.11.0")
+    @requires(version="2026.01.0")
     def get_credentials(self, audience: str) -> Credentials | None:
         """Retrieve OAuth credentials for a given integration ID.
 

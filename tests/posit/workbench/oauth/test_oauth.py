@@ -8,6 +8,9 @@ import responses
 
 from posit.workbench import Client
 
+# Valid RPC cookie format: value|expiry_date
+TEST_RPC_COOKIE = "test-cookie-value|Mon%2C%2001%20Jan%202030%2000%3A00%3A00%20GMT"
+
 
 class TestGetCredentials:
     """Tests for the existing get_credentials method."""
@@ -17,7 +20,8 @@ class TestGetCredentials:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -46,7 +50,8 @@ class TestGetCredentials:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -67,7 +72,8 @@ class TestGetCredentials:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -92,7 +98,8 @@ class TestIntegrations:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -153,7 +160,8 @@ class TestIntegrations:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -174,7 +182,8 @@ class TestIntegrations:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -199,7 +208,8 @@ class TestIntegrationsGetAndFindBy:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -245,7 +255,8 @@ class TestIntegrationsGetAndFindBy:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -266,7 +277,8 @@ class TestIntegrationsGetAndFindBy:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     def test_get_invalid_guid(self):
@@ -284,7 +296,8 @@ class TestIntegrationsGetAndFindBy:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -339,7 +352,8 @@ class TestIntegrationsGetAndFindBy:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -381,7 +395,8 @@ class TestIntegrationsGetAndFindBy:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -436,7 +451,8 @@ class TestIntegrationsGetAndFindBy:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.11.0",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -487,6 +503,7 @@ class TestGetDelegatedAzureToken:
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
             "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -518,6 +535,7 @@ class TestGetDelegatedAzureToken:
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
             "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -545,6 +563,7 @@ class TestGetDelegatedAzureToken:
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
             "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -566,6 +585,7 @@ class TestGetDelegatedAzureToken:
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
             "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -587,6 +607,7 @@ class TestGetDelegatedAzureToken:
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
             "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     def test_get_delegated_azure_token_invalid_resource(self):
@@ -608,15 +629,16 @@ class TestVersionRequirements:
         {
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2025.10.0",  # Too old for oauth property
+            "RSTUDIO_VERSION": "2025.12.0",  # Too old for OAuth integrations
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
-    def test_oauth_property_version_check(self):
-        """Test that oauth property enforces version requirement."""
+    def test_oauth_integrations_version_check(self):
+        """Test that oauth integrations enforce version requirement."""
         client = Client()
 
-        with pytest.raises(RuntimeError, match="2025.11.0"):
-            _ = client.oauth
+        with pytest.raises(RuntimeError, match="2026.01.0"):
+            _ = client.oauth.integrations.find()
 
     @patch.dict(
         "os.environ",
@@ -624,6 +646,7 @@ class TestVersionRequirements:
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
             "RSTUDIO_VERSION": "2024.11.0",  # Too old for Azure token
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     def test_azure_token_version_check(self):
@@ -639,6 +662,7 @@ class TestVersionRequirements:
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
             "RSTUDIO_VERSION": "2025.11.0-dev",  # Dev version should skip check
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate
@@ -650,7 +674,7 @@ class TestVersionRequirements:
         )
 
         client = Client()
-        # Should not raise even though this would be considered < 2025.11.0
+        # Should not raise even though this would be considered < 2026.01.0
         integrations = client.oauth.integrations.find()
         assert integrations == []
 
@@ -660,6 +684,7 @@ class TestVersionRequirements:
             "POSIT_PRODUCT": "WORKBENCH",
             "RS_SERVER_ADDRESS": "https://workbench.example.com",
             "RSTUDIO_VERSION": "2024.11.0-dev+123",  # Dev version should skip check
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
         },
     )
     @responses.activate

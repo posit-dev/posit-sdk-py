@@ -26,7 +26,7 @@ class Integration(BaseResource):
 class Integrations(Resources):
     """OAuth integrations resource collection."""
 
-    @requires(version="2025.11.0")
+    @requires(version="2026.01.0")
     def find(self) -> list[Integration]:
         """Find all OAuth integrations.
 
@@ -71,7 +71,7 @@ class Integrations(Resources):
 
         return integrations
 
-    @requires(version="2025.11.0")
+    @requires(version="2026.01.0")
     def find_by(
         self,
         type: Optional[str] = None,
@@ -120,7 +120,7 @@ class Integrations(Resources):
 
         return None
 
-    @requires(version="2025.11.0")
+    @requires(version="2026.01.0")
     def get(self, guid: str) -> Integration | None:
         """Get an OAuth integration by GUID.
 
