@@ -579,6 +579,13 @@ class TestClient:
             "https://connect.example.com/__api__/foo"
         )
 
+    def test_url(self, MockConfig):
+        api_key = "12345"
+        url = "https://connect.example.com"
+        client = Client(api_key=api_key, url=url)
+        MockConfig.return_value.url = "https://connect.example.com/__api__"
+        assert client.url == "https://connect.example.com/__api__"
+
 
 class TestClientOAuth:
     def test_required_version(self):
