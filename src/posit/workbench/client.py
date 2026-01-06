@@ -44,7 +44,12 @@ class Client(ContextManager):
     """
 
     def __init__(self, verify: Optional[Union[bool, str]] = None) -> None:
-        if not os.getenv("POSIT_PRODUCT") == "WORKBENCH":
+        # Fall back to RS_SERVER_ADDRESS for backward compatibility
+        # TODO: Remove RS_SERVER_ADDRESS fallback when Workbench 2025.09 falls out of support
+        posit_product = os.getenv("POSIT_PRODUCT")
+        server_url = os.getenv("RS_SERVER_ADDRESS")
+
+        if posit_product != "WORKBENCH" and not server_url:
             raise EnvironmentError(
                 "POSIT_PRODUCT environment variable not set. Workbench client can only be used within Posit Workbench sessions.",
             )
@@ -60,7 +65,6 @@ class Client(ContextManager):
         else:
             self.session.verify = verify
 
-        server_url = os.getenv("RS_SERVER_ADDRESS")
         if not server_url:
             raise EnvironmentError(
                 "RS_SERVER_ADDRESS environment variable not set. Cannot determine Posit Workbench server address. Contact your server administrator to ensure that launcher-sessions-callback-address is configured correctly.",
