@@ -140,21 +140,6 @@ class OAuth(Resources):
             - Workbench is not configured with Azure AD authentication
             - The resource URL is invalid or not authorized
             - The user lacks necessary permissions
-
-        Notes
-        -----
-        This method requires Workbench 2024.12.0 or later.
-
-        The method is only functional when Workbench is configured to use
-        Azure Active Directory for authentication. In other authentication
-        scenarios, it will raise a RuntimeError.
-
-        Examples
-        --------
-        >>> client = Client()
-        >>> token = client.oauth.get_delegated_azure_token("https://management.azure.com/")
-        >>> print(f"Token expires in {token['expires_in']} seconds")
-        >>> # Use token['access_token'] to authenticate Azure SDK calls
         """
         if not resource or not isinstance(resource, str):
             raise ValueError("Invalid value for 'resource': Must be a non-empty string.")

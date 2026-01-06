@@ -1,4 +1,4 @@
-"""Reads RPC Cookie from known locationw within Posit Workbench sessions."""
+"""Reads RPC Cookie from known location within Posit Workbench sessions."""
 
 from __future__ import annotations
 
