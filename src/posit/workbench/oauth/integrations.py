@@ -20,7 +20,7 @@ class Integration(BaseResource):
     Represents a single OAuth integration configured in Workbench.
     """
 
-    pass  # No additional methods needed for read-only resource
+    # No additional methods needed for read-only resource
 
 
 class Integrations(Resources):
@@ -50,9 +50,7 @@ class Integrations(Resources):
         response_json = response.json()
 
         if "error" in response_json:
-            raise RuntimeError(
-                f"Error retrieving OAuth integrations: {response_json['error']}"
-            )
+            raise RuntimeError(f"Error retrieving OAuth integrations: {response_json['error']}")
 
         # Backend returns {"providers": [...]} where each provider has an "integrations" array
         # We flatten the nested structure and rename "uid" to "guid" for consistency
@@ -74,7 +72,7 @@ class Integrations(Resources):
     @requires(version="2026.01.0")
     def find_by(
         self,
-        type: Optional[str] = None,
+        type_: Optional[str] = None,
         name: Optional[str] = None,
         display_name: Optional[str] = None,
         guid: Optional[str] = None,
@@ -84,7 +82,7 @@ class Integrations(Resources):
 
         Parameters
         ----------
-        type : Optional[str]
+        type_ : Optional[str]
             The type of the integration (e.g., "github", "azure", "custom").
         name : Optional[str]
             A regex pattern to match the integration name. For exact matches,
@@ -103,8 +101,8 @@ class Integrations(Resources):
             The first matching integration, or None if no match is found.
         """
         filters = []
-        if type is not None:
-            filters.append(partial(_matches_exact, key="type", value=type))
+        if type_ is not None:
+            filters.append(partial(_matches_exact, key="type", value=type_))
         if name is not None:
             filters.append(partial(_matches_pattern, key="name", pattern=name))
         if display_name is not None:
@@ -143,8 +141,6 @@ class Integrations(Resources):
             If guid is empty or not a string.
         """
         if not guid or not isinstance(guid, str):
-            raise ValueError(
-                "Invalid value for 'guid': Must be a non-empty string."
-            )
+            raise ValueError("Invalid value for 'guid': Must be a non-empty string.")
 
         return self.find_by(guid=guid)

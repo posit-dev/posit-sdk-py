@@ -1,7 +1,7 @@
 """Tests for Workbench OAuth functionality."""
 
-from unittest.mock import patch
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 import responses
@@ -136,7 +136,7 @@ class TestIntegrations:
                                 "authenticated": False,
                                 "uid": "b2c3d4e5-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
                             },
-                        ]
+                        ],
                     }
                 ]
             },
@@ -236,7 +236,7 @@ class TestIntegrationsGetAndFindBy:
                                 "authenticated": True,
                                 "uid": target_guid,
                             },
-                        ]
+                        ],
                     }
                 ]
             },
@@ -334,14 +334,14 @@ class TestIntegrationsGetAndFindBy:
                                 "authenticated": False,
                                 "uid": "guid-2",
                             },
-                        ]
+                        ],
                     }
                 ]
             },
         )
 
         client = Client()
-        integration = client.oauth.integrations.find_by(type="azure")
+        integration = client.oauth.integrations.find_by(type_="azure")
 
         assert integration is not None
         assert integration["type"] == "azure"
@@ -378,7 +378,7 @@ class TestIntegrationsGetAndFindBy:
                                 "authenticated": True,
                                 "uid": "guid-1",
                             },
-                        ]
+                        ],
                     }
                 ]
             },
@@ -433,7 +433,7 @@ class TestIntegrationsGetAndFindBy:
                                 "authenticated": False,
                                 "uid": "guid-2",
                             },
-                        ]
+                        ],
                     }
                 ]
             },
@@ -477,17 +477,14 @@ class TestIntegrationsGetAndFindBy:
                                 "authenticated": True,
                                 "uid": "guid-1",
                             },
-                        ]
+                        ],
                     }
                 ]
             },
         )
 
         client = Client()
-        integration = client.oauth.integrations.find_by(
-            type="github",
-            authenticated=True
-        )
+        integration = client.oauth.integrations.find_by(type_="github", authenticated=True)
 
         assert integration is not None
         assert integration["type"] == "github"

@@ -2,7 +2,9 @@
 
 from requests import PreparedRequest
 from requests.auth import AuthBase
+
 from .cookie_reader import CookieReader
+
 
 class Auth(AuthBase):
     """Authentication handler for Posit Workbench RPC requests."""

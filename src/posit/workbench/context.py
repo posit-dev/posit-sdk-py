@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import functools
+
 # version stuff from RSTUDIO_VERSION
 import os
-import functools
 import weakref
 
 from packaging.version import Version
@@ -10,6 +11,7 @@ from typing_extensions import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from .client import Client
+
 
 def _normalize_version(version_str: str) -> str:
     """Normalize Workbench version strings to PEP 440 format.
@@ -21,8 +23,9 @@ def _normalize_version(version_str: str) -> str:
     This function only extracts the base version for numeric comparison.
     """
     # Extract the base version (e.g., '2025.12.0' from '2025.12.0-daily+324.pro1')
-    base = version_str.split('-')[0].split('+')[0]
+    base = version_str.split("-")[0].split("+")[0]
     return base
+
 
 def requires(version: str):
     def decorator(func):
@@ -54,6 +57,7 @@ def requires(version: str):
 
     return decorator
 
+
 class Context:
     def __init__(self, client: Client):
         # Since this is a child object of the client, we use a weak reference to avoid circular
@@ -70,6 +74,7 @@ class Context:
     @version.setter
     def version(self, value: str | None):
         self._version = value
+
 
 class ContextManager(Protocol):
     _ctx: Context

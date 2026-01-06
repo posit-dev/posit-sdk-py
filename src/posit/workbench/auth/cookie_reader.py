@@ -1,15 +1,17 @@
 """Reads RPC Cookie from known locationw within Posit Workbench sessions."""
-from datetime import datetime, timezone
+
+from __future__ import annotations
+
 import os
+from datetime import datetime, timezone
 
 PWB_SESSION_RUNTIME_DIR_ENV = "PWB_SESSION_RUNTIME_DIR"
 RPC_COOKIE_FILE = "rpc_cookie"
 RS_SESSION_RPC_COOKIE_ENV = "RS_SESSION_RPC_COOKIE"
 
+
 class CookieReader:
-    """
-    Reads the RPC authentication cookie from the Posit Workbench session runtime directory.
-    """
+    """Reads the RPC authentication cookie from the Posit Workbench session runtime directory."""
 
     def __init__(self, runtime_dir: str = "") -> None:
         self.runtime_dir = runtime_dir
@@ -60,6 +62,7 @@ class CookieReader:
     def _parse_cookie_expiry(self, cookie_str: str) -> datetime | None:
         """
         Parses the expiry time from the cookie string.
+
         Returns the expiry time as a datetime object, or None if not found.
         """
         parts = cookie_str.split("|")

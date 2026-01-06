@@ -1,9 +1,12 @@
-from typing import TypedDict
-from datetime import datetime
+from __future__ import annotations
 
-from ..resources import Resources
+from datetime import datetime
+from typing import TypedDict
+
 from ..context import Context, requires
+from ..resources import Resources
 from .integrations import Integrations
+
 
 class Credentials(TypedDict):
     """OAuth credentials response.
@@ -17,9 +20,11 @@ class Credentials(TypedDict):
     integration_id : str
         The integration identifier
     """
+
     access_token: str
     expiry: datetime
     integration_id: str
+
 
 class AzureToken(TypedDict):
     """Azure delegated token response.
@@ -37,11 +42,13 @@ class AzureToken(TypedDict):
     ext_expires_in : int
         Extended expiration for Azure (optional)
     """
+
     access_token: str
     token_type: str
     expires_in: int
     scope: str  # optional
     ext_expires_in: int  # optional
+
 
 class OAuth(Resources):
     """OAuth resource manager for Workbench.
@@ -145,16 +152,12 @@ class OAuth(Resources):
         Examples
         --------
         >>> client = Client()
-        >>> token = client.oauth.get_delegated_azure_token(
-        ...     "https://management.azure.com/"
-        ... )
+        >>> token = client.oauth.get_delegated_azure_token("https://management.azure.com/")
         >>> print(f"Token expires in {token['expires_in']} seconds")
         >>> # Use token['access_token'] to authenticate Azure SDK calls
         """
         if not resource or not isinstance(resource, str):
-            raise ValueError(
-                "Invalid value for 'resource': Must be a non-empty string."
-            )
+            raise ValueError("Invalid value for 'resource': Must be a non-empty string.")
 
         path = "/delegated_azure_token"
         body = {
@@ -168,14 +171,10 @@ class OAuth(Resources):
         response_json = response.json()
 
         if "error" in response_json:
-            raise RuntimeError(
-                f"Error retrieving Azure delegated token: {response_json['error']}"
-            )
+            raise RuntimeError(f"Error retrieving Azure delegated token: {response_json['error']}")
 
         # Validate required fields are present
         if "access_token" not in response_json or "token_type" not in response_json:
-            raise RuntimeError(
-                "Invalid response from backend: missing required token fields"
-            )
+            raise RuntimeError("Invalid response from backend: missing required token fields")
 
         return response_json

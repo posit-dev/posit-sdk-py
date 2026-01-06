@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import re
 import warnings
-from typing import Any, Hashable
+from typing import TYPE_CHECKING, Any
 
-from .context import Context
+if TYPE_CHECKING:
+    from .context import Context
 
 
 class BaseResource(dict):
@@ -43,6 +44,7 @@ class Resources:
 
 # Filter helper functions for find_by operations
 
+
 def _matches_exact(resource: dict, /, key: str, value: Any) -> bool:
     """Check if resource field matches value exactly."""
     return resource.get(key) == value
@@ -61,7 +63,4 @@ def _contains_dict_key_values(resource: dict, /, key: str, value: dict) -> bool:
     resource_value = resource.get(key)
     if not isinstance(resource_value, dict):
         return False
-    return all(
-        k in resource_value and resource_value[k] == v
-        for k, v in value.items()
-    )
+    return all(k in resource_value and resource_value[k] == v for k, v in value.items())

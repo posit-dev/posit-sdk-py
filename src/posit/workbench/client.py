@@ -1,12 +1,14 @@
 """Client connection for Posit Workbench."""
+
 import os
 from typing import Optional, Union
 
-from .auth import Auth, CookieReader
-from .oauth import OAuth
-from .context import Context, ContextManager, requires
+from requests import Response, Session
 
-from requests import Session, Response
+from .auth import Auth, CookieReader
+from .context import Context, ContextManager
+from .oauth import OAuth
+
 
 class Client(ContextManager):
     """Client for interacting with Posit Workbench APIs.
