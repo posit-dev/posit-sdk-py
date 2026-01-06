@@ -16,7 +16,7 @@ class CookieReader:
     def __init__(self, runtime_dir: str = "") -> None:
         self.runtime_dir = runtime_dir
         self.cookie_value = None
-        self.expiry = None
+        self.expiry_time = None
         self._load_cookie()
 
     def _load_cookie(self):
@@ -40,8 +40,6 @@ class CookieReader:
         if self.expiry_time is None:
             self.cookie_value = None
             raise RuntimeError("Could not parse expiry time from RPC cookie.")
-
-        self.cookie_value = self.cookie_value
 
     def _read_cookie_from_file(self) -> str | None:
         """Attempts to read the cookie from the runtime directory file. Returns None if not available."""
