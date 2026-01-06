@@ -1,7 +1,7 @@
 """Client connection for Posit Workbench."""
 
 import os
-from typing import Optional, Union
+from typing_extensions import Optional, Union
 
 from requests import Response, Session
 

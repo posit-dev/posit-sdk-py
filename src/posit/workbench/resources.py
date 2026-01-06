@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing_extensions import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .context import Context

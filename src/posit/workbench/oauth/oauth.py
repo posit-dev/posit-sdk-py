@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TypedDict
+from typing_extensions import TypedDict
 
 from ..context import Context, requires
 from ..resources import Resources
