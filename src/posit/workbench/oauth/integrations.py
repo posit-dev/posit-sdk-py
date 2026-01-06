@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+
 from typing_extensions import Optional
 
 from ..context import requires

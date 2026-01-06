@@ -1,9 +1,9 @@
 """Client connection for Posit Workbench."""
 
 import os
-from typing_extensions import Optional, Union
 
 from requests import Response, Session
+from typing_extensions import Optional, Union
 
 from .auth import Auth, CookieReader
 from .context import Context, ContextManager
