@@ -301,62 +301,6 @@ class TestIntegrationsGetAndFindBy:
         },
     )
     @responses.activate
-    def test_find_by_type(self):
-        """Test finding integration by type."""
-        responses.get(
-            "https://workbench.example.com/oauth_integrations",
-            json={
-                "providers": [
-                    {
-                        "type": "custom",
-                        "integrations": [
-                            {
-                                "type": "github",
-                                "name": "github-main",
-                                "display_name": "GitHub",
-                                "client_id": "client123",
-                                "auth_url": "https://github.com/login/oauth/authorize",
-                                "token_url": "https://github.com/login/oauth/access_token",
-                                "scopes": ["read:user"],
-                                "issuer": "https://github.com",
-                                "authenticated": True,
-                                "uid": "guid-1",
-                            },
-                            {
-                                "type": "azure",
-                                "name": "azure-ad",
-                                "display_name": "Azure AD",
-                                "client_id": "azure-client-id",
-                                "auth_url": "https://login.microsoftonline.com/authorize",
-                                "token_url": "https://login.microsoftonline.com/token",
-                                "scopes": ["openid", "profile"],
-                                "issuer": "https://login.microsoftonline.com",
-                                "authenticated": False,
-                                "uid": "guid-2",
-                            },
-                        ],
-                    }
-                ]
-            },
-        )
-
-        client = Client()
-        integration = client.oauth.integrations.find_by(type_="azure")
-
-        assert integration is not None
-        assert integration["type"] == "azure"
-        assert integration["guid"] == "guid-2"
-
-    @patch.dict(
-        "os.environ",
-        {
-            "POSIT_PRODUCT": "WORKBENCH",
-            "RS_SERVER_ADDRESS": "https://workbench.example.com",
-            "RSTUDIO_VERSION": "2026.01.0",
-            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
-        },
-    )
-    @responses.activate
     def test_find_by_name_pattern(self):
         """Test finding integration by name pattern."""
         responses.get(
@@ -484,10 +428,10 @@ class TestIntegrationsGetAndFindBy:
         )
 
         client = Client()
-        integration = client.oauth.integrations.find_by(type_="github", authenticated=True)
+        integration = client.oauth.integrations.find_by(name="github.*", authenticated=True)
 
         assert integration is not None
-        assert integration["type"] == "github"
+        assert integration["name"] == "github-main"
         assert integration["authenticated"] is True
 
 

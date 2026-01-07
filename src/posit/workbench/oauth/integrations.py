@@ -73,7 +73,6 @@ class Integrations(Resources):
     @requires(version="2026.01.0")
     def find_by(
         self,
-        type_: Optional[str] = None,
         name: Optional[str] = None,
         display_name: Optional[str] = None,
         guid: Optional[str] = None,
@@ -83,8 +82,6 @@ class Integrations(Resources):
 
         Parameters
         ----------
-        type_ : Optional[str]
-            The type of the integration (e.g., "github", "azure", "custom").
         name : Optional[str]
             A regex pattern to match the integration name. For exact matches,
             use `^` and `$`. For example, `^github-main$` will match only "github-main".
@@ -102,8 +99,6 @@ class Integrations(Resources):
             The first matching integration, or None if no match is found.
         """
         filters = []
-        if type_ is not None:
-            filters.append(partial(_matches_exact, key="type", value=type_))
         if name is not None:
             filters.append(partial(_matches_pattern, key="name", pattern=name))
         if display_name is not None:
