@@ -1,6 +1,7 @@
 """Client connection for Posit Workbench."""
 
 import os
+from urllib.parse import urljoin
 
 from requests import Response, Session
 from typing_extensions import Optional, Union
@@ -55,23 +56,23 @@ class Client(ContextManager):
         self._ctx = Context(self)
 
     def get(self, path: str, **kwargs) -> Response:
-        url = self.server_url + path
+        url = urljoin(self.server_url, path)
         return self.session.get(url, **kwargs)
 
     def post(self, path: str, **kwargs) -> Response:
-        url = self.server_url + path
+        url = urljoin(self.server_url, path)
         return self.session.post(url, **kwargs)
 
     def put(self, path: str, **kwargs) -> Response:
-        url = self.server_url + path
+        url = urljoin(self.server_url, path)
         return self.session.put(url, **kwargs)
 
     def patch(self, path: str, **kwargs) -> Response:
-        url = self.server_url + path
+        url = urljoin(self.server_url, path)
         return self.session.patch(url, **kwargs)
 
     def delete(self, path: str, **kwargs) -> Response:
-        url = self.server_url + path
+        url = urljoin(self.server_url, path)
         return self.session.delete(url, **kwargs)
 
     @property
