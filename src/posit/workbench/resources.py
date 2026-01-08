@@ -1,39 +1,28 @@
 from __future__ import annotations
 
 import re
-import warnings
 
-from typing_extensions import TYPE_CHECKING, Any
+from typing_extensions import TYPE_CHECKING, Any, Hashable, Protocol
 
 if TYPE_CHECKING:
     from .context import Context
 
 
-class BaseResource(dict):
-    """Base class for Workbench resource objects.
+class Resource(Protocol):
+    """Protocol for Workbench resource objects."""
 
-    Extends dict to provide attribute-style access with deprecation warnings,
-    similar to Connect's BaseResource implementation.
+    def __getitem__(self, key: Hashable, /) -> Any: ...
+
+
+class _Resource(dict, Resource):
+    """Base implementation for Workbench resource objects.
+
+    Provides dictionary-style access to resource fields.
     """
 
-    def __init__(self, ctx: Context, /, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, ctx: Context, **attributes):
         self._ctx = ctx
-
-    def __getattr__(self, name):
-        if name in self:
-            warnings.warn(
-                f"Accessing the field '{name}' via attribute is deprecated and will be removed in v1.0.0. "
-                f"Please use __getitem__ (e.g., {self.__class__.__name__.lower()}['{name}']) for field access instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            return self[name]
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
-
-    def update(self, *args, **kwargs):
-        """Update the resource data."""
-        super().update(*args, **kwargs)
+        super().__init__(**attributes)
 
 
 class Resources:

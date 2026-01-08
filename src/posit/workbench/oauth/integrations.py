@@ -7,15 +7,10 @@ from functools import partial
 from typing_extensions import Optional
 
 from ..context import requires
-from ..resources import (
-    BaseResource,
-    Resources,
-    _matches_exact,
-    _matches_pattern,
-)
+from ..resources import Resources, _matches_exact, _matches_pattern, _Resource
 
 
-class Integration(BaseResource):
+class Integration(_Resource):
     """OAuth integration resource.
 
     Represents a single OAuth integration configured in Workbench.
