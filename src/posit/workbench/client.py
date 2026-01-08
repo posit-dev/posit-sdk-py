@@ -24,25 +24,10 @@ class Client(ContextManager):
 
     Environment Variables
     ---------------------
-    POSIT_PRODUCT : str
-        Must be set to "WORKBENCH" to use this client
-    RS_SERVER_ADDRESS : str
-        The Workbench server address
     REQUESTS_CA_BUNDLE : str, optional
         Path to CA bundle file for SSL verification (used if verify=None)
     CURL_CA_BUNDLE : str, optional
         Alternative CA bundle path (used if REQUESTS_CA_BUNDLE not set and verify=None)
-
-    Examples
-    --------
-    Basic usage (uses system certificates):
-    >>> client = Client()
-
-    Use a custom CA bundle:
-    >>> client = Client(verify="/path/to/ca-bundle.crt")
-
-    Disable SSL verification (not recommended):
-    >>> client = Client(verify=False)
     """
 
     def __init__(self, verify: Optional[Union[bool, str]] = None) -> None:
@@ -59,12 +44,7 @@ class Client(ContextManager):
         self.session.auth = Auth(CookieReader())
 
         # Configure SSL certificate verification
-        if verify is None:
-            # Check environment variables for CA bundle
-            ca_bundle = os.getenv("REQUESTS_CA_BUNDLE") or os.getenv("CURL_CA_BUNDLE")
-            if ca_bundle:
-                self.session.verify = ca_bundle
-        else:
+        if verify is not None:
             self.session.verify = verify
 
         if not server_url:
