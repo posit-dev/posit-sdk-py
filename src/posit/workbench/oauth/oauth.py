@@ -82,7 +82,8 @@ class OAuth(Resources):
 
         Returns
         -------
-            str | None: The OAuth credentials if found, otherwise None.
+        Credentials | None
+            The OAuth credentials if found, otherwise None.
         """
         path = "/oauth_token"
         body = {

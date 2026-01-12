@@ -644,3 +644,36 @@ class TestVersionRequirements:
         # Should not raise for dev version even though base version is too old
         token = client.oauth.get_delegated_azure_token("https://management.azure.com/")
         assert token["access_token"] == "azure-token-xyz"
+
+
+class TestBasePathHandling:
+    """Tests for proper handling of base paths in server URLs."""
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://example.com/workbench",  # Server with base path
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
+        },
+    )
+    @responses.activate
+    def test_base_path_preserved(self):
+        """Test that base paths in server URLs are preserved when making requests."""
+        integration_id = "test-integration-id"
+
+        # Mock should expect the URL to preserve the base path
+        responses.get(
+            "https://example.com/workbench/oauth_token",
+            json={
+                "access_token": "token123",
+                "expiry": "2025-12-31T23:59:59+00:00",
+            },
+        )
+
+        client = Client()
+        credentials = client.oauth.get_credentials(integration_id)
+
+        assert credentials is not None
+        assert credentials["access_token"] == "token123"
