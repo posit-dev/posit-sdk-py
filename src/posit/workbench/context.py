@@ -6,8 +6,10 @@ import functools
 import os
 import weakref
 
+from typing import Callable
+
 from packaging.version import Version
-from typing_extensions import TYPE_CHECKING, Protocol
+from typing_extensions import TYPE_CHECKING, Concatenate, ParamSpec, Protocol, TypeVar
 
 if TYPE_CHECKING:
     from .client import Client
@@ -27,10 +29,20 @@ def _normalize_version(version_str: str) -> str:
     return base
 
 
-def requires(version: str):
-    def decorator(func):
+P = ParamSpec("P")
+R = TypeVar("R")
+CM = TypeVar("CM", bound="ContextManager")
+
+
+def requires(
+    version: str,
+) -> Callable[
+    [Callable[Concatenate[CM, P], R]],
+    Callable[Concatenate[CM, P], R],
+]:
+    def decorator(func: Callable[Concatenate[CM, P], R]) -> Callable[Concatenate[CM, P], R]:
         @functools.wraps(func)
-        def wrapper(instance: ContextManager, *args, **kwargs):
+        def wrapper(instance: CM, *args: P.args, **kwargs: P.kwargs) -> R:
             ctx = instance._ctx
             if ctx.version:
                 # Skip version check for development versions (matches R implementation)
