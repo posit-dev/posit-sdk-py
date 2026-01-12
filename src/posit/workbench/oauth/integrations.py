@@ -14,6 +14,29 @@ class Integration(_Resource):
     """OAuth integration resource.
 
     Represents a single OAuth integration configured in Workbench.
+
+    Attributes
+    ----------
+    guid : str
+        The unique identifier (GUID) of the integration.
+    name : str
+        The internal name of the integration.
+    display_name : str
+        The user-facing display name of the integration.
+    type : str
+        The OAuth provider type (e.g., "github", "azure", "custom", etc.).
+    client_id : str
+        The OAuth client ID for this integration.
+    auth_url : str
+        The authorization URL for the OAuth provider.
+    token_url : str
+        The token exchange URL for the OAuth provider.
+    scopes : list[str]
+        The OAuth scopes requested by this integration.
+    issuer : str
+        The issuer URL for the OAuth provider.
+    authenticated : bool
+        Whether the current user is authenticated with this integration.
     """
 
     # No additional methods needed for read-only resource
