@@ -5,7 +5,6 @@ import functools
 # version stuff from RSTUDIO_VERSION
 import os
 import weakref
-
 from typing import Callable
 
 from packaging.version import Version
