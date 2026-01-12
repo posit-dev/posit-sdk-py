@@ -81,9 +81,9 @@ quartodoc:
       include_functions: true
       include_empty: true
   sections:
-    - title: Clients
+    - title: Connect Client
       desc: >
-        The `Client` is the entrypoint for each Posit product. Initialize a `Client` to get started.
+        The Connect `Client` is the entrypoint for Posit Connect. Initialize a `Client` to get started.
       contents:
         - name: connect.Client
           members:
@@ -94,7 +94,7 @@ quartodoc:
             - put
             - patch
             - delete
-    - title: Resources
+    - title: Connect Resources
       contents:
         - connect.bundles
         - connect.content
@@ -116,7 +116,29 @@ quartodoc:
         - connect.tasks
         - connect.users
         - connect.vanities
-    - title: Third-Party Integrations
+    - title: Connect Third-Party Integrations
       contents:
         - connect.external.databricks
         - connect.external.snowflake
+    - title: Workbench Client
+      desc: >
+        The Workbench `Client` is the entrypoint for Posit Workbench. Initialize a `Client` to get started.
+      contents:
+        - name: workbench.Client
+          members:
+            # methods
+            - get
+            - post
+            - put
+            - patch
+            - delete
+    - title: Workbench Resources
+      contents:
+        - name: workbench.oauth.OAuth
+          members:
+            - get_credentials
+            - get_delegated_azure_token
+        - workbench.oauth.integrations
+    - title: Workbench Third-Party Integrations
+      contents:
+        - workbench.external.databricks
