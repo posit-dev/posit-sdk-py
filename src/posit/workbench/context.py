@@ -5,10 +5,9 @@ import functools
 # version stuff from RSTUDIO_VERSION
 import os
 import weakref
-from typing import Callable
 
 from packaging.version import Version
-from typing_extensions import TYPE_CHECKING, Concatenate, ParamSpec, Protocol, TypeVar
+from typing_extensions import TYPE_CHECKING, Callable, Concatenate, ParamSpec, Protocol, TypeVar
 
 if TYPE_CHECKING:
     from .client import Client
