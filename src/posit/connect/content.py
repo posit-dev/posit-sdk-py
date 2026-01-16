@@ -642,6 +642,41 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         path = posixpath.join(self._path, "packages")
         return _ResourceSequence(self._ctx, path, uid="name")
 
+    @requires(version="2025.12.0")
+    def get_lockfile(self) -> str:
+        """Get the Python lockfile for the content's active bundle.
+
+        Returns the Python lockfile (requirements.txt.lock) that describes the
+        exact Python packages installed in Connect's managed Python environment
+        for this content. The file can be used to recreate the same Python
+        environment elsewhere.
+
+        The content must have a managed Python environment
+        (py_environment_management enabled).
+
+        Returns
+        -------
+        str
+            The Python lockfile content as a string.
+
+        Raises
+        ------
+        RuntimeError
+            If the Connect server version is older than 2025.12.0.
+        requests.HTTPError
+            If the content does not use Python, does not have environment
+            management enabled, or if the lockfile does not exist.
+
+        Examples
+        --------
+        >>> content = client.content.get(guid)
+        >>> lockfile = content.get_lockfile()
+        >>> print(lockfile)
+        """
+        path = f"v1/content/{self['guid']}/lockfile"
+        response = self._ctx.client.get(path)
+        return response.text
+
 
 class Content(Resources):
     """Content resource.
