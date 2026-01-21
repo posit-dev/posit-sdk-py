@@ -110,18 +110,22 @@ class TestContent:
         task = bundle.deploy()
         task.wait_for()
         # get lockfile
-        generated_by, lockfile = content.get_lockfile()
-        # verify generated_by header
-        assert generated_by is not None
-        assert isinstance(generated_by, str)
-        assert len(generated_by) > 0
+        lockfile = content.get_lockfile()
+        # verify lockfile metadata
+        assert lockfile.generated_by is not None
+        assert isinstance(lockfile.generated_by, str)
+        assert len(lockfile.generated_by) > 0
+        # verify python version was parsed
+        assert lockfile.python_version is not None
+        assert isinstance(lockfile.python_version, str)
+        assert len(lockfile.python_version) > 0
         # verify lockfile content
-        assert lockfile is not None
-        assert isinstance(lockfile, str)
-        assert len(lockfile) > 0
+        assert lockfile.text is not None
+        assert isinstance(lockfile.text, str)
+        assert len(lockfile.text) > 0
         # lockfile should contain package information
         # The flask bundle has Flask as a dependency
-        assert "flask" in lockfile.lower() or "Flask" in lockfile
+        assert "flask" in lockfile.text.lower() or "Flask" in lockfile.text
         # delete content
         content.delete()
 
@@ -147,9 +151,10 @@ class TestContent:
         assert callable(content.get_lockfile)
 
         # Call it to ensure no version errors on supported versions
-        generated_by, lockfile = content.get_lockfile()
-        assert generated_by is not None
-        assert lockfile is not None
+        lockfile = content.get_lockfile()
+        assert lockfile.generated_by is not None
+        assert lockfile.python_version is not None
+        assert lockfile.text is not None
 
         # delete content
         content.delete()

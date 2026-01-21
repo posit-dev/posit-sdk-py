@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import os
 import posixpath
+import re
 import time
+from dataclasses import dataclass
 
 from typing_extensions import (
     TYPE_CHECKING,
@@ -36,6 +38,83 @@ if TYPE_CHECKING:
     from .jobs import Jobs
     from .packages import ContentPackages
     from .tasks import Task
+
+
+@dataclass
+class Lockfile:
+    """Python lockfile retrieved from Connect.
+
+    Contains the lockfile content and metadata about the Python environment
+    used to generate it. This can be used to recreate the exact Python
+    environment on another machine.
+
+    Attributes
+    ----------
+    generated_by : str
+        The raw 'Generated-By' header value from the server response
+        (e.g., "connect; python=3.11.4").
+    python_version : str
+        The Python version extracted from the generated_by header
+        (e.g., "3.11.4").
+    content : str
+        The lockfile content (requirements.txt.lock format).
+
+    Examples
+    --------
+    >>> content = client.content.get(guid)
+    >>> lockfile = content.get_lockfile()
+    >>> print(f"Python version: {lockfile.python_version}")
+    >>> lockfile.write("requirements.txt.lock")
+    """
+
+    generated_by: str
+    python_version: str
+    text: str
+
+    @classmethod
+    def _from_response(cls, generated_by: str, text: str) -> "Lockfile":
+        """Create a Lockfile from the server response.
+
+        Parameters
+        ----------
+        generated_by : str
+            The 'Generated-By' header value.
+        text : str
+            The lockfile content.
+
+        Returns
+        -------
+        Lockfile
+            A new Lockfile instance.
+
+        Raises
+        ------
+        ValueError
+            If the python version cannot be parsed from the generated_by header.
+        """
+        match = re.search(r"python=(\d+\.\d+\.\d+)", generated_by)
+        if match is None:
+            raise ValueError(
+                f"Failed to parse Python version from 'Generated-By' header: {generated_by}"
+            )
+        python_version = match.group(1)
+        return cls(generated_by=generated_by, python_version=python_version, text=text)
+
+    def write(self, path: str) -> None:
+        """Write the lockfile content to a file.
+
+        Parameters
+        ----------
+        path : str
+            The file path to write the lockfile to.
+
+        Examples
+        --------
+        >>> lockfile = content.get_lockfile()
+        >>> lockfile.write("requirements.txt.lock")
+        """
+        with open(path, "w") as f:
+            f.write(self.text)
 
 
 def _assert_guid(guid: str):
@@ -643,26 +722,30 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         return _ResourceSequence(self._ctx, path, uid="name")
 
     @requires(version="2025.12.0")
-    def get_lockfile(self) -> tuple[str, str]:
+    def get_lockfile(self) -> Lockfile:
         """Get the Python lockfile for the content's active bundle.
 
         Returns the Python lockfile (requirements.txt.lock) that describes the
         exact Python packages installed in Connect's managed Python environment
-        for this content. The file can be used to recreate the same Python
-        environment elsewhere.
+        for this content. The lockfile can be used to recreate the same Python
+        environment elsewhere using pip or uv.
 
         The content must have a managed Python environment
         (py_environment_management enabled).
 
         Returns
         -------
-        str
-            The Python lockfile content as a string.
+        Lockfile
+            A Lockfile object containing the lockfile content and metadata,
+            including the Python version used to generate the lockfile.
 
         Raises
         ------
         RuntimeError
             If the Connect server version is older than 2025.12.0.
+        ValueError
+            If the server response is missing the 'Generated-By' header or
+            if the Python version cannot be parsed from it.
         requests.HTTPError
             If the content does not use Python, does not have environment
             management enabled, or if the lockfile does not exist.
@@ -671,14 +754,16 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         --------
         >>> content = client.content.get(guid)
         >>> lockfile = content.get_lockfile()
-        >>> print(lockfile)
+        >>> print(f"Python {lockfile.python_version}")
+        >>> print(lockfile.content)
+        >>> lockfile.write("requirements.txt.lock")
         """
         path = f"v1/content/{self['guid']}/lockfile"
         response = self._ctx.client.get(path)
         generated_by = response.headers.get("Generated-By")
         if generated_by is None:
             raise ValueError("Server response missing 'Generated-By' header.")
-        return (generated_by, response.text)
+        return Lockfile._from_response(generated_by, response.text)
 
 
 class Content(Resources):

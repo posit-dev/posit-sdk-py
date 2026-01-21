@@ -574,6 +574,46 @@ class TestRestart:
         assert mock_patch_content.call_count == 1
 
 
+class TestLockfile:
+    def test_from_response(self):
+        from posit.connect.content import Lockfile
+
+        generated_by = "connect; python=3.11.4"
+        content = "bottle==0.12.25"
+
+        lockfile = Lockfile._from_response(generated_by, content)
+
+        assert lockfile.generated_by == generated_by
+        assert lockfile.python_version == "3.11.4"
+        assert lockfile.text == content
+
+    def test_from_response_invalid_header(self):
+        from posit.connect.content import Lockfile
+
+        # Missing python version
+        with pytest.raises(ValueError, match="Failed to parse Python version"):
+            Lockfile._from_response("connect", "content")
+
+        # Invalid format
+        with pytest.raises(ValueError, match="Failed to parse Python version"):
+            Lockfile._from_response("connect; python=invalid", "content")
+
+    def test_write(self, tmp_path):
+        from posit.connect.content import Lockfile
+
+        lockfile = Lockfile(
+            generated_by="connect; python=3.11.4",
+            python_version="3.11.4",
+            text="bottle==0.12.25\nflask==2.0.0\n",
+        )
+
+        output_path = tmp_path / "requirements.txt.lock"
+        lockfile.write(str(output_path))
+
+        assert output_path.exists()
+        assert output_path.read_text() == "bottle==0.12.25\nflask==2.0.0\n"
+
+
 class TestContentGetLockfile:
     @responses.activate
     def test_get_lockfile_success(self):
@@ -610,11 +650,12 @@ bottle==0.12.25
         content = client.content.get(guid)
 
         # invoke
-        generated_by, lockfile = content.get_lockfile()
+        lockfile = content.get_lockfile()
 
         # assert
-        assert generated_by == "connect; python=3.11.4"
-        assert lockfile == lockfile_content
+        assert lockfile.generated_by == "connect; python=3.11.4"
+        assert lockfile.python_version == "3.11.4"
+        assert lockfile.text == lockfile_content
         assert mock_get_content.call_count == 1
         assert mock_get_lockfile.call_count == 1
 
@@ -714,6 +755,41 @@ bottle==0.12.25
 
         # invoke & assert
         with pytest.raises(ValueError, match="Server response missing 'Generated-By' header"):
+            content.get_lockfile()
+
+    @responses.activate
+    def test_get_lockfile_invalid_generated_by_header(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        lockfile_content = "bottle==0.12.25"
+
+        # behavior
+        responses.get(
+            "https://connect.example/__api__/server_settings",
+            json={"version": "2025.12.0"},
+        )
+
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+
+        # Mock response with invalid Generated-By header (missing python version)
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}/lockfile",
+            body=lockfile_content,
+            headers={
+                "Content-Type": "text/plain; charset=utf-8",
+                "Generated-By": "connect",
+            },
+        )
+
+        # setup
+        client = Client("https://connect.example", "12345")
+        content = client.content.get(guid)
+
+        # invoke & assert
+        with pytest.raises(ValueError, match="Failed to parse Python version"):
             content.get_lockfile()
 
 
