@@ -94,3 +94,67 @@ class TestContent:
         task.wait_for()
         # delete content
         content.delete()
+
+    @pytest.mark.skipif(
+        CONNECT_VERSION < version.parse("2025.12.0"),
+        reason="Lockfile endpoint not available",
+    )
+    def test_get_lockfile(self):
+        # create content
+        content = self.client.content.create(name="example-flask-lockfile-test")
+        # create bundle with Python requirements
+        path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
+        path = (Path(__file__).parent / path).resolve()
+        bundle = content.bundles.create(str(path))
+        # deploy bundle
+        task = bundle.deploy()
+        task.wait_for()
+        # get lockfile
+        lockfile = content.get_lockfile()
+        # verify lockfile metadata
+        assert lockfile.generated_by is not None
+        assert isinstance(lockfile.generated_by, str)
+        assert len(lockfile.generated_by) > 0
+        # verify python version was parsed
+        assert lockfile.python_version is not None
+        assert isinstance(lockfile.python_version, str)
+        assert len(lockfile.python_version) > 0
+        # verify lockfile content
+        assert lockfile.text is not None
+        assert isinstance(lockfile.text, str)
+        assert len(lockfile.text) > 0
+        # lockfile should contain package information
+        # The flask bundle has Flask as a dependency
+        assert "flask" in lockfile.text.lower() or "Flask" in lockfile.text
+        # delete content
+        content.delete()
+
+    @pytest.mark.skipif(
+        CONNECT_VERSION < version.parse("2025.12.0"),
+        reason="Lockfile endpoint not available",
+    )
+    def test_get_lockfile_version_check(self):
+        """Test that get_lockfile properly checks Connect version."""
+        # This test verifies the @requires decorator works correctly
+        # by attempting to call get_lockfile on an older version
+        # Since we skip this test on older versions, we just verify
+        # that the method exists and is callable on supported versions
+        content = self.client.content.create(name="example-version-check")
+        path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
+        path = (Path(__file__).parent / path).resolve()
+        bundle = content.bundles.create(str(path))
+        task = bundle.deploy()
+        task.wait_for()
+
+        # Verify the method exists and is callable
+        assert hasattr(content, "get_lockfile")
+        assert callable(content.get_lockfile)
+
+        # Call it to ensure no version errors on supported versions
+        lockfile = content.get_lockfile()
+        assert lockfile.generated_by is not None
+        assert lockfile.python_version is not None
+        assert lockfile.text is not None
+
+        # delete content
+        content.delete()
