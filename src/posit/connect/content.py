@@ -643,7 +643,7 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         return _ResourceSequence(self._ctx, path, uid="name")
 
     @requires(version="2025.12.0")
-    def get_lockfile(self) -> str:
+    def get_lockfile(self) -> tuple[str, str]:
         """Get the Python lockfile for the content's active bundle.
 
         Returns the Python lockfile (requirements.txt.lock) that describes the
@@ -675,7 +675,10 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         """
         path = f"v1/content/{self['guid']}/lockfile"
         response = self._ctx.client.get(path)
-        return response.text
+        generated_by = response.headers.get("Generated-By")
+        if generated_by is None:
+            raise ValueError("Server response missing 'Generated-By' header.")
+        return (generated_by, response.text)
 
 
 class Content(Resources):

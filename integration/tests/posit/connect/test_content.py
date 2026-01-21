@@ -110,7 +110,11 @@ class TestContent:
         task = bundle.deploy()
         task.wait_for()
         # get lockfile
-        lockfile = content.get_lockfile()
+        generated_by, lockfile = content.get_lockfile()
+        # verify generated_by header
+        assert generated_by is not None
+        assert isinstance(generated_by, str)
+        assert len(generated_by) > 0
         # verify lockfile content
         assert lockfile is not None
         assert isinstance(lockfile, str)
@@ -143,7 +147,8 @@ class TestContent:
         assert callable(content.get_lockfile)
 
         # Call it to ensure no version errors on supported versions
-        lockfile = content.get_lockfile()
+        generated_by, lockfile = content.get_lockfile()
+        assert generated_by is not None
         assert lockfile is not None
 
         # delete content

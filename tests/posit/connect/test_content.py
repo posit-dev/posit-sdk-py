@@ -610,9 +610,10 @@ bottle==0.12.25
         content = client.content.get(guid)
 
         # invoke
-        lockfile = content.get_lockfile()
+        generated_by, lockfile = content.get_lockfile()
 
         # assert
+        assert generated_by == "connect; python=3.11.4"
         assert lockfile == lockfile_content
         assert mock_get_content.call_count == 1
         assert mock_get_lockfile.call_count == 1
@@ -680,6 +681,40 @@ bottle==0.12.25
         with pytest.raises(ClientError) as exc_info:
             content.get_lockfile()
         assert "Content does not have a managed Python environment" in str(exc_info.value)
+
+    @responses.activate
+    def test_get_lockfile_missing_generated_by_header(self):
+        # data
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        lockfile_content = "bottle==0.12.25"
+
+        # behavior
+        responses.get(
+            "https://connect.example/__api__/server_settings",
+            json={"version": "2025.12.0"},
+        )
+
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+
+        # Mock response without Generated-By header (server error case)
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{guid}/lockfile",
+            body=lockfile_content,
+            headers={
+                "Content-Type": "text/plain; charset=utf-8",
+            },
+        )
+
+        # setup
+        client = Client("https://connect.example", "12345")
+        content = client.content.get(guid)
+
+        # invoke & assert
+        with pytest.raises(ValueError, match="Server response missing 'Generated-By' header"):
+            content.get_lockfile()
 
 
 class TestContentRepository:
