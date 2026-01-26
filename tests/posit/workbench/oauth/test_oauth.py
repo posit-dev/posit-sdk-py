@@ -100,7 +100,7 @@ class TestGetCredentials:
     )
     @responses.activate
     def test_get_credentials_with_z_timezone(self):
-        """Test credential retrieval with 'Z' timezone suffix"""
+        """Test credential retrieval with 'Z' timezone suffix."""
         integration_id = "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
 
         responses.get(
