@@ -89,6 +89,40 @@ class TestGetCredentials:
 
         assert credentials is None
 
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2026.01.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
+        },
+    )
+    @responses.activate
+    def test_get_credentials_with_z_timezone(self):
+        """Test credential retrieval with 'Z' timezone suffix"""
+        integration_id = "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
+
+        responses.get(
+            "https://workbench.example.com/oauth_token",
+            json={
+                "access_token": "token456",
+                "expiry": "2025-12-31T23:59:59Z",
+            },
+        )
+
+        client = Client()
+        credentials = client.oauth.get_credentials(integration_id)
+
+        assert credentials is not None
+        assert credentials["access_token"] == "token456"
+        assert credentials["integration_id"] == integration_id
+        assert isinstance(credentials["expiry"], datetime)
+        # Verify the datetime was parsed correctly
+        assert credentials["expiry"].year == 2025
+        assert credentials["expiry"].month == 12
+        assert credentials["expiry"].day == 31
+
 
 class TestIntegrations:
     """Tests for integrations resource."""
