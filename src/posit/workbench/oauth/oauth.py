@@ -98,9 +98,11 @@ class OAuth(Resources):
         if "error" in response_json:
             raise RuntimeError(f"Error retrieving OAuth credentials: {response_json['error']}")
         if "access_token" in response_json:
+            # Handle 'Z' timezone suffix for Python 3.10 compatibility
+            expiry_str = response_json["expiry"].replace("Z", "+00:00")
             return Credentials(
                 access_token=response_json["access_token"],
-                expiry=datetime.fromisoformat(response_json["expiry"]),
+                expiry=datetime.fromisoformat(expiry_str),
                 integration_id=audience,
             )
         return None
