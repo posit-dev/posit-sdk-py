@@ -661,6 +661,61 @@ class TestGetDelegatedAzureToken:
         with pytest.raises(ValueError, match="non-empty string"):
             client.oauth.get_delegated_azure_token(None)  # type: ignore
 
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_oauth2_error(self):
+        """Test OAuth2 error handling for Azure token."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={
+                "oauth2_error": {
+                    "error": "unauthorized_client",
+                    "error_description": "The client is not authorized to request a token using this method",
+                }
+            },
+        )
+
+        client = Client()
+
+        with pytest.raises(
+            RuntimeError,
+            match="OAuth2 error retrieving Azure delegated token: unauthorized_client - The client is not authorized to request a token using this method",
+        ):
+            client.oauth.get_delegated_azure_token("https://management.azure.com/")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_oauth2_error_partial(self):
+        """Test OAuth2 error with only error code provided."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={"oauth2_error": {"error": "access_denied"}},
+        )
+
+        client = Client()
+
+        with pytest.raises(
+            RuntimeError,
+            match="OAuth2 error retrieving Azure delegated token: access_denied - no description",
+        ):
+            client.oauth.get_delegated_azure_token("https://management.azure.com/")
+
 
 class TestVersionRequirements:
     """Tests for version requirement enforcement."""

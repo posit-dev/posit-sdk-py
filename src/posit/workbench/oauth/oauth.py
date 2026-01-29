@@ -162,6 +162,15 @@ class OAuth(Resources):
         response.raise_for_status()
         response_json = response.json()
 
+        # Check for OAuth2-specific errors
+        if "oauth2_error" in response_json:
+            oauth_err = response_json["oauth2_error"]
+            error_code = oauth_err.get("error", "unknown")
+            error_desc = oauth_err.get("error_description", "no description")
+            raise RuntimeError(
+                f"OAuth2 error retrieving Azure delegated token: {error_code} - {error_desc}"
+            )
+
         if "error" in response_json:
             raise RuntimeError(f"Error retrieving Azure delegated token: {response_json['error']}")
 
