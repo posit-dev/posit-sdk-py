@@ -70,6 +70,8 @@ class Client(ContextManager):
         Vanities resource.
     version: str
         The server version.
+    url: str
+        The server URL.
     """
 
     @overload
@@ -441,6 +443,18 @@ class Client(ContextManager):
             The version of the Posit Connect server.
         """
         return self._ctx.version
+
+    @property
+    def url(self) -> str:
+        """
+        The server URL.
+
+        Returns
+        -------
+        str
+            The URL of the Posit Connect server.
+        """
+        return self.cfg.url
 
     def __del__(self):
         """Close the session when the Client instance is deleted."""
