@@ -487,11 +487,14 @@ class TestGetDelegatedAzureToken:
         responses.get(
             "https://workbench.example.com/delegated_azure_token",
             json={
-                "access_token": "azure-token-xyz",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-                "scope": "https://management.azure.com/.default",
-                "ext_expires_in": 7200,
+                "result": True,
+                "token": {
+                    "access_token": "azure-token-xyz",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                    "scope": "https://management.azure.com/.default",
+                    "ext_expires_in": 7200,
+                },
             },
         )
 
@@ -501,8 +504,8 @@ class TestGetDelegatedAzureToken:
         assert token["access_token"] == "azure-token-xyz"
         assert token["token_type"] == "Bearer"
         assert token["expires_in"] == 3600
-        assert token["scope"] == "https://management.azure.com/.default"
-        assert token["ext_expires_in"] == 7200
+        assert token.get("scope") == "https://management.azure.com/.default"
+        assert token.get("ext_expires_in") == 7200
 
     @patch.dict(
         "os.environ",
@@ -519,9 +522,12 @@ class TestGetDelegatedAzureToken:
         responses.get(
             "https://workbench.example.com/delegated_azure_token",
             json={
-                "access_token": "azure-token-xyz",
-                "token_type": "Bearer",
-                "expires_in": 3600,
+                "result": True,
+                "token": {
+                    "access_token": "azure-token-xyz",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                },
             },
         )
 
@@ -531,6 +537,41 @@ class TestGetDelegatedAzureToken:
         assert token["access_token"] == "azure-token-xyz"
         assert token["token_type"] == "Bearer"
         assert token["expires_in"] == 3600
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_with_id_token(self):
+        """Test Azure token response includes id_token when OIDC scopes requested."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={
+                "result": True,
+                "token": {
+                    "access_token": "azure-token-xyz",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                    "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "scope": "openid profile https://graph.microsoft.com/.default",
+                },
+            },
+        )
+
+        client = Client()
+        token = client.oauth.get_delegated_azure_token("https://graph.microsoft.com/")
+
+        assert token["access_token"] == "azure-token-xyz"
+        assert token["token_type"] == "Bearer"
+        assert token["expires_in"] == 3600
+        assert token.get("id_token") == "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+        assert token.get("scope") == "openid profile https://graph.microsoft.com/.default"
 
     @patch.dict(
         "os.environ",
@@ -564,11 +605,36 @@ class TestGetDelegatedAzureToken:
         },
     )
     @responses.activate
+    def test_get_delegated_azure_token_missing_token_field(self):
+        """Test handling of response missing token field."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={"result": True},  # Missing token field
+        )
+
+        client = Client()
+
+        with pytest.raises(RuntimeError, match="missing 'token' field"):
+            client.oauth.get_delegated_azure_token("https://management.azure.com/")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
+        },
+    )
+    @responses.activate
     def test_get_delegated_azure_token_invalid_response(self):
         """Test handling of malformed response."""
         responses.get(
             "https://workbench.example.com/delegated_azure_token",
-            json={"some_field": "value"},  # Missing required fields
+            json={
+                "result": True,
+                "token": {"some_field": "value"},  # Missing required fields
+            },
         )
 
         client = Client()
@@ -594,6 +660,61 @@ class TestGetDelegatedAzureToken:
 
         with pytest.raises(ValueError, match="non-empty string"):
             client.oauth.get_delegated_azure_token(None)  # type: ignore
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_oauth2_error(self):
+        """Test OAuth2 error handling for Azure token."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={
+                "oauth2_error": {
+                    "error": "unauthorized_client",
+                    "error_description": "The client is not authorized to request a token using this method",
+                }
+            },
+        )
+
+        client = Client()
+
+        with pytest.raises(
+            RuntimeError,
+            match="OAuth2 error retrieving Azure delegated token: unauthorized_client - The client is not authorized to request a token using this method",
+        ):
+            client.oauth.get_delegated_azure_token("https://management.azure.com/")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "POSIT_PRODUCT": "WORKBENCH",
+            "RS_SERVER_ADDRESS": "https://workbench.example.com",
+            "RSTUDIO_VERSION": "2024.12.0",
+            "RS_SESSION_RPC_COOKIE": TEST_RPC_COOKIE,
+        },
+    )
+    @responses.activate
+    def test_get_delegated_azure_token_oauth2_error_partial(self):
+        """Test OAuth2 error with only error code provided."""
+        responses.get(
+            "https://workbench.example.com/delegated_azure_token",
+            json={"oauth2_error": {"error": "access_denied"}},
+        )
+
+        client = Client()
+
+        with pytest.raises(
+            RuntimeError,
+            match="OAuth2 error retrieving Azure delegated token: access_denied - no description",
+        ):
+            client.oauth.get_delegated_azure_token("https://management.azure.com/")
 
 
 class TestVersionRequirements:
@@ -668,9 +789,12 @@ class TestVersionRequirements:
         responses.get(
             "https://workbench.example.com/delegated_azure_token",
             json={
-                "access_token": "azure-token-xyz",
-                "token_type": "Bearer",
-                "expires_in": 3600,
+                "result": True,
+                "token": {
+                    "access_token": "azure-token-xyz",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                },
             },
         )
 

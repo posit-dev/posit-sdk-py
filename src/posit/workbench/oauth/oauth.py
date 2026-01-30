@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from ..context import Context, requires
 from ..resources import Resources
@@ -38,6 +38,8 @@ class AzureToken(TypedDict):
         The token type (typically 'Bearer')
     expires_in : int
         Token lifetime in seconds
+    id_token : str
+        The OpenID Connect ID token containing user identity claims (optional)
     scope : str
         Granted scopes (optional)
     ext_expires_in : int
@@ -47,8 +49,9 @@ class AzureToken(TypedDict):
     access_token: str
     token_type: str
     expires_in: int
-    scope: str  # optional
-    ext_expires_in: int  # optional
+    id_token: NotRequired[str]
+    scope: NotRequired[str]
+    ext_expires_in: NotRequired[int]
 
 
 class OAuth(Resources):
@@ -151,19 +154,34 @@ class OAuth(Resources):
         path = "/delegated_azure_token"
         body = {
             "method": path,
-            "kwparams": {
-                "resource": resource,
-            },
+            "params": [
+                resource,
+            ],
         }
         response = self._ctx.client.get("/delegated_azure_token", json=body)
         response.raise_for_status()
         response_json = response.json()
 
+        # Check for OAuth2-specific errors
+        if "oauth2_error" in response_json:
+            oauth_err = response_json["oauth2_error"]
+            error_code = oauth_err.get("error", "unknown")
+            error_desc = oauth_err.get("error_description", "no description")
+            raise RuntimeError(
+                f"OAuth2 error retrieving Azure delegated token: {error_code} - {error_desc}"
+            )
+
         if "error" in response_json:
             raise RuntimeError(f"Error retrieving Azure delegated token: {response_json['error']}")
 
-        # Validate required fields are present
-        if "access_token" not in response_json or "token_type" not in response_json:
+        # Extract the token from the JSON-RPC response
+        if "token" not in response_json:
+            raise RuntimeError("Invalid response from backend: missing 'token' field")
+
+        token = response_json["token"]
+
+        # Validate required fields are present in the token
+        if "access_token" not in token or "token_type" not in token:
             raise RuntimeError("Invalid response from backend: missing required token fields")
 
-        return response_json
+        return token
