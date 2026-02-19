@@ -3,7 +3,7 @@ import responses
 from responses import matchers
 
 from posit.connect.client import Client
-from posit.connect.variants import Variant, Variants
+from posit.connect.variants import Variant
 
 from .api import load_mock
 
