@@ -1,4 +1,6 @@
-from typing_extensions import List
+import warnings
+
+from typing_extensions import List, Literal
 
 from .context import Context
 from .resources import BaseResource, Resources
@@ -9,6 +11,38 @@ class Variant(BaseResource):
     def render(self) -> Task:
         path = f"variants/{self['id']}/render"
         response = self._ctx.client.post(path)
+        return Task(self._ctx, **response.json())
+
+    def send_mail(
+        self, to: Literal["me", "collaborators", "collaborators_viewers"] = "me"
+    ) -> Task:
+        """Send email for this variant.
+
+        Parameters
+        ----------
+        to : Literal["me", "collaborators", "collaborators_viewers"], optional
+            The recipient type for the email.
+
+        Returns
+        -------
+        Task
+            A Task object representing the email sending operation.
+
+        Warnings
+        --------
+            This operation is experimental.
+        """
+        warnings.warn(
+            "send_mail() is experimental and may change in future releases.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        path = f"variants/{self['id']}/sender"
+        params = {
+            "email": to,
+            "rendering_id": self["rendering_id"],
+        }
+        response = self._ctx.client.post(path, params=params)
         return Task(self._ctx, **response.json())
 
 
