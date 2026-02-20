@@ -5,8 +5,6 @@ from responses import matchers
 from posit.connect.client import Client
 from posit.connect.variants import Variant
 
-from .api import load_mock
-
 
 class TestVariantSendMail:
     @pytest.mark.parametrize(
@@ -30,7 +28,8 @@ class TestVariantSendMail:
                     {"email": expected_email, "rendering_id": rendering_id}
                 )
             ],
-            json=load_mock(f"variants/{variant_id}/sender.json"),
+            body="",
+            status=200,
         )
 
         c = Client("https://connect.example.com", "12345")
@@ -47,9 +46,7 @@ class TestVariantSendMail:
 
         kwargs = {} if to is None else {"to": to}
         with pytest.warns(FutureWarning, match="send_mail.*experimental"):
-            task = variant.send_mail(**kwargs)
+            result = variant.send_mail(**kwargs)
 
-        assert task["id"] == "jXhOhdm5OOSkMail"
-        assert task["finished"] is True
-        assert task["code"] == 0
+        assert result is None
         assert mock_post.call_count == 1

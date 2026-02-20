@@ -15,18 +15,17 @@ class Variant(BaseResource):
 
     def send_mail(
         self, to: Literal["me", "collaborators", "collaborators_viewers"] = "me"
-    ) -> Task:
+    ) -> None:
         """Send email for this variant.
 
         Parameters
         ----------
         to : Literal["me", "collaborators", "collaborators_viewers"], optional
-            The recipient type for the email.
+            The recipient type for the email. Default is "me".
 
         Returns
         -------
-        Task
-            A Task object representing the email sending operation.
+        None
 
         Warnings
         --------
@@ -42,8 +41,7 @@ class Variant(BaseResource):
             "email": to,
             "rendering_id": self["rendering_id"],
         }
-        response = self._ctx.client.post(path, params=params)
-        return Task(self._ctx, **response.json())
+        self._ctx.client.post(path, params=params)
 
 
 class Variants(Resources):
