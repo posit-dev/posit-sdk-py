@@ -55,9 +55,7 @@ class TestHitsFetch:
         c._ctx.version = "2025.04.0"
 
         # Fetch hits filtered by a single content GUID
-        hits = list(
-            c.metrics.hits.fetch(content_guid="bd1d2285-6c80-49af-8a83-a200effe3cb3")
-        )
+        hits = list(c.metrics.hits.fetch(content_guid="bd1d2285-6c80-49af-8a83-a200effe3cb3"))
 
         # Verify request was made with proper parameters
         assert mock_get.call_count == 1

@@ -6,11 +6,13 @@ import requests
 from packaging import version
 
 from posit import connect
+from posit.connect.content import ContentItem
 
 from .. import CONNECT_VERSION
 
 BUNDLE_PATH = (
-    Path(__file__).parent / "../../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz"
+    Path(__file__).parent
+    / "../../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz"
 ).resolve()
 
 
@@ -24,12 +26,12 @@ class TestHitsContentGuidFilter:
         cls.client = connect.Client()
 
         # Deploy two content items and visit them to generate hits.
-        cls.content_a = cls._deploy(cls, "hits_filter_a")
-        cls.content_b = cls._deploy(cls, "hits_filter_b")
+        cls.content_a = cls._deploy("hits_filter_a")
+        cls.content_b = cls._deploy("hits_filter_b")
 
         # Visit each piece of content to generate hit records.
-        cls._visit(cls, cls.content_a)
-        cls._visit(cls, cls.content_b)
+        cls._visit(cls.content_a)
+        cls._visit(cls.content_b)
 
         # The hits endpoint may not surface records immediately.
         # Poll until hits for both content items appear (up to 10 s).
@@ -48,19 +50,21 @@ class TestHitsContentGuidFilter:
         cls.content_a.delete()
         cls.content_b.delete()
 
-    def _deploy(self, name: str) -> connect.content.ContentItem:
-        content = self.client.content.create(name=name)
+    @classmethod
+    def _deploy(cls, name: str) -> ContentItem:
+        content = cls.client.content.create(name=name)
         bundle = content.bundles.create(str(BUNDLE_PATH))
         task = bundle.deploy()
         task.wait_for()
         return content
 
-    def _visit(self, content: connect.content.ContentItem) -> None:
+    @classmethod
+    def _visit(cls, content: ContentItem) -> None:
         """Make an HTTP request to deployed content to generate a hit."""
         # Re-fetch the content item to get the content_url populated after deploy.
-        item = self.client.content.get(content["guid"])
+        item = cls.client.content.get(content["guid"])
         url = item["content_url"]
-        api_key = self.client.cfg.api_key
+        api_key = cls.client.cfg.api_key
         requests.get(url, headers={"Authorization": f"Key {api_key}"})
 
     # -- tests ----------------------------------------------------------------
@@ -84,9 +88,7 @@ class TestHitsContentGuidFilter:
         """Filtering by a list of GUIDs returns only hits for those items."""
         guid_a = self.content_a["guid"]
         guid_b = self.content_b["guid"]
-        hits = list(
-            self.client.metrics.hits.fetch(content_guid=[guid_a, guid_b])
-        )
+        hits = list(self.client.metrics.hits.fetch(content_guid=[guid_a, guid_b]))
         assert len(hits) > 0
         for hit in hits:
             assert hit["content_guid"] in (guid_a, guid_b)
@@ -103,9 +105,7 @@ class TestHitsContentGuidFilter:
     def test_fetch_with_content_guid_no_match(self):
         """Filtering by a non-existent GUID returns no results."""
         hits = list(
-            self.client.metrics.hits.fetch(
-                content_guid="00000000-0000-0000-0000-000000000000"
-            )
+            self.client.metrics.hits.fetch(content_guid="00000000-0000-0000-0000-000000000000")
         )
         assert hits == []
 
@@ -113,9 +113,7 @@ class TestHitsContentGuidFilter:
         """Filtered results are a strict subset of unfiltered results."""
         guid_a = self.content_a["guid"]
         all_hits = list(self.client.metrics.hits.fetch())
-        filtered_hits = list(
-            self.client.metrics.hits.fetch(content_guid=guid_a)
-        )
+        filtered_hits = list(self.client.metrics.hits.fetch(content_guid=guid_a))
         all_ids = {h["id"] for h in all_hits}
         filtered_ids = {h["id"] for h in filtered_hits}
         assert filtered_ids <= all_ids
