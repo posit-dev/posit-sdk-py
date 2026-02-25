@@ -36,6 +36,69 @@ class TestHitsFetch:
         assert hits[0]["data"]["path"] == "/dashboard"
 
     @responses.activate
+    def test_fetch_with_content_guid(self):
+        # Set up mock response
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/instrumentation/content/hits",
+            json=load_mock("v1/instrumentation/content/hits.json"),
+            match=[
+                matchers.query_param_matcher(
+                    {
+                        "content_guid": "bd1d2285-6c80-49af-8a83-a200effe3cb3",
+                    }
+                ),
+            ],
+        )
+
+        # Create client with required version for hits API
+        c = connect.Client("https://connect.example", "12345")
+        c._ctx.version = "2025.04.0"
+
+        # Fetch hits filtered by a single content GUID
+        hits = list(c.metrics.hits.fetch(content_guid="bd1d2285-6c80-49af-8a83-a200effe3cb3"))
+
+        # Verify request was made with proper parameters
+        assert mock_get.call_count == 1
+
+        # Verify results
+        assert len(hits) == 2
+
+    @responses.activate
+    def test_fetch_with_content_guid_list(self):
+        # Set up mock response
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/instrumentation/content/hits",
+            json=load_mock("v1/instrumentation/content/hits.json"),
+            match=[
+                matchers.query_param_matcher(
+                    {
+                        "content_guid": "bd1d2285-6c80-49af-8a83-a200effe3cb3|a1b2c3d4-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+                    }
+                ),
+            ],
+        )
+
+        # Create client with required version for hits API
+        c = connect.Client("https://connect.example", "12345")
+        c._ctx.version = "2025.04.0"
+
+        # Fetch hits filtered by multiple content GUIDs
+        hits = list(
+            c.metrics.hits.fetch(
+                content_guid=[
+                    "bd1d2285-6c80-49af-8a83-a200effe3cb3",
+                    "a1b2c3d4-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+                ]
+            )
+        )
+
+        # Verify request was made with pipe-delimited GUIDs
+        assert mock_get.call_count == 1
+
+        # Verify results
+        assert len(hits) == 2
+
+    @responses.activate
     def test_fetch_with_params(self):
         # Set up mock response
         mock_get = responses.get(

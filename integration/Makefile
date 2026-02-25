@@ -19,6 +19,7 @@ endef
 
 # Versions
 CONNECT_VERSIONS := \
+	2026.01.0 \
 	2025.12.1 \
 	2025.12.0 \
 	2025.11.0 \
