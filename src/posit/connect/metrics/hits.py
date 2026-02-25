@@ -17,6 +17,7 @@ class Hits(ResourceSequence[Hit], Protocol):
     def fetch(
         self,
         *,
+        content_guid: str | list[str] = ...,
         start: str = ...,
         end: str = ...,
     ) -> Iterable[Hit]:
@@ -25,6 +26,9 @@ class Hits(ResourceSequence[Hit], Protocol):
 
         Parameters
         ----------
+        content_guid : str or list[str], not required
+            Filter results by content GUID (RFC4122 format). Can be a single GUID string
+            or a list of GUID strings.
         start : str, not required
             The timestamp that starts the time window of interest in RFC 3339 format.
             Any hit information that happened prior to this timestamp will not be returned.
@@ -84,6 +88,9 @@ class _Hits(_ResourceSequence, Hits):
 
         Parameters
         ----------
+        content_guid : str or list[str], not required
+            Filter results by content GUID (RFC4122 format). Can be a single GUID string
+            or a list of GUID strings.
         start : str, not required
             The timestamp that starts the time window of interest in RFC 3339 format.
             Any hit information that happened prior to this timestamp will not be returned.
@@ -101,4 +108,6 @@ class _Hits(_ResourceSequence, Hits):
             All content hit records matching the specified conditions.
         """
         params = rename_params(kwargs)
+        if "content_guid" in params and isinstance(params["content_guid"], list):
+            params["content_guid"] = "|".join(params["content_guid"])
         return super().fetch(**params)
