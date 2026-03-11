@@ -34,6 +34,17 @@ class TestGetContentSessionToken:
         ):
             assert _get_content_session_token() == "file-token"
 
+    def test_token_file_not_found_falls_back_to_env_var(self, tmp_path):
+        token_file = tmp_path / "nonexistent"
+        with patch.dict(
+            "os.environ",
+            {
+                "CONNECT_CONTENT_SESSION_TOKEN_FILE": str(token_file),
+                "CONNECT_CONTENT_SESSION_TOKEN": "env-token",
+            },
+        ):
+            assert _get_content_session_token() == "env-token"
+
     def test_token_file_empty(self, tmp_path):
         token_file = tmp_path / "token"
         token_file.write_text("")

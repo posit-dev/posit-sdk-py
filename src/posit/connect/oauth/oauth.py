@@ -36,13 +36,16 @@ def _get_content_session_token() -> str:
     """
     token_file = os.environ.get("CONNECT_CONTENT_SESSION_TOKEN_FILE")
     if token_file:
-        with open(token_file) as f:
-            value = f.read().strip()
-        if not value:
-            raise ValueError(
-                "Invalid value for 'CONNECT_CONTENT_SESSION_TOKEN_FILE': File must contain a non-empty string."
-            )
-        return value
+        try:
+            with open(token_file) as f:
+                value = f.read().strip()
+            if not value:
+                raise ValueError(
+                    "Invalid value for 'CONNECT_CONTENT_SESSION_TOKEN_FILE': File must contain a non-empty string."
+                )
+            return value
+        except FileNotFoundError:
+            pass
 
     value = os.environ.get("CONNECT_CONTENT_SESSION_TOKEN")
     if not value:
