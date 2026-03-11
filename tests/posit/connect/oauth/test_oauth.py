@@ -7,14 +7,53 @@ from posit.connect import Client
 from posit.connect.oauth.oauth import OAuthTokenType, _get_content_session_token
 
 
-class TestOAuthIntegrations:
+class TestGetContentSessionToken:
     @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
-    def test_get_content_session_token_success(self):
+    def test_env_var(self):
         assert _get_content_session_token() == "cit"
 
-    def test_get_content_session_token_failure(self):
-        with pytest.raises(ValueError):
+    def test_no_env_var(self):
+        with pytest.raises(ValueError, match="CONNECT_CONTENT_SESSION_TOKEN"):
             _get_content_session_token()
+
+    def test_token_file(self, tmp_path):
+        token_file = tmp_path / "token"
+        token_file.write_text("file-token\n")
+        with patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN_FILE": str(token_file)}):
+            assert _get_content_session_token() == "file-token"
+
+    def test_token_file_takes_priority(self, tmp_path):
+        token_file = tmp_path / "token"
+        token_file.write_text("file-token")
+        with patch.dict(
+            "os.environ",
+            {
+                "CONNECT_CONTENT_SESSION_TOKEN_FILE": str(token_file),
+                "CONNECT_CONTENT_SESSION_TOKEN": "env-token",
+            },
+        ):
+            assert _get_content_session_token() == "file-token"
+
+    def test_token_file_not_found_falls_back_to_env_var(self, tmp_path):
+        token_file = tmp_path / "nonexistent"
+        with patch.dict(
+            "os.environ",
+            {
+                "CONNECT_CONTENT_SESSION_TOKEN_FILE": str(token_file),
+                "CONNECT_CONTENT_SESSION_TOKEN": "env-token",
+            },
+        ):
+            assert _get_content_session_token() == "env-token"
+
+    def test_token_file_empty(self, tmp_path):
+        token_file = tmp_path / "token"
+        token_file.write_text("")
+        with patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN_FILE": str(token_file)}):
+            with pytest.raises(ValueError, match="CONNECT_CONTENT_SESSION_TOKEN_FILE"):
+                _get_content_session_token()
+
+
+class TestOAuthIntegrations:
 
     @responses.activate
     def test_get_credentials(self):
