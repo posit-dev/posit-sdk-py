@@ -22,16 +22,28 @@ OAuthTokenType = types.OAuthTokenType
 def _get_content_session_token() -> str:
     """Return the content session token.
 
-    Reads the environment variable 'CONNECT_CONTENT_SESSION_TOKEN'.
+    Reads the token from the file specified by the environment variable
+    'CONNECT_CONTENT_SESSION_TOKEN_FILE' if set, otherwise falls back to the
+    environment variable 'CONNECT_CONTENT_SESSION_TOKEN'.
 
     Raises
     ------
-        ValueError: If CONNECT_CONTENT_SESSION_TOKEN is not set or invalid
+        ValueError: If neither environment variable is set or the token is invalid
 
     Returns
     -------
         str
     """
+    token_file = os.environ.get("CONNECT_CONTENT_SESSION_TOKEN_FILE")
+    if token_file:
+        with open(token_file) as f:
+            value = f.read().strip()
+        if not value:
+            raise ValueError(
+                "Invalid value for 'CONNECT_CONTENT_SESSION_TOKEN_FILE': File must contain a non-empty string."
+            )
+        return value
+
     value = os.environ.get("CONNECT_CONTENT_SESSION_TOKEN")
     if not value:
         raise ValueError(
@@ -100,7 +112,7 @@ class OAuth(Resources):
         Parameters
         ----------
         content_session_token : str, optional
-            The content session token to use for the exchange. If not provided, the function will attempt to read the token from the environment variable 'CONNECT_CONTENT_SESSION_TOKEN'.
+            The content session token to use for the exchange. If not provided, the function will attempt to read the token from the file specified by the environment variable 'CONNECT_CONTENT_SESSION_TOKEN_FILE', falling back to the environment variable 'CONNECT_CONTENT_SESSION_TOKEN'.
         requested_token_type : str or OAuthTokenType, optional
             The type of token being requested. This can be one of the predefined types in `OAuthTokenType` or a custom string.
         audience : str, optional

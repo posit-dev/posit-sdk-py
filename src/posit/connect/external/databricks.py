@@ -55,7 +55,7 @@ def _new_bearer_authorization_header(credentials: Credentials) -> Dict[str, str]
 class _PositConnectContentCredentialsProvider:
     """`CredentialsProvider` implementation which initiates a credential exchange using a content-session-token.
 
-    The content-session-token is provided by Connect through the environment variable `CONNECT_CONTENT_SESSION_TOKEN`.
+    The content-session-token is provided by Connect through the environment variable `CONNECT_CONTENT_SESSION_TOKEN_FILE` (or `CONNECT_CONTENT_SESSION_TOKEN`).
 
     See Also
     --------
@@ -118,7 +118,7 @@ class ConnectStrategy(CredentialsStrategy):
     This strategy can be used for both Viewer authentication and Service Account authentication
     (sometimes referred to as Content credentials). When `user_session_token` is provided then
     Viewer authentication is used, otherwise the strategy attempts to fall back to Service Account
-    authentication by reading the `CONNECT_CONTENT_SESSION_TOKEN` environment var.
+    authentication by reading the content session token from the environment.
 
     See Also
     --------
