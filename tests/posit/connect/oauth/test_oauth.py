@@ -1,6 +1,6 @@
+import logging
 from unittest.mock import patch
 
-import pytest
 import responses
 
 from posit.connect import Client
@@ -13,8 +13,7 @@ class TestGetContentSessionToken:
         assert _get_content_session_token() == "cit"
 
     def test_no_env_var(self):
-        with pytest.raises(ValueError, match="CONNECT_CONTENT_SESSION_TOKEN"):
-            _get_content_session_token()
+        assert _get_content_session_token() is None
 
     def test_token_file(self, tmp_path):
         token_file = tmp_path / "token"
@@ -45,12 +44,42 @@ class TestGetContentSessionToken:
         ):
             assert _get_content_session_token() == "env-token"
 
-    def test_token_file_empty(self, tmp_path):
+    def test_token_file_empty(self, tmp_path, caplog):
         token_file = tmp_path / "token"
         token_file.write_text("")
         with patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN_FILE": str(token_file)}):
-            with pytest.raises(ValueError, match="CONNECT_CONTENT_SESSION_TOKEN_FILE"):
-                _get_content_session_token()
+            with caplog.at_level(logging.WARNING):
+                assert _get_content_session_token() is None
+            assert "file is empty" in caplog.text
+
+
+class TestHasContentCredentials:
+    @patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN": "cit"})
+    def test_true_with_env_var(self):
+        c = Client(api_key="12345", url="https://connect.example/")
+        c._ctx.version = None
+        assert c.oauth.has_content_credentials() is True
+
+    def test_false_without_env_var(self):
+        c = Client(api_key="12345", url="https://connect.example/")
+        c._ctx.version = None
+        assert c.oauth.has_content_credentials() is False
+
+    def test_true_with_token_file(self, tmp_path):
+        token_file = tmp_path / "token"
+        token_file.write_text("file-token")
+        with patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN_FILE": str(token_file)}):
+            c = Client(api_key="12345", url="https://connect.example/")
+            c._ctx.version = None
+            assert c.oauth.has_content_credentials() is True
+
+    def test_false_with_empty_token_file(self, tmp_path):
+        token_file = tmp_path / "token"
+        token_file.write_text("")
+        with patch.dict("os.environ", {"CONNECT_CONTENT_SESSION_TOKEN_FILE": str(token_file)}):
+            c = Client(api_key="12345", url="https://connect.example/")
+            c._ctx.version = None
+            assert c.oauth.has_content_credentials() is False
 
 
 class TestOAuthIntegrations:
@@ -130,6 +159,7 @@ class TestOAuthIntegrations:
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
         creds = c.oauth.get_content_credentials("cit")
+        assert creds is not None
         assert creds.get("access_token") == "content-token"
 
     @responses.activate
@@ -155,6 +185,7 @@ class TestOAuthIntegrations:
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
         creds = c.oauth.get_content_credentials("cit", OAuthTokenType.AWS_CREDENTIALS)
+        assert creds is not None
         assert creds.get("access_token") == "encoded-aws-creds"
         assert creds.get("issued_token_type") == "urn:ietf:params:aws:token-type:credentials"
         assert creds.get("token_type") == "aws_credentials"
@@ -182,7 +213,13 @@ class TestOAuthIntegrations:
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
         creds = c.oauth.get_content_credentials()
+        assert creds is not None
         assert creds.get("access_token") == "content-token"
+
+    def test_get_content_credentials_returns_none_without_token(self):
+        c = Client(api_key="12345", url="https://connect.example/")
+        c._ctx.version = None
+        assert c.oauth.get_content_credentials() is None
 
     @responses.activate
     def test_get_content_credentials_with_audience(self):
@@ -207,6 +244,7 @@ class TestOAuthIntegrations:
         c = Client(api_key="12345", url="https://connect.example/")
         c._ctx.version = None
         creds = c.oauth.get_content_credentials("cit", audience="integration-guid")
+        assert creds is not None
         assert creds.get("access_token") == "content-token"
         assert creds.get("issued_token_type") == "urn:ietf:params:oauth:token-type:access_token"
         assert creds.get("token_type") == "Bearer"
