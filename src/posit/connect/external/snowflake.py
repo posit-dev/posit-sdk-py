@@ -110,5 +110,7 @@ class PositAuthenticator:
                 self._content_session_token,
                 audience=self._audience,
             )
+            if credentials is None:
+                raise ValueError("No content session token is available for credential exchange.")
 
         return credentials.get("access_token")

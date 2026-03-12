@@ -83,7 +83,6 @@ class TestHasContentCredentials:
 
 
 class TestOAuthIntegrations:
-
     @responses.activate
     def test_get_credentials(self):
         responses.post(
