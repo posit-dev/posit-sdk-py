@@ -49,7 +49,7 @@ def _get_content_session_token() -> Optional[str]:
         except FileNotFoundError:
             pass
 
-    return os.environ.get("CONNECT_CONTENT_SESSION_TOKEN") or None
+    return os.environ.get("CONNECT_CONTENT_SESSION_TOKEN")
 
 
 class OAuth(Resources):
