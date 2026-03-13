@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 
 from typing_extensions import TYPE_CHECKING, Optional, TypedDict
@@ -19,40 +20,36 @@ GRANT_TYPE = types.GRANT_TYPE
 OAuthTokenType = types.OAuthTokenType
 
 
-def _get_content_session_token() -> str:
-    """Return the content session token.
+logger = logging.getLogger(__name__)
+
+
+def _get_content_session_token() -> Optional[str]:
+    """Return the content session token, if available.
 
     Reads the token from the file specified by the environment variable
     'CONNECT_CONTENT_SESSION_TOKEN_FILE' if set, otherwise falls back to the
     environment variable 'CONNECT_CONTENT_SESSION_TOKEN'.
 
-    Raises
-    ------
-        ValueError: If neither environment variable is set or the token is invalid
-
     Returns
     -------
-        str
+    Optional[str]
+        The content session token, or None if not available.
     """
     token_file = os.environ.get("CONNECT_CONTENT_SESSION_TOKEN_FILE")
     if token_file:
         try:
             with open(token_file) as f:
                 value = f.read().strip()
-            if not value:
-                raise ValueError(
-                    "Invalid value for 'CONNECT_CONTENT_SESSION_TOKEN_FILE': File must contain a non-empty string."
-                )
-            return value
+            if value:
+                return value
+            logger.warning(
+                "CONNECT_CONTENT_SESSION_TOKEN_FILE is set to '%s', but the file is empty.",
+                token_file,
+            )
         except FileNotFoundError:
             pass
 
-    value = os.environ.get("CONNECT_CONTENT_SESSION_TOKEN")
-    if not value:
-        raise ValueError(
-            "Invalid value for 'CONNECT_CONTENT_SESSION_TOKEN': Must be a non-empty string."
-        )
-    return value
+    return os.environ.get("CONNECT_CONTENT_SESSION_TOKEN")
 
 
 class OAuth(Resources):
@@ -104,12 +101,25 @@ class OAuth(Resources):
         response = self._ctx.client.post(self._path, data=data)
         return Credentials(**response.json())
 
+    def has_content_credentials(self) -> bool:
+        """Check whether OAuth content credentials are available.
+
+        Returns True if a content session token is present in the environment,
+        indicating that this code is running on Posit Connect with OAuth
+        content credentials configured.
+
+        Returns
+        -------
+        bool
+        """
+        return _get_content_session_token() is not None
+
     def get_content_credentials(
         self,
         content_session_token: Optional[str] = None,
         requested_token_type: Optional[str | types.OAuthTokenType] = None,
         audience: Optional[str] = None,
-    ) -> Credentials:
+    ) -> Optional[Credentials]:
         """Perform an oauth credential exchange with a content-session-token.
 
         Parameters
@@ -123,15 +133,19 @@ class OAuth(Resources):
 
         Returns
         -------
-        Credentials
-            The credentials obtained from the exchange.
-
+        Optional[Credentials]
+            The credentials obtained from the exchange, or None if no content
+            session token is available.
         """
+        token = content_session_token or _get_content_session_token()
+        if token is None:
+            return None
+
         # craft a credential exchange request
         data = {}
         data["grant_type"] = types.GRANT_TYPE
         data["subject_token_type"] = types.OAuthTokenType.CONTENT_SESSION_TOKEN
-        data["subject_token"] = content_session_token or _get_content_session_token()
+        data["subject_token"] = token
         if requested_token_type:
             data["requested_token_type"] = requested_token_type
         if audience:

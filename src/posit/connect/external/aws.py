@@ -131,6 +131,8 @@ def get_content_credentials(
         requested_token_type=OAuthTokenType.AWS_CREDENTIALS,
         audience=audience,
     )
+    if credentials is None:
+        raise ValueError("No content session token is available for credential exchange.")
 
     # Decode base64 access token
     access_token = credentials.get("access_token")

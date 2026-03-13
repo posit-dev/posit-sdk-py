@@ -72,6 +72,8 @@ class _PositConnectContentCredentialsProvider:
 
     def __call__(self) -> Dict[str, str]:
         credentials = self._client.oauth.get_content_credentials(audience=self._audience)
+        if credentials is None:
+            raise ValueError("No content session token is available for credential exchange.")
         return _new_bearer_authorization_header(credentials)
 
 
