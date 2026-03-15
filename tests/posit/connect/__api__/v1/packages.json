@@ -3,7 +3,11 @@
         {
             "language": "python",
             "name": "posit",
-            "version": "0.6.0"
+            "version": "0.6.0",
+            "app_id": "123",
+            "app_guid": "abcd-1234",
+            "content_id": "123",
+            "content_guid": "abcd-1234"
         }
     ],
     "current_page": 1,
