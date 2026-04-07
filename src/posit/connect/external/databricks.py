@@ -14,7 +14,7 @@ import logging
 
 from typing_extensions import TYPE_CHECKING, Dict, Optional
 
-from .._utils import is_connect, is_workbench
+from .._utils import is_connect, is_connect_cloud, is_workbench
 from ..client import Client
 
 try:
@@ -201,7 +201,7 @@ class ConnectStrategy(CredentialsStrategy):
         return POSIT_OAUTH_INTEGRATION_AUTH_TYPE
 
     def __call__(self, *args, **kwargs) -> CredentialsProvider:  # noqa: ARG002
-        if not is_connect():
+        if not is_connect() and not is_connect_cloud():
             raise ValueError(
                 "ConnectStrategy is not supported for content running outside of Posit Connect"
             )
@@ -428,7 +428,7 @@ def databricks_config(
     if "credentials_strategy" in kwargs:
         del kwargs["credentials_strategy"]
 
-    if is_connect():
+    if is_connect() or is_connect_cloud():
         logger.info("Using Posit Connect credentials strategy")
         if posit_connect_strategy is not None:
             credentials_strategy = posit_connect_strategy
