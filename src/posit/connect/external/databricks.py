@@ -203,7 +203,7 @@ class ConnectStrategy(CredentialsStrategy):
     def __call__(self, *args, **kwargs) -> CredentialsProvider:  # noqa: ARG002
         if not is_connect() and not is_connect_cloud():
             raise ValueError(
-                "ConnectStrategy is not supported for content running outside of Posit Connect"
+                "ConnectStrategy is not supported for content running outside of Posit Connect or Posit Connect Cloud"
             )
 
         if self._client is None:
