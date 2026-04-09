@@ -70,6 +70,33 @@ class TestClientInit:
         Client(api_key=api_key, url=url)
         MockConfig.assert_called_once_with(api_key=api_key, url=url)
 
+    def test_verify_default(
+        self,
+        MockAuth: MagicMock,
+        MockConfig: MagicMock,
+        MockSession: MagicMock,
+    ):
+        Client(url="https://connect.example.com", api_key="12345")
+        assert MockSession.return_value.verify is True
+
+    def test_verify_false(
+        self,
+        MockAuth: MagicMock,
+        MockConfig: MagicMock,
+        MockSession: MagicMock,
+    ):
+        Client(url="https://connect.example.com", api_key="12345", verify=False)
+        assert MockSession.return_value.verify is False
+
+    def test_verify_ca_bundle(
+        self,
+        MockAuth: MagicMock,
+        MockConfig: MagicMock,
+        MockSession: MagicMock,
+    ):
+        Client(url="https://connect.example.com", api_key="12345", verify="/path/to/ca.crt")
+        assert MockSession.return_value.verify == "/path/to/ca.crt"
+
 
 class TestClient:
     def test_init(
@@ -578,6 +605,65 @@ class TestClient:
         MockSession.return_value.delete.assert_called_once_with(
             "https://connect.example.com/__api__/foo"
         )
+
+
+class TestClientBootstrap:
+    @responses.activate
+    def test_bootstrap(self):
+        url = "https://connect.example.com"
+        token = "my-jwt"
+        api_key = "returned-api-key"
+
+        mock_bootstrap = responses.post(
+            f"{url}/__api__/v1/experimental/bootstrap",
+            match=[responses.matchers.json_params_matcher({})],
+            json={"api_key": api_key},
+        )
+
+        result = Client.bootstrap(url, token)
+
+        assert result["api_key"] == api_key
+        assert mock_bootstrap.call_count == 1
+        # Verify the Authorization header uses Bootstrap scheme
+        assert mock_bootstrap.calls[0].request.headers["Authorization"] == f"Connect-Bootstrap {token}"
+
+    @responses.activate
+    def test_bootstrap_verify_false(self):
+        url = "https://connect.example.com"
+        token = "my-jwt"
+
+        responses.post(
+            f"{url}/__api__/v1/experimental/bootstrap",
+            json={"api_key": "key"},
+        )
+
+        # Should not raise even with verify=False
+        result = Client.bootstrap(url, token, verify=False)
+        assert "api_key" in result
+
+
+class TestClientPythonSettings:
+    @responses.activate
+    def test_python_settings(self):
+        url = "https://connect.example.com"
+        api_key = "12345"
+        python_settings = {
+            "installations": [
+                {"version": "3.9.0", "path": "/usr/bin/python3"},
+                {"version": "3.11.0", "path": "/usr/local/bin/python3"},
+            ]
+        }
+
+        responses.get(
+            f"{url}/__api__/v1/server_settings/python",
+            json=python_settings,
+        )
+
+        client = Client(url=url, api_key=api_key)
+        result = client.python_settings
+
+        assert result == python_settings
+        assert len(result["installations"]) == 2
 
 
 class TestClientOAuth:

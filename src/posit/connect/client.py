@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing_extensions import TYPE_CHECKING, Optional, overload
+from typing_extensions import TYPE_CHECKING, Optional, Union, overload
 
-from . import hooks, me
-from .auth import Auth
+from . import hooks, me, urls
+from .auth import Auth, BootstrapAuth
 from .config import Config
 from .content import Content
 from .context import Context, ContextManager, requires
@@ -40,7 +40,11 @@ class Client(ContextManager):
     api_key : str, optional
         API key for authentication
     url : str, optional
-        Sever API URL
+        Server URL
+    verify : bool or str, optional
+        Controls TLS certificate verification. Pass ``False`` to disable
+        verification (not recommended for production), or a path string to a
+        CA bundle file or directory. Defaults to ``True``.
 
     Attributes
     ----------
@@ -58,6 +62,8 @@ class Client(ContextManager):
         OAuth resource.
     packages: Packages
         Packages resource.
+    python_settings: dict
+        Python installation settings from the server.
     system: System
         System resource.
     tags: Tags
@@ -73,7 +79,7 @@ class Client(ContextManager):
     """
 
     @overload
-    def __init__(self) -> None:
+    def __init__(self, *, verify: Union[bool, str] = ...) -> None:
         """Initialize a Client instance.
 
         Creates a client instance using credentials read from the environment.
@@ -89,7 +95,7 @@ class Client(ContextManager):
         """
 
     @overload
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, *, verify: Union[bool, str] = ...) -> None:
         """Initialize a Client instance.
 
         Creates a client instance using a provided URL and API key credential read from the environment.
@@ -109,7 +115,7 @@ class Client(ContextManager):
         """
 
     @overload
-    def __init__(self, url: str, api_key: str) -> None:
+    def __init__(self, url: str, api_key: str, *, verify: Union[bool, str] = ...) -> None:
         """Initialize a Client instance.
 
         Parameters
@@ -146,7 +152,12 @@ class Client(ContextManager):
                     The API key credential for client authentication.
 
         **kwargs
-            Keyword arguments. Can include 'url' and 'api_key'.
+            Keyword arguments. Can include 'url', 'api_key', and 'verify'.
+
+        verify : bool or str, optional
+            Controls TLS certificate verification. Pass ``False`` to disable
+            verification, or a path to a CA bundle file/directory. Defaults
+            to ``True``.
 
         Examples
         --------
@@ -154,7 +165,10 @@ class Client(ContextManager):
         >>> Client("https://connect.example.com")
         >>> Client("https://connect.example.com", os.getenv("CONNECT_API_KEY"))
         >>> Client(api_key=os.getenv("CONNECT_API_KEY"), url="https://connect.example.com")
+        >>> Client(url="https://connect.example.com", verify=False)
+        >>> Client(url="https://connect.example.com", verify="/path/to/ca-bundle.crt")
         """
+        verify = kwargs.pop("verify", True)
         api_key = None
         url = None
         if len(args) == 1 and isinstance(args[0], str):
@@ -170,6 +184,7 @@ class Client(ContextManager):
 
         self.cfg = Config(api_key=api_key, url=url)
         session = Session()
+        session.verify = verify
         session.auth = Auth(config=self.cfg)
         session.hooks["response"].append(hooks.check_for_deprecation_header)
         session.hooks["response"].append(hooks.handle_errors)
@@ -288,6 +303,45 @@ class Client(ContextManager):
 
         return Client(url=self.cfg.url, api_key=visitor_api_key)
 
+    @staticmethod
+    def bootstrap(url: str, token: str, *, verify: Union[bool, str] = True) -> dict:
+        """Bootstrap a Connect server using a JWT token.
+
+        Calls the ``v1/experimental/bootstrap`` endpoint with bootstrap
+        authentication to perform first-time server initialization. Returns
+        the full response dict, which includes the ``api_key`` that can be
+        used to create a standard :class:`Client`.
+
+        Parameters
+        ----------
+        url : str
+            The Connect server URL.
+        token : str
+            The bootstrap JWT token.
+        verify : bool or str, optional
+            Controls TLS certificate verification. Pass ``False`` to disable
+            verification, or a path to a CA bundle. Defaults to ``True``.
+
+        Returns
+        -------
+        dict
+            The bootstrap response. The ``api_key`` field contains the API key
+            for subsequent authenticated requests.
+
+        Examples
+        --------
+        >>> result = Client.bootstrap("https://connect.example.com", jwt_token)
+        >>> client = Client("https://connect.example.com", result["api_key"])
+        """
+        session = Session()
+        session.verify = verify
+        session.auth = BootstrapAuth(token=token)
+        session.hooks["response"].append(hooks.handle_errors)
+        url_obj = urls.Url(url)
+        response = session.post(url_obj + "v1/experimental/bootstrap", json={})
+        session.close()
+        return response.json()
+
     @property
     def content(self) -> Content:
         """
@@ -375,6 +429,28 @@ class Client(ContextManager):
         return _PaginatedResourceSequence(
             self._ctx, "v1/packages", uid="name", page_size=1_000_000
         )
+
+    @property
+    def python_settings(self) -> dict:
+        """Python installation settings from the server.
+
+        Retrieves information about the Python installations available on the
+        Connect server, including version and path for each installation.
+
+        Returns
+        -------
+        dict
+            The server's Python settings. Contains an ``installations`` list
+            where each entry has ``version`` and ``path`` fields.
+
+        Examples
+        --------
+        >>> settings = client.python_settings
+        >>> for install in settings["installations"]:
+        ...     print(install["version"])
+        """
+        response = self.get("v1/server_settings/python")
+        return response.json()
 
     @property
     def system(self) -> System:
