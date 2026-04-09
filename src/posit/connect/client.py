@@ -338,8 +338,21 @@ class Client(ContextManager):
         session.auth = BootstrapAuth(token=token)
         session.hooks["response"].append(hooks.handle_errors)
         url_obj = urls.Url(url)
-        response = session.post(url_obj + "v1/experimental/bootstrap", json={})
-        session.close()
+        try:
+            # max_redirects=0 ensures the bootstrap JWT is never forwarded
+            # to a redirect target.
+            response = session.post(
+                url_obj + "v1/experimental/bootstrap",
+                json={},
+                max_redirects=0,
+            )
+        except Exception as e:
+            # Re-raise with a generic message so that the bootstrap token
+            # (which may appear in the underlying exception's request/url
+            # representation) cannot leak via str(exc).
+            raise RuntimeError("Bootstrap authentication failed") from None
+        finally:
+            session.close()
         return response.json()
 
     @property
