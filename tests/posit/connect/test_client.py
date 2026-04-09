@@ -85,8 +85,42 @@ class TestClientInit:
         MockConfig: MagicMock,
         MockSession: MagicMock,
     ):
-        Client(url="https://connect.example.com", api_key="12345", verify=False)
+        with pytest.warns(UserWarning, match="TLS certificate verification is disabled"):
+            Client(url="https://connect.example.com", api_key="12345", verify=False)
         assert MockSession.return_value.verify is False
+
+    def test_verify_false_emits_warning(
+        self,
+        MockAuth: MagicMock,
+        MockConfig: MagicMock,
+        MockSession: MagicMock,
+    ):
+        with pytest.warns(UserWarning, match="TLS certificate verification is disabled"):
+            Client(url="https://connect.example.com", api_key="12345", verify=False)
+
+    def test_verify_true_no_warning(
+        self,
+        MockAuth: MagicMock,
+        MockConfig: MagicMock,
+        MockSession: MagicMock,
+    ):
+        import warnings as _warnings
+
+        with _warnings.catch_warnings():
+            _warnings.simplefilter("error")
+            Client(url="https://connect.example.com", api_key="12345", verify=True)
+
+    def test_verify_ca_bundle_no_warning(
+        self,
+        MockAuth: MagicMock,
+        MockConfig: MagicMock,
+        MockSession: MagicMock,
+    ):
+        import warnings as _warnings
+
+        with _warnings.catch_warnings():
+            _warnings.simplefilter("error")
+            Client(url="https://connect.example.com", api_key="12345", verify="/path/to/ca.crt")
 
     def test_verify_ca_bundle(
         self,

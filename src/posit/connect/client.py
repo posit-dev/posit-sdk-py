@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+import warnings
+
 from typing_extensions import TYPE_CHECKING, Optional, Union, overload
+
+_TLS_VERIFY_DISABLED_WARNING = (
+    "TLS certificate verification is disabled. This is insecure and should "
+    "not be used in production. Pass a path to a CA bundle via `verify=` "
+    "instead."
+)
 
 from . import hooks, me, urls
 from .auth import Auth, BootstrapAuth
@@ -169,6 +177,12 @@ class Client(ContextManager):
         >>> Client(url="https://connect.example.com", verify="/path/to/ca-bundle.crt")
         """
         verify = kwargs.pop("verify", True)
+        if verify is False:
+            warnings.warn(
+                _TLS_VERIFY_DISABLED_WARNING,
+                UserWarning,
+                stacklevel=2,
+            )
         api_key = None
         url = None
         if len(args) == 1 and isinstance(args[0], str):
