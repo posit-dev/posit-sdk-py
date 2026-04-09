@@ -641,6 +641,27 @@ class TestClientBootstrap:
         result = Client.bootstrap(url, token, verify=False)
         assert "api_key" in result
 
+    @responses.activate
+    def test_bootstrap_failure_does_not_leak_token(self):
+        url = "https://connect.example.com"
+        token = "SEKRET-JWT-VALUE"
+
+        responses.post(
+            f"{url}/__api__/v1/experimental/bootstrap",
+            json={"error": "unauthorized"},
+            status=401,
+        )
+
+        import pytest
+
+        with pytest.raises(Exception) as exc_info:
+            Client.bootstrap(url, token)
+
+        assert token not in str(exc_info.value)
+        assert token not in repr(exc_info.value)
+        # The generic message should be used.
+        assert "Bootstrap authentication failed" in str(exc_info.value)
+
 
 class TestClientPythonSettings:
     @responses.activate

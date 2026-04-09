@@ -38,3 +38,11 @@ class BootstrapAuth(AuthBase):
         """Add bootstrap authorization header to the request."""
         r.headers["Authorization"] = f"Connect-Bootstrap {self._token}"
         return r
+
+    def __repr__(self) -> str:
+        """Return a representation that does not expose the bootstrap token."""
+        return "BootstrapAuth(token=***)"
+
+    def __str__(self) -> str:
+        """Return a string that does not expose the bootstrap token."""
+        return self.__repr__()
