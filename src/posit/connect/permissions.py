@@ -2,18 +2,68 @@
 
 from __future__ import annotations
 
+from enum import IntEnum
+
 from requests.sessions import Session as Session
 from typing_extensions import TYPE_CHECKING, List, Optional, overload
 
 from .resources import BaseResource, Resources
 
+
+class PermissionRole(IntEnum):
+    """Permission role hierarchy for content items.
+
+    Supports natural comparisons for determining role precedence::
+
+        PermissionRole("owner") > PermissionRole("viewer")  # True
+        max(PermissionRole("viewer"), PermissionRole("owner"))  # PermissionRole.owner
+
+    Examples
+    --------
+    Compare roles from permission objects:
+
+    >>> PermissionRole(source_perm["role"]) >= PermissionRole(target_perm["role"])
+    """
+
+    viewer = 0
+    owner = 1
+
+    @classmethod
+    def _missing_(cls, value: object) -> PermissionRole | None:
+        if isinstance(value, str):
+            try:
+                return cls[value]
+            except KeyError:
+                return None
+        return None
+
 if TYPE_CHECKING:
+    from .content import ContentItem
     from .context import Context
     from .groups import Group
     from .users import User
 
 
 class Permission(BaseResource):
+    @property
+    def content(self) -> "ContentItem":
+        """The content item associated with this permission.
+
+        Returns
+        -------
+        ContentItem
+            The content item.
+
+        Examples
+        --------
+        >>> perm = content_item.permissions.find_one()
+        >>> perm.content["name"]
+        'my-app'
+        """
+        from .content import Content
+
+        return Content(self._ctx).get(self["content_guid"])
+
     def destroy(self) -> None:
         """Destroy the permission."""
         path = f"v1/content/{self['content_guid']}/permissions/{self['id']}"
