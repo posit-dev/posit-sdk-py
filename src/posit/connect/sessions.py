@@ -1,53 +1,41 @@
-from urllib.parse import urljoin
-
 import requests
 
 
 class Session(requests.Session):
-    """Custom session that implements CURLOPT_POSTREDIR.
+    """Custom session that preserves POST bodies across 301/302 redirects.
 
-    This class mimics the functionality of CURLOPT_POSTREDIR from libcurl by
-    providing a custom implementation of the POST method. It allows the caller
-    to control whether the original POST data is preserved on redirects or if the
-    request should be converted to a GET when a redirect occurs. This is achieved
-    by disabling automatic redirect handling and manually following the redirect
-    chain with the desired behavior.
-
-    Notes
-    -----
-    The custom `post` method in this class:
-
-    - Disables automatic redirect handling by setting ``allow_redirects=False``.
-    - Manually follows redirects up to a specified ``max_redirects``.
-    - Determines the HTTP method for subsequent requests based on the response
-      status code and the ``preserve_post`` flag:
-
-        - For HTTP status codes 307 and 308, the method and request body are
-          always preserved as POST.
-        - For other redirects (e.g., 301, 302, 303), the behavior is determined
-          by ``preserve_post``:
-            - If ``preserve_post=True``, the POST method is maintained.
-            - If ``preserve_post=False``, the method is converted to GET and the
-              request body is discarded.
-
-    Examples
-    --------
-    Create a session and send a POST request while preserving POST data on redirects:
-
-    >>> session = Session()
-    >>> response = session.post(
-    ...     "https://example.com/api", data={"key": "value"}, preserve_post=True
-    ... )
-    >>> print(response.status_code)
-
-    See Also
-    --------
-    requests.Session : The base session class from the requests library.
+    RFC 7231 allows clients to downgrade POST to GET on 301/302, and
+    ``requests`` does so by default. Some Connect endpoints issue a 302 and
+    expect the client to re-POST the original body to the new location
+    (mirroring libcurl's ``CURLOPT_POSTREDIR`` behavior). Overriding
+    :meth:`rebuild_method` keeps every other piece of the ``requests``
+    redirect machinery intact — ``rebuild_auth`` (which strips the
+    ``Authorization`` header on cross-origin hops), cookie propagation,
+    ``response.history``, ``TooManyRedirects``, proxy rebuild, and streaming
+    semantics — so this class is a minimal, safe override rather than a
+    hand-rolled redirect loop.
     """
 
-    def post(self, url, data=None, json=None, preserve_post=True, max_redirects=5, **kwargs):
+    def __init__(self):
+        super().__init__()
+        self._preserve_post_on_redirect = True
+
+    def rebuild_method(self, prepared_request, response):
+        """Preserve POST across 301/302 when ``preserve_post_on_redirect`` is set.
+
+        303 always downgrades to GET per the HTTP spec. 307/308 already
+        preserve the method in the base implementation.
         """
-        Send a POST request and handle redirects manually.
+        if (
+            self._preserve_post_on_redirect
+            and prepared_request.method == "POST"
+            and response.status_code in (301, 302)
+        ):
+            return
+        super().rebuild_method(prepared_request, response)
+
+    def post(self, url, data=None, json=None, preserve_post=True, max_redirects=5, **kwargs):
+        """Send a POST request.
 
         Parameters
         ----------
@@ -58,46 +46,21 @@ class Session(requests.Session):
         json : any, optional
             The JSON data to send.
         preserve_post : bool, optional
-            If True, re-send POST data on redirects (mimicking CURLOPT_POSTREDIR);
-            if False, converts to GET on 301/302/303 responses.
+            If True (default), re-send POST data on 301/302 redirects
+            (mimicking ``CURLOPT_POSTREDIR``). If False, fall back to the
+            default ``requests`` behavior (downgrade to GET on 301/302).
         max_redirects : int, optional
-            Maximum number of redirects to follow.
+            Maximum number of redirects to follow before raising
+            :class:`requests.exceptions.TooManyRedirects`.
         **kwargs
-            Additional keyword arguments passed to the request.
-
-        Returns
-        -------
-        requests.Response
-            The final response after following redirects.
+            Additional keyword arguments passed to :meth:`requests.Session.request`.
         """
-        # Force manual redirect handling by disabling auto redirects.
-        kwargs["allow_redirects"] = False
-
-        # Initial POST request
-        response = super().post(url, data=data, json=json, **kwargs)
-        redirect_count = 0
-
-        # Manually follow redirects, if any
-        while response.is_redirect and redirect_count < max_redirects:
-            redirect_url = response.headers.get("location")
-            if not redirect_url:
-                break  # No redirect URL; exit loop
-
-            redirect_url = urljoin(response.url, redirect_url)
-
-            # For 307 and 308 the HTTP spec mandates preserving the method and body.
-            if response.status_code in (307, 308):
-                method = "POST"
-            else:
-                if preserve_post:
-                    method = "POST"
-                else:
-                    method = "GET"
-                    data = None
-                    json = None
-
-            # Perform the next request in the redirect chain.
-            response = self.request(method, redirect_url, data=data, json=json, **kwargs)
-            redirect_count += 1
-
-        return response
+        previous_preserve = self._preserve_post_on_redirect
+        previous_max = self.max_redirects
+        self._preserve_post_on_redirect = preserve_post
+        self.max_redirects = max_redirects
+        try:
+            return super().post(url, data=data, json=json, **kwargs)
+        finally:
+            self._preserve_post_on_redirect = previous_preserve
+            self.max_redirects = previous_max
