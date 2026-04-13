@@ -9,7 +9,8 @@ from posit import connect
 from posit.connect.client import Client
 from posit.connect.context import Context
 from posit.connect.groups import Group
-from posit.connect.permissions import Permission, Permissions
+from posit.connect.content import ContentItem
+from posit.connect.permissions import Permission, PermissionRole, Permissions
 from posit.connect.users import User
 
 from .api import load_mock, load_mock_dict, load_mock_list
@@ -431,3 +432,60 @@ class TestPermissionsDestroy:
             permissions.destroy(
                 42  # pyright: ignore[reportArgumentType]
             )
+
+
+class TestPermissionRole:
+    def test_ordering(self):
+        assert PermissionRole.viewer < PermissionRole.owner
+        assert PermissionRole.owner > PermissionRole.viewer
+        assert PermissionRole.viewer == PermissionRole.viewer
+        assert PermissionRole.owner == PermissionRole.owner
+
+    def test_max_min(self):
+        assert max(PermissionRole.viewer, PermissionRole.owner) == PermissionRole.owner
+        assert min(PermissionRole.viewer, PermissionRole.owner) == PermissionRole.viewer
+
+    def test_from_string(self):
+        assert PermissionRole("viewer") == PermissionRole.viewer
+        assert PermissionRole("owner") == PermissionRole.owner
+
+    def test_invalid_role(self):
+        with pytest.raises(ValueError):
+            PermissionRole("editor")
+
+    def test_name(self):
+        assert PermissionRole.viewer.name == "viewer"
+        assert PermissionRole.owner.name == "owner"
+
+
+class TestPermissionContent:
+    @responses.activate
+    def test(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        fake_content = {
+            "guid": content_guid,
+            "name": "my-content",
+            "title": "My Content",
+            "owner_guid": "owner-guid",
+        }
+
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=fake_content,
+        )
+
+        c = connect.Client("https://connect.example", "12345")
+        permission = Permission(
+            c._ctx,
+            id=1,
+            content_guid=content_guid,
+            principal_guid="user-guid",
+            principal_type="user",
+            role="viewer",
+        )
+
+        content = permission.content
+
+        assert isinstance(content, ContentItem)
+        assert content["guid"] == content_guid
+        assert content["name"] == "my-content"
