@@ -48,11 +48,19 @@ def is_workbench() -> bool:
 def is_connect() -> bool:
     """Returns true if called from a piece of content running on Posit Connect.
 
-    The Connect content will always set the environment variable `RSTUDIO_PRODUCT=CONNECT`.
+    Connect will set the environment variable `RSTUDIO_PRODUCT=CONNECT` or `POSIT_PRODUCT=CONNECT`.
     """
-    return os.getenv("RSTUDIO_PRODUCT") == "CONNECT"
+    return os.getenv("RSTUDIO_PRODUCT") == "CONNECT" or os.getenv("POSIT_PRODUCT") == "CONNECT"
+
+
+def is_connect_cloud() -> bool:
+    """Returns true if called from a piece of content running on Posit Connect Cloud.
+
+    Connect Cloud will set the environment variable `POSIT_PRODUCT=CONNECT_CLOUD`.
+    """
+    return os.getenv("POSIT_PRODUCT") == "CONNECT_CLOUD"
 
 
 def is_local() -> bool:
     """Returns true if called from a piece of content running locally."""
-    return not is_connect() and not is_workbench()
+    return not is_connect() and not is_connect_cloud() and not is_workbench()
