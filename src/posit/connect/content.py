@@ -520,6 +520,54 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         ts = tasks.Tasks(self._ctx)
         return ts.get(result["task_id"])
 
+    def build(
+        self,
+        bundle_id: Optional[str] = None,
+        *,
+        activate: bool = True,
+    ) -> tasks.Task:
+        """Build the content from a bundle.
+
+        Spawns an asynchronous task that builds the content environment from
+        the specified bundle (or the active bundle if none is given). Unlike
+        :meth:`deploy`, this method allows rebuilding the environment without
+        necessarily activating the bundle.
+
+        Parameters
+        ----------
+        bundle_id : str, optional
+            The identifier of the bundle to build. If omitted, the active
+            bundle is used.
+        activate : bool, optional
+            Whether to activate the bundle after building. Defaults to
+            ``True``. Pass ``False`` to build the environment without
+            making the bundle active.
+
+        Returns
+        -------
+        tasks.Task
+            The task for the build operation.
+
+        Examples
+        --------
+        >>> task = content.build()
+        >>> task.wait_for()
+        None
+
+        Build without activating:
+        >>> task = content.build(activate=False)
+        >>> task.wait_for()
+        None
+        """
+        path = f"v1/content/{self['guid']}/build"
+        body: dict = {"bundle_id": bundle_id}
+        if not activate:
+            body["activate"] = False
+        response = self._ctx.client.post(path, json=body)
+        result = response.json()
+        ts = tasks.Tasks(self._ctx)
+        return ts.get(result["task_id"])
+
     def render(self) -> Task:
         """Render the content.
 
