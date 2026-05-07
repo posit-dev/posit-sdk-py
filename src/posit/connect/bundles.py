@@ -14,6 +14,11 @@ if TYPE_CHECKING:
     from .context import Context
 
 
+# requests' default of chunk_size=1 iterates the response one byte at a time,
+# making large downloads CPU-bound and ~60x slower than necessary.
+CHUNK_SIZE = 64 * 1024
+
+
 class BundleMetadata(resources.BaseResource):
     pass
 
@@ -84,11 +89,11 @@ class Bundle(resources.BaseResource):
         path = f"v1/content/{self['content_guid']}/bundles/{self['id']}/download"
         response = self._ctx.client.get(path, stream=True)
         if isinstance(output, io.BufferedWriter):
-            for chunk in response.iter_content():
+            for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                 output.write(chunk)
         elif isinstance(output, str):
             with open(output, "wb") as file:
-                for chunk in response.iter_content():
+                for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                     file.write(chunk)
 
 
