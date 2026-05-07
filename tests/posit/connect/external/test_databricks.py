@@ -18,10 +18,11 @@ from posit.connect.external.databricks import (
 from posit.connect.oauth import Credentials
 
 try:
-    from databricks.sdk.core import Config, DefaultCredentials
+    from databricks.sdk.core import Config
     from databricks.sdk.credentials_provider import (
         CredentialsProvider,
         CredentialsStrategy,
+        DefaultCredentials,
     )
 
     # construct a DefaultCredentials CredentialsStrategy

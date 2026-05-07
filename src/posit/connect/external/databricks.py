@@ -18,10 +18,11 @@ from .._utils import is_connect, is_connect_cloud, is_workbench
 from ..client import Client
 
 try:
-    from databricks.sdk.core import Config, DefaultCredentials
+    from databricks.sdk.core import Config
     from databricks.sdk.credentials_provider import (
         CredentialsProvider,
         CredentialsStrategy,
+        DefaultCredentials,
     )
 except ImportError as e:
     raise ImportError("The 'databricks-sdk' package is required to use this module.") from e
