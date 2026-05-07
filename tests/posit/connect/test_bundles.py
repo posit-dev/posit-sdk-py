@@ -2,6 +2,7 @@ import io
 from unittest import mock
 
 import pytest
+import requests
 import responses
 from responses import matchers
 
@@ -200,6 +201,50 @@ class TestBundleDownload:
         # assert
         assert mock_content_get.call_count == 1
         assert mock_bundle_get.call_count == 1
+
+    @responses.activate
+    def test_uses_reasonable_chunk_size(self):
+        # iter_content() with default chunk_size=1 makes large downloads ~60x slower
+        # and CPU-bound. Ensure we pass a non-trivial chunk_size.
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        bundle_id = "101"
+
+        # behavior
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
+        )
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}/download",
+            body=b"",
+        )
+
+        # setup
+        c = Client("https://connect.example", "12345")
+        bundle = c.content.get(content_guid).bundles.get(bundle_id)
+
+        # invoke
+        file = io.BytesIO()
+        buffer = io.BufferedWriter(
+            file  # pyright: ignore[reportArgumentType]
+        )
+        with mock.patch.object(
+            requests.Response, "iter_content", return_value=iter([])
+        ) as mock_iter_content:
+            bundle.download(buffer)
+
+        # assert
+        mock_iter_content.assert_called_once()
+        call = mock_iter_content.call_args
+        chunk_size = call.kwargs.get("chunk_size")
+        if chunk_size is None and call.args:
+            chunk_size = call.args[0]
+        assert chunk_size is not None, "iter_content called without chunk_size"
+        assert chunk_size >= 8192, f"expected chunk_size >= 8192, got {chunk_size!r}"
 
 
 class TestBundlesCreate:
