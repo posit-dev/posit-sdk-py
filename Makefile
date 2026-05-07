@@ -61,7 +61,7 @@ it: $(UV_LOCK)
 
 lint: dev
 	$(UV) run ruff check
-	$(UV) run pyright
+	PYRIGHT_PYTHON_FORCE_VERSION=latest $(UV) run pyright
 
 test: dev
 	$(UV) run coverage run --source=src -m pytest tests
