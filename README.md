@@ -1,8 +1,6 @@
 # Posit SDK for Python
 
-This package provides a Pythonic interface for developers to work against the public APIs of Posit's professional products. It is intended to be lightweight yet expressive.
-
-> The Posit SDK is in the very early stages of development, and currently only Posit Connect has any support.
+This package provides a Pythonic interface for developers to work against the public APIs of Posit's professional products.
 
 ## Installation
 
