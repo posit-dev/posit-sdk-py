@@ -153,18 +153,15 @@ class TestBundleDownload:
         bundle = c.content.get(content_guid).bundles.get(bundle_id)
 
         # invoke
-        file = io.BytesIO()
-        buffer = io.BufferedWriter(
-            file  # pyright: ignore[reportArgumentType]
-        )
-        bundle.download(buffer)
-        buffer.seek(0)
+        output = io.BytesIO()
+        bundle.download(output)
+        output.seek(0)
 
         # assert
         assert mock_content_get.call_count == 1
         assert mock_bundle_get.call_count == 1
         assert mock_bundle_download.call_count == 1
-        assert file.read() == path.read_bytes()
+        assert output.read() == path.read_bytes()
 
     @responses.activate
     def test_invalid_arguments(self):
@@ -228,14 +225,11 @@ class TestBundleDownload:
         bundle = c.content.get(content_guid).bundles.get(bundle_id)
 
         # invoke
-        file = io.BytesIO()
-        buffer = io.BufferedWriter(
-            file  # pyright: ignore[reportArgumentType]
-        )
+        output = io.BytesIO()
         with mock.patch.object(
             requests.Response, "iter_content", return_value=iter([])
         ) as mock_iter_content:
-            bundle.download(buffer)
+            bundle.download(output)
 
         # assert
         mock_iter_content.assert_called_once()
