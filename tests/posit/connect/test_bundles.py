@@ -153,24 +153,20 @@ class TestBundleDownload:
         bundle = c.content.get(content_guid).bundles.get(bundle_id)
 
         # invoke
-        file = io.BytesIO()
-        buffer = io.BufferedWriter(
-            file  # pyright: ignore[reportArgumentType]
-        )
-        bundle.download(buffer)
-        buffer.seek(0)
+        output = io.BytesIO()
+        bundle.download(output)
+        output.seek(0)
 
         # assert
         assert mock_content_get.call_count == 1
         assert mock_bundle_get.call_count == 1
         assert mock_bundle_download.call_count == 1
-        assert file.read() == path.read_bytes()
+        assert output.read() == path.read_bytes()
 
     @responses.activate
     def test_invalid_arguments(self):
         content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
         bundle_id = "101"
-        path = get_path(f"v1/content/{content_guid}/bundles/{bundle_id}/download/bundle.tar.gz")
 
         # behavior
         mock_content_get = responses.get(
@@ -183,11 +179,6 @@ class TestBundleDownload:
             json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
         )
 
-        mock_bundle_download = responses.get(
-            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}/download",
-            body=path.read_bytes(),
-        )
-
         # setup
         c = Client("https://connect.example", "12345")
         bundle = c.content.get(content_guid).bundles.get(bundle_id)
@@ -197,6 +188,41 @@ class TestBundleDownload:
             bundle.download(
                 None  # pyright: ignore[reportArgumentType]
             )
+
+        # assert
+        assert mock_content_get.call_count == 1
+        assert mock_bundle_get.call_count == 1
+
+    @responses.activate
+    def test_read_only_stream_raises(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        bundle_id = "101"
+
+        # behavior
+        mock_content_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_bundle_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/bundles/{bundle_id}",
+            json=load_mock(f"v1/content/{content_guid}/bundles/{bundle_id}.json"),
+        )
+
+        # setup
+        c = Client("https://connect.example", "12345")
+        bundle = c.content.get(content_guid).bundles.get(bundle_id)
+
+        class _ReadOnly(io.RawIOBase):
+            def readable(self):
+                return True
+
+            def readinto(self, b):
+                return 0
+
+        # invoke — BufferedReader is a BufferedIOBase but is not writable
+        with pytest.raises(TypeError, match="not writable"):
+            bundle.download(io.BufferedReader(_ReadOnly()))
 
         # assert
         assert mock_content_get.call_count == 1
@@ -228,14 +254,11 @@ class TestBundleDownload:
         bundle = c.content.get(content_guid).bundles.get(bundle_id)
 
         # invoke
-        file = io.BytesIO()
-        buffer = io.BufferedWriter(
-            file  # pyright: ignore[reportArgumentType]
-        )
+        output = io.BytesIO()
         with mock.patch.object(
             requests.Response, "iter_content", return_value=iter([])
         ) as mock_iter_content:
-            bundle.download(buffer)
+            bundle.download(output)
 
         # assert
         mock_iter_content.assert_called_once()

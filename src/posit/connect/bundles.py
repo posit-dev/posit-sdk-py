@@ -55,20 +55,22 @@ class Bundle(resources.BaseResource):
         ts = tasks.Tasks(self._ctx)
         return ts.get(result["task_id"])
 
-    def download(self, output: io.BufferedWriter | str) -> None:
+    def download(self, output: io.BufferedIOBase | str) -> None:
         """Download a bundle.
 
         Download a bundle to a file or memory.
 
         Parameters
         ----------
-        output : io.BufferedWriter or str
-            An io.BufferedWriter instance or a str representing a relative or absolute path.
+        output : io.BufferedIOBase or str
+            An io.BufferedIOBase instance (e.g., io.BufferedWriter, io.BytesIO) or a str
+            representing a relative or absolute path.
 
         Raises
         ------
         TypeError
-            If the output is not of type `io.BufferedWriter` or `str`.
+            If the output is not of type `io.BufferedIOBase` or `str`, or if the
+            `io.BufferedIOBase` instance is not writable.
 
         Examples
         --------
@@ -81,14 +83,18 @@ class Bundle(resources.BaseResource):
         >>>     bundle.download(file)
         None
         """
-        if not isinstance(output, (io.BufferedWriter, str)):
+        if not isinstance(output, (io.BufferedIOBase, str)):
             raise TypeError(
-                f"download() expected argument type 'io.BufferedWriter` or 'str', but got '{type(output).__name__}'",
+                f"download() expected argument type 'io.BufferedIOBase' or 'str', but got '{type(output).__name__}'",
+            )
+        if isinstance(output, io.BufferedIOBase) and not output.writable():
+            raise TypeError(
+                f"download() expected a writable 'io.BufferedIOBase', but '{type(output).__name__}' is not writable",
             )
 
         path = f"v1/content/{self['content_guid']}/bundles/{self['id']}/download"
         response = self._ctx.client.get(path, stream=True)
-        if isinstance(output, io.BufferedWriter):
+        if isinstance(output, io.BufferedIOBase):
             for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                 output.write(chunk)
         elif isinstance(output, str):
