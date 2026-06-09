@@ -69,7 +69,8 @@ class Bundle(resources.BaseResource):
         Raises
         ------
         TypeError
-            If the output is not of type `io.BufferedIOBase` or `str`.
+            If the output is not of type `io.BufferedIOBase` or `str`, or if the
+            `io.BufferedIOBase` instance is not writable.
 
         Examples
         --------
@@ -84,7 +85,11 @@ class Bundle(resources.BaseResource):
         """
         if not isinstance(output, (io.BufferedIOBase, str)):
             raise TypeError(
-                f"download() expected argument type 'io.BufferedIOBase` or 'str', but got '{type(output).__name__}'",
+                f"download() expected argument type 'io.BufferedIOBase' or 'str', but got '{type(output).__name__}'",
+            )
+        if isinstance(output, io.BufferedIOBase) and not output.writable():
+            raise TypeError(
+                f"download() expected a writable 'io.BufferedIOBase', but '{type(output).__name__}' is not writable",
             )
 
         path = f"v1/content/{self['content_guid']}/bundles/{self['id']}/download"
