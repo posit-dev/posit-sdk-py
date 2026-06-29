@@ -29,7 +29,7 @@ from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
 from .repository import ContentItemRepositoryMixin
 from .resources import Active, BaseResource, Resources, _ResourceSequence
-from .storage import ContentItemStorage, ContentStorage
+from .storage import ContentStorage, ContentStorageDetail
 from .tags import ContentItemTags
 from .vanities import VanityMixin
 from .variants import Variants
@@ -723,23 +723,27 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         return _ResourceSequence(self._ctx, path, uid="name")
 
     @property
-    def storage(self) -> ContentItemStorage:
+    @requires(version="2026.06.0")
+    def storage(self) -> ContentStorageDetail:
         """Bundle storage usage for this content item.
 
         This information is available only to administrators.
 
         Returns
         -------
-        ContentItemStorage
-            Helper class for the content item's bundle storage.
+        ContentStorageDetail
+            Detailed bundle storage information, including per-bundle details.
 
         Examples
         --------
         >>> content = client.content.get(guid)
-        >>> storage = content.storage.find()
+        >>> storage = content.storage
+        >>> for bundle in storage["bundles"]:
+        ...     print(bundle["id"], bundle["size_bytes"], bundle["is_active"])
         """
         path = posixpath.join(self._path, "storage")
-        return ContentItemStorage(self._ctx, path)
+        response = self._ctx.client.get(path)
+        return ContentStorageDetail(self._ctx, **response.json())
 
     @requires(version="2025.12.0")
     def get_lockfile(self) -> Lockfile:

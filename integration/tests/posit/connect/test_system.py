@@ -85,7 +85,7 @@ class TestStorage:
         cls.content.delete()
 
     def test_system_storage(self):
-        storage = self.client.system.storage.find()
+        storage = self.client.system.storage
         assert isinstance(storage, ServerStorage)
         assert storage["bundles"]["count"] > 0
 
@@ -100,7 +100,7 @@ class TestStorage:
         assert self.content["guid"] in guids
 
     def test_content_item_storage(self):
-        storage = self.content.storage.find()
+        storage = self.content.storage
         assert isinstance(storage, ContentStorageDetail)
         assert storage["content_guid"] == self.content["guid"]
         assert storage["bundle_count"] > 0

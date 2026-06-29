@@ -12,7 +12,7 @@ from .api import load_mock_dict
 
 class TestSystemStorage:
     @responses.activate
-    def test_find(self):
+    def test_storage(self):
         mock_get = responses.get(
             "https://connect.example/__api__/v1/system/storage",
             json=load_mock_dict("v1/system/storage.json"),
@@ -21,7 +21,7 @@ class TestSystemStorage:
         client = Client("https://connect.example", "12345")
         client._ctx.version = None
 
-        storage = client.system.storage.find()
+        storage = client.system.storage
 
         assert isinstance(storage, ServerStorage)
         assert storage["bundles"]["count"] == 12
@@ -119,7 +119,7 @@ class TestContentItemStorage:
         client._ctx.version = None
 
         content = client.content.get(guid)
-        storage = content.storage.find()
+        storage = content.storage
 
         assert isinstance(storage, ContentStorageDetail)
         assert storage["content_guid"] == guid

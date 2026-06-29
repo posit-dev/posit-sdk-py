@@ -88,44 +88,6 @@ class ContentStorageDetail(BaseResource):
     """
 
 
-class SystemStorage(ContextManager):
-    """Server-wide bundle storage usage.
-
-    This information is available only to administrators.
-    """
-
-    def __init__(self, ctx: Context, path: str) -> None:
-        super().__init__()
-        self._ctx: Context = ctx
-        # v1/system/storage
-        self._path: str = path
-
-    @requires(version="2026.06.0")
-    def find(self) -> ServerStorage:
-        """Get aggregate bundle storage metrics for the Connect server.
-
-        This information is available only to administrators.
-
-        Returns
-        -------
-        ServerStorage
-            Server-wide bundle storage totals.
-
-        Examples
-        --------
-        ```python
-        from posit.connect import Client
-
-        client = Client()
-
-        storage = client.system.storage.find()
-        print(storage["bundles"]["bytes_total"])
-        ```
-        """
-        response = self._ctx.client.get(self._path)
-        return ServerStorage(self._ctx, **response.json())
-
-
 class ContentStorage(ContextManager):
     """Bundle storage usage across all content items.
 
@@ -197,43 +159,3 @@ class ContentStorage(ContextManager):
             page_number += 1
 
         return results
-
-
-class ContentItemStorage(ContextManager):
-    """Bundle storage usage for a single content item.
-
-    This information is available only to administrators.
-    """
-
-    def __init__(self, ctx: Context, path: str) -> None:
-        super().__init__()
-        self._ctx: Context = ctx
-        # v1/content/{guid}/storage
-        self._path: str = path
-
-    @requires(version="2026.06.0")
-    def find(self) -> ContentStorageDetail:
-        """Get bundle storage details for the content item.
-
-        This information is available only to administrators.
-
-        Returns
-        -------
-        ContentStorageDetail
-            Bundle storage details, including per-bundle information.
-
-        Examples
-        --------
-        ```python
-        from posit.connect import Client
-
-        client = Client()
-
-        content = client.content.get("8c8b3a8c-3b3e-4f1c-9c8e-1f2b3c4d5e6f")
-        storage = content.storage.find()
-        for bundle in storage["bundles"]:
-            print(bundle["id"], bundle["size_bytes"], bundle["is_active"])
-        ```
-        """
-        response = self._ctx.client.get(self._path)
-        return ContentStorageDetail(self._ctx, **response.json())
