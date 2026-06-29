@@ -13,13 +13,11 @@ from __future__ import annotations
 from typing_extensions import TYPE_CHECKING, List, Literal, Optional
 
 from .context import ContextManager, requires
+from .paginator import _MAX_PAGE_SIZE
 from .resources import BaseResource
 
 if TYPE_CHECKING:
     from .context import Context
-
-# The maximum page size supported by the API.
-_MAX_PAGE_SIZE = 500
 
 
 class ServerStorage(BaseResource):
