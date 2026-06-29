@@ -1,0 +1,30 @@
+{
+  "content_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+  "content_name": "example-shiny-app",
+  "owner_guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+  "owner_username": "carlos12",
+  "bundle_count": 3,
+  "bundle_bytes_total": 524288,
+  "bundle_bytes_active": 262144,
+  "bundle_bytes_inactive": 262144,
+  "bundles": [
+    {
+      "id": "103",
+      "created_time": "2026-06-25T18:00:00Z",
+      "size_bytes": 262144,
+      "is_active": true
+    },
+    {
+      "id": "102",
+      "created_time": "2026-06-24T18:00:00Z",
+      "size_bytes": 131072,
+      "is_active": false
+    },
+    {
+      "id": "101",
+      "created_time": "2026-06-23T18:00:00Z",
+      "size_bytes": 131072,
+      "is_active": false
+    }
+  ]
+}

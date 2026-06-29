@@ -6,6 +6,7 @@ from typing_extensions import TYPE_CHECKING, List, Literal, TypedDict, Unpack, o
 
 from .context import ContextManager
 from .resources import Active
+from .storage import SystemStorage
 
 if TYPE_CHECKING:
     from .context import Context
@@ -44,6 +45,31 @@ class System(ContextManager):
         """
         path = self._path + "/caches"
         return SystemCaches(self._ctx, path)
+
+    @property
+    def storage(self) -> SystemStorage:
+        """
+        Server-wide bundle storage usage.
+
+        This information is available only to administrators.
+
+        Returns
+        -------
+        SystemStorage
+            Helper class for server bundle storage.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client()
+
+        storage = client.system.storage.find()
+        ```
+        """
+        path = self._path + "/storage"
+        return SystemStorage(self._ctx, path)
 
 
 class SystemCaches(ContextManager):
