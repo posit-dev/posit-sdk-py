@@ -84,7 +84,7 @@ class TestContentStorage:
             match=[
                 responses.matchers.query_param_matcher(
                     {
-                        "sort": "bytes_total",
+                        "sort": "bundle_bytes_total",
                         "order": "desc",
                         "page_number": 1,
                         "page_size": 500,
@@ -96,7 +96,7 @@ class TestContentStorage:
         client = Client("https://connect.example", "12345")
         client._ctx.version = None
 
-        items = client.content.storage.find(sort="bytes_total", order="desc")
+        items = client.content.storage.find(sort="bundle_bytes_total", order="desc")
 
         assert len(items) == 2
         assert mock_get.call_count == 1

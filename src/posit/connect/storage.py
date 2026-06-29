@@ -19,6 +19,15 @@ from .resources import BaseResource
 if TYPE_CHECKING:
     from .context import Context
 
+# Fields accepted by the `sort` query parameter on GET /v1/content/storage.
+# The server rejects any other value with an HTTP 400.
+ContentStorageSortField = Literal[
+    "bundle_bytes_total",
+    "bundle_bytes_active",
+    "bundle_bytes_inactive",
+    "bundle_count",
+]
+
 
 class ServerStorage(BaseResource):
     """Aggregate bundle storage metrics for the Connect server.
@@ -102,7 +111,7 @@ class ContentStorage(ContextManager):
     def find(
         self,
         *,
-        sort: Optional[str] = None,
+        sort: Optional[ContentStorageSortField] = None,
         order: Optional[Literal["asc", "desc"]] = None,
     ) -> List[ContentStorageItem]:
         """List bundle storage usage for every content item.
@@ -113,10 +122,10 @@ class ContentStorage(ContextManager):
 
         Parameters
         ----------
-        sort : str, optional
-            The field to sort by.
+        sort : Literal['bundle_bytes_total', 'bundle_bytes_active', 'bundle_bytes_inactive', 'bundle_count'], optional
+            The field to sort by. Defaults to ``bundle_bytes_total`` on the server.
         order : Literal['asc', 'desc'], optional
-            The sort order.
+            The sort order. Defaults to ``desc`` on the server.
 
         Returns
         -------
