@@ -67,7 +67,7 @@ class TestSystem:
 
 @pytest.mark.skipif(
     CONNECT_VERSION < version.parse("2026.06.0"),
-    reason="Bundle storage endpoints not implemented",
+    reason="Bundle storage endpoints not available",
 )
 class TestStorage:
     @classmethod
