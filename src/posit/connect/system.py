@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing_extensions import TYPE_CHECKING, List, Literal, TypedDict, Unpack, overload
 
-from .context import ContextManager
+from .context import ContextManager, requires
 from .resources import Active
+from .storage import ServerStorage
 
 if TYPE_CHECKING:
     from .context import Context
@@ -44,6 +45,34 @@ class System(ContextManager):
         """
         path = self._path + "/caches"
         return SystemCaches(self._ctx, path)
+
+    @property
+    @requires(version="2026.06.0")
+    def storage(self) -> ServerStorage:
+        """
+        Server-wide bundle storage usage.
+
+        This information is available only to administrators.
+
+        Returns
+        -------
+        ServerStorage
+            Aggregate bundle storage metrics for the Connect server.
+
+        Examples
+        --------
+        ```python
+        from posit.connect import Client
+
+        client = Client()
+
+        storage = client.system.storage
+        print(storage["bundles"]["bytes_total"])
+        ```
+        """
+        path = self._path + "/storage"
+        response = self._ctx.client.get(path)
+        return ServerStorage(self._ctx, **response.json())
 
 
 class SystemCaches(ContextManager):

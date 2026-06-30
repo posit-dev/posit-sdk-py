@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "content_guid": "8f9e2c9b-1a3d-4e5f-9c8e-1f2b3c4d5e6f",
+      "content_name": "example-report",
+      "content_title": null,
+      "owner_guid": null,
+      "owner_username": null,
+      "app_mode": "rmd-static",
+      "bundles": {
+        "count": 1,
+        "bytes_total": 131072,
+        "bytes_active": 131072,
+        "bytes_inactive": 0
+      }
+    }
+  ],
+  "current_page": 2,
+  "total": 2,
+  "total_pages": 2
+}

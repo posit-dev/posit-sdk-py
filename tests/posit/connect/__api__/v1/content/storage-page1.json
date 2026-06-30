@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "content_guid": "f2f37341-e21d-3d80-c698-a935ad614066",
+      "content_name": "example-shiny-app",
+      "content_title": "Example Shiny App",
+      "owner_guid": "20a79ce3-6e87-4522-9faf-be24228800a4",
+      "owner_username": "carlos12",
+      "app_mode": "shiny",
+      "bundles": {
+        "count": 3,
+        "bytes_total": 524288,
+        "bytes_active": 262144,
+        "bytes_inactive": 262144
+      }
+    }
+  ],
+  "current_page": 1,
+  "total": 2,
+  "total_pages": 2
+}
