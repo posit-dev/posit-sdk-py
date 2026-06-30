@@ -77,6 +77,22 @@ class TestContentStorage:
         assert mock_page2.call_count == 1
 
     @responses.activate
+    def test_find_returns_empty_list_when_no_content(self):
+        mock_get = responses.get(
+            "https://connect.example/__api__/v1/content/storage",
+            json={"results": [], "current_page": 1, "total": 0, "total_pages": 0},
+        )
+
+        client = Client("https://connect.example", "12345")
+        client._ctx.version = None
+
+        items = client.content.storage.find()
+
+        # No content: a single request returns an empty page and the loop stops.
+        assert items == []
+        assert mock_get.call_count == 1
+
+    @responses.activate
     def test_find_with_sort_and_order(self):
         mock_get = responses.get(
             "https://connect.example/__api__/v1/content/storage",
