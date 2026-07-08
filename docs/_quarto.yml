@@ -111,6 +111,7 @@ quartodoc:
         - connect.packages
         - connect.permissions
         - connect.repository
+        - connect.schedules
         - connect.system
         - connect.tags
         - connect.tasks
