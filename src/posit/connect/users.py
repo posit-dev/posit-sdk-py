@@ -20,12 +20,32 @@ from .resources import BaseResource, Resources
 if TYPE_CHECKING:
     from .context import Context
     from .groups import Group
+    from .permissions import Permission
 
 
 class User(BaseResource):
     @property
     def content(self) -> Content:
         return Content(self._ctx, owner_guid=self["guid"])
+
+    @property
+    def permissions(self) -> UserPermissions:
+        """
+        Retrieve all permissions for this user across all content items.
+
+        Returns
+        -------
+        UserPermissions
+            Helper class with a ``find()`` method that returns permissions.
+
+        Examples
+        --------
+        ```python
+        user = client.users.get("USER_GUID_HERE")
+        permissions = user.permissions.find()
+        ```
+        """
+        return UserPermissions(self._ctx, self["guid"])
 
     def lock(self, *, force: bool = False):
         """
@@ -159,6 +179,43 @@ class User(BaseResource):
         ```
         """
         return UserGroups(self._ctx, self["guid"])
+
+
+class UserPermissions(Resources):
+    """Permissions for a specific user across all content items."""
+
+    def __init__(self, ctx: Context, user_guid: str) -> None:
+        super().__init__(ctx)
+        self._user_guid = user_guid
+
+    def find(self) -> List["Permission"]:
+        """Find all permissions for this user across all content items.
+
+        Iterates all content items and checks permissions on each one,
+        resulting in O(N) API calls where N is the total content count.
+
+        Returns
+        -------
+        List[Permission]
+            A list of permissions for this user.
+
+        Examples
+        --------
+        ```python
+        user = client.users.get("USER_GUID_HERE")
+        permissions = user.permissions.find()
+        for perm in permissions:
+            print(perm["content_guid"], perm["role"])
+        ```
+        """
+        from .permissions import Permission  # noqa: F811
+
+        all_content = Content(self._ctx).find()
+        user_permissions: list[Permission] = []
+        for content_item in all_content:
+            perms = content_item.permissions.find(principal_guid=self._user_guid)
+            user_permissions.extend(perms)
+        return user_permissions
 
 
 class UserGroups(Resources):
@@ -389,6 +446,7 @@ class Users(Resources):
         """Find user request."""
 
         prefix: NotRequired[str]
+        username: NotRequired[str]
         user_role: NotRequired[Literal["administrator", "publisher", "viewer"] | str]
         account_status: NotRequired[Literal["locked", "licensed", "inactive"] | str]
 
@@ -400,6 +458,8 @@ class Users(Resources):
         ----------
         prefix : str, not required
             Filter users by prefix (username, first name, or last name). The filter is case-insensitive.
+        username : str, not required
+            Filter by exact username match. Uses the server's prefix search to narrow results, then post-filters for an exact match on the ``username`` field.
         user_role : Literal["administrator", "publisher", "viewer"], not required
             Filter by user role. Options are `'administrator'`, `'publisher'`, `'viewer'`. Use `'|'` to represent logical OR (e.g., `'viewer|publisher'`).
         account_status : Literal["locked", "licensed", "inactive"], not required
@@ -416,6 +476,10 @@ class Users(Resources):
 
         >>> users = client.find(prefix="jo")
 
+        Find a user by exact username:
+
+        >>> users = client.find(username="kaia")
+
         Find all users who are either viewers or publishers:
 
         >>> users = client.find(user_role="viewer|publisher")
@@ -428,16 +492,30 @@ class Users(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/users
         """
+        # Extract client-side filter before sending to server
+        conditions = dict(conditions)  # type: ignore[assignment]
+        exact_username = conditions.pop("username", None)
+
+        # Use exact username as prefix to narrow server results
+        if exact_username is not None and "prefix" not in conditions:
+            conditions["prefix"] = exact_username
+
         path = "v1/users"
         paginator = Paginator(self._ctx, path, params={**conditions})
         results = paginator.fetch_results()
-        return [
+        users = [
             User(
                 self._ctx,
                 **user,
             )
             for user in results
         ]
+
+        # Post-filter for exact username match
+        if exact_username is not None:
+            users = [u for u in users if u["username"] == exact_username]
+
+        return users
 
     def find_one(self, **conditions: Unpack[FindUser]) -> User | None:
         """
@@ -447,6 +525,8 @@ class Users(Resources):
         ----------
         prefix : str, optional
             Filter users by prefix (username, first name, or last name). The filter is case-insensitive. Default is `None`.
+        username : str, optional
+            Filter by exact username match. Uses the server's prefix search to narrow results, then post-filters for an exact match on the ``username`` field. Default is `None`.
         user_role : Literal["administrator", "publisher", "viewer"], optional
             Filter by user role. Options are `'administrator'`, `'publisher'`, `'viewer'`. Use `'|'` to represent logical OR (e.g., `'viewer|publisher'`). Default is `None`.
         account_status : Literal["locked", "licensed", "inactive"], optional
@@ -463,6 +543,10 @@ class Users(Resources):
 
         >>> user = client.find_one(prefix="jo")
 
+        Find a user by exact username:
+
+        >>> user = client.find_one(username="kaia")
+
         Find a user who is either a viewer or publisher:
 
         >>> user = client.find_one(user_role="viewer|publisher")
@@ -475,6 +559,14 @@ class Users(Resources):
         --------
         * https://docs.posit.co/connect/api/#get-/v1/users
         """
+        # Extract client-side filter before sending to server
+        conditions = dict(conditions)  # type: ignore[assignment]
+        exact_username = conditions.pop("username", None)
+
+        # Use exact username as prefix to narrow server results
+        if exact_username is not None and "prefix" not in conditions:
+            conditions["prefix"] = exact_username
+
         path = "v1/users"
         paginator = Paginator(self._ctx, path, params={**conditions})
         pages = paginator.fetch_pages()
@@ -486,6 +578,11 @@ class Users(Resources):
             )
             for result in results
         )
+
+        # Post-filter for exact username match
+        if exact_username is not None:
+            return next((u for u in users if u["username"] == exact_username), None)
+
         return next(users, None)
 
     def get(self, uid: str) -> User:
@@ -514,6 +611,30 @@ class Users(Resources):
             self._ctx,
             **response.json(),
         )
+
+    def get_batch(self, uids: List[str]) -> List[User]:
+        """
+        Retrieve multiple users by their unique identifiers (guids).
+
+        Parameters
+        ----------
+        uids : List[str]
+            A list of unique identifiers (guids) of the users to retrieve.
+
+        Returns
+        -------
+        List[User]
+            A list of User objects in the same order as the input guids.
+
+        Examples
+        --------
+        >>> users = client.users.get_batch(["guid-1", "guid-2"])
+
+        See Also
+        --------
+        * https://docs.posit.co/connect/api/#get-/v1/users/-guid-
+        """
+        return [self.get(uid) for uid in uids]
 
     def count(self) -> int:
         """
