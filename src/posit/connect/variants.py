@@ -4,10 +4,28 @@ from typing_extensions import List, Literal
 
 from .context import Context
 from .resources import BaseResource, Resources
+from .schedules import Schedules
 from .tasks import Task
 
 
 class Variant(BaseResource):
+    @property
+    def schedules(self) -> Schedules:
+        """Manager for this variant's render schedule.
+
+        Warnings
+        --------
+        The schedule API is experimental and may change in future releases.
+
+        Accessing this property emits a `FutureWarning`.
+        """
+        warnings.warn(
+            "The schedule API is experimental and may change in future releases.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return Schedules(self._ctx, app_id=self["app_id"], variant_id=self["id"])
+
     def render(self) -> Task:
         path = f"variants/{self['id']}/render"
         response = self._ctx.client.post(path)

@@ -1,0 +1,12 @@
+{
+    "id": 24,
+    "app_id": 50941,
+    "variant_id": 6627,
+    "type": "hour",
+    "schedule": "{\"N\": 2}",
+    "start_time": "2026-01-01T12:00:00Z",
+    "next_run": "2026-01-01T14:00:00Z",
+    "timezone": "UTC",
+    "activate": true,
+    "email": false
+}

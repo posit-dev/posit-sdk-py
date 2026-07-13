@@ -6,7 +6,9 @@ import os
 import posixpath
 import re
 import time
+import warnings
 from dataclasses import dataclass
+from functools import cached_property
 
 from typing_extensions import (
     TYPE_CHECKING,
@@ -29,9 +31,10 @@ from .oauth.associations import ContentItemAssociations
 from .permissions import Permissions
 from .repository import ContentItemRepositoryMixin
 from .resources import Active, BaseResource, Resources, _ResourceSequence
+from .schedules import Schedules
 from .tags import ContentItemTags
 from .vanities import VanityMixin
-from .variants import Variants
+from .variants import Variant, Variants
 
 if TYPE_CHECKING:
     from .context import Context
@@ -536,14 +539,7 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         self.update()  # pyright: ignore[reportCallIssue]
 
         if self.is_rendered:
-            variants = self._variants.find()
-            variants = [variant for variant in variants if variant["is_default"]]
-            if len(variants) != 1:
-                raise RuntimeError(
-                    f"Found {len(variants)} default variants. Expected 1. Without a single default variant, the content cannot be refreshed. This is indicative of a corrupted state.",
-                )
-            variant = variants[0]
-            return variant.render()
+            return self._default_variant.render()
         else:
             raise ValueError(
                 f"Render not supported for this application mode: {self['app_mode']}. Did you need to use the 'restart()' method instead? Note that some application modes do not support 'render()' or 'restart()'.",
@@ -674,6 +670,73 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
     @property
     def _variants(self) -> Variants:
         return Variants(self._ctx, self["guid"])
+
+    @property
+    def _default_variant(self) -> Variant:
+        variants = [variant for variant in self._variants.find() if variant["is_default"]]
+        if len(variants) != 1:
+            raise RuntimeError(
+                f"Found {len(variants)} default variants. Expected 1. This is indicative of a corrupted state.",
+            )
+        return variants[0]
+
+    @cached_property
+    def schedule(self) -> Schedules:
+        """Manager for the render schedule of the content's default variant.
+
+        The first access resolves the content's default variant, which requires a
+        request to the server; the result is cached on this content item.
+
+        Warnings
+        --------
+        The schedule API is experimental and may change in future releases.
+        Accessing this property emits a `FutureWarning`.
+
+        Returns
+        -------
+        Schedules
+
+        Raises
+        ------
+        ValueError
+            If the content's application mode does not support rendering, and
+            therefore cannot be scheduled.
+
+        Examples
+        --------
+        ```python
+        from posit import connect
+
+        client = connect.Client()
+        content = client.content.get("CONTENT_GUID_HERE")
+
+        # Read the current schedule, if any
+        schedule = content.schedule.find_one()
+
+        # Render every Monday and Wednesday
+        content.schedule.create(type="dayofweek", days=["monday", "wednesday"])
+
+        # Remove the schedule
+        content.schedule.delete()
+        ```
+        """
+        if self["app_mode"] == "unknown":
+            # "unknown" is the application mode until a deploy completes, so this
+            # record may predate its deploy; refresh before deciding.
+            response = self._ctx.client.get(f"v1/content/{self['guid']}")
+            super().update(**response.json())
+        if not self.is_rendered:
+            raise ValueError(
+                f"Scheduling is not supported for this application mode: {self['app_mode']}. "
+                "Schedules require rendered content, such as R Markdown, Jupyter, or Quarto documents.",
+            )
+        variant = self._default_variant
+        warnings.warn(
+            "The schedule API is experimental and may change in future releases.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return Schedules(self._ctx, app_id=variant["app_id"], variant_id=variant["id"])
 
     @property
     def is_interactive(self) -> bool:
