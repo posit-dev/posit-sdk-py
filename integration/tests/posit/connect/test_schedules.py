@@ -39,7 +39,7 @@ class TestSchedules:
 
         assert schedules.find_one() is None
 
-        created = schedules.set(
+        created = schedules.create(
             type="dayofweek",
             days=["monday", "wednesday"],
             start_time="2026-01-01T09:00:00Z",
@@ -54,7 +54,7 @@ class TestSchedules:
         assert found["id"] == created["id"]
         assert found.rule == {"Days": [1, 3]}
 
-        updated = schedules.set(type="hour", n=2, email=True)
+        updated = schedules.create(type="hour", n=2, email=True)
         assert updated["id"] == created["id"]
         assert updated.rule == {"N": 2}
         assert updated["email"] is True
@@ -90,7 +90,7 @@ class TestSchedules:
         ]
         try:
             for kwargs, expected_rule in cases:
-                result = schedules.set(**kwargs)
+                result = schedules.create(**kwargs)
                 assert result.rule == expected_rule, kwargs
                 found = schedules.find_one()
                 assert found is not None

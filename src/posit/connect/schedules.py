@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .context import Context
 
 # `datetime.timezone` under a distinct name; the `timezone` parameter of
-# `Schedules.set()` shadows the module-level import within its scope.
+# `Schedules.create()` shadows the module-level import within its scope.
 _UTC = timezone.utc
 
 ScheduleType = Literal[
@@ -73,7 +73,7 @@ def _build_schedule_json(
     day: Optional[int] = None,
     week: Optional[int] = None,
     # `object` rather than `Optional[bool]` because values arrive untyped via
-    # `Schedules.set(**kwargs)`; the isinstance check below is the real gate.
+    # `Schedules.create(**kwargs)`; the isinstance check below is the real gate.
     first: object = None,
 ) -> str:
     """Encode the per-type schedule parameters as the JSON string Connect expects."""
@@ -220,7 +220,7 @@ class Schedules(Resources):
         return next((Schedule(self._ctx, **result) for result in results), None)
 
     @overload
-    def set(
+    def create(
         self,
         *,
         type: Literal["minute", "hour", "day", "week", "year"],
@@ -231,7 +231,7 @@ class Schedules(Resources):
     ) -> Schedule: ...
 
     @overload
-    def set(
+    def create(
         self,
         *,
         type: Literal["weekday"],
@@ -241,7 +241,7 @@ class Schedules(Resources):
     ) -> Schedule: ...
 
     @overload
-    def set(
+    def create(
         self,
         *,
         type: Literal["dayofweek"],
@@ -252,7 +252,7 @@ class Schedules(Resources):
     ) -> Schedule: ...
 
     @overload
-    def set(
+    def create(
         self,
         *,
         type: Literal["semimonth"],
@@ -263,7 +263,7 @@ class Schedules(Resources):
     ) -> Schedule: ...
 
     @overload
-    def set(
+    def create(
         self,
         *,
         type: Literal["dayofmonth"],
@@ -275,7 +275,7 @@ class Schedules(Resources):
     ) -> Schedule: ...
 
     @overload
-    def set(
+    def create(
         self,
         *,
         type: Literal["dayweekofmonth"],
@@ -287,7 +287,7 @@ class Schedules(Resources):
         email: Optional[bool] = None,
     ) -> Schedule: ...
 
-    def set(
+    def create(
         self,
         *,
         type: ScheduleType,  # noqa: A002
@@ -362,17 +362,17 @@ class Schedules(Resources):
         content = client.content.get("CONTENT_GUID_HERE")
 
         # Render every Monday and Wednesday at the current time of day
-        content.schedule.set(
+        content.schedule.create(
             type="dayofweek",
             days=["monday", "wednesday"],
             timezone="America/New_York",
         )
 
         # Render every 2 hours
-        content.schedule.set(type="hour", n=2)
+        content.schedule.create(type="hour", n=2)
 
         # Render on the 1st and 15th of each month
-        content.schedule.set(type="semimonth", first=True)
+        content.schedule.create(type="semimonth", first=True)
         ```
         """
         schedule = _build_schedule_json(type, **kwargs)

@@ -714,7 +714,7 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         schedule = content.schedule.find_one()
 
         # Render every Monday and Wednesday
-        content.schedule.set(type="dayofweek", days=["monday", "wednesday"])
+        content.schedule.create(type="dayofweek", days=["monday", "wednesday"])
 
         # Remove the schedule
         content.schedule.delete()

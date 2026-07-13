@@ -155,7 +155,7 @@ class TestSchedulesFindOne:
         assert schedule.rule == {"N": 1}
 
 
-class TestSchedulesSet:
+class TestSchedulesCreate:
     @responses.activate
     def test_create(self):
         responses.get(
@@ -184,7 +184,7 @@ class TestSchedulesSet:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        schedule = schedules.set(
+        schedule = schedules.create(
             type="dayofweek",
             days=["monday", "wednesday"],
             start_time="2026-01-01T12:00:00Z",
@@ -208,7 +208,7 @@ class TestSchedulesSet:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        schedules.set(type="day", n=1)
+        schedules.create(type="day", n=1)
 
         body = json.loads(mock_post.calls[0].request.body)  # pyright: ignore[reportArgumentType]
         assert body["start_time"].endswith("Z")
@@ -250,7 +250,7 @@ class TestSchedulesSet:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        schedule = schedules.set(type="hour", n=2, email=True)
+        schedule = schedules.create(type="hour", n=2, email=True)
 
         assert schedule["type"] == "hour"
         assert mock_post.call_count == 1
@@ -261,7 +261,7 @@ class TestSchedulesSet:
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
         with pytest.raises(ValueError, match="Invalid parameters"):
-            schedules.set(type="hour", n=1, days=[1])  # pyright: ignore[reportCallIssue]
+            schedules.create(type="hour", n=1, days=[1])  # pyright: ignore[reportCallIssue]
 
 
 class TestSchedulesDelete:
