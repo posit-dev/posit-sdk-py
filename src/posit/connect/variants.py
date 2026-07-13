@@ -16,7 +16,14 @@ class Variant(BaseResource):
         Warnings
         --------
         The schedule API is experimental and may change in future releases.
+
+        Accessing this property emits a `FutureWarning`.
         """
+        warnings.warn(
+            "The schedule API is experimental and may change in future releases.",
+            FutureWarning,
+            stacklevel=2,
+        )
         return Schedules(self._ctx, app_id=self["app_id"], variant_id=self["id"])
 
     def render(self) -> Task:

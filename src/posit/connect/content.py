@@ -6,6 +6,7 @@ import os
 import posixpath
 import re
 import time
+import warnings
 from dataclasses import dataclass
 from functools import cached_property
 
@@ -688,9 +689,8 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
 
         Warnings
         --------
-        The schedule API is backed by unversioned Connect endpoints and is
-        experimental; it may change in future releases. `set()` and `delete()`
-        emit `FutureWarning`.
+        The schedule API is experimental and may change in future releases.
+        Accessing this property emits a `FutureWarning`.
 
         Returns
         -------
@@ -720,12 +720,22 @@ class ContentItem(Active, ContentItemRepositoryMixin, VanityMixin, BaseResource)
         content.schedule.delete()
         ```
         """
+        if self["app_mode"] == "unknown":
+            # "unknown" is the application mode until a deploy completes, so this
+            # record may predate its deploy; refresh before deciding.
+            response = self._ctx.client.get(f"v1/content/{self['guid']}")
+            super().update(**response.json())
         if not self.is_rendered:
             raise ValueError(
                 f"Scheduling is not supported for this application mode: {self['app_mode']}. "
                 "Schedules require rendered content, such as R Markdown, Jupyter, or Quarto documents.",
             )
         variant = self._default_variant
+        warnings.warn(
+            "The schedule API is experimental and may change in future releases.",
+            FutureWarning,
+            stacklevel=2,
+        )
         return Schedules(self._ctx, app_id=variant["app_id"], variant_id=variant["id"])
 
     @property

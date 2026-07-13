@@ -101,9 +101,11 @@ class TestBuildScheduleJson:
             ("hour", {"n": 2.5}, "Invalid n"),
             ("dayofmonth", {"day": True}, "Invalid day"),
             ("dayweekofmonth", {"day": 1, "week": "1"}, "Invalid week"),
+            ("semimonth", {"first": 1}, "Invalid first"),
+            ("semimonth", {"first": "true"}, "Invalid first"),
         ],
     )
-    def test_non_int_params_rejected(self, schedule_type, kwargs, match):
+    def test_invalid_param_types_rejected(self, schedule_type, kwargs, match):
         with pytest.raises(TypeError, match=match):
             _build_schedule_json(schedule_type, **kwargs)
 
@@ -182,13 +184,12 @@ class TestSchedulesSet:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning, match="set.*experimental"):
-            schedule = schedules.set(
-                type="dayofweek",
-                days=["monday", "wednesday"],
-                start_time="2026-01-01T12:00:00Z",
-                timezone="America/New_York",
-            )
+        schedule = schedules.set(
+            type="dayofweek",
+            days=["monday", "wednesday"],
+            start_time="2026-01-01T12:00:00Z",
+            timezone="America/New_York",
+        )
 
         assert schedule["id"] == 24
         assert mock_post.call_count == 1
@@ -207,8 +208,7 @@ class TestSchedulesSet:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning, match="set.*experimental"):
-            schedules.set(type="day", n=1)
+        schedules.set(type="day", n=1)
 
         body = json.loads(mock_post.calls[0].request.body)  # pyright: ignore[reportArgumentType]
         assert body["start_time"].endswith("Z")
@@ -250,8 +250,7 @@ class TestSchedulesSet:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning, match="set.*experimental"):
-            schedule = schedules.set(type="hour", n=2, email=True)
+        schedule = schedules.set(type="hour", n=2, email=True)
 
         assert schedule["type"] == "hour"
         assert mock_post.call_count == 1
@@ -261,7 +260,7 @@ class TestSchedulesSet:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning), pytest.raises(ValueError, match="Invalid parameters"):
+        with pytest.raises(ValueError, match="Invalid parameters"):
             schedules.set(type="hour", n=1, days=[1])  # pyright: ignore[reportCallIssue]
 
 
@@ -280,8 +279,7 @@ class TestSchedulesDelete:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning, match="delete.*experimental"):
-            schedules.delete()
+        schedules.delete()
 
         assert mock_delete.call_count == 1
 
@@ -296,8 +294,7 @@ class TestSchedulesDelete:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning):
-            schedules.delete()
+        schedules.delete()
 
     @responses.activate
     def test_delete_tolerates_races(self):
@@ -315,8 +312,7 @@ class TestSchedulesDelete:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning):
-            schedules.delete()
+        schedules.delete()
 
         assert mock_delete.call_count == 1
 
@@ -335,7 +331,7 @@ class TestSchedulesDelete:
         c = Client("https://connect.example.com", "12345")
         schedules = Schedules(c._ctx, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning), pytest.raises(ClientError):
+        with pytest.raises(ClientError):
             schedules.delete()
 
 
@@ -350,8 +346,7 @@ class TestScheduleDestroy:
         c = Client("https://connect.example.com", "12345")
         schedule = Schedule(c._ctx, id=24, app_id=50941, variant_id=6627)
 
-        with pytest.warns(FutureWarning, match="destroy.*experimental"):
-            schedule.destroy()
+        schedule.destroy()
 
         assert mock_delete.call_count == 1
 
@@ -361,7 +356,8 @@ class TestVariantSchedules:
         c = Client("https://connect.example.com", "12345")
         variant = Variant(c._ctx, id=6627, app_id=50941, key="txvRW8SG", is_default=True)
 
-        schedules = variant.schedules
+        with pytest.warns(FutureWarning, match="experimental"):
+            schedules = variant.schedules
         assert isinstance(schedules, Schedules)
         assert schedules.app_id == 50941
         assert schedules.variant_id == 6627
@@ -383,7 +379,8 @@ class TestContentItemSchedule:
         c = Client("https://connect.example.com", "12345")
         content = c.content.get(guid)
 
-        schedules = content.schedule
+        with pytest.warns(FutureWarning, match="experimental"):
+            schedules = content.schedule
         assert isinstance(schedules, Schedules)
         assert schedules.app_id == 50941
         assert schedules.variant_id == 6627
@@ -403,10 +400,59 @@ class TestContentItemSchedule:
         c = Client("https://connect.example.com", "12345")
         content = c.content.get(guid)
 
-        first = content.schedule
+        with pytest.warns(FutureWarning):
+            first = content.schedule
         second = content.schedule
         assert first is second
         assert get_variants.call_count == 1
+
+    @responses.activate
+    def test_refreshes_unknown_app_mode(self):
+        # the record predates the deploy: the first GET reports app_mode
+        # "unknown", and the refresh triggered by `content.schedule` reports the
+        # deployed app_mode
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        stale_json = load_mock(f"v1/content/{guid}.json")
+        stale_json["app_mode"] = "unknown"
+        responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=stale_json,
+        )
+        get_refresh = responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=load_mock(f"v1/content/{guid}.json"),
+        )
+        responses.get(
+            f"https://connect.example.com/__api__/applications/{guid}/variants",
+            json=load_mock(f"applications/{guid}/variants.json"),
+        )
+
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get(guid)
+
+        with pytest.warns(FutureWarning):
+            schedules = content.schedule
+        assert isinstance(schedules, Schedules)
+        assert content["app_mode"] == "quarto-static"
+        assert get_refresh.call_count == 1
+
+    @responses.activate
+    def test_undeployed_content_raises(self):
+        # app_mode is still "unknown" after the refresh (nothing is deployed)
+        guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        content_json = load_mock(f"v1/content/{guid}.json")
+        content_json["app_mode"] = "unknown"
+        get_content = responses.get(
+            f"https://connect.example.com/__api__/v1/content/{guid}",
+            json=content_json,
+        )
+
+        c = Client("https://connect.example.com", "12345")
+        content = c.content.get(guid)
+
+        with pytest.raises(ValueError, match="Scheduling is not supported"):
+            content.schedule  # noqa: B018
+        assert get_content.call_count == 2
 
     @responses.activate
     def test_interactive_content_raises(self):

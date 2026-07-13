@@ -25,10 +25,9 @@ class TestSchedules:
         task = bundle.deploy()
         task.wait_for()
 
-        # Re-fetch so the content item reflects the deployed application mode
-        # (the record from `create` predates the deploy and still has app_mode
-        # "unknown", which content.schedule rejects).
-        cls.content = cls.client.content.get(content["guid"])
+        # `content` still has app_mode "unknown" because the record predates the
+        # deploy; content.schedule refreshes it automatically.
+        cls.content = content
 
     @classmethod
     def teardown_class(cls):
@@ -100,7 +99,9 @@ class TestSchedules:
             if schedules.find_one() is not None:
                 schedules.delete()
 
-    def test_interactive_content_not_schedulable(self):
+    def test_undeployed_content_not_schedulable(self):
+        # nothing is deployed, so app_mode remains "unknown" even after the
+        # refresh performed by content.schedule
         content = self.client.content.create(name="unschedulable")
         try:
             with pytest.raises(ValueError):

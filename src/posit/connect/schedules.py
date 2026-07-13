@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import warnings
 from datetime import datetime, timezone
 
 from typing_extensions import TYPE_CHECKING, List, Literal, Optional, Sequence, Union, overload
@@ -73,7 +72,9 @@ def _build_schedule_json(
     days: Optional[Sequence[Union[int, str]]] = None,
     day: Optional[int] = None,
     week: Optional[int] = None,
-    first: Optional[bool] = None,
+    # `object` rather than `Optional[bool]` because values arrive untyped via
+    # `Schedules.set(**kwargs)`; the isinstance check below is the real gate.
+    first: object = None,
 ) -> str:
     """Encode the per-type schedule parameters as the JSON string Connect expects."""
     provided = {
@@ -125,6 +126,8 @@ def _build_schedule_json(
             raise ValueError("Schedule type 'dayofweek' requires 'days'.")
         return json.dumps({"Days": _normalize_days(days)})
     if type == "semimonth":
+        if first is not None and not isinstance(first, bool):
+            raise TypeError(f"Invalid first: {first!r}. Expected a bool.")
         return json.dumps({"First": True if first is None else first})
     # 'dayofmonth' and 'dayweekofmonth'
     if day is None:
@@ -162,8 +165,7 @@ class Schedule(BaseResource):
 
     Warnings
     --------
-    This API is backed by unversioned Connect endpoints and is experimental; it may
-    change in future releases.
+    The schedule API is experimental and may change in future releases.
     """
 
     @property
@@ -184,13 +186,8 @@ class Schedule(BaseResource):
 
         Warnings
         --------
-        This operation is backed by an unversioned Connect endpoint and is experimental.
+        This operation is experimental and may change in future releases.
         """
-        warnings.warn(
-            "destroy() is experimental and may change in future releases.",
-            FutureWarning,
-            stacklevel=2,
-        )
         self._ctx.client.delete(f"schedules/{self['id']}")
 
 
@@ -201,8 +198,8 @@ class Schedules(Resources):
 
     Warnings
     --------
-    This API is backed by unversioned Connect endpoints and is experimental; it may
-    change in future releases. `set()` and `delete()` emit `FutureWarning`.
+    The schedule API is experimental and may change in future releases. Accessing
+    it via `ContentItem.schedule` or `Variant.schedules` emits a `FutureWarning`.
     """
 
     def __init__(self, ctx: Context, *, app_id: int, variant_id: int) -> None:
@@ -354,7 +351,7 @@ class Schedules(Resources):
 
         Warnings
         --------
-        This operation is backed by an unversioned Connect endpoint and is experimental.
+        This operation is experimental and may change in future releases.
 
         Examples
         --------
@@ -378,11 +375,6 @@ class Schedules(Resources):
         content.schedule.set(type="semimonth", first=True)
         ```
         """
-        warnings.warn(
-            "set() is experimental and may change in future releases.",
-            FutureWarning,
-            stacklevel=2,
-        )
         schedule = _build_schedule_json(type, **kwargs)
         body: dict = {"type": type, "schedule": schedule}
         if start_time is not None:
@@ -426,13 +418,8 @@ class Schedules(Resources):
 
         Warnings
         --------
-        This operation is backed by an unversioned Connect endpoint and is experimental.
+        This operation is experimental and may change in future releases.
         """
-        warnings.warn(
-            "delete() is experimental and may change in future releases.",
-            FutureWarning,
-            stacklevel=2,
-        )
         existing = self.find_one()
         if existing is None:
             return
