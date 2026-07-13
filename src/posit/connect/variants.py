@@ -15,8 +15,7 @@ class Variant(BaseResource):
 
         Warnings
         --------
-        The schedule API is backed by unversioned Connect endpoints and is
-        experimental; it may change in future releases.
+        The schedule API is experimental and may change in future releases.
         """
         return Schedules(self._ctx, app_id=self["app_id"], variant_id=self["id"])
 
