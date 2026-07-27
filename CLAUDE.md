@@ -17,7 +17,7 @@ All development uses `uv` for package management and a `Makefile` for tasks. A `
 | `make lint` | Lint (`ruff check` + `pyright`) |
 | `make fmt` | Auto-format (`ruff check --fix` + `ruff format`) |
 | `make build` | Build wheel distribution |
-| `make it` | Run integration tests (requires Connect instance) |
+| `make it` | Run integration tests (requires Docker and a license at `integration/license.lic`; see `integration/README.md`) |
 | `make` | Run all: dev, test, lint, build |
 
 **Run a single test:**
