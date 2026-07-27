@@ -1,4 +1,4 @@
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests
 
@@ -85,6 +85,10 @@ class Session(requests.Session):
 
             redirect_url = urljoin(response.url, redirect_url)
 
+            parsed_redirect = urlparse(redirect_url)
+            if parsed_redirect.scheme not in ("http", "https"):
+                break
+
             # For 307 and 308 the HTTP spec mandates preserving the method and body.
             if response.status_code in (307, 308):
                 method = "POST"
@@ -96,8 +100,29 @@ class Session(requests.Session):
                     data = None
                     json = None
 
+            # Strip credentials on cross-origin redirects to prevent leaking
+            # the Authorization header / session auth to a different host.
+            request_kwargs = dict(kwargs)
+            parsed_current = urlparse(response.url)
+            same_origin = (
+                parsed_current.scheme == parsed_redirect.scheme
+                and parsed_current.hostname == parsed_redirect.hostname
+                and parsed_current.port == parsed_redirect.port
+            )
+            if not same_origin:
+                headers = dict(request_kwargs.get("headers") or {})
+                headers = {
+                    k: v for k, v in headers.items() if k.lower() != "authorization"
+                }
+                # Setting to None suppresses any matching session-level header.
+                headers["Authorization"] = None
+                request_kwargs["headers"] = headers
+                request_kwargs["auth"] = None
+
             # Perform the next request in the redirect chain.
-            response = self.request(method, redirect_url, data=data, json=json, **kwargs)
+            response = self.request(
+                method, redirect_url, data=data, json=json, **request_kwargs
+            )
             redirect_count += 1
 
         return response
