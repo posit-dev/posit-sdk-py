@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, Mock, patch
 
-from posit.connect.auth import Auth
+from posit.connect.auth import Auth, BootstrapAuth
 
 
 class TestAuth:
@@ -13,3 +13,13 @@ class TestAuth:
         r.headers = {}
         auth(r)
         assert r.headers == {"Authorization": f"Key {config.api_key}"}
+
+
+class TestBootstrapAuth:
+    def test_auth_headers(self):
+        token = "my-bootstrap-jwt"
+        auth = BootstrapAuth(token=token)
+        r = Mock()
+        r.headers = {}
+        auth(r)
+        assert r.headers == {"Authorization": f"Connect-Bootstrap {token}"}
