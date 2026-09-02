@@ -5,6 +5,7 @@ import json
 import pytest
 import responses
 
+from posit.workbench.errors import WorkbenchHTTPError
 from posit.workbench.jobs import Jobs
 from posit.workbench.urls import Url
 
@@ -286,6 +287,39 @@ class TestGetStatusMap:
         )
         statuses = _jobs().get_status_map(include_historical=False)
         assert set(statuses) == {"active1"}
+
+    @responses.activate
+    def test_degrades_to_active_only_on_unauthorized_historical(self):
+        """A 401/403 from get_historical_session degrades to active-job-only status.
+
+        Regular users' in-session cookies can launch/poll their own jobs but may lack the
+        broader visibility get_historical_session requires -- this shouldn't break polling.
+        """
+        responses.add(
+            responses.POST,
+            _api_url("get_historical_session"),
+            status=401,
+        )
+        responses.add(
+            responses.POST,
+            _api_url("get_session"),
+            json={"result": {"jobs": [{"id": "active1", "status": "Running"}]}},
+            status=200,
+        )
+        statuses = _jobs().get_status_map()
+        assert set(statuses) == {"active1"}
+
+    @responses.activate
+    def test_reraises_other_historical_http_errors(self):
+        """A non-auth HTTP error from get_historical_session still propagates."""
+        responses.add(
+            responses.POST,
+            _api_url("get_historical_session"),
+            status=502,
+        )
+        with pytest.raises(WorkbenchHTTPError) as exc_info:
+            _jobs().get_status_map()
+        assert exc_info.value.status_code == 502
 
 
 class TestLaunchAndWait:

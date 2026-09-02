@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing_extensions import TYPE_CHECKING, Any, Iterator, cast
 
 from . import rpc
+from .errors import WorkbenchHTTPError
 from .resources import Resources
 
 if TYPE_CHECKING:
@@ -266,15 +267,31 @@ class Jobs(Resources):
         call per job.
 
         On an id collision, the active-job entry wins over the historical one.
+
+        ``get_historical_session`` requires broader session-visibility privileges than plain
+        self-service job launching does -- confirmed live: a regular user's in-session cookie
+        can ``launch_job``/``get_session`` for themselves but gets HTTP 401 from
+        ``get_historical_session``, while a Bearer token for an account with elevated
+        visibility does not. Rather than let that break status polling for ordinary users, a
+        401/403 here is treated the same as ``include_historical=False`` -- silently degrading
+        to active-job-only status, at the cost of no longer catching jobs that finish and
+        rotate out of the active list before the next poll.
         """
         statuses: dict[str, WorkbenchJob] = {}
 
         if include_historical:
-            historical = rpc.call(self._ctx.client, "get_historical_session", include_jobs=True)
-            for candidate in historical.get("jobs") or []:
-                job_id = candidate.get("id")
-                if job_id is not None:
-                    statuses[job_id] = candidate
+            try:
+                historical = rpc.call(
+                    self._ctx.client, "get_historical_session", include_jobs=True
+                )
+            except WorkbenchHTTPError as e:
+                if e.status_code not in (401, 403):
+                    raise
+            else:
+                for candidate in historical.get("jobs") or []:
+                    job_id = candidate.get("id")
+                    if job_id is not None:
+                        statuses[job_id] = candidate
 
         # Adhoc jobs (launched via launch_job) aren't tied to a session, so include_all_jobs
         # is required to see them via get_session. Populated after historical so active
