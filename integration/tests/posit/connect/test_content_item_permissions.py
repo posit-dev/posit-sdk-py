@@ -57,7 +57,7 @@ class TestContentPermissions:
         )
 
         def assert_permissions_match_guids(permissions: list[Permission], objs_with_guid):
-            for permission, obj_with_guid in zip(permissions, objs_with_guid):
+            for permission, obj_with_guid in zip(permissions, objs_with_guid, strict=True):
                 assert permission["principal_guid"] == obj_with_guid["guid"]
 
         # Prove they have been added
