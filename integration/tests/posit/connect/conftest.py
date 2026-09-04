@@ -25,8 +25,41 @@ _WITH_CONNECT = [
     "with-connect",
 ]
 
+# The 2026.04+ Connect images moved to a new base image that contains one
+# versioned Python installation but does not enable it in the default config.
+_CONNECT_PYTHON_VERSIONS = {
+    "2026.04": "3.14.4",
+    "2026.05": "3.14.5",
+    "2026.06": "3.14.6",
+    "2026.07": "3.14.6",
+    "2026.08": "3.14.7",
+}
+
 # Posit Connect license file to mount into each container (gitignored).
 _LICENSE = os.environ.get("LICENSE", "./license.lic")
+
+
+def _connect_env(connect_version: str) -> list[str]:
+    """Return Connect configuration overrides for the current image family."""
+    release = ".".join(connect_version.split(".")[:2])
+    python_version = _CONNECT_PYTHON_VERSIONS.get(release)
+    if python_version is None:
+        return []
+
+    return [
+        "--env",
+        "CONNECT_PYTHON_ENABLED=true",
+        "--env",
+        f"CONNECT_PYTHON_EXECUTABLE=/opt/python/{python_version}/bin/python",
+        "--env",
+        "CONNECT_PYTHON_VERSIONMATCHING=nearest",
+        "--env",
+        "CONNECT_PYTHON_ENVIRONMENTMANAGEMENT=true",
+        "--env",
+        "CONNECT_SERVER_ALLOWRUNTIMECACHEMANAGEMENT=true",
+        "--env",
+        "CONNECT_METRICS_INSTRUMENTATION=true",
+    ]
 
 
 def _free_port() -> int:
@@ -55,6 +88,7 @@ def fresh_connect():
             "--license",
             _LICENSE,
             "--quiet",
+            *_connect_env(version),
         ],
         capture_output=True,
         text=True,
