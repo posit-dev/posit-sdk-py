@@ -1,0 +1,52 @@
+name: Update Connect integration matrix
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  # posit-dev/connect can dispatch "connect-release" after publishing a tag.
+  repository_dispatch:
+    types:
+      - connect-release
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Update supported Connect versions
+        id: matrix
+        run: |
+          python3 scripts/update_connect_matrix.py
+          if git diff --quiet -- integration/Makefile; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate the generated matrix
+        if: steps.matrix.outputs.changed == 'true'
+        run: |
+          git diff --check
+          make -C integration print-versions
+
+      - name: Open pull request
+        if: steps.matrix.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/update-connect-matrix
+          delete-branch: true
+          commit-message: "chore: update Connect integration test matrix"
+          title: "chore: update Connect integration test matrix"
+          body: |
+            Automated update from the Posit Connect supported versions page.
+
+            The matrix contains the latest listed patch release for each supported Connect release train.
+
+            Triggered by: `${{ github.event_name }}`
