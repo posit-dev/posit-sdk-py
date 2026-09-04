@@ -64,6 +64,6 @@ ContentItem uses mixins for composed behavior: `VanityMixin`, `ContentItemReposi
 - **Pyright** for type checking.
 - **NumPy-style docstrings** (used by quartodoc for API reference docs).
 - `from __future__ import annotations` is used in all source files.
-- `typing-extensions` is used instead of `typing` for Python 3.8 compatibility.
+- `typing-extensions` provides typing features that are not available in all supported Python versions.
 - Pre-commit hooks run `make fmt lint` (enable with `pre-commit install`).
 - Conventional commit messages are enforced by CI.
