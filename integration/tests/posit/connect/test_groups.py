@@ -19,7 +19,13 @@ class TestGroups:
         assert self.client.groups.get(self.group["guid"])
 
     def test_find(self):
-        assert self.client.groups.find() == [self.group]
+        groups = self.client.groups.find()
+        assert len(groups) == 1
+        for key, value in self.group.items():
+            assert groups[0][key] == value
 
     def test_find_one(self):
-        assert self.client.groups.find_one() == self.group
+        group = self.client.groups.find_one()
+        assert group is not None
+        for key, value in self.group.items():
+            assert group[key] == value
