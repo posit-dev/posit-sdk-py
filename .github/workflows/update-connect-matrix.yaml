@@ -50,5 +50,3 @@ jobs:
             The matrix contains the latest listed patch release for each supported Connect release train.
 
             Triggered by: `${{ github.event_name }}`
-
-            Closes #493
