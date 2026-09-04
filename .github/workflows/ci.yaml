@@ -61,13 +61,14 @@ jobs:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
       - run: uv python install
+      - name: Write Connect license file
+        env:
+          CONNECT_LICENSE: ${{ secrets.CONNECT_LICENSE }}
+        run: |
+          umask 077
+          printf '%s' "$CONNECT_LICENSE" > integration/license.lic
       - name: Run integration tests
-        uses: posit-dev/with-connect@main
-        with:
-          version: ${{ matrix.CONNECT_VERSION }}
-          license: ${{ secrets.CONNECT_LICENSE }}
-          command:
-            make -C ./integration test-${{ matrix.CONNECT_VERSION }}
+        run: make -C ./integration test-${{ matrix.CONNECT_VERSION }}
       - uses: actions/upload-artifact@v5
         if: always()
         with:

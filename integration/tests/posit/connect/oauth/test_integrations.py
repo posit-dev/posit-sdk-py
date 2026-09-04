@@ -14,6 +14,7 @@ class TestIntegrations:
     @classmethod
     def setup_class(cls):
         cls.client = connect.Client()
+
         cls.integration = cls.client.oauth.integrations.create(
             name="example integration",
             description="integration description",

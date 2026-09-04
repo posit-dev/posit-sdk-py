@@ -17,13 +17,6 @@ class TestAssociations:
     def setup_class(cls):
         cls.client = connect.Client()
 
-        # Destroy existing integrations.
-        #
-        # Starting with Connect 2025.05.0, a default integration is created automatically.
-        # https://github.com/posit-dev/connect/issues/31570
-        for integration in cls.client.oauth.integrations.find():
-            integration.delete()
-
         # Assert that no integrations exist
         assert len(cls.client.oauth.integrations.find()) == 0
 

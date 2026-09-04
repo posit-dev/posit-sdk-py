@@ -2,20 +2,12 @@ include ../vars.mk
 
 # pytest settings
 PYTEST_ARGS ?= "-s"
+PYTEST_TARGET ?= tests
+
+# Posit Connect license file
+LICENSE ?= ./license.lic
 
 .DEFAULT_GOAL := latest
-
-define GET_PORT
-$(UV) run -- python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()'
-endef
-
-.PHONY: $(CONNECT_VERSIONS) \
-	all \
-	clean \
-	latest \
-	print-versions \
-	help \
-	test-%
 
 # Versions
 CONNECT_VERSIONS := \
@@ -54,25 +46,29 @@ CONNECT_VERSIONS := \
 	2022.12.0 \
 	2022.11.0
 
+.PHONY: $(CONNECT_VERSIONS) \
+	all \
+	clean \
+	latest \
+	print-versions \
+	help \
+	test-%
+
 clean:
 	rm -rf logs reports
 	find . -type d -empty -delete
 
-# Run pytest for a specific version (assumes Connect is already running).
+# Run the test suite against a specific Connect version.
 test-%:
 	@mkdir -p logs reports
-	$(UV) run pytest $(PYTEST_ARGS) \
-		--junitxml=reports/junit-$*.xml | tee logs/$*.log
+	CONNECT_VERSION=$* LICENSE=$(LICENSE) $(UV) run pytest $(PYTEST_TARGET) $(PYTEST_ARGS) \
+		--junitxml=reports/junit-$*.xml 2>&1 | tee logs/$*.log; \
+	exit $${PIPESTATUS[0]}
 
-# Spin up Connect for a specific version and run tests.
-$(CONNECT_VERSIONS): %:
-	PORT=$$($(GET_PORT)); \
-	uv run --with https://github.com/posit-dev/with-connect.git \
-		with-connect --version $* --port $$PORT \
-		-- $(MAKE) test-$*
+$(CONNECT_VERSIONS): %: test-%
 
 # Run test suite against all Connect versions.
-all: $(CONNECT_VERSIONS:%=%)
+all: $(CONNECT_VERSIONS)
 
 # Run test suite against latest Connect version.
 latest:
@@ -101,3 +97,5 @@ help:
 	@echo
 	@echo "Environment Variables:"
 	@echo "  PYTEST_ARGS      Arguments to pass to pytest. Default: \"-s\""
+	@echo "  PYTEST_TARGET    Test path/node-ID selection. Default: tests"
+	@echo "  LICENSE          Path to the Connect license file. Default: ./license.lic"
