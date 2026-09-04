@@ -137,7 +137,7 @@ build = ["build"]
 coverage = ["coverage"]
 external = ["databricks-sdk"]
 git = ["pre-commit"]
-lint = ["ruff", "pyright"]
+lint = ["ruff<0.16", "pyright"]
 test = ["rsconnect-python", "responses", "pytest", "pyjson5"]
 # Default install group by `uv`: `dev`
 dev = [
