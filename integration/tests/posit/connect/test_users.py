@@ -69,8 +69,10 @@ class TestUser:
             # `Group.members.find()`
             group_users = test_group.members.find()
             assert len(group_users) == 2
-            assert group_users[0]["guid"] == self.bill["guid"]
-            assert group_users[1]["guid"] == self.cole["guid"]
+            assert {user["guid"] for user in group_users} == {
+                self.bill["guid"],
+                self.cole["guid"],
+            }
 
             # `User.group.find()`
             bill_groups = self.bill.groups.find()

@@ -28,8 +28,8 @@ class TestPackages:
         cls.content.delete()
 
     def test(self):
-        assert self.client.packages
-        assert self.content.packages
+        assert list(self.client.packages)
+        assert list(self.content.packages)
 
     def test_find_by(self):
         package = self.client.packages.find_by(name="flask")

@@ -29,10 +29,10 @@ class TestContent:
             assert key in item
             assert item[key] == self.content[key]
         if CONNECT_VERSION >= version.parse("2024.06.0"):
-            # get() always includes owner, tags, and vanity_url. Owner data is always present in
-            # all content, tags and vanity_url are only present if explicitly set in the content.
+            # Owner data is always present. Newer Connect versions include an empty tags field,
+            # while older versions omit it when no tags are set.
             assert "owner" in item
-            assert "tags" not in item
+            assert item.get("tags", []) == []
             assert "vanity_url" not in item
 
     def test_find(self):
@@ -63,17 +63,18 @@ class TestContent:
     def test_restart(self):
         # create content
         content = self.client.content.create(name="example-flask-minimal")
-        # create bundle
-        path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
-        path = (Path(__file__).parent / path).resolve()
-        bundle = content.bundles.create(str(path))
-        # deploy bundle
-        task = bundle.deploy()
-        task.wait_for()
-        # restart
-        content.restart()
-        # delete content
-        content.delete()
+        try:
+            # create bundle
+            path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
+            path = (Path(__file__).parent / path).resolve()
+            bundle = content.bundles.create(str(path))
+            # deploy bundle
+            task = bundle.deploy()
+            task.wait_for()
+            # restart
+            content.restart()
+        finally:
+            content.delete()
 
     @pytest.mark.skipif(
         CONNECT_VERSION <= version.parse("2023.01.1"),
@@ -102,32 +103,33 @@ class TestContent:
     def test_get_lockfile(self):
         # create content
         content = self.client.content.create(name="example-flask-lockfile-test")
-        # create bundle with Python requirements
-        path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
-        path = (Path(__file__).parent / path).resolve()
-        bundle = content.bundles.create(str(path))
-        # deploy bundle
-        task = bundle.deploy()
-        task.wait_for()
-        # get lockfile
-        lockfile = content.get_lockfile()
-        # verify lockfile metadata
-        assert lockfile.generated_by is not None
-        assert isinstance(lockfile.generated_by, str)
-        assert len(lockfile.generated_by) > 0
-        # verify python version was parsed
-        assert lockfile.python_version is not None
-        assert isinstance(lockfile.python_version, str)
-        assert len(lockfile.python_version) > 0
-        # verify lockfile content
-        assert lockfile.text is not None
-        assert isinstance(lockfile.text, str)
-        assert len(lockfile.text) > 0
-        # lockfile should contain package information
-        # The flask bundle has Flask as a dependency
-        assert "flask" in lockfile.text.lower() or "Flask" in lockfile.text
-        # delete content
-        content.delete()
+        try:
+            # create bundle with Python requirements
+            path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
+            path = (Path(__file__).parent / path).resolve()
+            bundle = content.bundles.create(str(path))
+            # deploy bundle
+            task = bundle.deploy()
+            task.wait_for()
+            # get lockfile
+            lockfile = content.get_lockfile()
+            # verify lockfile metadata
+            assert lockfile.generated_by is not None
+            assert isinstance(lockfile.generated_by, str)
+            assert len(lockfile.generated_by) > 0
+            # verify python version was parsed
+            assert lockfile.python_version is not None
+            assert isinstance(lockfile.python_version, str)
+            assert len(lockfile.python_version) > 0
+            # verify lockfile content
+            assert lockfile.text is not None
+            assert isinstance(lockfile.text, str)
+            assert len(lockfile.text) > 0
+            # lockfile should contain package information
+            # The flask bundle has Flask as a dependency
+            assert "flask" in lockfile.text.lower() or "Flask" in lockfile.text
+        finally:
+            content.delete()
 
     @pytest.mark.skipif(
         CONNECT_VERSION < version.parse("2025.12.0"),
@@ -140,21 +142,21 @@ class TestContent:
         # Since we skip this test on older versions, we just verify
         # that the method exists and is callable on supported versions
         content = self.client.content.create(name="example-version-check")
-        path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
-        path = (Path(__file__).parent / path).resolve()
-        bundle = content.bundles.create(str(path))
-        task = bundle.deploy()
-        task.wait_for()
+        try:
+            path = Path("../../../resources/connect/bundles/example-flask-minimal/bundle.tar.gz")
+            path = (Path(__file__).parent / path).resolve()
+            bundle = content.bundles.create(str(path))
+            task = bundle.deploy()
+            task.wait_for()
 
-        # Verify the method exists and is callable
-        assert hasattr(content, "get_lockfile")
-        assert callable(content.get_lockfile)
+            # Verify the method exists and is callable
+            assert hasattr(content, "get_lockfile")
+            assert callable(content.get_lockfile)
 
-        # Call it to ensure no version errors on supported versions
-        lockfile = content.get_lockfile()
-        assert lockfile.generated_by is not None
-        assert lockfile.python_version is not None
-        assert lockfile.text is not None
-
-        # delete content
-        content.delete()
+            # Call it to ensure no version errors on supported versions
+            lockfile = content.get_lockfile()
+            assert lockfile.generated_by is not None
+            assert lockfile.python_version is not None
+            assert lockfile.text is not None
+        finally:
+            content.delete()
