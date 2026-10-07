@@ -6,9 +6,14 @@ from requests import Response, Session
 from typing_extensions import Optional, Union
 
 from .auth import Auth, CookieReader
+from .compute_envs import ComputeEnvs
 from .context import Context, ContextManager
+from .jobs import Jobs
 from .oauth import OAuth
+from .server import Server
+from .sessions import Sessions
 from .urls import Url
+from .users import Users
 
 
 class Client(ContextManager):
@@ -89,3 +94,53 @@ class Client(ContextManager):
             OAuth
         """
         return OAuth(self._ctx)
+
+    @property
+    def sessions(self) -> Sessions:
+        """Access the launcher API's sessions resource manager.
+
+        Returns
+        -------
+            Sessions
+        """
+        return Sessions(self._ctx)
+
+    @property
+    def jobs(self) -> Jobs:
+        """Access the launcher API's jobs resource manager.
+
+        Returns
+        -------
+            Jobs
+        """
+        return Jobs(self._ctx)
+
+    @property
+    def compute_envs(self) -> ComputeEnvs:
+        """Access the launcher API's compute envs resource manager.
+
+        Returns
+        -------
+            ComputeEnvs
+        """
+        return ComputeEnvs(self._ctx)
+
+    @property
+    def users(self) -> Users:
+        """Access the launcher API's users resource manager.
+
+        Returns
+        -------
+            Users
+        """
+        return Users(self._ctx)
+
+    @property
+    def server(self) -> Server:
+        """Access the launcher API's server resource manager.
+
+        Returns
+        -------
+            Server
+        """
+        return Server(self._ctx)
