@@ -117,6 +117,84 @@ def test_post_redirect_no_location():
 
 
 @responses.activate
+def test_post_cross_origin_redirect_strips_authorization():
+    initial_url = "https://example.com/api"
+    attacker_url = "https://attacker.example/steal"
+
+    responses.add(
+        responses.POST, initial_url, status=302, headers={"location": attacker_url}
+    )
+    responses.add(responses.POST, attacker_url, json={"ok": True}, status=200)
+
+    session = Session()
+    session.headers["Authorization"] = "Key super-secret"
+
+    response = session.post(initial_url, data={"key": "value"}, preserve_post=True)
+
+    assert response.status_code == 200
+    assert len(responses.calls) == 2
+    assert responses.calls[0].request.headers.get("Authorization") == "Key super-secret"
+    assert "Authorization" not in responses.calls[1].request.headers
+
+
+@responses.activate
+def test_post_cross_origin_redirect_strips_header_kwarg_authorization():
+    initial_url = "https://example.com/api"
+    attacker_url = "https://attacker.example/steal"
+
+    responses.add(
+        responses.POST, initial_url, status=302, headers={"location": attacker_url}
+    )
+    responses.add(responses.POST, attacker_url, json={"ok": True}, status=200)
+
+    session = Session()
+    response = session.post(
+        initial_url,
+        data={"key": "value"},
+        headers={"Authorization": "Bearer jwt-token"},
+        preserve_post=True,
+    )
+
+    assert response.status_code == 200
+    assert "Authorization" not in responses.calls[1].request.headers
+
+
+@responses.activate
+def test_post_same_origin_redirect_preserves_authorization():
+    initial_url = "https://example.com/api"
+    redirect_url = "https://example.com/next"
+
+    responses.add(
+        responses.POST, initial_url, status=302, headers={"location": "/next"}
+    )
+    responses.add(responses.POST, redirect_url, json={"ok": True}, status=200)
+
+    session = Session()
+    session.headers["Authorization"] = "Key super-secret"
+
+    response = session.post(initial_url, data={"key": "value"}, preserve_post=True)
+
+    assert response.status_code == 200
+    assert len(responses.calls) == 2
+    assert responses.calls[1].request.headers.get("Authorization") == "Key super-secret"
+
+
+@responses.activate
+def test_post_redirect_rejects_non_http_scheme():
+    initial_url = "https://example.com/api"
+
+    responses.add(
+        responses.POST, initial_url, status=302, headers={"location": "file:///etc/passwd"}
+    )
+
+    session = Session()
+    response = session.post(initial_url, data={"key": "value"})
+
+    assert len(responses.calls) == 1
+    assert response.status_code == 302
+
+
+@responses.activate
 def test_post_redirect_location_none_explicit():
     url = "http://connect.example.com/api"
 
