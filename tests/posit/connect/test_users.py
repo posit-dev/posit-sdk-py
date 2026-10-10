@@ -7,6 +7,7 @@ from responses import matchers
 
 from posit.connect.client import Client
 from posit.connect.groups import Group
+from posit.connect.permissions import Permission
 from posit.connect.users import User
 
 from .api import load_mock, load_mock_dict
@@ -443,3 +444,186 @@ class TestUsersFind:
             con.users.find(
                 not_dict_like  # pyright: ignore[reportCallIssue]
             )
+
+    @responses.activate
+    def test_username_exact_match(self):
+        """Exact username filter returns only the exact match, not prefix matches."""
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 1, "prefix": "kaia"},
+                ),
+            ],
+            json={
+                "results": [
+                    {"guid": "guid-1", "username": "kaia"},
+                    {"guid": "guid-2", "username": "kaia-test"},
+                ],
+                "current_page": 1,
+                "total": 2,
+            },
+        )
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 2, "prefix": "kaia"},
+                ),
+            ],
+            json={"results": [], "current_page": 2, "total": 2},
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        users = con.users.find(username="kaia")
+        assert len(users) == 1
+        assert users[0]["username"] == "kaia"
+        assert users[0]["guid"] == "guid-1"
+
+    @responses.activate
+    def test_username_no_match(self):
+        """Exact username filter returns empty list when no exact match."""
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 1, "prefix": "nonexistent"},
+                ),
+            ],
+            json={"results": [], "current_page": 1, "total": 0},
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        users = con.users.find(username="nonexistent")
+        assert len(users) == 0
+
+
+class TestUsersFindOneUsername:
+    @responses.activate
+    def test_username_exact_match(self):
+        """find_one with username returns the exact match."""
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"page_size": 500, "page_number": 1, "prefix": "kaia"},
+                ),
+            ],
+            json={
+                "results": [
+                    {"guid": "guid-1", "username": "kaia"},
+                    {"guid": "guid-2", "username": "kaia-test"},
+                ],
+                "current_page": 1,
+                "total": 2,
+            },
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.find_one(username="kaia")
+        assert user is not None
+        assert user["username"] == "kaia"
+
+    @responses.activate
+    def test_username_no_match(self):
+        """find_one with username returns None when no exact match."""
+        responses.get(
+            "https://connect.example/__api__/v1/users",
+            json={"results": [], "current_page": 1, "total": 0},
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        user = con.users.find_one(username="nonexistent")
+        assert user is None
+
+
+class TestUsersGetBatch:
+    @responses.activate
+    def test_get_batch(self):
+        guid1 = "20a79ce3-6e87-4522-9faf-be24228800a4"
+        guid2 = "87c12c08-11cd-4de1-8da3-12a7579c4998"
+        responses.get(
+            f"https://connect.example/__api__/v1/users/{guid1}",
+            json={"guid": guid1, "username": "carlos12"},
+        )
+        responses.get(
+            f"https://connect.example/__api__/v1/users/{guid2}",
+            json={"guid": guid2, "username": "bob"},
+        )
+        con = Client(api_key="12345", url="https://connect.example/")
+        users = con.users.get_batch([guid1, guid2])
+        assert len(users) == 2
+        assert users[0]["guid"] == guid1
+        assert users[1]["guid"] == guid2
+
+    def test_get_batch_empty(self):
+        con = Client(api_key="12345", url="https://connect.example/")
+        users = con.users.get_batch([])
+        assert users == []
+
+
+class TestUserPermissions:
+    @responses.activate
+    def test_find(self):
+        user_guid = "user-guid-1"
+        other_guid = "other-user-guid"
+        content_guid_1 = "content-guid-1"
+        content_guid_2 = "content-guid-2"
+
+        # Mock content listing
+        responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=[
+                {"guid": content_guid_1, "name": "app-1", "owner_guid": "owner-1"},
+                {"guid": content_guid_2, "name": "app-2", "owner_guid": "owner-2"},
+            ],
+        )
+
+        # Mock permissions for content 1 - user has viewer
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid_1}/permissions",
+            json=[
+                {"id": 1, "content_guid": content_guid_1, "principal_guid": user_guid, "principal_type": "user", "role": "viewer"},
+                {"id": 2, "content_guid": content_guid_1, "principal_guid": other_guid, "principal_type": "user", "role": "owner"},
+            ],
+        )
+
+        # Mock permissions for content 2 - user has owner
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid_2}/permissions",
+            json=[
+                {"id": 3, "content_guid": content_guid_2, "principal_guid": user_guid, "principal_type": "user", "role": "owner"},
+            ],
+        )
+
+        c = Client(api_key="12345", url="https://connect.example/")
+        user = User(c._ctx, guid=user_guid)
+        perms = user.permissions.find()
+
+        assert len(perms) == 2
+        assert all(isinstance(p, Permission) for p in perms)
+        assert perms[0]["content_guid"] == content_guid_1
+        assert perms[0]["role"] == "viewer"
+        assert perms[1]["content_guid"] == content_guid_2
+        assert perms[1]["role"] == "owner"
+
+    @responses.activate
+    def test_find_no_permissions(self):
+        user_guid = "user-guid-1"
+        content_guid = "content-guid-1"
+
+        responses.get(
+            "https://connect.example/__api__/v1/content",
+            json=[
+                {"guid": content_guid, "name": "app-1", "owner_guid": "owner-1"},
+            ],
+        )
+
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}/permissions",
+            json=[
+                {"id": 1, "content_guid": content_guid, "principal_guid": "other-user", "principal_type": "user", "role": "viewer"},
+            ],
+        )
+
+        c = Client(api_key="12345", url="https://connect.example/")
+        user = User(c._ctx, guid=user_guid)
+        perms = user.permissions.find()
+
+        assert len(perms) == 0
