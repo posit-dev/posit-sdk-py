@@ -96,6 +96,95 @@ class TestContentDeploy:
         assert mock_tasks_get.call_count == 1
 
 
+class TestContentBuild:
+    @responses.activate
+    def test_build_default(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        task_id = "jXhOhdm5OOSkGhJw"
+
+        mock_content_get = responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_content_build = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/build",
+            match=[matchers.json_params_matcher({"bundle_id": None})],
+            json={"task_id": task_id},
+        )
+
+        mock_tasks_get = responses.get(
+            f"https://connect.example/__api__/v1/tasks/{task_id}",
+            json=load_mock(f"v1/tasks/{task_id}.json"),
+        )
+
+        c = Client("https://connect.example", "12345")
+        content = c.content.get(content_guid)
+        task = content.build()
+
+        assert task["id"] == task_id
+        assert mock_content_get.call_count == 1
+        assert mock_content_build.call_count == 1
+        assert mock_tasks_get.call_count == 1
+
+    @responses.activate
+    def test_build_specific_bundle(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        bundle_id = "42"
+        task_id = "jXhOhdm5OOSkGhJw"
+
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_content_build = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/build",
+            match=[matchers.json_params_matcher({"bundle_id": bundle_id})],
+            json={"task_id": task_id},
+        )
+
+        responses.get(
+            f"https://connect.example/__api__/v1/tasks/{task_id}",
+            json=load_mock(f"v1/tasks/{task_id}.json"),
+        )
+
+        c = Client("https://connect.example", "12345")
+        content = c.content.get(content_guid)
+        task = content.build(bundle_id=bundle_id)
+
+        assert task["id"] == task_id
+        assert mock_content_build.call_count == 1
+
+    @responses.activate
+    def test_build_no_activate(self):
+        content_guid = "f2f37341-e21d-3d80-c698-a935ad614066"
+        task_id = "jXhOhdm5OOSkGhJw"
+
+        responses.get(
+            f"https://connect.example/__api__/v1/content/{content_guid}",
+            json=load_mock(f"v1/content/{content_guid}.json"),
+        )
+
+        mock_content_build = responses.post(
+            f"https://connect.example/__api__/v1/content/{content_guid}/build",
+            match=[matchers.json_params_matcher({"bundle_id": None, "activate": False})],
+            json={"task_id": task_id},
+        )
+
+        responses.get(
+            f"https://connect.example/__api__/v1/tasks/{task_id}",
+            json=load_mock(f"v1/tasks/{task_id}.json"),
+        )
+
+        c = Client("https://connect.example", "12345")
+        content = c.content.get(content_guid)
+        task = content.build(activate=False)
+
+        assert task["id"] == task_id
+        assert mock_content_build.call_count == 1
+
+
 class TestContentUpdate:
     @responses.activate
     def test_update(self):
