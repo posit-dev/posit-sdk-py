@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import posixpath
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 
 class Url(str):
@@ -112,4 +112,64 @@ def _append(url: str, path) -> str:
     path = str(path).strip("/")
     split = urlsplit(url, allow_fragments=False)
     new_path = posixpath.join(split.path, path)
-    return urlunsplit((split.scheme, split.netloc, new_path, split.query, None))
+    joined = urlunsplit((split.scheme, split.netloc, new_path, split.query, None))
+    # Defense-in-depth: ensure the resulting URL still points at the original
+    # scheme+host+port. Guards against host-confusion if ``path`` is ever a
+    # fully-qualified or protocol-relative URL (e.g. ``//evil`` or
+    # ``https://evil``).
+    _assert_same_origin(url, joined)
+    return joined
+
+
+def _assert_same_origin(base: str, resolved: str) -> None:
+    """Raise ``ValueError`` if ``resolved`` is not same-origin with ``base``.
+
+    Compares scheme, hostname, and port. Used to defend URL joining against
+    user- or server-supplied fragments that would otherwise escape the
+    configured Connect base URL.
+    """
+    base_split = urlsplit(base, allow_fragments=False)
+    resolved_split = urlsplit(resolved, allow_fragments=False)
+    if (
+        base_split.scheme != resolved_split.scheme
+        or base_split.hostname != resolved_split.hostname
+        or base_split.port != resolved_split.port
+    ):
+        raise ValueError(
+            f"Refusing to resolve URL to a different origin: base={base!r}, resolved={resolved!r}"
+        )
+
+
+def safe_urljoin(base: str, fragment: str) -> str:
+    """Join ``fragment`` onto ``base`` without allowing host confusion.
+
+    Unlike :func:`urllib.parse.urljoin`, a ``fragment`` beginning with ``/``,
+    ``//host``, or ``https://host`` cannot change the scheme/host/port of the
+    resolved URL. The fragment is first normalized to a relative path by
+    stripping any leading ``/`` characters, then joined against ``base``. The
+    result is asserted to be same-origin with ``base``.
+
+    Parameters
+    ----------
+    base : str
+        The trusted base URL (typically the configured Connect URL).
+    fragment : str
+        A path fragment, possibly user- or server-supplied.
+
+    Returns
+    -------
+    str
+        The joined URL, guaranteed to share scheme+host+port with ``base``.
+
+    Raises
+    ------
+    ValueError
+        If the joined URL would not be same-origin with ``base``.
+    """
+    normalized = str(fragment).lstrip("/")
+    # Ensure base has a trailing slash so ``urljoin`` treats it as a directory
+    # and appends rather than replacing the final path segment.
+    base_with_slash = base if base.endswith("/") else base + "/"
+    resolved = urljoin(base_with_slash, normalized)
+    _assert_same_origin(base, resolved)
+    return resolved
