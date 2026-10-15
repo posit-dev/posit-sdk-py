@@ -11,17 +11,23 @@ from requests import Response, Session
 from typing_extensions import TYPE_CHECKING, Any, Iterator, Self
 
 from .. import rpc
-from ..compute_envs import ComputeEnvs
-from ..jobs import Jobs
-from ..server import Server
-from ..sessions import Sessions
-from ..users import Users
+from ..compute_envs import _ComputeEnvs
+from ..jobs import _Jobs
+from ..server import _Server
+from ..sessions import _Sessions
+from ..users import _Users
 from .auth import Auth
 from .config import Config
 from .context import Context
 
 if TYPE_CHECKING:
     from types import TracebackType
+
+    from ..compute_envs import ComputeEnvs
+    from ..jobs import Jobs
+    from ..server import Server
+    from ..sessions import Sessions
+    from ..users import Users
 
 
 class Client:
@@ -85,27 +91,27 @@ class Client:
     @property
     def sessions(self) -> Sessions:
         """The sessions resource manager."""
-        return Sessions(self._ctx)
+        return _Sessions(self._ctx)
 
     @property
     def jobs(self) -> Jobs:
         """The jobs resource manager."""
-        return Jobs(self._ctx)
+        return _Jobs(self._ctx)
 
     @property
     def compute_envs(self) -> ComputeEnvs:
         """The compute envs resource manager."""
-        return ComputeEnvs(self._ctx)
+        return _ComputeEnvs(self._ctx)
 
     @property
     def users(self) -> Users:
         """The users resource manager."""
-        return Users(self._ctx)
+        return _Users(self._ctx)
 
     @property
     def server(self) -> Server:
         """The server resource manager."""
-        return Server(self._ctx)
+        return _Server(self._ctx)
 
     @property
     def version(self) -> Any:

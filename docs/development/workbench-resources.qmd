@@ -1,0 +1,102 @@
+---
+title: "Posit Workbench Protocol resources"
+---
+
+Workbench uses its own resource runtime in
+`src/posit/workbench/resources.py`. Follow the public contract and private
+implementation structure from the
+[Protocol resource implementation rules](protocol-resources.qmd).
+Workbench resources use launcher remote procedure call (RPC) requests.
+Record identifiers do not imply HTTP item paths.
+
+## Contracts and implementations
+
+Declare item Protocols such as `Session`, `Job`, `User`, and `ComputeEnv`.
+Declare collection Protocols such as `Sessions` and `Jobs` by extending
+`ResourceSequence[Item]`.
+Keep endpoint behavior in private classes such as `_Sessions` and `_Jobs`.
+Both the session client and the Bearer client return those implementations
+through properties that expose the public Protocol types.
+
+Use client properties to obtain resources. Public manager names describe
+Protocols and do not support construction with `Sessions(ctx)` or `Jobs(ctx)`.
+
+The private `_Resource` stores dictionary fields and the owner context.
+It has no HTTP item path and no generic remote update or deletion methods.
+Item adapters use record identifiers with the appropriate RPC operations.
+
+The private `_ResourceSequence` accepts the context, RPC method name, item
+factory, and an optional result key.
+It calls the Workbench RPC transport and wraps the selected records.
+
+| Collection | RPC method | Record source | Item implementation |
+|---|---|---|---|
+| `Sessions` | `get_session` | `result["sessions"]` | `_Session` |
+| `Jobs` | `get_session` with `include_all_jobs=True` | `result["jobs"]` | `_Job` |
+| `Users` | `get_users` | The result list | `_Resource` |
+| `ComputeEnvs` | `get_compute_envs` | `result["clusters"]` | `_Resource` |
+
+`_Sessions.fetch()` converts a list of session identifiers to a comma-separated
+string. `_Jobs.fetch()` includes jobs that have no associated session.
+The transport handles authentication, HTTP errors, RPC errors, and omitted
+parameters for both clients.
+
+`Server` is a service Protocol rather than a collection.
+Its `_Server` implementation retains the bare response from the version method.
+Job output methods return streams and do not use resource sequences.
+
+## Fetching and matching
+
+`fetch()` returns an iterable of resource objects with dictionary field access.
+It accepts the server query parameters declared by its collection Protocol.
+
+`find_by()` fetches the default collection and matches record fields locally.
+It returns the first exact match, or `None`.
+It does not forward matching conditions to the server, change visibility, or
+guarantee a unique match.
+Use explicit `fetch()` arguments when the server query needs a different user
+or a session identifier filter.
+
+Collection iteration, length, indexing, slicing, string conversion, and
+representation fetch records without caching.
+For repeated access, materialize `collection.fetch()` once.
+
+```{.python filename="Collection access"}
+from posit.workbench.admin import Client
+
+with Client() as client:
+    users = list(client.users.fetch())
+    alice = client.users.find_by(username="alice")
+    sessions = list(client.sessions.fetch(user="alice"))
+    environments = list(client.compute_envs.fetch())
+```
+
+Fetch supports projected session records that omit the identifier.
+Operations such as stopping or resuming a session require its `id` field.
+Resolving its browser URL requires its `url` field.
+Use a full session record when calling those operations.
+
+## Item operations and composite responses
+
+Fetched sessions expose `stop()`, `resume()`, and `connection_url`.
+Launched jobs expose `stop()` and `get_output()`.
+Audited jobs also expose `get_details()` and route their operations through
+the audited job RPC methods.
+
+The manager methods retain the launcher response information.
+
+- `Sessions.get()` retains sessions, projects, jobs, and timestamps.
+- `Sessions.launch()` and `Sessions.resume()` retain the launch response.
+- `ComputeEnvs.list()` retains clusters and IDE configuration.
+- `Users.list()` retains the list of response dictionaries.
+- `Jobs.get_status_map()` retains the active and historical job mapping.
+- `Jobs.launch_and_wait()` retains the `JobResult` response.
+
+`Jobs.launch()` and `Jobs.launch_audited()` return dictionary subclasses
+with the corresponding item operations. Their fields still support dictionary
+access, and their public return types are `Job` and `AuditedJob`.
+Keep the response TypedDicts for composite envelopes and stream chunks.
+
+The OAuth managers retain their own endpoint behavior.
+The generic `Resources` base preserves their session-specific context type
+while allowing launcher managers to use a structural context.

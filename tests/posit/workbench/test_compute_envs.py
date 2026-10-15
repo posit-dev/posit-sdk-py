@@ -2,7 +2,7 @@
 
 import responses
 
-from posit.workbench.compute_envs import ComputeEnvs
+from posit.workbench.compute_envs import _ComputeEnvs
 from posit.workbench.urls import Url
 
 SERVER_URL = "https://workbench.example.com"
@@ -50,5 +50,5 @@ class TestList:
             },
             status=200,
         )
-        result = ComputeEnvs(_FakeContext()).list()
+        result = _ComputeEnvs(_FakeContext()).list()
         assert result["clusters"][0]["name"] == "Local"  # pyright: ignore[reportTypedDictNotRequiredAccess]

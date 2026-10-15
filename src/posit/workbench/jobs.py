@@ -5,11 +5,11 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 
-from typing_extensions import TYPE_CHECKING, Any, Iterator, cast
+from typing_extensions import TYPE_CHECKING, Any, Iterable, Iterator, Protocol, cast
 
 from . import rpc
 from .errors import WorkbenchHTTPError
-from .resources import Resources
+from .resources import Resource, ResourceSequence, _Resource, _ResourceSequence
 
 if TYPE_CHECKING:
     from .rpc import ContextProtocol
@@ -33,14 +33,243 @@ class JobResult:
     stderr: str = ""
 
 
-class Jobs(Resources):
+class Job(Resource, Protocol):
+    """A Workbench job with dictionary access and job operations."""
+
+    def stop(self, *, force_quit: bool | None = None) -> None:
+        """Stop this job, optionally forcing termination."""
+        ...
+
+    def get_output(self, *, user: str | None = None) -> Iterator[JobOutputChunk]:
+        """Stream output chunks for this job."""
+        ...
+
+
+class AuditedJob(Job, Protocol):
+    """An audited Workbench job."""
+
+    def get_output(self, *, user: str | None = None) -> Iterator[AuditedJobOutputChunk]:
+        """Stream output chunks for this audited job."""
+        ...
+
+    def get_details(self, *, user: str | None = None) -> AuditedJobDetails:
+        """Get the audit details for this job."""
+        ...
+
+
+class Jobs(ResourceSequence[Job], Protocol):
+    """Launch, stop, and fetch output/details for Workbench jobs (regular and audited)."""
+
+    def fetch(self, *, user: str = ...) -> Iterable[Job]:
+        """Fetch active jobs, including jobs without a session.
+
+        Parameters
+        ----------
+        user : str, optional
+            The user whose jobs to retrieve.
+
+        Returns
+        -------
+        Iterable[Job]
+            Active jobs from the launcher response. Use get_status_map() to
+            include historical jobs.
+        """
+        ...
+
+    def find_by(
+        self,
+        *,
+        id: str = ...,  # noqa: A002
+        name: str = ...,
+        user: str = ...,
+        cluster: str = ...,
+        status: str = ...,
+    ) -> Job | None:
+        """Find the first active job matching all record fields exactly.
+
+        Conditions apply locally and do not become RPC parameters.
+
+        Parameters
+        ----------
+        id : str, optional
+            The job identifier.
+        name : str, optional
+            The job name.
+        user : str, optional
+            The job owner.
+        cluster : str, optional
+            The launcher cluster.
+        status : str, optional
+            The job status.
+
+        Returns
+        -------
+        Job or None
+            The first matching job, or None when no record matches.
+        """
+        ...
+
+    def launch(
+        self,
+        cluster: str,
+        name: str,
+        exe: str,
+        args: list[str] | None = None,
+        *,
+        working_directory: str | None = None,
+        environment: list[dict] | None = None,
+        tags: list[str] | None = None,
+        container: dict | None = None,
+        resource_limits: list[dict] | None = None,
+        queues: list[str] | None = None,
+        placement_constraints: list[dict] | None = None,
+        user: str | None = None,
+        apply_config_settings: bool | None = None,
+    ) -> Job:
+        """Launch a (non-audited) Workbench job."""
+        ...
+
+    def launch_audited(
+        self,
+        cluster: str,
+        name: str,
+        exe: str,
+        args: list[str] | None = None,
+        *,
+        working_directory: str | None = None,
+        environment: list[dict] | None = None,
+        tags: list[str] | None = None,
+        container: dict | None = None,
+        resource_limits: list[dict] | None = None,
+        queues: list[str] | None = None,
+        placement_constraints: list[dict] | None = None,
+        user: str | None = None,
+        apply_config_settings: bool | None = None,
+    ) -> AuditedJob:
+        """Launch an audited Workbench job.
+
+        A container image is required for containerized jobs.
+        """
+        ...
+
+    def launch_and_wait(
+        self,
+        cluster: str,
+        name: str,
+        exe: str,
+        args: list[str] | None = None,
+        *,
+        working_directory: str | None = None,
+        environment: list[dict] | None = None,
+        tags: list[str] | None = None,
+        container: dict | None = None,
+        resource_limits: list[dict] | None = None,
+        queues: list[str] | None = None,
+        placement_constraints: list[dict] | None = None,
+        user: str | None = None,
+        apply_config_settings: bool | None = None,
+        poll_interval: float = 2.0,
+        timeout: float | None = None,
+        capture_output: bool = True,
+    ) -> JobResult:
+        """Launch a (non-audited) job and block until it reaches a terminal state.
+
+        If ``capture_output`` is set (the default), first drains ``get_output`` for the job --
+        which streams until the job's process ends -- collecting stdout/stderr into the
+        returned result. It then polls ``get_session``/``get_historical_session`` every
+        ``poll_interval`` seconds for the job's final status (normally just once, since the
+        output stream closing already means the job has ended). Raises ``TimeoutError`` if
+        ``timeout`` elapses first; note ``timeout`` only bounds the status poll, not the
+        output-draining step.
+
+        Returns
+        -------
+        JobResult
+            ``exit_code``, ``error_message`` (from the job's ``statusMessage``, if the job
+            didn't finish cleanly), ``stdout``/``stderr`` (if captured), and the full raw job
+            dict.
+        """
+        ...
+
+    def get_status_map(
+        self,
+        *,
+        user: str | None = None,
+        include_historical: bool = True,
+    ) -> dict[str, WorkbenchJob]:
+        """Fetch all known jobs in one (or two) round-trips, keyed by job id.
+
+        Meant for checking many jobs' status at once -- e.g. a Snakemake executor's
+        active-job poll -- with a single ``get_session`` call (plus one
+        ``get_historical_session`` call, unless ``include_historical=False``) instead of one
+        call per job.
+
+        On an id collision, the active-job entry wins over the historical one.
+
+        ``get_historical_session`` requires broader session-visibility privileges than plain
+        self-service job launching does -- confirmed live: a regular user's in-session cookie
+        can ``launch_job``/``get_session`` for themselves but gets HTTP 401 from
+        ``get_historical_session``, while a Bearer token for an account with elevated
+        visibility does not. Rather than let that break status polling for ordinary users, a
+        401/403 here is treated the same as ``include_historical=False`` -- silently degrading
+        to active-job-only status, at the cost of no longer catching jobs that finish and
+        rotate out of the active list before the next poll.
+        """
+        ...
+
+    def stop(self, job_id: str, *, force_quit: bool | None = None) -> None:
+        """Stop a running job.
+
+        ``force_quit=True`` sends ``kill -9`` instead of ``kill``.
+        """
+        ...
+
+    def stop_audited(self, audited_job_id: str, *, force_quit: bool | None = None) -> None:
+        """Stop a running audited job."""
+        ...
+
+    def get_output(
+        self,
+        job_id: str,
+        *,
+        user: str | None = None,
+    ) -> Iterator[JobOutputChunk]:
+        """Stream stdout/stderr chunks for a live or recently-finished job."""
+        ...
+
+    def get_audited_output(
+        self,
+        audited_job_id: str,
+        *,
+        user: str | None = None,
+    ) -> Iterator[AuditedJobOutputChunk]:
+        """Get output for an audited job.
+
+        Yields one or more chunks: multiple bare streamed chunks for a live job, or a single
+        combined-output chunk (unwrapped from the ``result``/``audited_job_output`` envelope)
+        if the job has already finished.
+        """
+        ...
+
+    def get_audited_details(
+        self,
+        audited_job_id: str,
+        *,
+        user: str | None = None,
+    ) -> AuditedJobDetails:
+        """Get audit details (script output, environment info) for a completed audited job."""
+        ...
+
+
+class _Jobs(_ResourceSequence[Job], Jobs):
     """Launch, stop, and fetch output/details for Workbench jobs (regular and audited)."""
 
     def __init__(self, ctx: ContextProtocol) -> None:
-        # Not super().__init__(ctx): Resources.__init__ types ctx as the specific in-session
-        # Context, but this manager is shared with the Bearer-token admin.Context too -- see
-        # ContextProtocol's docstring in rpc.py.
-        self._ctx = ctx
+        super().__init__(ctx, "get_session", resource_type=_Job, result_key="jobs")
+
+    def fetch(self, **params: Any) -> Iterable[Job]:
+        params["include_all_jobs"] = True
+        return super().fetch(**params)
 
     def _build_job(
         self,
@@ -99,8 +328,7 @@ class Jobs(Resources):
         placement_constraints: list[dict] | None = None,
         user: str | None = None,
         apply_config_settings: bool | None = None,
-    ) -> WorkbenchJob:
-        """Launch a (non-audited) Workbench job."""
+    ) -> Job:
         job = self._build_job(
             cluster,
             name,
@@ -123,7 +351,7 @@ class Jobs(Resources):
         )
         # Assumes the result envelope echoes the job back under a "job" key, mirroring the
         # "job" kwparam key; verify against a live server if this ever mismatches.
-        return result["job"]
+        return _Job(self._ctx, **result["job"])
 
     def launch_audited(
         self,
@@ -141,11 +369,7 @@ class Jobs(Resources):
         placement_constraints: list[dict] | None = None,
         user: str | None = None,
         apply_config_settings: bool | None = None,
-    ) -> WorkbenchJob:
-        """Launch an audited Workbench job.
-
-        A container image is required for containerized jobs.
-        """
+    ) -> AuditedJob:
         audited_job = self._build_job(
             cluster,
             name,
@@ -169,7 +393,7 @@ class Jobs(Resources):
         # Assumes the result envelope echoes the job back under an "audited_job" key,
         # mirroring the "audited_job" kwparam key; verify against a live server if this
         # ever mismatches.
-        return result["audited_job"]
+        return _AuditedJob(self._ctx, **result["audited_job"])
 
     def launch_and_wait(
         self,
@@ -191,23 +415,6 @@ class Jobs(Resources):
         timeout: float | None = None,
         capture_output: bool = True,
     ) -> JobResult:
-        """Launch a (non-audited) job and block until it reaches a terminal state.
-
-        If ``capture_output`` is set (the default), first drains ``get_output`` for the job --
-        which streams until the job's process ends -- collecting stdout/stderr into the
-        returned result. It then polls ``get_session``/``get_historical_session`` every
-        ``poll_interval`` seconds for the job's final status (normally just once, since the
-        output stream closing already means the job has ended). Raises ``TimeoutError`` if
-        ``timeout`` elapses first; note ``timeout`` only bounds the status poll, not the
-        output-draining step.
-
-        Returns
-        -------
-        JobResult
-            ``exit_code``, ``error_message`` (from the job's ``statusMessage``, if the job
-            didn't finish cleanly), ``stdout``/``stderr`` (if captured), and the full raw job
-            dict.
-        """
         job = self.launch(
             cluster,
             name,
@@ -224,9 +431,7 @@ class Jobs(Resources):
             apply_config_settings=apply_config_settings,
         )
 
-        # "id" is always present on a job returned by launch_job in practice, even though
-        # WorkbenchJob marks it optional (total=False).
-        job_id = job["id"]  # pyright: ignore[reportTypedDictNotRequiredAccess]
+        job_id = job["id"]
 
         stdout = ""
         stderr = ""
@@ -260,24 +465,6 @@ class Jobs(Resources):
         user: str | None = None,
         include_historical: bool = True,
     ) -> dict[str, WorkbenchJob]:
-        """Fetch all known jobs in one (or two) round-trips, keyed by job id.
-
-        Meant for checking many jobs' status at once -- e.g. a Snakemake executor's
-        active-job poll -- with a single ``get_session`` call (plus one
-        ``get_historical_session`` call, unless ``include_historical=False``) instead of one
-        call per job.
-
-        On an id collision, the active-job entry wins over the historical one.
-
-        ``get_historical_session`` requires broader session-visibility privileges than plain
-        self-service job launching does -- confirmed live: a regular user's in-session cookie
-        can ``launch_job``/``get_session`` for themselves but gets HTTP 401 from
-        ``get_historical_session``, while a Bearer token for an account with elevated
-        visibility does not. Rather than let that break status polling for ordinary users, a
-        401/403 here is treated the same as ``include_historical=False`` -- silently degrading
-        to active-job-only status, at the cost of no longer catching jobs that finish and
-        rotate out of the active list before the next poll.
-        """
         statuses: dict[str, WorkbenchJob] = {}
 
         if include_historical:
@@ -345,14 +532,9 @@ class Jobs(Resources):
             time.sleep(poll_interval)
 
     def stop(self, job_id: str, *, force_quit: bool | None = None) -> None:
-        """Stop a running job.
-
-        ``force_quit=True`` sends ``kill -9`` instead of ``kill``.
-        """
         rpc.call(self._ctx.client, "stop_job", job_id=job_id, force_quit=force_quit)
 
     def stop_audited(self, audited_job_id: str, *, force_quit: bool | None = None) -> None:
-        """Stop a running audited job."""
         rpc.call(
             self._ctx.client,
             "stop_audited_job",
@@ -366,7 +548,6 @@ class Jobs(Resources):
         *,
         user: str | None = None,
     ) -> Iterator[JobOutputChunk]:
-        """Stream stdout/stderr chunks for a live or recently-finished job."""
         chunks = rpc.call_stream(self._ctx.client, "get_job_output", job_id=job_id, user=user)
         return cast("Iterator[JobOutputChunk]", chunks)
 
@@ -376,12 +557,6 @@ class Jobs(Resources):
         *,
         user: str | None = None,
     ) -> Iterator[AuditedJobOutputChunk]:
-        """Get output for an audited job.
-
-        Yields one or more chunks: multiple bare streamed chunks for a live job, or a single
-        combined-output chunk (unwrapped from the ``result``/``audited_job_output`` envelope)
-        if the job has already finished.
-        """
         for chunk in rpc.call_stream(
             self._ctx.client,
             "get_audited_job_output",
@@ -400,7 +575,6 @@ class Jobs(Resources):
         *,
         user: str | None = None,
     ) -> AuditedJobDetails:
-        """Get audit details (script output, environment info) for a completed audited job."""
         result = rpc.call(
             self._ctx.client,
             "get_audited_job_details",
@@ -410,3 +584,22 @@ class Jobs(Resources):
         # The doc's example nests the details under an "audited_details" key; fall back to the
         # raw result if a future/actual server returns the fields unwrapped.
         return result.get("audited_details", result)
+
+
+class _Job(_Resource, Job):
+    def stop(self, *, force_quit: bool | None = None) -> None:
+        _Jobs(self._ctx).stop(self["id"], force_quit=force_quit)
+
+    def get_output(self, *, user: str | None = None) -> Iterator[JobOutputChunk]:
+        return _Jobs(self._ctx).get_output(self["id"], user=user)
+
+
+class _AuditedJob(_Job, AuditedJob):
+    def stop(self, *, force_quit: bool | None = None) -> None:
+        _Jobs(self._ctx).stop_audited(self["id"], force_quit=force_quit)
+
+    def get_output(self, *, user: str | None = None) -> Iterator[AuditedJobOutputChunk]:
+        return _Jobs(self._ctx).get_audited_output(self["id"], user=user)
+
+    def get_details(self, *, user: str | None = None) -> AuditedJobDetails:
+        return _Jobs(self._ctx).get_audited_details(self["id"], user=user)

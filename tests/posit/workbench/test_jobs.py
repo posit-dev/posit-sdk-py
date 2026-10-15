@@ -6,7 +6,7 @@ import pytest
 import responses
 
 from posit.workbench.errors import WorkbenchHTTPError
-from posit.workbench.jobs import Jobs
+from posit.workbench.jobs import Jobs, _Jobs
 from posit.workbench.urls import Url
 
 SERVER_URL = "https://workbench.example.com"
@@ -38,7 +38,7 @@ def _api_url(method: str) -> str:
 
 
 def _jobs() -> Jobs:
-    return Jobs(_FakeContext())
+    return _Jobs(_FakeContext())
 
 
 class TestLaunch:

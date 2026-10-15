@@ -1,0 +1,278 @@
+---
+title: "Protocol resource implementation rules"
+---
+
+Use this ruleset when adding a Posit Connect API through the Protocol resource
+pattern. Public Protocols describe the supported Python interface. Shared private
+classes supply the runtime behavior. Add a private adapter only when the endpoint
+needs behavior that the shared implementation does not provide.
+
+The reference implementations are
+[Packages](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/packages.py)
+and [Hits](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/metrics/hits.py).
+The rules below describe their structure and the behavior of the shared classes.
+They also identify limits that an implementation must account for.
+
+Posit Workbench follows the same contract structure with a separate remote
+procedure call (RPC) runtime.
+See [Workbench Protocol resources](workbench-resources.qmd) for its implementation
+and response conventions.
+
+## Code structure
+
+Keep the endpoint contract and any endpoint adapter in the same resource module.
+Use a singular name for the item Protocol, a plural name for its collection
+Protocol, and an underscore prefix for a private concrete adapter.
+
+| Component | Responsibility | Example |
+|---|---|---|
+| Item Protocol | Declare dictionary access and supported item operations | `Package(Resource, Protocol)` |
+| Collection Protocol | Declare sequence access and typed endpoint methods | `Packages(ResourceSequence[Package], Protocol)` |
+| Shared implementation | Make requests, wrap records, and provide collection behavior | `_ResourceSequence`, `_PaginatedResourceSequence`, `_Resource` |
+| Optional private adapter | Handle endpoint differences in the smallest affected method | `_Hits(_ResourceSequence, Hits)` |
+| Owner property | Choose the path, identifier field, implementation, and version gate | `Client.packages`, `ContentItem.packages`, `Metrics.hits` |
+
+The shared contracts and implementations live in
+[resources.py](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/resources.py).
+Pass the owner context, `self._ctx`, to child resources. Use
+`self._ctx.client` for requests so the client handles authentication, URL
+resolution, and HTTP errors.
+
+## Public contract rules
+
+1. Define items as `class Item(Resource, Protocol)`. Use `pass` when dictionary
+   access is the entire item contract. Declare operations such as `destroy()`
+   or `update()` only when the endpoint supports them.
+2. Define collections as `class Items(ResourceSequence[Item], Protocol)`.
+   Inherit the sequence contract instead of repeating its special methods.
+3. Declare endpoint methods with explicit types and named parameters.
+   Make filters keyword-only. Use positional-only identifiers for direct lookup,
+   as in `Jobs.find(self, key: str, /)`.
+4. Keep these Protocol method bodies as declarations. Use `...` rather than
+   requests, filtering, serialization, or pagination logic.
+5. Use `= ...` for an optional argument without a concrete default in the
+   contract. Omission and `None` have different meanings. Add `| None` only when
+   the interface accepts `None`.
+6. Return `Iterable[Item]` from `fetch()` and `Item | None` from `find_by()`.
+   An iterable supports both the list from `_ResourceSequence` and the generator
+   from `_PaginatedResourceSequence`.
+7. Add NumPy-style docstrings to public methods. Match the parameter types,
+   return types, filtering behavior, privileges, and version requirements.
+   Describe `fetch()` as returning all matching records.
+8. Use `from __future__ import annotations` and import typing helpers from
+   `typing_extensions`. Put imports used only for annotations under
+   `if TYPE_CHECKING` when practical.
+
+Protocols define structural types. A runtime object satisfies the public
+interface through its members, without requiring an endpoint-specific item
+class. The generic collection creates `_Resource` instances, not `Package` or
+`Hit` instances.
+
+Access response fields with `item["field"]`. The base `Resource.__getitem__()`
+returns `Any`, so this pattern types operations without enforcing individual
+response-field types.
+
+Do not instantiate a public Protocol or require consumers to check concrete
+class identity. Use `@runtime_checkable` only when runtime Protocol checks serve
+a specific purpose. Those checks do not validate argument types or method
+behavior.
+
+## Minimal implementation
+
+For an endpoint that fits the shared implementation, define only the item and
+collection Protocols. This illustrative skeleton omits docstrings. Add them
+before using it as an implementation.
+
+```{.python filename="src/posit/connect/widgets.py"}
+from __future__ import annotations
+
+from typing_extensions import Iterable, Protocol
+
+from .resources import Resource, ResourceSequence
+
+
+class Widget(Resource, Protocol):
+    pass
+
+
+class Widgets(ResourceSequence[Widget], Protocol):
+    def fetch(self, *, name: str = ...) -> Iterable[Widget]: ...
+
+    def find_by(self, *, name: str = ...) -> Widget | None: ...
+```
+
+Wire the collection through a typed property on its owner. This example assumes
+an unpaginated endpoint that returns a JSON array of records containing `guid`.
+Replace the endpoint path and schema assumptions with the actual API contract.
+
+```{.python filename="Owner property"}
+@property
+def widgets(self) -> Widgets:
+    return _ResourceSequence(self._ctx, "v1/widgets")
+```
+
+Import `_ResourceSequence` at runtime. If `Widgets` serves only as an annotation,
+import it under `if TYPE_CHECKING` in an owner module that uses deferred
+annotations.
+
+Do not add an empty `_Widgets` subclass or copy the shared methods. The
+Packages module follows this minimal form. Its owner properties choose different
+shared implementations for the global and content-scoped endpoints.
+
+## Runtime selection and owner wiring
+
+Choose the concrete implementation from the response shape.
+
+| Endpoint response | Implementation | Requirements |
+|---|---|---|
+| JSON array of records | `_ResourceSequence` | Every record contains the configured identifier field |
+| Page-number envelope with `current_page`, `total`, and `results` | `_PaginatedResourceSequence` | Endpoint accepts `page_number` and `page_size` |
+| Different envelope or cursor pagination | Private adapter with matching pagination logic | Normalize records and preserve the public iterable contract |
+
+`_PaginatedResourceSequence` uses
+[Paginator](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/paginator.py).
+It does not handle cursor pagination. The separate
+[CursorPaginator](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/cursors.py)
+provides cursor paging, but no shared Protocol collection wraps it directly.
+
+Set `uid` to the response field used to construct item paths. The default is
+`"guid"`. Packages uses `"name"`, Jobs uses `"key"`, and Hits uses `"id"`.
+The shared implementation constructs each item path as
+`<collection path>/<str(record[uid])>`.
+Do not assume that this constructed path supports lookup, update, or deletion.
+Declare those operations only after checking the endpoint.
+
+For child collections, derive the path from the parent resource path when the
+API uses that hierarchy. `ContentItem.packages` joins `self._path` with
+`"packages"`.
+
+Annotate the owner property with the public Protocol and return the concrete
+implementation. Put `@property` above `@requires(version="...")` when the entire
+endpoint has a minimum server version.
+
+The reference wiring appears in
+[client.py](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/client.py),
+[content.py](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/content.py),
+and [metrics.py](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/metrics/metrics.py).
+
+- `Client.packages` returns `_PaginatedResourceSequence` with `uid="name"` and
+  `page_size=1_000_000`. It requires Connect `2024.11.0`.
+- `ContentItem.packages` returns `_ResourceSequence` with `uid="name"`. It also
+  requires Connect `2024.11.0`.
+- `Metrics.hits` returns `_Hits` with `uid="id"`. It requires Connect `2025.04.0`.
+
+Treat these values as endpoint choices, not defaults for other APIs. The
+`requires` decorator checks the version only when the context has a known
+version. A property gate does not establish support for every filter. For
+example, the Hits integration tests require `2026.01.0` for `content_guid`
+filtering.
+
+## Fetch and lookup semantics
+
+`fetch(**conditions)` sends conditions as query parameters and wraps the server
+response. The shared method does not perform local filtering.
+
+`find_by(**conditions)` calls `self.fetch(**conditions)`, then returns the first
+record whose dictionary contains every supplied key-value pair. It returns
+`None` when no record matches. It does not guarantee a unique match or ordering.
+
+Choose the two signatures separately. A fetch argument can describe a server
+query without corresponding to an exact record field.
+Hits illustrates the distinction.
+
+| Method | Accepted conditions | Meaning |
+|---|---|---|
+| `Hits.fetch()` | `content_guid` as a string or list of strings, `start`, `end` | Server filters, including a time window and multiple content identifiers |
+| `Hits.find_by()` | Scalar `id`, `content_guid`, `user_guid`, `timestamp` | Exact record-field matching after fetching |
+
+Do not expose a list filter or time-window argument through inherited
+`find_by()` unless its exact-match behavior supports that argument.
+Renaming parameters inside `fetch()` does not change the original conditions
+that `find_by()` compares. If an endpoint needs different lookup semantics,
+override `find_by()` in its private adapter and document the behavior.
+
+The inherited `find_by()` also forwards every condition to the server.
+If the server rejects a record-field condition, adapt the fetch parameters or
+separate server filtering from local matching in an override.
+
+The separate `find(identifier)` method retrieves an item path directly. Declare
+it only when the API supplies that endpoint.
+
+The collection has no response cache. Iteration, length, indexing, slicing,
+string conversion, and representation each invoke `fetch()`.
+Length and indexing materialize the full result. Avoid promising cached access
+or constant-time indexing. Call `fetch()` and materialize its result once when
+the consumer needs repeated access.
+
+## Private adapter rules
+
+Add a private concrete class when an endpoint needs parameter translation,
+different pagination, response normalization, or a different HTTP operation.
+Keep the public Protocol stable and place wire-format details in the adapter.
+
+For a collection adapter, put the concrete base first and the public Protocol
+second, as in `_Hits(_ResourceSequence, Hits)`. Override only the affected method.
+Accept `**kwargs` when delegating the declared optional filters, and return the
+public item type.
+
+This excerpt shows the fetch adaptation in Hits.
+
+```{.python filename="src/posit/connect/metrics/hits.py"}
+class _Hits(_ResourceSequence, Hits):
+    def fetch(self, **kwargs) -> Iterable[Hit]:
+        params = rename_params(kwargs)
+        if "content_guid" in params and isinstance(params["content_guid"], list):
+            params["content_guid"] = "|".join(params["content_guid"])
+        return super().fetch(**params)
+```
+
+The [rename_params helper](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/metrics/rename_params.py)
+translates `start` to `from` and `end` to `to`. The adapter joins a list of content
+identifiers with `|`. It leaves a scalar identifier unchanged and delegates
+request handling and record wrapping to the shared fetch method.
+
+Keep omitted parameters absent. A declaration such as `start: str = ...`
+does not cause the concrete `**kwargs` method to send an ellipsis.
+Implement real defaults in runtime code when the interface promises them.
+Do not mutate caller-owned containers while translating parameters.
+In Hits, `kwargs` is a fresh dictionary, and joining the list leaves that list
+unchanged.
+
+Reuse a shared adapter helper when multiple endpoints have the same translation.
+If `super().fetch()` cannot handle the response shape, use the matching paginator
+or request code in the adapter and wrap records with their context and item path.
+Test that behavior through the public property.
+
+Item operations can also need an adapter. In
+[repository.py](https://github.com/posit-dev/posit-sdk-py/blob/main/src/posit/connect/repository.py),
+`_ContentItemRepository` overrides `_Resource.update()` to use PATCH.
+The owner explicitly constructs that item adapter. A collection adapter does not
+automatically replace the `_Resource` items created by the shared fetch method.
+
+## Verification rules
+
+Before accepting an implementation, check its public behavior through the owner
+property.
+
+- Check the HTTP method, endpoint path, query parameters, and request body where
+  relevant. Use realistic response shapes and the configured identifier field.
+- Cover empty results, matching records, and a `find_by()` miss. Check that
+  `find_by()` selects an exact match rather than simply the first server result.
+- Exercise sequence behavior and pagination across multiple pages. Check
+  termination and filter forwarding when the implementation uses pagination.
+- For adapters, check omitted arguments, scalar values, list values, parameter
+  aliases, and unchanged caller inputs where applicable.
+- Check the version gate below the supported version and at a supported version.
+  Cover filter-specific version requirements when they differ.
+- Run Ruff and Pyright. Generic methods use permissive types, so type checking
+  alone does not prove that the endpoint fulfills the public contract.
+- Add integration coverage for behavior that needs a real server, such as
+  filter availability across server versions.
+- Review the diff for duplicated shared behavior, unsupported public methods,
+  inaccurate docstrings, and unnecessary concrete classes.
+
+Use the
+[Packages unit tests](https://github.com/posit-dev/posit-sdk-py/blob/main/tests/posit/connect/test_packages.py)
+and [Hits unit tests](https://github.com/posit-dev/posit-sdk-py/blob/main/tests/posit/connect/metrics/test_hits.py)
+as starting points. They use the responses package to check the public API with
+HTTP fixtures. Extend coverage to match the endpoint contract.

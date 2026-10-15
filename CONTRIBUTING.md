@@ -39,6 +39,15 @@ All proposed changes must successfully pass the `make lint` rules prior to mergi
 
 Utilize `make fmt lint` to format and lint your changes.
 
+### Protocol resource implementations
+
+For Posit Connect APIs that use typed resource Protocols, follow the
+[Protocol resource implementation rules](docs/development/protocol-resources.qmd).
+The guide covers public contracts, shared runtime classes, endpoint adapters,
+owner properties, and verification.
+For Posit Workbench launcher APIs, also follow the
+[Workbench Protocol resource conventions](docs/development/workbench-resources.qmd).
+
 ### (Optional) pre-commit
 
 This project is configured for [pre-commit](https://pre-commit.com). Once enabled, a `git commit` hook is created, which invokes `make fmt lint`.

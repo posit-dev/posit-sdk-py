@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing_extensions import TYPE_CHECKING
+from typing_extensions import TYPE_CHECKING, Iterable, Protocol
 
 from . import rpc
-from .resources import Resources
+from .resources import Resource, ResourceSequence, _Resource, _ResourceSequence
 
 if TYPE_CHECKING:
     import builtins
@@ -14,15 +14,64 @@ if TYPE_CHECKING:
     from .types import WorkbenchUser
 
 
-class Users(Resources):
+class User(Resource, Protocol):
+    """A registered Workbench user with dictionary field access."""
+
+
+class Users(ResourceSequence[User], Protocol):
     """Look up registered Workbench users. Requires an admin/super-admin token."""
 
-    def __init__(self, ctx: ContextProtocol) -> None:
-        # Not super().__init__(ctx): Resources.__init__ types ctx as the specific in-session
-        # Context, but this manager is shared with the Bearer-token admin.Context too -- see
-        # ContextProtocol's docstring in rpc.py.
-        self._ctx = ctx
+    def fetch(self) -> Iterable[User]:
+        """Fetch all registered user records.
+
+        Returns
+        -------
+        Iterable[User]
+            Registered Workbench users.
+        """
+        ...
+
+    def find_by(
+        self,
+        *,
+        username: str = ...,
+        status: str = ...,
+        isAdmin: bool = ...,
+        isSuperAdmin: bool = ...,
+        uid: int = ...,
+    ) -> User | None:
+        """Find the first user matching all record fields exactly.
+
+        Parameters
+        ----------
+        username : str, optional
+            The login name.
+        status : str, optional
+            The account status.
+        isAdmin : bool, optional
+            Whether the account has administrator privileges.
+        isSuperAdmin : bool, optional
+            Whether the account has super-administrator privileges.
+        uid : int, optional
+            The numeric user identifier.
+
+        Returns
+        -------
+        User or None
+            The first matching user, or None when no record matches.
+        """
+        ...
 
     def list(self) -> builtins.list[WorkbenchUser]:
         """List registered Workbench users."""
+        ...
+
+
+class _Users(_ResourceSequence[User], Users):
+    """Look up registered Workbench users. Requires an admin/super-admin token."""
+
+    def __init__(self, ctx: ContextProtocol) -> None:
+        super().__init__(ctx, "get_users", resource_type=_Resource)
+
+    def list(self) -> builtins.list[WorkbenchUser]:
         return rpc.call(self._ctx.client, "get_users")
