@@ -6,7 +6,7 @@ from functools import partial
 
 from typing_extensions import Optional
 
-from ..context import requires
+from ..context import Context, requires
 from ..resources import Resources, _matches_exact, _matches_pattern, _Resource
 
 
@@ -42,7 +42,7 @@ class Integration(_Resource):
     # No additional methods needed for read-only resource
 
 
-class Integrations(Resources):
+class Integrations(Resources[Context]):
     """OAuth integrations resource collection."""
 
     @requires(version="2026.01.0")

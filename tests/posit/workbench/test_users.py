@@ -3,7 +3,7 @@
 import responses
 
 from posit.workbench.urls import Url
-from posit.workbench.users import Users
+from posit.workbench.users import _Users
 
 SERVER_URL = "https://workbench.example.com"
 
@@ -49,5 +49,5 @@ class TestList:
             },
             status=200,
         )
-        users = Users(_FakeContext()).list()
+        users = _Users(_FakeContext()).list()
         assert users[0]["username"] == "user1"  # pyright: ignore[reportTypedDictNotRequiredAccess]

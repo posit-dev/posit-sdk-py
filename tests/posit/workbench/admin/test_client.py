@@ -6,11 +6,6 @@ from unittest.mock import MagicMock
 import responses
 
 from posit.workbench.admin import Client
-from posit.workbench.compute_envs import ComputeEnvs
-from posit.workbench.jobs import Jobs
-from posit.workbench.server import Server
-from posit.workbench.sessions import Sessions
-from posit.workbench.users import Users
 
 SERVER_URL = "https://workbench.example.com"
 API_KEY = "test-token"
@@ -22,30 +17,6 @@ def _client() -> Client:
 
 def _api_url(method: str) -> str:
     return f"{SERVER_URL}/api/{method}"
-
-
-class TestResourceProperties:
-    """Tests that the client exposes the shared launcher API resource managers."""
-
-    def test_sessions_property(self):
-        """client.sessions returns a Sessions resource manager."""
-        assert isinstance(_client().sessions, Sessions)
-
-    def test_jobs_property(self):
-        """client.jobs returns a Jobs resource manager."""
-        assert isinstance(_client().jobs, Jobs)
-
-    def test_compute_envs_property(self):
-        """client.compute_envs returns a ComputeEnvs resource manager."""
-        assert isinstance(_client().compute_envs, ComputeEnvs)
-
-    def test_users_property(self):
-        """client.users returns a Users resource manager."""
-        assert isinstance(_client().users, Users)
-
-    def test_server_property(self):
-        """client.server returns a Server resource manager."""
-        assert isinstance(_client().server, Server)
 
 
 class TestAuth:

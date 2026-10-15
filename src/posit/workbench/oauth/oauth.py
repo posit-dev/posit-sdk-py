@@ -54,7 +54,7 @@ class AzureToken(TypedDict):
     ext_expires_in: NotRequired[int]
 
 
-class OAuth(Resources):
+class OAuth(Resources[Context]):
     """OAuth resource manager for Workbench.
 
     Provides access to OAuth credentials, integrations, and Azure delegated tokens.

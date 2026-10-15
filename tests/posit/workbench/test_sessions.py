@@ -4,7 +4,7 @@ import json
 
 import responses
 
-from posit.workbench.sessions import Sessions
+from posit.workbench.sessions import Sessions, _Sessions
 from posit.workbench.urls import Url
 
 SERVER_URL = "https://workbench.example.com"
@@ -36,7 +36,7 @@ def _api_url(method: str) -> str:
 
 
 def _sessions() -> Sessions:
-    return Sessions(_FakeContext())
+    return _Sessions(_FakeContext())
 
 
 class TestLaunch:

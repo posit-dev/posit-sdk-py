@@ -2,7 +2,7 @@
 
 import responses
 
-from posit.workbench.server import Server
+from posit.workbench.server import _Server
 from posit.workbench.urls import Url
 
 SERVER_URL = "https://workbench.example.com"
@@ -49,6 +49,6 @@ class TestVersion:
             json={"version": {"major": "2025", "minor": "12"}, "features": ["jobs"]},
             status=200,
         )
-        info = Server(_FakeContext()).version()
+        info = _Server(_FakeContext()).version()
         assert info["features"] == ["jobs"]  # pyright: ignore[reportTypedDictNotRequiredAccess]
         assert info["version"] == {"major": "2025", "minor": "12"}  # pyright: ignore[reportTypedDictNotRequiredAccess]

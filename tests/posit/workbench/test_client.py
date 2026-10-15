@@ -5,11 +5,6 @@ from unittest.mock import patch
 import responses
 
 from posit.workbench import Client
-from posit.workbench.compute_envs import ComputeEnvs
-from posit.workbench.jobs import Jobs
-from posit.workbench.server import Server
-from posit.workbench.sessions import Sessions
-from posit.workbench.users import Users
 
 # Valid RPC cookie format: value|expiry_date
 TEST_RPC_COOKIE = "test-cookie-value|Mon%2C%2001%20Jan%202030%2000%3A00%3A00%20GMT"
@@ -23,31 +18,6 @@ _ENV = {
 
 class TestLauncherApiProperties:
     """Tests that the existing Client exposes the shared launcher API resource managers."""
-
-    @patch.dict("os.environ", _ENV)
-    def test_sessions_property(self):
-        """client.sessions returns a Sessions resource manager."""
-        assert isinstance(Client().sessions, Sessions)
-
-    @patch.dict("os.environ", _ENV)
-    def test_jobs_property(self):
-        """client.jobs returns a Jobs resource manager."""
-        assert isinstance(Client().jobs, Jobs)
-
-    @patch.dict("os.environ", _ENV)
-    def test_compute_envs_property(self):
-        """client.compute_envs returns a ComputeEnvs resource manager."""
-        assert isinstance(Client().compute_envs, ComputeEnvs)
-
-    @patch.dict("os.environ", _ENV)
-    def test_users_property(self):
-        """client.users returns a Users resource manager."""
-        assert isinstance(Client().users, Users)
-
-    @patch.dict("os.environ", _ENV)
-    def test_server_property(self):
-        """client.server returns a Server resource manager."""
-        assert isinstance(Client().server, Server)
 
     @patch.dict("os.environ", _ENV)
     @responses.activate

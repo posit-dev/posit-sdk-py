@@ -1,19 +1,28 @@
 """Client connection for Posit Workbench."""
 
+from __future__ import annotations
+
 import os
 
 from requests import Response, Session
-from typing_extensions import Optional, Union
+from typing_extensions import TYPE_CHECKING, Optional, Union
 
 from .auth import Auth, CookieReader
-from .compute_envs import ComputeEnvs
+from .compute_envs import _ComputeEnvs
 from .context import Context, ContextManager
-from .jobs import Jobs
+from .jobs import _Jobs
 from .oauth import OAuth
-from .server import Server
-from .sessions import Sessions
+from .server import _Server
+from .sessions import _Sessions
 from .urls import Url
-from .users import Users
+from .users import _Users
+
+if TYPE_CHECKING:
+    from .compute_envs import ComputeEnvs
+    from .jobs import Jobs
+    from .server import Server
+    from .sessions import Sessions
+    from .users import Users
 
 
 class Client(ContextManager):
@@ -103,7 +112,7 @@ class Client(ContextManager):
         -------
             Sessions
         """
-        return Sessions(self._ctx)
+        return _Sessions(self._ctx)
 
     @property
     def jobs(self) -> Jobs:
@@ -113,7 +122,7 @@ class Client(ContextManager):
         -------
             Jobs
         """
-        return Jobs(self._ctx)
+        return _Jobs(self._ctx)
 
     @property
     def compute_envs(self) -> ComputeEnvs:
@@ -123,7 +132,7 @@ class Client(ContextManager):
         -------
             ComputeEnvs
         """
-        return ComputeEnvs(self._ctx)
+        return _ComputeEnvs(self._ctx)
 
     @property
     def users(self) -> Users:
@@ -133,7 +142,7 @@ class Client(ContextManager):
         -------
             Users
         """
-        return Users(self._ctx)
+        return _Users(self._ctx)
 
     @property
     def server(self) -> Server:
@@ -143,4 +152,4 @@ class Client(ContextManager):
         -------
             Server
         """
-        return Server(self._ctx)
+        return _Server(self._ctx)
