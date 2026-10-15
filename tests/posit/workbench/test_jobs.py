@@ -126,9 +126,7 @@ class TestLaunchAudited:
         )
         assert job["id"] == "abc"  # pyright: ignore[reportTypedDictNotRequiredAccess]
         body = json.loads(responses.calls[0].request.body)  # pyright: ignore[reportArgumentType]
-        assert body["kwparams"]["audited_job"]["container"] == {
-            "image": "posit/r-base:4.3-jammy"
-        }
+        assert body["kwparams"]["audited_job"]["container"] == {"image": "posit/r-base:4.3-jammy"}
 
 
 class TestStop:
@@ -431,7 +429,9 @@ class TestLaunchAndWait:
             status=200,
         )
 
-        result = _jobs().launch_and_wait("Local", "test-job", "python", ["test.py"], poll_interval=0)
+        result = _jobs().launch_and_wait(
+            "Local", "test-job", "python", ["test.py"], poll_interval=0
+        )
 
         assert result.stdout == "hello world\n"
         assert result.stderr == "uh oh\n"

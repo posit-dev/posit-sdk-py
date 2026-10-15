@@ -14,6 +14,7 @@ attached to the underlying session, so they're shared by both the cookie-authent
 from __future__ import annotations
 
 import json
+
 from requests import HTTPError, Response
 from typing_extensions import Any, Iterator, Protocol
 
