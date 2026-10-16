@@ -109,8 +109,8 @@ jobs:
       - name: Start Workbench
         id: workbench
         if: env.HAS_WORKBENCH_LICENSE == 'true'
-        # Fork with --api-token support until it lands upstream in posit-dev/with-workbench.
-        uses: michaelmayer2/with-workbench@sdk-integration
+        # Fork with --api-token support until posit-dev/with-workbench#4 and #5 land upstream.
+        uses: michaelmayer2/with-workbench@2e2ce269f528fd9eca2384f22fbfe3b8410cd267 # sdk-integration
         with:
           version: ${{ matrix.WORKBENCH_VERSION }}
           license-key: ${{ secrets.WORKBENCH_LICENSE }}
@@ -126,7 +126,7 @@ jobs:
       - name: Stop Workbench
         # Also deactivates the license; always run so activations don't leak.
         if: always() && steps.workbench.outputs.CONTAINER_ID != ''
-        uses: michaelmayer2/with-workbench@sdk-integration
+        uses: michaelmayer2/with-workbench@2e2ce269f528fd9eca2384f22fbfe3b8410cd267 # sdk-integration
         with:
           license-key: ${{ secrets.WORKBENCH_LICENSE }}
           stop: ${{ steps.workbench.outputs.CONTAINER_ID }}

@@ -64,9 +64,9 @@ CONNECT_VERSIONS := \
 WORKBENCH_VERSIONS := \
 	2026.10.0
 
-# with-workbench with --api-token support. Points at the fork's integration branch until
-# the --api-token/license-deactivation changes land upstream in posit-dev/with-workbench.
-WITH_WORKBENCH ?= git+https://github.com/michaelmayer2/with-workbench.git@sdk-integration
+# with-workbench with --api-token support, pinned to the fork's integration branch until
+# posit-dev/with-workbench#4 (license deactivation) and #5 (--api-token) land upstream.
+WITH_WORKBENCH ?= git+https://github.com/michaelmayer2/with-workbench.git@2e2ce269f528fd9eca2384f22fbfe3b8410cd267
 
 clean:
 	rm -rf logs reports
