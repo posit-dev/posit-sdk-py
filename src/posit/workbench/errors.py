@@ -25,3 +25,15 @@ class WorkbenchHTTPError(WorkbenchError):
         self.status_code = status_code
         self.body = body
         super().__init__(f"Workbench API HTTP error {status_code}: {body!r}")
+
+
+class WorkbenchJobNotFoundError(WorkbenchError):
+    """Raised when a job can't be found in either the active or the historical job list."""
+
+    def __init__(self, job_id: str) -> None:
+        self.job_id = job_id
+        super().__init__(
+            f"Job {job_id!r} not found in active or historical jobs (it may have ended and "
+            "rotated out of the active list while get_historical_session is unauthorized "
+            "for this user)"
+        )

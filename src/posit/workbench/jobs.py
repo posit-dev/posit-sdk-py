@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing_extensions import TYPE_CHECKING, Any, Iterator, cast
 
 from . import rpc
-from .errors import WorkbenchHTTPError
+from .errors import WorkbenchHTTPError, WorkbenchJobNotFoundError
 from .resources import Resources
 
 if TYPE_CHECKING:
@@ -19,6 +19,10 @@ if TYPE_CHECKING:
 # (Pending/Canceled/Running/Suspended/Failed/Finished/Killed) -- "Suspended" is treated as
 # non-terminal since it's a session-oriented state, not a job end state.
 _TERMINAL_JOB_STATUSES = frozenset({"Canceled", "Failed", "Finished", "Killed"})
+
+# Consecutive polls in which launch_and_wait may fail to find its job (in either the active or
+# historical list) before giving up with WorkbenchJobNotFoundError instead of polling forever.
+_MAX_MISSING_POLLS = 3
 
 
 @dataclass
@@ -199,7 +203,10 @@ class Jobs(Resources):
         ``poll_interval`` seconds for the job's final status (normally just once, since the
         output stream closing already means the job has ended). Raises ``TimeoutError`` if
         ``timeout`` elapses first; note ``timeout`` only bounds the status poll, not the
-        output-draining step.
+        output-draining step. Raises ``WorkbenchJobNotFoundError`` if the job is missing from
+        both the active and historical lists for several consecutive polls -- e.g. it ended
+        and rotated out of the active list, and this user isn't authorized to call
+        ``get_historical_session``.
 
         Returns
         -------
@@ -236,6 +243,9 @@ class Jobs(Resources):
         result = self._wait_for_terminal_status(
             job_id,
             user=user,
+            # Only historical jobs that ended after this one was submitted can match, so
+            # bound the historical fetch with the server's own timestamp (no clock skew).
+            since=job.get("submissionTime"),
             poll_interval=poll_interval,
             timeout=timeout,
         )
@@ -259,6 +269,7 @@ class Jobs(Resources):
         *,
         user: str | None = None,
         include_historical: bool = True,
+        filter_time_begin: str | None = None,
     ) -> dict[str, WorkbenchJob]:
         """Fetch all known jobs in one (or two) round-trips, keyed by job id.
 
@@ -268,6 +279,13 @@ class Jobs(Resources):
         call per job.
 
         On an id collision, the active-job entry wins over the historical one.
+
+        ``user`` scopes both lookups to that user's jobs. ``get_historical_session`` has no
+        per-user filter, so when ``user`` is given it's called with ``include_all_users=True``
+        and the result is filtered client-side by each job's ``user`` field.
+
+        ``filter_time_begin`` (ISO-8601) limits historical jobs to those that ended at or
+        after that time, keeping the historical fetch small when polling recent jobs.
 
         ``get_historical_session`` requires broader session-visibility privileges than plain
         self-service job launching does -- confirmed live: a regular user's in-session cookie
@@ -283,13 +301,19 @@ class Jobs(Resources):
         if include_historical:
             try:
                 historical = rpc.call(
-                    self._ctx.client, "get_historical_session", include_jobs=True
+                    self._ctx.client,
+                    "get_historical_session",
+                    include_jobs=True,
+                    include_all_users=True if user is not None else None,
+                    filter_time_begin=filter_time_begin,
                 )
             except WorkbenchHTTPError as e:
                 if e.status_code not in (401, 403):
                     raise
             else:
                 for candidate in historical.get("jobs") or []:
+                    if user is not None and candidate.get("user") != user:
+                        continue
                     job_id = candidate.get("id")
                     if job_id is not None:
                         statuses[job_id] = candidate
@@ -305,34 +329,32 @@ class Jobs(Resources):
 
         return statuses
 
-    def _find_job(self, job_id: str, *, user: str | None) -> WorkbenchJob | None:
-        # Adhoc jobs (launched via launch_job) aren't tied to a session, so include_all_jobs
-        # is required to see them via get_session.
-        active = rpc.call(self._ctx.client, "get_session", user=user, include_all_jobs=True)
-        for candidate in active.get("jobs") or []:
-            if candidate.get("id") == job_id:
-                return candidate
-
-        # A quick job may have already finished and rotated out of the active list by the
-        # time we first poll -- fall back to historical jobs before giving up.
-        historical = rpc.call(self._ctx.client, "get_historical_session", include_jobs=True)
-        for candidate in historical.get("jobs") or []:
-            if candidate.get("id") == job_id:
-                return candidate
-
-        return None
+    def _find_job(
+        self, job_id: str, *, user: str | None, since: str | None
+    ) -> WorkbenchJob | None:
+        # Checks active jobs, then falls back to historical ones -- a quick job may have
+        # already finished and rotated out of the active list by the time we first poll.
+        return self.get_status_map(user=user, filter_time_begin=since).get(job_id)
 
     def _wait_for_terminal_status(
         self,
         job_id: str,
         *,
         user: str | None,
+        since: str | None,
         poll_interval: float,
         timeout: float | None,
     ) -> JobResult:
         start = time.monotonic()
+        missing_polls = 0
         while True:
-            job = self._find_job(job_id, user=user)
+            job = self._find_job(job_id, user=user, since=since)
+            if job is None:
+                missing_polls += 1
+                if missing_polls >= _MAX_MISSING_POLLS:
+                    raise WorkbenchJobNotFoundError(job_id)
+            else:
+                missing_polls = 0
             if job is not None and job.get("status") in _TERMINAL_JOB_STATUSES:
                 return JobResult(
                     job=job,

@@ -5,7 +5,7 @@ import json
 import pytest
 import responses
 
-from posit.workbench.errors import WorkbenchHTTPError
+from posit.workbench.errors import WorkbenchHTTPError, WorkbenchJobNotFoundError
 from posit.workbench.jobs import Jobs
 from posit.workbench.urls import Url
 
@@ -39,6 +39,15 @@ def _api_url(method: str) -> str:
 
 def _jobs() -> Jobs:
     return Jobs(_FakeContext())
+
+
+def _add_empty_historical() -> None:
+    responses.add(
+        responses.POST,
+        _api_url("get_historical_session"),
+        json={"result": {"jobs": []}},
+        status=200,
+    )
 
 
 class TestLaunch:
@@ -319,6 +328,48 @@ class TestGetStatusMap:
             _jobs().get_status_map()
         assert exc_info.value.status_code == 502
 
+    @responses.activate
+    def test_user_scopes_historical_jobs(self):
+        """With user=, historical jobs are fetched for all users and filtered to that user."""
+        responses.add(
+            responses.POST,
+            _api_url("get_historical_session"),
+            json={
+                "result": {
+                    "jobs": [
+                        {"id": "alice1", "user": "alice", "status": "Finished"},
+                        {"id": "admin1", "user": "admin", "status": "Finished"},
+                    ]
+                }
+            },
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            _api_url("get_session"),
+            json={"result": {"jobs": []}},
+            status=200,
+        )
+        statuses = _jobs().get_status_map(user="alice")
+        assert set(statuses) == {"alice1"}
+        body = json.loads(responses.calls[0].request.body)  # pyright: ignore[reportArgumentType]
+        assert body["kwparams"]["include_all_users"] is True
+
+    @responses.activate
+    def test_forwards_filter_time_begin(self):
+        """filter_time_begin is passed through to get_historical_session."""
+        _add_empty_historical()
+        responses.add(
+            responses.POST,
+            _api_url("get_session"),
+            json={"result": {"jobs": []}},
+            status=200,
+        )
+        _jobs().get_status_map(filter_time_begin="2026-10-16T00:00:00.000000Z")
+        body = json.loads(responses.calls[0].request.body)  # pyright: ignore[reportArgumentType]
+        assert body["kwparams"]["filter_time_begin"] == "2026-10-16T00:00:00.000000Z"
+        assert "include_all_users" not in body["kwparams"]
+
 
 class TestLaunchAndWait:
     """Tests for Jobs.launch_and_wait()."""
@@ -332,6 +383,7 @@ class TestLaunchAndWait:
             json={"result": {"job": {"id": "j1", "status": "Pending"}}},
             status=200,
         )
+        _add_empty_historical()
         responses.add(
             responses.POST,
             _api_url("get_session"),
@@ -357,6 +409,7 @@ class TestLaunchAndWait:
             json={"result": {"job": {"id": "j1", "status": "Pending"}}},
             status=200,
         )
+        _add_empty_historical()
         responses.add(
             responses.POST,
             _api_url("get_session"),
@@ -387,6 +440,7 @@ class TestLaunchAndWait:
             json={"result": {"job": {"id": "j1", "status": "Pending"}}},
             status=200,
         )
+        _add_empty_historical()
         responses.add(
             responses.POST,
             _api_url("get_session"),
@@ -414,6 +468,7 @@ class TestLaunchAndWait:
             json={"result": {"job": {"id": "j1", "status": "Pending"}}},
             status=200,
         )
+        _add_empty_historical()
         output_body = "\n".join(
             [
                 json.dumps({"jobId": "j1", "outputType": "stdout", "output": "hello "}),
@@ -436,3 +491,90 @@ class TestLaunchAndWait:
         assert result.stdout == "hello world\n"
         assert result.stderr == "uh oh\n"
         assert result.status == "Finished"
+
+    @responses.activate
+    def test_finds_job_in_historical_list(self):
+        """A job that already rotated out of the active list is found in historical jobs."""
+        responses.add(
+            responses.POST,
+            _api_url("launch_job"),
+            json={"result": {"job": {"id": "j1", "status": "Pending"}}},
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            _api_url("get_historical_session"),
+            json={"result": {"jobs": [{"id": "j1", "status": "Finished", "exitCode": 0}]}},
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            _api_url("get_session"),
+            json={"result": {"jobs": []}},
+            status=200,
+        )
+
+        result = _jobs().launch_and_wait(
+            "Local", "test-job", "python", ["test.py"], poll_interval=0, capture_output=False
+        )
+
+        assert result.status == "Finished"
+        assert result.exit_code == 0
+
+    @responses.activate
+    def test_raises_when_job_not_found(self):
+        """A job missing from both lists raises instead of polling forever."""
+        responses.add(
+            responses.POST,
+            _api_url("launch_job"),
+            json={"result": {"job": {"id": "j1", "status": "Pending"}}},
+            status=200,
+        )
+        responses.add(responses.POST, _api_url("get_historical_session"), status=401)
+        responses.add(
+            responses.POST,
+            _api_url("get_session"),
+            json={"result": {"jobs": []}},
+            status=200,
+        )
+
+        with pytest.raises(WorkbenchJobNotFoundError) as exc_info:
+            _jobs().launch_and_wait(
+                "Local", "test-job", "python", ["test.py"], poll_interval=0, capture_output=False
+            )
+        assert exc_info.value.job_id == "j1"
+
+    @responses.activate
+    def test_bounds_historical_lookup_by_submission_time(self):
+        """The launched job's submissionTime is sent as filter_time_begin."""
+        responses.add(
+            responses.POST,
+            _api_url("launch_job"),
+            json={
+                "result": {
+                    "job": {
+                        "id": "j1",
+                        "status": "Pending",
+                        "submissionTime": "2026-10-16T12:00:00.000000Z",
+                    }
+                }
+            },
+            status=200,
+        )
+        _add_empty_historical()
+        responses.add(
+            responses.POST,
+            _api_url("get_session"),
+            json={"result": {"jobs": [{"id": "j1", "status": "Finished", "exitCode": 0}]}},
+            status=200,
+        )
+
+        _jobs().launch_and_wait(
+            "Local", "test-job", "python", ["test.py"], poll_interval=0, capture_output=False
+        )
+
+        historical_calls = [
+            c for c in responses.calls if c.request.url == _api_url("get_historical_session")
+        ]
+        body = json.loads(historical_calls[0].request.body)  # pyright: ignore[reportArgumentType]
+        assert body["kwparams"]["filter_time_begin"] == "2026-10-16T12:00:00.000000Z"
