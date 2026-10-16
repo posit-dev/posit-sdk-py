@@ -15,7 +15,12 @@ endef
 	latest \
 	print-versions \
 	help \
-	test-%
+	test-% \
+	$(WORKBENCH_VERSIONS:%=workbench-%) \
+	workbench-all \
+	workbench-latest \
+	print-workbench-versions \
+	workbench-test-%
 
 # Versions
 CONNECT_VERSIONS := \
@@ -54,6 +59,15 @@ CONNECT_VERSIONS := \
 	2022.12.0 \
 	2022.11.0
 
+# Workbench versions (newest first). Requires the Workbench API (Bearer tokens) and
+# `rstudio-server generate-api-token --token-env`; older versions are added as they're verified.
+WORKBENCH_VERSIONS := \
+	2026.10.0
+
+# with-workbench with --api-token support. Points at the fork's integration branch until
+# the --api-token/license-deactivation changes land upstream in posit-dev/with-workbench.
+WITH_WORKBENCH ?= git+https://github.com/michaelmayer2/with-workbench.git@sdk-integration
+
 clean:
 	rm -rf logs reports
 	find . -type d -empty -delete
@@ -61,7 +75,8 @@ clean:
 # Run pytest for a specific version (assumes Connect is already running).
 test-%:
 	@mkdir -p logs reports
-	$(UV) run pytest $(PYTEST_ARGS) \
+	set -o pipefail; \
+	$(UV) run pytest tests/posit/connect $(PYTEST_ARGS) \
 		--junitxml=reports/junit-$*.xml | tee logs/$*.log
 
 # Spin up Connect for a specific version and run tests.
@@ -82,6 +97,38 @@ latest:
 print-versions:
 	@printf "%s\n" $(strip $(CONNECT_VERSIONS))
 
+# Run the Workbench test suite for a specific version (assumes Workbench is already running and
+# WORKBENCH_SERVER/WORKBENCH_API_KEY point at it).
+workbench-test-%:
+	@mkdir -p logs reports
+	set -o pipefail; \
+	$(UV) run pytest tests/posit/workbench $(PYTEST_ARGS) \
+		--junitxml=reports/junit-workbench-$*.xml | tee logs/workbench-$*.log
+
+# Spin up Workbench for a specific version and run tests. Requires a license key in
+# RSW_LICENSE or PWB_LICENSE. with-workbench runs `-- COMMAND` inside the container, so start it
+# in start-only mode and stop it (which also deactivates the license) when done.
+$(WORKBENCH_VERSIONS:%=workbench-%): workbench-%:
+	set -euo pipefail; \
+	export RSW_LICENSE="$${RSW_LICENSE:-$${PWB_LICENSE:?Set RSW_LICENSE or PWB_LICENSE}}"; \
+	PORT=$$($(GET_PORT)); \
+	CREDENTIALS=$$($(UV) run --with "$(WITH_WORKBENCH)" with-workbench \
+		--version $* --port $$PORT --api-token admin --quiet); \
+	eval "$$(sed 's/^/export /' <<< "$$CREDENTIALS")"; \
+	trap '$(UV) run --with "$(WITH_WORKBENCH)" with-workbench --stop "$$CONTAINER_ID"' EXIT; \
+	WORKBENCH_SERVER="$$WORKBENCH_URL" $(MAKE) workbench-test-$*
+
+# Run test suite against all Workbench versions.
+workbench-all: $(WORKBENCH_VERSIONS:%=workbench-%)
+
+# Run test suite against latest Workbench version.
+workbench-latest:
+	$(MAKE) workbench-$(firstword $(WORKBENCH_VERSIONS))
+
+# Show available Workbench versions
+print-workbench-versions:
+	@printf "%s\n" $(strip $(WORKBENCH_VERSIONS))
+
 # Show help message.
 help:
 	@echo "Makefile Targets:"
@@ -90,6 +137,10 @@ help:
 	@echo "  <version>        Run test suite for the specified Connect version. (e.g., make 2025.10.0)"
 	@echo "  clean            Clean up logs and reports directories."
 	@echo "  print-versions   Show the available Connect versions."
+	@echo "  workbench-latest Run Workbench test suite for latest Workbench version."
+	@echo "  workbench-all    Run Workbench test suite for all Workbench versions."
+	@echo "  workbench-<ver>  Run Workbench test suite for the specified version. (e.g., make workbench-2026.10.0)"
+	@echo "  print-workbench-versions  Show the available Workbench versions."
 	@echo "  help             Show this help message."
 	@echo
 	@echo "Common Usage:"
@@ -101,3 +152,5 @@ help:
 	@echo
 	@echo "Environment Variables:"
 	@echo "  PYTEST_ARGS      Arguments to pass to pytest. Default: \"-s\""
+	@echo "  RSW_LICENSE      Workbench license key (falls back to PWB_LICENSE)."
+	@echo "  WITH_WORKBENCH   with-workbench package spec. Default: $(WITH_WORKBENCH)"
