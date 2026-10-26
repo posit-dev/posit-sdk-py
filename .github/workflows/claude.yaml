@@ -35,16 +35,16 @@ jobs:
       issues: write
       id-token: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
-      - uses: aws-actions/configure-aws-credentials@v5
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::440849847947:role/claude-code-gha
           role-session-name: gha-claude-code-action
           aws-region: us-east-2
       - id: generate-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: 1129585
           private-key: ${{ secrets.POSIT_CONNECT_PROJECTS_PEM }}

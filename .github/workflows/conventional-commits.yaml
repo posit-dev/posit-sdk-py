@@ -9,7 +9,7 @@ jobs:
   default:
     runs-on: ubuntu-latest
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
+      - uses: amannn/action-semantic-pull-request@v6
         id: lint
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -25,7 +25,7 @@ jobs:
             style
             refactor
             test
-      - uses: marocchino/sticky-pull-request-comment@v2
+      - uses: marocchino/sticky-pull-request-comment@v3
         if: always() && (steps.lint.outputs.error_message != null)
         with:
           header: lint-error
@@ -40,7 +40,7 @@ jobs:
             ${{ steps.lint.outputs.error_message }}
             ```
       - if: ${{ steps.lint.outputs.error_message == null }}
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: lint-error
           delete: true
