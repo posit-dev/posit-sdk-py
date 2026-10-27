@@ -80,7 +80,7 @@ jobs:
     outputs:
       versions: ${{ steps.versions.outputs.versions }}
     steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v7
         - id: versions
           working-directory: ./integration
           run: |
@@ -99,7 +99,7 @@ jobs:
       # e.g. on pull requests from forks.
       HAS_WORKBENCH_LICENSE: ${{ secrets.WORKBENCH_LICENSE != '' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         if: env.HAS_WORKBENCH_LICENSE == 'true'
       - uses: astral-sh/setup-uv@v7
         if: env.HAS_WORKBENCH_LICENSE == 'true'
@@ -131,7 +131,7 @@ jobs:
         with:
           license-key: ${{ secrets.WORKBENCH_LICENSE }}
           stop: ${{ steps.workbench.outputs.CONTAINER_ID }}
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: always() && env.HAS_WORKBENCH_LICENSE == 'true'
         with:
           name: Workbench ${{ matrix.WORKBENCH_VERSION }} - Integration Test Report
