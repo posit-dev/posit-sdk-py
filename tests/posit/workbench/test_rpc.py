@@ -51,6 +51,12 @@ class TestCall:
         assert body == {"method": "stop_job", "kwparams": {"job_id": "abc123"}}
 
     @responses.activate
+    def test_empty_body_returns_none(self):
+        """An empty 200 body (e.g. from stop_session on a live server) returns None."""
+        responses.add(responses.POST, _api_url("stop_session"), body="", status=200)
+        assert rpc.call(_FakeClient(), "stop_session", session_ids="abc") is None
+
+    @responses.activate
     def test_raises_rpc_error_on_error_envelope(self):
         """A `{"error": ...}` envelope raises WorkbenchRPCError."""
         responses.add(

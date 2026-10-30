@@ -2,7 +2,7 @@ include vars.mk
 
 .DEFAULT_GOAL := all
 
-.PHONY: build clean cov default dev docs ensure-uv fmt fix install it lint test uninstall version help
+.PHONY: build clean cov default dev docs ensure-uv fmt fix install it it-workbench lint test uninstall version help
 
 $(UV_LOCK): dev
 	$(UV) lock
@@ -58,6 +58,9 @@ install: build
 
 it: $(UV_LOCK)
 	$(MAKE) -C ./integration
+
+it-workbench: $(UV_LOCK)
+	$(MAKE) -C ./integration workbench-latest
 
 lint: dev
 	$(UV) run ruff check

@@ -30,3 +30,23 @@ Standard pytest selection also works; set `CONNECT_VERSION` and `LICENSE`:
 ```bash
 CONNECT_VERSION=2026.01.0 LICENSE=integration/license.lic uv run pytest integration/tests/posit/connect/test_groups.py -v
 ```
+
+## Workbench
+
+The Workbench suite (`tests/posit/workbench/`) exercises the Bearer-token admin client
+(`posit.workbench.admin.Client`) against a single Workbench container per run, provisioned by
+[with-workbench](https://github.com/posit-dev/with-workbench) with `--api-token admin`. It needs
+a Workbench license key in `RSW_LICENSE` or `PWB_LICENSE`:
+
+```bash
+make -C integration workbench-latest       # latest Workbench version
+make -C integration workbench-2026.10.0    # a specific version
+make -C integration workbench-all          # every supported version
+```
+
+To run against an already-running Workbench, set `WORKBENCH_SERVER`, `WORKBENCH_API_KEY` and
+`WORKBENCH_USER` (the user the token belongs to):
+
+```bash
+make -C integration workbench-test-2026.10.0
+```
