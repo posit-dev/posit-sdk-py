@@ -78,6 +78,10 @@ def call(client: _ClientProtocol, method: str, **kwparams: Any) -> Any:
         json={"method": method, "kwparams": _kwparams(**kwparams)},
     )
     _raise_for_status(response)
+    # Some methods (e.g. stop_session) answer a successful call with an empty 200 body
+    # rather than a {"result": ...} envelope -- confirmed against a live server.
+    if not response.content.strip():
+        return None
     return _unwrap(response.json())
 
 

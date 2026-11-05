@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing_extensions import TYPE_CHECKING, Any, Iterator, cast
 
 from . import rpc
-from .errors import WorkbenchHTTPError, WorkbenchJobNotFoundError
+from .errors import WorkbenchHTTPError, WorkbenchJobNotFoundError, WorkbenchRPCError
 from .resources import Resources
 
 if TYPE_CHECKING:
@@ -58,6 +58,7 @@ class Jobs(Resources):
         tags: list[str] | None,
         container: dict | None,
         resource_limits: list[dict] | None,
+        resource_profile: str | None,
         queues: list[str] | None,
         placement_constraints: list[dict] | None,
         user: str | None,
@@ -79,6 +80,8 @@ class Jobs(Resources):
             job["container"] = container
         if resource_limits is not None:
             job["resourceLimits"] = resource_limits
+        if resource_profile is not None:
+            job["resourceProfile"] = resource_profile
         if queues is not None:
             job["queues"] = queues
         if placement_constraints is not None:
@@ -99,12 +102,19 @@ class Jobs(Resources):
         tags: list[str] | None = None,
         container: dict | None = None,
         resource_limits: list[dict] | None = None,
+        resource_profile: str | None = None,
         queues: list[str] | None = None,
         placement_constraints: list[dict] | None = None,
         user: str | None = None,
         apply_config_settings: bool | None = None,
     ) -> WorkbenchJob:
-        """Launch a (non-audited) Workbench job."""
+        """Launch a (non-audited) Workbench job.
+
+        ``resource_profile`` names one of the cluster's resource profiles (see
+        ``ComputeEnvs.list()``'s ``resourceProfiles``). Clusters that define profiles and
+        disallow custom resources -- e.g. the Local cluster in the stock Workbench container
+        image -- reject jobs without one ("Invalid resource profile for user").
+        """
         job = self._build_job(
             cluster,
             name,
@@ -115,6 +125,7 @@ class Jobs(Resources):
             tags=tags,
             container=container,
             resource_limits=resource_limits,
+            resource_profile=resource_profile,
             queues=queues,
             placement_constraints=placement_constraints,
             user=user,
@@ -125,8 +136,7 @@ class Jobs(Resources):
             job=job,
             apply_config_settings=apply_config_settings,
         )
-        # Assumes the result envelope echoes the job back under a "job" key, mirroring the
-        # "job" kwparam key; verify against a live server if this ever mismatches.
+        # The result echoes the job back under a "job" key (confirmed against a live server).
         return result["job"]
 
     def launch_audited(
@@ -141,6 +151,7 @@ class Jobs(Resources):
         tags: list[str] | None = None,
         container: dict | None = None,
         resource_limits: list[dict] | None = None,
+        resource_profile: str | None = None,
         queues: list[str] | None = None,
         placement_constraints: list[dict] | None = None,
         user: str | None = None,
@@ -160,6 +171,7 @@ class Jobs(Resources):
             tags=tags,
             container=container,
             resource_limits=resource_limits,
+            resource_profile=resource_profile,
             queues=queues,
             placement_constraints=placement_constraints,
             user=user,
@@ -187,6 +199,7 @@ class Jobs(Resources):
         tags: list[str] | None = None,
         container: dict | None = None,
         resource_limits: list[dict] | None = None,
+        resource_profile: str | None = None,
         queues: list[str] | None = None,
         placement_constraints: list[dict] | None = None,
         user: str | None = None,
@@ -225,6 +238,7 @@ class Jobs(Resources):
             tags=tags,
             container=container,
             resource_limits=resource_limits,
+            resource_profile=resource_profile,
             queues=queues,
             placement_constraints=placement_constraints,
             user=user,
@@ -291,10 +305,12 @@ class Jobs(Resources):
         self-service job launching does -- confirmed live: a regular user's in-session cookie
         can ``launch_job``/``get_session`` for themselves but gets HTTP 401 from
         ``get_historical_session``, while a Bearer token for an account with elevated
-        visibility does not. Rather than let that break status polling for ordinary users, a
-        401/403 here is treated the same as ``include_historical=False`` -- silently degrading
-        to active-job-only status, at the cost of no longer catching jobs that finish and
-        rotate out of the active list before the next poll.
+        visibility does not. It also requires an audit database: without one, the server
+        answers with an RPC error ("Audit DB must be initialized") -- also confirmed live. Rather
+        than let either break status polling, a 401/403 or an RPC error here is treated the
+        same as ``include_historical=False`` -- silently degrading to active-job-only status,
+        at the cost of no longer catching jobs that finish and rotate out of the active list
+        before the next poll.
         """
         statuses: dict[str, WorkbenchJob] = {}
 
@@ -310,6 +326,8 @@ class Jobs(Resources):
             except WorkbenchHTTPError as e:
                 if e.status_code not in (401, 403):
                     raise
+            except WorkbenchRPCError:
+                pass
             else:
                 for candidate in historical.get("jobs") or []:
                     if user is not None and candidate.get("user") != user:
@@ -429,6 +447,7 @@ class Jobs(Resources):
             audited_job_id=audited_job_id,
             user=user,
         )
-        # The doc's example nests the details under an "audited_details" key; fall back to the
-        # raw result if a future/actual server returns the fields unwrapped.
-        return result.get("audited_details", result)
+        # A live server nests the details under "audit_details" (confirmed against 2026.10),
+        # while the doc's example shows "audited_details"; accept either, falling back to the
+        # raw result if the fields come back unwrapped.
+        return result.get("audit_details") or result.get("audited_details") or result
