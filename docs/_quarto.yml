@@ -119,6 +119,8 @@ quartodoc:
         - connect.vanities
     - title: Connect Third-Party Integrations
       contents:
+        - connect.external.a2a
+        - connect.external.commons
         - connect.external.databricks
         - connect.external.snowflake
     - title: Workbench Client
