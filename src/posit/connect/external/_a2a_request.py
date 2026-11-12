@@ -2,6 +2,12 @@
 
 This module does not import ``a2a-sdk``, so tools that run inside a turn can read the current
 request without the A2A extra installed.
+
+Connect sets two of the headers that this package reads, and the two work differently. Connect
+overwrites ``Posit-Connect-User-Session-Token`` with its own value, so a client cannot supply the
+token, and the server refuses a request that carries more than one value of it. Connect appends its
+``RStudio-Connect-App-Base-URL`` after any value that the client sent, so a client can supply
+earlier values, and only the last value is Connect's.
 """
 
 from __future__ import annotations
@@ -67,8 +73,9 @@ def _request_scope(request: A2ARequest) -> Iterator[None]:
 def visitor_guid_from_token(token: str | None) -> str | None:
     """Return the ``sub`` claim of a Connect user session token, or None.
 
-    The signature is not checked. Connect deletes any client-supplied copy of the header and sets
-    its own, so inside Connect the claims are trusted. A malformed token has no visitor.
+    The signature is not checked. Connect overwrites any client-supplied copy of the header with its
+    own, so inside Connect the claims are trusted. A malformed token, or one whose payload nests too
+    deeply to parse, has no visitor.
     """
     if not token:
         return None
@@ -78,7 +85,7 @@ def visitor_guid_from_token(token: str | None) -> str | None:
     payload = segments[1]
     try:
         claims: Any = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
-    except ValueError:
+    except (ValueError, RecursionError):
         return None
     subject = claims.get("sub") if isinstance(claims, dict) else None
     return subject if isinstance(subject, str) and subject else None
