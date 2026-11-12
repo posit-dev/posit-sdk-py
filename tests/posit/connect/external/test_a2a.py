@@ -52,6 +52,22 @@ TRUSTED_BADGE = (
     '<shiny-aside label="Trusted" icon="/commons/figs/trusted-icon.svg">'
     f"{TRUSTED_BODY} {BADGE_INFO}</shiny-aside>"
 )
+# A verified citation as Commons writes it when no asset bundle is served. The title row names the
+# corpus label, and the quote follows the title row.
+CITATION = (
+    '<shiny-aside label="documentation">'
+    '<span class="commons-citation-title"><span class="commons-citation-title-label">'
+    "documentation</span></span>\n\n> Revenue is the sum of booked order amounts.</shiny-aside>"
+)
+CITATION_WITH_ICON = CITATION.replace(
+    '<shiny-aside label="documentation">',
+    '<shiny-aside label="documentation" icon="/commons/figs/citation-mark.svg">',
+)
+# Answers in the shape the sales agent returns, as their text reads after the asides are removed.
+SALES_TRUSTED_TEXT = "Total revenue by region:\n\n- North: $90,000\n- South: $90,000"
+SALES_CITED_TEXT = "There are 120 Monitor orders.\n\nRevenue definition from the context document:"
+SALES_UNTRUSTED_TEXT = "The median order revenue across all 480 orders is $300."
+SALES_NONE_TEXT = "Sure — what would you like to know about the sales orders data?"
 
 
 def _badge(label: str, body: str, icon: str | None = None) -> str:
@@ -377,7 +393,7 @@ def test_agent_card_public_urls_follow_the_precedence(
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        pytest.param("plain text", ("plain text", None), id="no-markup"),
+        pytest.param("plain text", ("plain text", "Untrusted"), id="no-markup"),
         pytest.param(
             'Answer.<shiny-aside label="Trusted" icon="i.svg">'
             "<commons-provenance-info></commons-provenance-info></shiny-aside>",
@@ -386,30 +402,32 @@ def test_agent_card_public_urls_follow_the_precedence(
         ),
         pytest.param(
             "Answer <b>bold</b> stays.",
-            ("Answer <b>bold</b> stays.", None),
+            ("Answer <b>bold</b> stays.", "Untrusted"),
             id="unknown-tags-kept",
         ),
         pytest.param(
             "Answer <span>highlighted</span>.",
-            ("Answer highlighted.", None),
+            ("Answer highlighted.", "Untrusted"),
             id="commons-tag-outside-aside-removed",
         ),
-        pytest.param("x<br/>y", ("x<br/>y", None), id="self-closing-tag-kept"),
-        pytest.param("a<b and c>d", ("a<b and c>d", None), id="no-space-comparison-kept"),
-        pytest.param("a < b and c > d", ("a < b and c > d", None), id="spaced-comparison-kept"),
+        pytest.param("x<br/>y", ("x<br/>y", "Untrusted"), id="self-closing-tag-kept"),
+        pytest.param("a<b and c>d", ("a<b and c>d", "Untrusted"), id="no-space-comparison-kept"),
+        pytest.param(
+            "a < b and c > d", ("a < b and c > d", "Untrusted"), id="spaced-comparison-kept"
+        ),
         pytest.param(
             "List<int> and Map<String, int>",
-            ("List<int> and Map<String, int>", None),
+            ("List<int> and Map<String, int>", "Untrusted"),
             id="generics-kept",
         ),
         pytest.param(
             "Example:\n```\nVec<T>::new()\n```",
-            ("Example:\n```\nVec<T>::new()\n```", None),
+            ("Example:\n```\nVec<T>::new()\n```", "Untrusted"),
             id="code-fence-kept",
         ),
         pytest.param(
             "Line one\n\n\n\nLine two\n \n \nLine three  \n",
-            ("Line one\n\nLine two\n\nLine three", None),
+            ("Line one\n\nLine two\n\nLine three", "Untrusted"),
             id="blank-lines-collapsed",
         ),
         pytest.param(
@@ -425,7 +443,7 @@ def test_agent_card_public_urls_follow_the_precedence(
         ),
         pytest.param(
             'Fact.<shiny-aside label="Sales data">quote</shiny-aside>',
-            ("Fact.", None),
+            ("Fact.", "Untrusted"),
             id="citation-aside-only",
         ),
         pytest.param(
@@ -445,7 +463,7 @@ def test_agent_card_public_urls_follow_the_precedence(
         ),
         pytest.param(
             "stray </shiny-aside> closer",
-            ("stray  closer", None),
+            ("stray  closer", "Untrusted"),
             id="stray-closer-removed",
         ),
         pytest.param(
@@ -455,12 +473,12 @@ def test_agent_card_public_urls_follow_the_precedence(
         ),
         pytest.param(
             'Use label="Trusted" in text.',
-            ('Use label="Trusted" in text.', None),
+            ('Use label="Trusted" in text.', "Untrusted"),
             id="label-text-outside-aside-is-not-provenance",
         ),
         pytest.param(
             '<shiny-aside data-label="Trusted">x</shiny-aside>',
-            ("", None),
+            ("", "Untrusted"),
             id="data-label-is-not-provenance",
         ),
         pytest.param(
@@ -543,12 +561,15 @@ def test_message_returns_one_agent_message_with_provenance():
     }
 
 
-def test_message_without_provenance_reports_null():
+def test_message_without_a_label_is_untrusted_with_its_badge():
     with TestClient(_app(Factory(chunks=("Plain answer.",)))) as client:
         message = _send(client, "hi", "ctx-1").json()["result"]["message"]
 
-    assert message["metadata"] == {"commons": {"provenance": None}}
-    assert message["parts"] == [{"text": "Plain answer."}]
+    assert message["metadata"] == {"commons": {"provenance": "Untrusted"}}
+    assert message["parts"] == [
+        {"text": "Plain answer."},
+        _badge_part(_badge("Untrusted", UNTRUSTED_BODY)),
+    ]
 
 
 def test_provenance_badge_is_forwarded_as_a_text_html_part_after_the_text():
@@ -602,12 +623,6 @@ def test_every_provenance_badge_in_the_answer_is_forwarded_in_order():
     ("answer", "expected_text"),
     [
         pytest.param(
-            'Fact.<shiny-aside label="Sales data" icon="/i.svg">'
-            '<span class="commons-citation-title">Sales data</span>\n\n> quote</shiny-aside>',
-            "Fact.",
-            id="citation-aside",
-        ),
-        pytest.param(
             'Answer.<shiny-aside label="Trusted">Trust me.</shiny-aside>',
             "Answer.",
             id="trusted-label-with-other-body",
@@ -622,11 +637,6 @@ def test_every_provenance_badge_in_the_answer_is_forwarded_in_order():
             f'Answer.<shiny-aside label="Trusted">{TRUSTED_BODY}{BADGE_INFO}</shiny-aside>',
             "Answer.",
             id="badge-without-space-before-info",
-        ),
-        pytest.param(
-            f'Answer.<shiny-aside label="Sales data">{TRUSTED_BODY} {BADGE_INFO}</shiny-aside>',
-            "Answer.",
-            id="badge-body-with-other-label",
         ),
         pytest.param(
             f'Answer.<shiny-aside label="Trusted" icon="x<script>.svg">{TRUSTED_BODY} '
@@ -657,6 +667,124 @@ def test_asides_that_are_not_provenance_badges_are_not_forwarded(answer: str, ex
         message = _send(client, "hi", "ctx-1").json()["result"]["message"]
 
     assert message["parts"] == [{"text": expected_text}]
+
+
+def test_aside_with_another_label_is_not_forwarded_and_the_answer_is_untrusted():
+    answer = f'Answer.<shiny-aside label="Sales data">{TRUSTED_BODY} {BADGE_INFO}</shiny-aside>'
+    with TestClient(_app(Factory(chunks=(answer,)))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    assert message["parts"] == [
+        {"text": "Answer."},
+        _badge_part(_badge("Untrusted", UNTRUSTED_BODY)),
+    ]
+    assert message["metadata"] == {"commons": {"provenance": "Untrusted"}}
+
+
+@pytest.mark.parametrize(
+    ("answer", "text", "provenance", "badge"),
+    [
+        pytest.param(
+            SALES_TRUSTED_TEXT + _badge("Trusted", TRUSTED_BODY),
+            SALES_TRUSTED_TEXT,
+            "Trusted",
+            _badge("Trusted", TRUSTED_BODY),
+            id="trusted-measure-answer",
+        ),
+        pytest.param(
+            f"{SALES_CITED_TEXT}\n\n{CITATION}",
+            SALES_CITED_TEXT,
+            "Cited",
+            _badge("Cited", CITED_BODY),
+            id="cited-verified-sql-answer",
+        ),
+        pytest.param(
+            SALES_UNTRUSTED_TEXT + _badge("Untrusted", UNTRUSTED_BODY),
+            SALES_UNTRUSTED_TEXT,
+            "Untrusted",
+            _badge("Untrusted", UNTRUSTED_BODY),
+            id="untrusted-ad-hoc-sql-answer",
+        ),
+        pytest.param(
+            SALES_NONE_TEXT,
+            SALES_NONE_TEXT,
+            "Untrusted",
+            _badge("Untrusted", UNTRUSTED_BODY),
+            id="clarifying-question",
+        ),
+    ],
+)
+def test_sales_answers_carry_their_label(
+    answer: str, text: str, provenance: str | None, badge: str | None
+):
+    with TestClient(_app(Factory(chunks=(answer,)))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    expected_parts: list[dict[str, Any]] = [{"text": text}]
+    if badge is not None:
+        expected_parts.append(_badge_part(badge))
+    assert message["parts"] == expected_parts
+    assert message["metadata"] == {"commons": {"provenance": provenance}}
+
+
+@pytest.mark.parametrize(
+    ("answer", "expected"),
+    [
+        pytest.param(
+            f"Fact.{CITATION}",
+            ("Fact.", "Cited", _badge("Cited", CITED_BODY)),
+            id="citation-alone",
+        ),
+        pytest.param(
+            f"Fact.{CITATION_WITH_ICON}",
+            ("Fact.", "Cited", _badge("Cited", CITED_BODY)),
+            id="citation-with-mark-icon",
+        ),
+        pytest.param(
+            f"Fact.{CITATION.replace('documentation', 'Trusted')}",
+            ("Fact.", "Cited", _badge("Cited", CITED_BODY)),
+            id="citation-from-corpus-labelled-trusted",
+        ),
+        pytest.param(
+            f"Fact.{CITATION.replace('documentation', 'Untrusted')}",
+            ("Fact.", "Cited", _badge("Cited", CITED_BODY)),
+            id="citation-from-corpus-labelled-untrusted",
+        ),
+        pytest.param(
+            f"Fact.{CITATION}{TRUSTED_BADGE}",
+            ("Fact.", "Trusted", TRUSTED_BADGE),
+            id="citation-with-trusted-badge-stays-trusted",
+        ),
+        pytest.param(
+            f'Fact.<shiny-aside label="Trusted">x</shiny-aside>{CITATION}',
+            ("Fact.", "Trusted", None),
+            id="explicit-trusted-label-with-citation-stays-trusted",
+        ),
+        pytest.param(
+            'Fact.<shiny-aside label="documentation">quote</shiny-aside>',
+            ("Fact.", "Untrusted", _badge("Untrusted", UNTRUSTED_BODY)),
+            id="aside-without-title-row",
+        ),
+        pytest.param(
+            'Fact.<shiny-aside label="documentation">Note.<span class="commons-citation-title">'
+            '<span class="commons-citation-title-label">documentation</span></span>\n\n> quote'
+            "</shiny-aside>",
+            ("Fact.", "Untrusted", _badge("Untrusted", UNTRUSTED_BODY)),
+            id="title-row-after-text",
+        ),
+        pytest.param(
+            f"Fact.{CITATION.removesuffix('</shiny-aside>')}",
+            ("Fact.", "Untrusted", _badge("Untrusted", UNTRUSTED_BODY)),
+            id="unclosed-citation",
+        ),
+    ],
+)
+def test_verified_citation_makes_an_answer_cited_unless_a_provenance_label_is_present(
+    answer: str, expected: tuple[str, str | None, str | None]
+):
+    result = a2a._parse_answer(answer)
+
+    assert (result.text, result.provenance, result.badge) == expected
 
 
 @pytest.mark.parametrize(
@@ -757,14 +885,20 @@ def test_stream_chunks_are_joined_without_separators():
     with TestClient(_app(Factory(chunks=("Hel", "lo")))) as client:
         message = _send(client, "hi", "ctx-1").json()["result"]["message"]
 
-    assert message["parts"] == [{"text": "Hello"}]
+    assert message["parts"] == [
+        {"text": "Hello"},
+        _badge_part(_badge("Untrusted", UNTRUSTED_BODY)),
+    ]
 
 
 def test_non_text_chunks_are_skipped():
     with TestClient(_app(Factory(chunks=("Hi", {"kind": "tool"}, " there")))) as client:
         message = _send(client, "hi", "ctx-1").json()["result"]["message"]
 
-    assert message["parts"] == [{"text": "Hi there"}]
+    assert message["parts"] == [
+        {"text": "Hi there"},
+        _badge_part(_badge("Untrusted", UNTRUSTED_BODY)),
+    ]
 
 
 def test_multi_part_message_is_joined_with_newlines():
@@ -1043,6 +1177,15 @@ def test_agent_failure_returns_failed_task_without_details(
     assert "'ctx-fail'" in record.getMessage()
 
 
+def test_failed_task_carries_no_provenance():
+    with TestClient(_app(Factory(fail_at="stream"))) as client:
+        response = _send(client, "hi", "ctx-fail")
+
+    assert response.json()["result"]["task"]["status"]["state"] == "TASK_STATE_FAILED"
+    assert "provenance" not in response.text
+    assert "Untrusted" not in response.text
+
+
 def test_failed_turn_starts_a_new_agent_on_the_next_message():
     failures_left = [1]
 
@@ -1068,7 +1211,10 @@ def test_failed_turn_starts_a_new_agent_on_the_next_message():
         recovered = _send(client, "two", "ctx")
 
     assert "task" in failed.json()["result"]
-    assert recovered.json()["result"]["message"]["parts"] == [{"text": "recovered"}]
+    assert recovered.json()["result"]["message"]["parts"] == [
+        {"text": "recovered"},
+        _badge_part(_badge("Untrusted", UNTRUSTED_BODY)),
+    ]
     assert factory_calls == ["ctx", "ctx"]
 
 

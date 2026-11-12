@@ -113,17 +113,25 @@ _CURRENT_REQUEST: ContextVar[Request | None] = ContextVar(
     "commons_a2a_current_request", default=None
 )
 
+_CITED = "Cited"
+# The label of an answer that Commons gave no label. Commons derives no tag when no successful data
+# tool ran, such as for a clarifying question or a tool error, so the server reports such an answer
+# as Untrusted.
+_UNTRUSTED = "Untrusted"
 # A label that ranks higher is less trusted. The least trusted label in an answer is reported.
-_PROVENANCE_RANK = {"Trusted": 0, "Cited": 1, "Untrusted": 2}
+_PROVENANCE_RANK = {"Trusted": 0, _CITED: 1, _UNTRUSTED: 2}
 _ASIDE_OPEN = "<shiny-aside"
 _ASIDE_CLOSE = "</shiny-aside>"
 _LABEL = re.compile(r"""\slabel=["'](?P<label>[^"']*)["']""")
 # The tags that Commons writes. Each one appears only inside an aside, so a stray one is removed.
 _COMMONS_TAGS = re.compile(r"</?(?:span|blockquote|commons-provenance-info)\b[^<>]*>")
 _BLANK_LINE = re.compile(r"\n\s*\n")
+# The opening tag of a Commons aside: its label, and its icon when Commons serves one.
+_OPEN_TAG = re.compile(r"""<shiny-aside label="(?P<label>[^"]*)"(?: icon="(?P<icon>[^"]*)")?>""")
 # A provenance badge is an aside whose label, icon, and body match a badge that Commons writes.
 # Any other aside, including a citation, is not a badge, so its HTML is not forwarded.
-_BADGE_OPEN = re.compile(r"""<shiny-aside label="(?P<label>[^"]*)"(?: icon="(?P<icon>[^"]*)")?>""")
+# A verified citation's body starts with this title row, which Commons writes before the quote.
+_CITATION_TITLE = '<span class="commons-citation-title">'
 _BADGE_INFO = '<commons-provenance-info class="commons-provenance-info"></commons-provenance-info>'
 # The icon's base is a relative path or an http(s) URL with no quote, angle bracket, or whitespace.
 _ICON_BASE = re.compile(r"""(?:https?://|/)[^\s"<>]*""")
@@ -145,6 +153,12 @@ _BADGES = {
     "Trusted": _Badge(_TRUSTED_BODY, "trusted-icon.svg"),
     "Cited": _Badge(_CITED_BODY, None),
     "Untrusted": _Badge(_UNTRUSTED_BODY, "warning-icon.svg"),
+}
+# Commons writes no badge for a Cited answer or for an answer with no label. The server builds those
+# badges from the table, without an icon.
+_BUILT_BADGES = {
+    label: f'<shiny-aside label="{label}">{_BADGES[label].body} {_BADGE_INFO}{_ASIDE_CLOSE}'
+    for label in (_CITED, _UNTRUSTED)
 }
 
 
@@ -197,6 +211,9 @@ def create_a2a_app(
     An answer with a provenance badge has a second part after its text. The part's text is the
     badge's HTML, its media type is ``text/html``, and its metadata sets ``commons.kind`` to
     ``provenance-badge``. The part is omitted when the HTML is longer than 20,000 characters.
+    An answer with no label from Commons is Untrusted, and its second part is the Untrusted badge.
+    A Cited answer's second part is the Cited badge. The server builds both badges, because Commons
+    writes neither for these answers.
 
     A turn that fails is stored as a failed task. The task is visible only to the visitor who sent
     the message. The store keeps the most recent 1000 saved tasks and deletes older ones. Requests
@@ -557,24 +574,51 @@ def _parse_answer(raw: str) -> _Answer:
     """Split a raw answer into its plain text, its provenance label, and its badge HTML.
 
     The asides are removed from the text. The Commons tags that appear outside an aside are removed
-    too. Other text, including angle brackets, is kept as written. The label is the least trusted
-    provenance label among the asides. The badge is the HTML of the provenance badges, or None when
-    there are none or when that HTML is longer than ``_BADGE_MAX_CHARS``.
+    too. Other text, including angle brackets, is kept as written. The label and badge come from
+    ``_provenance_and_badge``. The badge is None when there is none, or when its HTML is longer than
+    ``_BADGE_MAX_CHARS``.
     """
     text, asides = _split_asides(raw)
     text = _COMMONS_TAGS.sub("", text.replace(_ASIDE_CLOSE, ""))
-    badges = [html for _, html in asides if _is_provenance_badge(html)]
-    html = "\n".join(badges)
+    provenance, html = _provenance_and_badge(asides)
     return _Answer(
         text=_BLANK_LINE.sub("\n\n", text).strip(),
-        provenance=_least_trusted([label for label, _ in asides]),
-        badge=html if badges and len(html) <= _BADGE_MAX_CHARS else None,
+        provenance=provenance,
+        badge=html if html and len(html) <= _BADGE_MAX_CHARS else None,
+    )
+
+
+def _provenance_and_badge(asides: list[tuple[str | None, str]]) -> tuple[str, str]:
+    """Return the answer's label, and the HTML of its badge (an empty string for no badge).
+
+    An explicit Commons label wins. Otherwise a verified citation makes the answer Cited. Otherwise
+    the answer is Untrusted. Commons derives no tag when no successful data tool ran, for example for
+    a clarifying question, so such an answer has no calculation or citation behind it.
+    """
+    label = _least_trusted([label for label, html in asides if not _is_citation(html)])
+    if label is not None:
+        return label, "\n".join(html for _, html in asides if _is_provenance_badge(html))
+    if any(_is_citation(html) for _, html in asides):
+        return _CITED, _BUILT_BADGES[_CITED]
+    return _UNTRUSTED, _BUILT_BADGES[_UNTRUSTED]
+
+
+def _is_citation(aside: str) -> bool:
+    """Return whether an aside is a verified citation exactly as Commons writes it.
+
+    Commons writes the citation's title row first, then its quote, and closes the aside.
+    """
+    match = _OPEN_TAG.match(aside)
+    return (
+        match is not None
+        and aside.startswith(_CITATION_TITLE, match.end())
+        and aside.endswith(_ASIDE_CLOSE)
     )
 
 
 def _is_provenance_badge(aside: str) -> bool:
     """Return whether an aside's HTML is a provenance badge exactly as Commons writes it."""
-    match = _BADGE_OPEN.match(aside)
+    match = _OPEN_TAG.match(aside)
     if match is None:
         return False
     badge = _BADGES.get(match.group("label"))
