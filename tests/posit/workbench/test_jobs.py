@@ -103,15 +103,18 @@ class TestLaunch:
             working_directory="/home/michael",
             resource_limits=[{"type": "cpuCount", "value": "2"}],
             placement_constraints=[{"name": "zone", "value": "us-east-1"}],
+            resource_profile="default",
         )
         body = json.loads(responses.calls[0].request.body)  # pyright: ignore[reportArgumentType]
         job_body = body["kwparams"]["job"]
         assert job_body["workingDirectory"] == "/home/michael"
+        assert job_body["resourceProfile"] == "default"
         assert job_body["resourceLimits"] == [{"type": "cpuCount", "value": "2"}]
         assert job_body["placementConstraints"] == [{"name": "zone", "value": "us-east-1"}]
         assert "working_directory" not in job_body
         assert "resource_limits" not in job_body
         assert "placement_constraints" not in job_body
+        assert "resource_profile" not in job_body
 
 
 class TestLaunchAudited:
@@ -224,13 +227,32 @@ class TestGetAuditedDetails:
 
     @responses.activate
     def test_get_audited_details(self):
-        """get_audited_job_details unwraps the audited_details envelope."""
+        """get_audited_job_details unwraps the documented audited_details envelope."""
         responses.add(
             responses.POST,
             _api_url("get_audited_job_details"),
             json={
                 "result": {
                     "audited_details": {
+                        "script_output": {"checksum": "kFe4sdpdad"},
+                        "environment": {"summary": "..."},
+                    }
+                }
+            },
+            status=200,
+        )
+        details = _jobs().get_audited_details("aj1")
+        assert details["script_output"]["checksum"] == "kFe4sdpdad"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+
+    @responses.activate
+    def test_get_audited_details_live_envelope(self):
+        """get_audited_job_details unwraps the audit_details envelope a live server returns."""
+        responses.add(
+            responses.POST,
+            _api_url("get_audited_job_details"),
+            json={
+                "result": {
+                    "audit_details": {
                         "script_output": {"checksum": "kFe4sdpdad"},
                         "environment": {"summary": "..."},
                     }
@@ -306,6 +328,28 @@ class TestGetStatusMap:
             responses.POST,
             _api_url("get_historical_session"),
             status=401,
+        )
+        responses.add(
+            responses.POST,
+            _api_url("get_session"),
+            json={"result": {"jobs": [{"id": "active1", "status": "Running"}]}},
+            status=200,
+        )
+        statuses = _jobs().get_status_map()
+        assert set(statuses) == {"active1"}
+
+    @responses.activate
+    def test_degrades_to_active_only_on_historical_rpc_error(self):
+        """An RPC error from get_historical_session degrades to active-job-only status.
+
+        Confirmed live: without an audit database, the server answers with an RPC error
+        ("Audit DB must be initialized") rather than an HTTP error.
+        """
+        responses.add(
+            responses.POST,
+            _api_url("get_historical_session"),
+            json={"error": {"code": 100, "message": "Error occurred while executing method"}},
+            status=200,
         )
         responses.add(
             responses.POST,

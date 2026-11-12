@@ -98,6 +98,7 @@ class WorkbenchJob(TypedDict, total=False):
     environment: list[EnvironmentVariable]
     placementConstraints: list[PlacementConstraint]
     resourceLimits: list[ResourceLimit]
+    resourceProfile: str
     metadata: Any
 
 
