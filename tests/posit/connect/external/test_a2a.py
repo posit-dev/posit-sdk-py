@@ -39,6 +39,41 @@ ALLOWED_HEADERS = {
 }
 SKILL = AgentSkill(id="lookup", name="Lookup", description="Looks things up.", tags=["data"])
 LOGGER_NAME = "posit.connect.external.a2a"
+TRUSTED_BODY = "This answer comes from a trusted calculation."
+CITED_BODY = "This answer cites context from a trusted source that supports its approach."
+UNTRUSTED_BODY = (
+    "This answer was not produced by a trusted calculation and does not cite trusted context."
+)
+BADGE_INFO = '<commons-provenance-info class="commons-provenance-info"></commons-provenance-info>'
+# The badge shape from Commons' provenance table: the label, body, and info control, with the icon
+# as ``{asset base}/figs/{file}``. The asset base path is illustrative. Commons serves the bundle
+# under a path that includes its version.
+TRUSTED_BADGE = (
+    '<shiny-aside label="Trusted" icon="/commons/figs/trusted-icon.svg">'
+    f"{TRUSTED_BODY} {BADGE_INFO}</shiny-aside>"
+)
+
+
+def _badge(label: str, body: str, icon: str | None = None) -> str:
+    icon_attr = "" if icon is None else f' icon="{icon}"'
+    return f'<shiny-aside label="{label}"{icon_attr}>{body} {BADGE_INFO}</shiny-aside>'
+
+
+def _trusted_badge_of_length(length: int) -> str:
+    """Return a Trusted badge of exactly ``length`` characters, padded in its asset base path."""
+
+    def build(padding: int) -> str:
+        return _badge("Trusted", TRUSTED_BODY, icon=f"/{'a' * padding}/figs/trusted-icon.svg")
+
+    return build(length - len(build(0)))
+
+
+def _badge_part(html: str) -> dict[str, Any]:
+    return {
+        "text": html,
+        "mediaType": "text/html",
+        "metadata": {"commons": {"kind": "provenance-badge"}},
+    }
 
 
 @pytest.fixture(autouse=True)
@@ -449,7 +484,7 @@ def test_agent_card_public_urls_follow_the_precedence(
     ],
 )
 def test_clean_answer_strips_markup_and_reads_provenance(raw: str, expected: tuple[str, Any]):
-    assert a2a._clean_answer(raw) == expected
+    assert a2a._parse_answer(raw)[:2] == expected
 
 
 @pytest.mark.parametrize(
@@ -463,11 +498,24 @@ def test_clean_answer_strips_markup_and_reads_provenance(raw: str, expected: tup
 )
 def test_adversarial_unclosed_asides_are_cleaned_quickly(raw: str, expected: tuple[str, Any]):
     started = time.perf_counter()
-    result = a2a._clean_answer(raw)
+    result = a2a._parse_answer(raw)[:2]
     elapsed = time.perf_counter() - started
 
     assert elapsed < 1.0
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        pytest.param(
+            '<shiny-aside label="Trusted" icon="' * 8000, id="unterminated-badge-openers"
+        ),
+        pytest.param(TRUSTED_BADGE * 2000, id="many-badges-over-limit"),
+    ],
+)
+def test_adversarial_badge_candidates_are_not_forwarded(raw: str):
+    assert a2a._parse_answer(raw).badge is None
 
 
 def test_message_returns_one_agent_message_with_provenance():
@@ -501,6 +549,208 @@ def test_message_without_provenance_reports_null():
 
     assert message["metadata"] == {"commons": {"provenance": None}}
     assert message["parts"] == [{"text": "Plain answer."}]
+
+
+def test_provenance_badge_is_forwarded_as_a_text_html_part_after_the_text():
+    with TestClient(_app(Factory(chunks=("Answer.", TRUSTED_BADGE)))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    assert message["parts"] == [{"text": "Answer."}, _badge_part(TRUSTED_BADGE)]
+    assert message["metadata"] == {"commons": {"provenance": "Trusted"}}
+
+
+@pytest.mark.parametrize(
+    ("label", "body", "icon"),
+    [
+        pytest.param("Cited", CITED_BODY, None, id="cited-without-icon"),
+        pytest.param(
+            "Untrusted", UNTRUSTED_BODY, "/commons/figs/warning-icon.svg", id="untrusted"
+        ),
+        pytest.param("Untrusted", UNTRUSTED_BODY, None, id="untrusted-without-icon"),
+        pytest.param(
+            "Untrusted",
+            UNTRUSTED_BODY,
+            "https://connect.example/content/abc/commons-chat-0.1.0/figs/warning-icon.svg",
+            id="untrusted-with-https-asset-base",
+        ),
+    ],
+)
+def test_each_provenance_label_is_forwarded_with_its_own_badge(
+    label: str, body: str, icon: str | None
+):
+    badge = _badge(label, body, icon)
+    with TestClient(_app(Factory(chunks=("Answer.", badge)))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    assert message["parts"] == [{"text": "Answer."}, _badge_part(badge)]
+    assert message["metadata"] == {"commons": {"provenance": label}}
+
+
+def test_every_provenance_badge_in_the_answer_is_forwarded_in_order():
+    untrusted = _badge("Untrusted", UNTRUSTED_BODY, "/commons/figs/warning-icon.svg")
+    with TestClient(_app(Factory(chunks=("Answer.", TRUSTED_BADGE, untrusted)))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    assert message["parts"] == [
+        {"text": "Answer."},
+        _badge_part(f"{TRUSTED_BADGE}\n{untrusted}"),
+    ]
+    assert message["metadata"] == {"commons": {"provenance": "Untrusted"}}
+
+
+@pytest.mark.parametrize(
+    ("answer", "expected_text"),
+    [
+        pytest.param(
+            'Fact.<shiny-aside label="Sales data" icon="/i.svg">'
+            '<span class="commons-citation-title">Sales data</span>\n\n> quote</shiny-aside>',
+            "Fact.",
+            id="citation-aside",
+        ),
+        pytest.param(
+            'Answer.<shiny-aside label="Trusted">Trust me.</shiny-aside>',
+            "Answer.",
+            id="trusted-label-with-other-body",
+        ),
+        pytest.param(
+            f'Answer.<shiny-aside label="Trusted">{TRUSTED_BODY} <script>alert(1)</script>'
+            f"{BADGE_INFO}</shiny-aside>",
+            "Answer.",
+            id="badge-body-with-script",
+        ),
+        pytest.param(
+            f'Answer.<shiny-aside label="Trusted">{TRUSTED_BODY}{BADGE_INFO}</shiny-aside>',
+            "Answer.",
+            id="badge-without-space-before-info",
+        ),
+        pytest.param(
+            f'Answer.<shiny-aside label="Sales data">{TRUSTED_BODY} {BADGE_INFO}</shiny-aside>',
+            "Answer.",
+            id="badge-body-with-other-label",
+        ),
+        pytest.param(
+            f'Answer.<shiny-aside label="Trusted" icon="x<script>.svg">{TRUSTED_BODY} '
+            f"{BADGE_INFO}</shiny-aside>",
+            "Answer.",
+            id="icon-with-angle-brackets",
+        ),
+        pytest.param(
+            f'Answer.<shiny-aside label="Trusted">{TRUSTED_BODY} '
+            "<commons-provenance-info></commons-provenance-info></shiny-aside>",
+            "Answer.",
+            id="info-control-without-class",
+        ),
+        pytest.param(
+            f'Answer.<shiny-aside label="Trusted">{TRUSTED_BODY} {BADGE_INFO}',
+            "Answer.",
+            id="unclosed-badge",
+        ),
+        pytest.param(
+            f"Answer.<shiny-aside label='Trusted'>{TRUSTED_BODY} {BADGE_INFO}</shiny-aside>",
+            "Answer.",
+            id="single-quoted-label",
+        ),
+    ],
+)
+def test_asides_that_are_not_provenance_badges_are_not_forwarded(answer: str, expected_text: str):
+    with TestClient(_app(Factory(chunks=(answer,)))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    assert message["parts"] == [{"text": expected_text}]
+
+
+@pytest.mark.parametrize(
+    ("length", "forwarded"),
+    [
+        pytest.param(20_000, True, id="at-limit"),
+        pytest.param(20_001, False, id="over-limit"),
+    ],
+)
+def test_provenance_badge_is_omitted_only_above_the_size_limit(length: int, forwarded: bool):
+    badge = _trusted_badge_of_length(length)
+    assert len(badge) == length
+    with TestClient(_app(Factory(chunks=("Answer.", badge)))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    expected_parts = [{"text": "Answer."}]
+    if forwarded:
+        expected_parts.append(_badge_part(badge))
+    assert message["parts"] == expected_parts
+    assert message["metadata"] == {"commons": {"provenance": "Trusted"}}
+
+
+@pytest.mark.parametrize(
+    ("label", "body", "icon"),
+    [
+        pytest.param(
+            "Trusted",
+            TRUSTED_BODY,
+            "javascript:alert(1)/figs/trusted-icon.svg",
+            id="javascript-scheme",
+        ),
+        pytest.param(
+            "Trusted",
+            TRUSTED_BODY,
+            "data:image/svg+xml;base64,PHN2Zy8+/figs/trusted-icon.svg",
+            id="data-scheme",
+        ),
+        pytest.param("Trusted", TRUSTED_BODY, "/anything.svg", id="arbitrary-path"),
+        pytest.param(
+            "Trusted", TRUSTED_BODY, "/commons/figs/warning-icon.svg", id="wrong-icon-for-label"
+        ),
+        pytest.param(
+            "Untrusted",
+            UNTRUSTED_BODY,
+            "/commons/figs/trusted-icon.svg",
+            id="trusted-icon-on-untrusted",
+        ),
+        pytest.param("Cited", CITED_BODY, "/commons/figs/trusted-icon.svg", id="cited-with-icon"),
+        pytest.param(
+            "Trusted", TRUSTED_BODY, "/commons /figs/trusted-icon.svg", id="base-with-space"
+        ),
+        pytest.param("Trusted", TRUSTED_BODY, "", id="empty-icon"),
+    ],
+)
+def test_badge_icon_must_be_the_label_icon_under_the_asset_base(label: str, body: str, icon: str):
+    with TestClient(_app(Factory(chunks=("Answer.", _badge(label, body, icon))))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    assert message["parts"] == [{"text": "Answer."}]
+
+
+@pytest.mark.parametrize(
+    ("total", "forwarded"),
+    [
+        pytest.param(20_000, True, id="at-limit"),
+        pytest.param(20_001, False, id="over-limit"),
+    ],
+)
+def test_two_badges_are_limited_together_as_their_joined_html(total: int, forwarded: bool):
+    first = _trusted_badge_of_length(10_000)
+    second = _trusted_badge_of_length(total - len(first) - 1)
+    html = f"{first}\n{second}"
+    assert len(html) == total
+    with TestClient(_app(Factory(chunks=("Answer.", first, second)))) as client:
+        message = _send(client, "hi", "ctx-1").json()["result"]["message"]
+
+    expected_parts = [{"text": "Answer."}]
+    if forwarded:
+        expected_parts.append(_badge_part(html))
+    assert message["parts"] == expected_parts
+
+
+def test_badge_extraction_failure_returns_failed_task(monkeypatch: pytest.MonkeyPatch):
+    def broken(_: str) -> bool:
+        raise RuntimeError("boom: badge")
+
+    monkeypatch.setattr(a2a, "_is_provenance_badge", broken)
+    with TestClient(_app(Factory(chunks=("Answer.", TRUSTED_BADGE)))) as client:
+        response = _send(client, "hi", "ctx-badge")
+
+    task = response.json()["result"]["task"]
+    assert task["status"]["state"] == "TASK_STATE_FAILED"
+    assert task["status"]["message"]["parts"] == [{"text": FAILURE_TEXT}]
+    assert "boom" not in response.text
 
 
 def test_stream_chunks_are_joined_without_separators():

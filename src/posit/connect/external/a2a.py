@@ -28,7 +28,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
-from typing_extensions import TYPE_CHECKING, Any, Literal, Protocol
+from typing_extensions import TYPE_CHECKING, Any, Literal, NamedTuple, Protocol
 
 from ._a2a_request import A2ARequest, _request_scope, current_a2a_request, visitor_guid_from_token
 
@@ -60,6 +60,7 @@ try:
         AgentInterface,
         AgentProvider,
         APIKeySecurityScheme,
+        Part,
         SecurityRequirement,
         SecurityScheme,
         StringList,
@@ -120,6 +121,31 @@ _LABEL = re.compile(r"""\slabel=["'](?P<label>[^"']*)["']""")
 # The tags that Commons writes. Each one appears only inside an aside, so a stray one is removed.
 _COMMONS_TAGS = re.compile(r"</?(?:span|blockquote|commons-provenance-info)\b[^<>]*>")
 _BLANK_LINE = re.compile(r"\n\s*\n")
+# A provenance badge is an aside whose label, icon, and body match a badge that Commons writes.
+# Any other aside, including a citation, is not a badge, so its HTML is not forwarded.
+_BADGE_OPEN = re.compile(r"""<shiny-aside label="(?P<label>[^"]*)"(?: icon="(?P<icon>[^"]*)")?>""")
+_BADGE_INFO = '<commons-provenance-info class="commons-provenance-info"></commons-provenance-info>'
+# The icon's base is a relative path or an http(s) URL with no quote, angle bracket, or whitespace.
+_ICON_BASE = re.compile(r"""(?:https?://|/)[^\s"<>]*""")
+_BADGE_MAX_CHARS = 20_000
+_TRUSTED_BODY = "This answer comes from a trusted calculation."
+_CITED_BODY = "This answer cites context from a trusted source that supports its approach."
+_UNTRUSTED_BODY = (
+    "This answer was not produced by a trusted calculation and does not cite trusted context."
+)
+
+
+class _Badge(NamedTuple):
+    body: str
+    icon_file: str | None
+
+
+# The text and icon file of each badge, as Commons writes them. Cited has no icon.
+_BADGES = {
+    "Trusted": _Badge(_TRUSTED_BODY, "trusted-icon.svg"),
+    "Cited": _Badge(_CITED_BODY, None),
+    "Untrusted": _Badge(_UNTRUSTED_BODY, "warning-icon.svg"),
+}
 
 
 class Agent(Protocol):
@@ -167,6 +193,10 @@ def create_a2a_app(
     the content, and Connect removes the ``Authorization`` header.
 
     A message with several text parts is one prompt. The parts are joined with newlines.
+
+    An answer with a provenance badge has a second part after its text. The part's text is the
+    badge's HTML, its media type is ``text/html``, and its metadata sets ``commons.kind`` to
+    ``provenance-badge``. The part is omitted when the HTML is longer than 20,000 characters.
 
     A turn that fails is stored as a failed task. The task is visible only to the visitor who sent
     the message. The store keeps the most recent 1000 saved tasks and deletes older ones. Requests
@@ -461,26 +491,25 @@ class _CommonsExecutor(AgentExecutor):
         context_id = context.context_id
         request = _a2a_request(context, context_id)
         try:
-            answer, provenance = await self._answer(context, request)
+            raw = await self._answer(context, request)
+            reply = _reply(_parse_answer(raw), context_id)
         except Exception:
             logger.exception("The agent failed in A2A context %r.", context_id)
             self._sessions.discard(request)
             await event_queue.enqueue_event(_failed_task(context, context_id))
             return
-        await event_queue.enqueue_event(_reply(answer, context_id, provenance))
+        await event_queue.enqueue_event(reply)
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:  # noqa: ARG002
         raise UnsupportedOperationError()
 
-    async def _answer(
-        self, context: RequestContext, request: A2ARequest
-    ) -> tuple[str, str | None]:
+    async def _answer(self, context: RequestContext, request: A2ARequest) -> str:
         with _request_scope(request):
             session = self._sessions.session_for(request)
             async with session.lock:
                 stream = await session.agent.stream_async(context.get_user_input(), content="text")
                 chunks = [chunk async for chunk in stream]
-        return _clean_answer("".join(chunk for chunk in chunks if isinstance(chunk, str)))
+        return "".join(chunk for chunk in chunks if isinstance(chunk, str))
 
 
 def _a2a_request(context: RequestContext, context_id: str) -> A2ARequest:
@@ -495,9 +524,21 @@ def _a2a_request(context: RequestContext, context_id: str) -> A2ARequest:
     )
 
 
-def _reply(text: str, context_id: str, provenance: str | None) -> Message:
-    message = new_text_message(text, context_id=context_id)
-    message.metadata.update({"commons": {"provenance": provenance}})
+class _Answer(NamedTuple):
+    """An answer split into the parts that its reply carries."""
+
+    text: str
+    provenance: str | None
+    badge: str | None
+
+
+def _reply(answer: _Answer, context_id: str) -> Message:
+    message = new_text_message(answer.text, context_id=context_id)
+    message.metadata.update({"commons": {"provenance": answer.provenance}})
+    if answer.badge is not None:
+        badge_part = Part(text=answer.badge, media_type="text/html")
+        badge_part.metadata.update({"commons": {"kind": "provenance-badge"}})
+        message.parts.append(badge_part)
     return message
 
 
@@ -512,29 +553,61 @@ def _failed_task(context: RequestContext, context_id: str) -> Task:
     )
 
 
-def _clean_answer(raw: str) -> tuple[str, str | None]:
-    """Return the answer's plain text and its provenance label.
+def _parse_answer(raw: str) -> _Answer:
+    """Split a raw answer into its plain text, its provenance label, and its badge HTML.
 
-    The asides are removed. The Commons tags that appear outside an aside are removed too. Other
-    text, including angle brackets, is kept as written. The label is the least trusted provenance
-    label among the asides.
+    The asides are removed from the text. The Commons tags that appear outside an aside are removed
+    too. Other text, including angle brackets, is kept as written. The label is the least trusted
+    provenance label among the asides. The badge is the HTML of the provenance badges, or None when
+    there are none or when that HTML is longer than ``_BADGE_MAX_CHARS``.
     """
-    text, labels = _split_asides(raw)
+    text, asides = _split_asides(raw)
     text = _COMMONS_TAGS.sub("", text.replace(_ASIDE_CLOSE, ""))
-    return _BLANK_LINE.sub("\n\n", text).strip(), _least_trusted(labels)
+    badges = [html for _, html in asides if _is_provenance_badge(html)]
+    html = "\n".join(badges)
+    return _Answer(
+        text=_BLANK_LINE.sub("\n\n", text).strip(),
+        provenance=_least_trusted([label for label, _ in asides]),
+        badge=html if badges and len(html) <= _BADGE_MAX_CHARS else None,
+    )
 
 
-def _split_asides(raw: str) -> tuple[str, list[str | None]]:
-    """Return the text outside the asides, and the label of each aside in order."""
+def _is_provenance_badge(aside: str) -> bool:
+    """Return whether an aside's HTML is a provenance badge exactly as Commons writes it."""
+    match = _BADGE_OPEN.match(aside)
+    if match is None:
+        return False
+    badge = _BADGES.get(match.group("label"))
+    if badge is None or not _icon_matches(match.group("icon"), badge.icon_file):
+        return False
+    return aside[match.end() :] == f"{badge.body} {_BADGE_INFO}{_ASIDE_CLOSE}"
+
+
+def _icon_matches(icon: str | None, icon_file: str | None) -> bool:
+    """Return whether a badge's icon attribute is absent or is the icon that Commons serves.
+
+    Commons omits the attribute when it serves no asset bundle. Otherwise the value is the bundle's
+    base, then ``/figs/``, then the badge's icon file.
+    """
+    if icon is None:
+        return True
+    if icon_file is None:
+        return False
+    suffix = f"/figs/{icon_file}"
+    return icon.endswith(suffix) and _ICON_BASE.fullmatch(icon[: -len(suffix)]) is not None
+
+
+def _split_asides(raw: str) -> tuple[str, list[tuple[str | None, str]]]:
+    """Return the text outside the asides, and each aside's label and HTML, in order."""
     kept: list[str] = []
-    labels: list[str | None] = []
+    asides: list[tuple[str | None, str]] = []
     position = 0
     while (start := raw.find(_ASIDE_OPEN, position)) != -1:
         kept.append(raw[position:start])
         label, position = _scan_aside(raw, start)
-        labels.append(label)
+        asides.append((label, raw[start:position]))
     kept.append(raw[position:])
-    return "".join(kept), labels
+    return "".join(kept), asides
 
 
 def _scan_aside(raw: str, start: int) -> tuple[str | None, int]:
