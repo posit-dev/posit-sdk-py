@@ -1,6 +1,6 @@
 """Request state for an A2A turn, shared by the A2A server and the tools that run inside it.
 
-This module does not import ``a2a-sdk``, so tools such as the feedback tool can read the current
+This module does not import ``a2a-sdk``, so tools that run inside a turn can read the current
 request without the A2A extra installed.
 """
 
